@@ -29,10 +29,26 @@ macOS Sonoma‑style lock screen clock for GNOME Shell (unlock dialog session mo
   - Uncomment the `text-shadow` in `.unlock-dialog-clock-hint` for a subtle glow; adjust blur/spread there.
 - Colors, sizes, and letter‑spacing are all in `stylesheet.css`; no rebuild required.
 
-## Install / update
-1) Copy this directory to `~/.local/share/gnome-shell/extensions/wack-lockscreen-clock@rinzler69-wastaken.github.com/` (or symlink while developing).
-2) Reload GNOME Shell (`Alt+F2` → `r` on Xorg; logout/login on Wayland).
-3) Enable: `gnome-extensions enable wack-lockscreen-clock@rinzler69-wastaken.github.com`.
+## Install / update (one-step Makefile)
+Prereqs: `make`, `rsync`, GNOME Shell 45–50.
+
+```bash
+git clone https://github.com/YOURUSER/wack-sonoma-lockscreen.git
+cd wack-sonoma-lockscreen
+make            # copies into ~/.local/share/gnome-shell/extensions/wack-lockscreen-clock@rinzler69-wastaken.github.com
+```
+
+Then reload GNOME Shell (`Alt+F2` → `r` on Xorg; logout/login on Wayland) and enable:
+
+```bash
+gnome-extensions enable wack-lockscreen-clock@rinzler69-wastaken.github.com
+```
+
+If you prefer one command after clone:
+
+```bash
+make enable
+```
 
 ## Notes & limitations
 - Runs only on the lock screen (`unlock-dialog` session mode); won’t affect the regular shell.
