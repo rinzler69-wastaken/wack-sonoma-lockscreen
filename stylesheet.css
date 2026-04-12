@@ -79,9 +79,9 @@
 .wack-date {
     color: rgba(255, 255, 255, 0.55);
     font-size: 28px;
-    font-weight: 600; /* for Inter, it's better to use 500. safe to use 600 for SF Pro Text */
-    letter-spacing: -2px; /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
-    /* font-family: 'Inter'; */
+    font-weight: 500; /* for Inter, it's better to use 500. safe to use 600 for SF Pro Text */
+    letter-spacing: -1px; /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
+    font-family: 'Inter';
 }
 
 .wack-time {
