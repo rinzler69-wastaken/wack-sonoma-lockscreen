@@ -15,6 +15,7 @@ macOS Sonoma‑style lock screen clock for GNOME Shell (unlock dialog session mo
 - `stylesheet.css` — typography, spacing, and (optional) shadows. Uses `@font-face` pointing at `fonts/`.
 - `fonts/` — bundled Open Runde (`OpenRunde-*.otf`) and `Inter-V.ttf` variable font.
 - `metadata.json` — declares support for GNOME Shell 45–50, `unlock-dialog` only.
+- `LICENSE` — GPL-3.0-or-later for code (see font licenses below).
 
 ## Tweaking (edit and reload)
 - Layout constants (top of `extension.js`):
@@ -55,5 +56,8 @@ make enable
 - No preferences dialog; edits are manual in `extension.js`/`stylesheet.css`.
 - Notifications currently render over the wallpaper without their own blur—keeps text crisp. Prompt blur still applies when the password prompt shows.
 - Date string comes from the `date` command; if it fails, falls back to JS locale formatting.
+- **Licenses:** Code is GPL-3.0-or-later. Fonts remain under their own licenses:
+  - Inter: SIL Open Font License 1.1 (see https://rsms.me/inter/).
+  - Open Runde: included for convenience; keep its license notice alongside the font files.
 
 Happy Sonoma‑ing! 🎐
