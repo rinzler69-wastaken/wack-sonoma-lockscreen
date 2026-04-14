@@ -6,7 +6,10 @@ import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 
+import Gettext from 'gettext';
 import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
+
+const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('gnome-shell'));
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 const HINT_TIMEOUT = 4;
@@ -26,6 +29,11 @@ const FADE_OUT_SCALE = 0.3;
 const PROMPT_BLUR_RADIUS = 50;
 const PROMPT_BLUR_BRIGHTNESS = 0.85;
 const PROMPT_BLUR_DURATION = 300;
+
+// Notif blur params
+const NOTIF_BLUR_RADIUS = 30;
+const NOTIF_BLUR_BRIGHTNESS = 1.0;
+const NOTIF_BLUR_NAME = 'wack-notif-blur';
 
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async');
 
@@ -110,8 +118,8 @@ class WackClock extends St.BoxLayout {
 
     _updateHint() {
         this._hint.text = this._seat.touch_mode
-            ? 'Swipe up to unlock'
-            : 'Click or press a key to unlock';
+            ? shellGettext('Swipe up to unlock')
+            : shellGettext('Click or press a key to unlock');
     }
 
     _onDestroy() {
@@ -249,6 +257,9 @@ export default class WackLockscreenClockExtension extends Extension {
 
 
 
+        // --- per-card notif blur ---
+        this._setupNotifBlur(dialog._notificationsBox);
+
         // Monitor changes
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => {
             this._positionClock();
@@ -269,6 +280,15 @@ export default class WackLockscreenClockExtension extends Extension {
                 scale_y: clockScale,
                 translation_y: 0,
             });
+
+    // Blur: drive proportionally during swipe too
+    const blurRadius = PROMPT_BLUR_RADIUS * progress;
+    const blurBrightness = 1.0 - (1.0 - PROMPT_BLUR_BRIGHTNESS) * progress;
+    for (const widget of dialog._backgroundGroup) {
+        const effect = widget.get_effect('blur');
+        if (effect)
+            effect.set({radius: blurRadius, brightness: blurBrightness});
+    }
 
             // Hint: stow when prompt appears
             if (progress > 0 && this._hint.opacity > 0) {
@@ -291,6 +311,71 @@ export default class WackLockscreenClockExtension extends Extension {
             mainBox.queue_relayout();
             this._mainBox = mainBox;
         }
+    }
+
+    _makeCardBlur() {
+        return new Shell.BlurEffect({
+            name: NOTIF_BLUR_NAME,
+            mode: Shell.BlurMode.BACKGROUND,
+            radius: NOTIF_BLUR_RADIUS,
+            brightness: NOTIF_BLUR_BRIGHTNESS,
+        });
+    }
+
+    _addCardBlur(actor) {
+        if (!actor.get_effect(NOTIF_BLUR_NAME))
+            actor.add_effect(this._makeCardBlur());
+    }
+
+    _removeCardBlur(actor) {
+        const effect = actor.get_effect(NOTIF_BLUR_NAME);
+        if (effect) actor.remove_effect(effect);
+    }
+
+    _setNotifBlursEnabled(enabled) {
+        const nb = this._dialog?._notificationsBox;
+        if (!nb) return;
+        for (const child of nb._notificationBox) {
+            const effect = child.get_effect(NOTIF_BLUR_NAME);
+            if (effect) effect.set_enabled(enabled);
+        }
+        for (const msg of nb._players.values()) {
+            const effect = msg.get_effect(NOTIF_BLUR_NAME);
+            if (effect) effect.set_enabled(enabled);
+        }
+    }
+
+    _setupNotifBlur(nb) {
+        // blur existing cards
+        for (const child of nb._notificationBox.get_children())
+            this._addCardBlur(child);
+
+        // hook actor-added — covers both notif sourceBoxes and MediaMessages
+        // since both get inserted into _notificationBox
+        this._actorAddedId = nb._notificationBox.connect('child-added', (container, actor) => {
+            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                this._addCardBlur(actor);
+                return GLib.SOURCE_REMOVE;
+            });
+        });
+
+        this._notifBox = nb;
+    }
+
+    _teardownNotifBlur() {
+        const nb = this._notifBox;
+        if (!nb) return;
+
+        if (this._actorAddedId) {
+            nb._notificationBox.disconnect(this._actorAddedId);
+            this._actorAddedId = null;
+        }
+
+        // remove blur from all existing cards
+        for (const child of nb._notificationBox.get_children())
+            this._removeCardBlur(child);
+
+        this._notifBox = null;
     }
 
     _onPromptShow() {
@@ -357,6 +442,9 @@ export default class WackLockscreenClockExtension extends Extension {
             this._origUpdateBgEffects = null;
             this._dialog._updateBackgroundEffects();
         }
+
+        // Remove per-card notif blurs and restore patched methods
+        this._teardownNotifBlur();
 
 
 

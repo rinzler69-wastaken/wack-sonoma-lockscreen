@@ -80,8 +80,8 @@
     color: rgba(255, 255, 255, 0.55);
     font-size: 28px;
     font-weight: 500; /* for Inter, it's better to use 500. safe to use 600 for SF Pro Text */
-    letter-spacing: -1px; /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
-    font-family: 'Inter';
+    letter-spacing: -2px; /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
+    /* font-family: 'Inter'; */
 }
 
 .wack-time {
@@ -89,8 +89,8 @@
     font-size: 112px;
     font-weight: 600;
     font-feature-settings: "pnum" 1, "tnum" 0;
-    letter-spacing: -7px;
-    font-family: 'Open Runde';
+    letter-spacing: -4px;
+    font-family: 'SF Pro Display';
 }
 
 .unlock-dialog-clock-hint {
@@ -98,5 +98,18 @@
     font-weight: 500;
     font-size: 18px;
     font-family: 'Inter';
-    /* text-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.18); */
+    text-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* Notification and media message styling */
+
+.unlock-dialog-notification-source,
+.media-message {
+    background-color: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.08);
+    /* box-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.08); */
 }
