@@ -24,7 +24,7 @@ This extension is designed to complement the default Adwaita theme (Adwaita Sans
 
 - **[Open Runde](https://github.com/lauridskern/open-runde)** — Recommended font for the clock numerals. Install and set `font-family: 'Open Runde'` in `stylesheet.css` under `.wack-time`. Approximates SF Pro Rounded's warmth at large sizes.
 
-- **[Inter](https://rsms.me/inter/)** — Recommended for date and hint text. Uncomment the `font-family: 'Inter'` line in `.wack-date` in `stylesheet.css`.
+- **[Inter](https://rsms.me/inter/)** — Recommended for date and hint text. 
 
 > Neither font is bundled. Install system-wide (`~/.local/share/fonts/`) or per-user and run `fc-cache -fv` after.
 
