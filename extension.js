@@ -94,7 +94,8 @@ const WackClock = GObject.registerClass(
 
             // Setup the wall clock to update every minute
             this._wallClock = new GnomeDesktop.WallClock({ time_only: true });
-            this._wallClock.connect('notify::clock', this._updateTime.bind(this));
+            this._wallClockId = this._wallClock.connect('notify::clock',
+                this._updateTime.bind(this));
 
             // Update the hint based on whether the device is in touch mode
             const backend = this.get_context().get_backend();
@@ -152,7 +153,12 @@ const WackClock = GObject.registerClass(
          * Clean up timers, monitors, and signal handlers.
          */
         _onDestroy() {
-            this._wallClock.run_dispose();
+            if (this._wallClockId) {
+                this._wallClock.disconnect(this._wallClockId);
+                this._wallClockId = null;
+            }
+            this._wallClock = null;
+
             this._idleMonitor.remove_watch(this._idleWatchId);
             if (this._dateTimeoutId)
                 GLib.source_remove(this._dateTimeoutId);
@@ -246,6 +252,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._dialog = dialog;
         this._originalClock = dialog._clock;
         this._injectionManager = new InjectionManager();
+        this._idleSources = new Set();
         const lockDialogGroup = Main.screenShield._lockDialogGroup;
 
         // Initialize background effects.
@@ -418,6 +425,22 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     /**
+     * Helper to track GLib.idle_add sources for cleanup.
+     * 
+     * @param {number} priority Priority level.
+     * @param {Function} callback Callback function.
+     * @returns {number} The source ID.
+     */
+    _idleAdd(priority, callback) {
+        let id = GLib.idle_add(priority, () => {
+            this._idleSources.delete(id);
+            return callback();
+        });
+        this._idleSources.add(id);
+        return id;
+    }
+
+    /**
      * Creates a new blur effect for notification cards.
      * 
      * @returns {Shell.BlurEffect} The configured blur effect.
@@ -556,7 +579,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
         // Listen for new notifications being added
         this._actorAddedId = nb._notificationBox.connect('child-added', (container, actor) => {
-            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
                 this._addCardBlur(actor);
 
                 const player = this._getMediaPlayer(nb, actor);
@@ -577,7 +600,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 } else {
                     // Re-enforce limits if the shell explicitly changes a card's visibility
                     const visId = actor.connect('notify::visible', () => {
-                        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                        this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
                             this._enforceCardLimit(nb);
                             return GLib.SOURCE_REMOVE;
                         });
@@ -592,7 +615,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
         // Listen for notifications being removed
         this._actorRemovedId = nb._notificationBox.connect('child-removed', () => {
-            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
                 this._enforceCardLimit(nb);
                 return GLib.SOURCE_REMOVE;
             });
@@ -745,6 +768,11 @@ export default class WackLockscreenClockExtension extends Extension {
         for (const msg of nb._players.values())
             msg.visible = true;
 
+        if (this._idleSources) {
+            this._idleSources.forEach(id => GLib.source_remove(id));
+            this._idleSources.clear();
+        }
+
         this._notifBox = null;
     }
 
@@ -826,6 +854,9 @@ export default class WackLockscreenClockExtension extends Extension {
      * Cleans up all modifications and returns the GNOME Shell lock screen to its original state.
      */
     disable() {
+        // Guideline EGO-M-008: Documenting use of unlock-dialog
+        // We modify the unlock dialog to replace the default clock with our custom WackClock
+        // and to implement custom background blur transitions.
         if (!this._dialog) return;
 
         // Restore the original background effect update method
