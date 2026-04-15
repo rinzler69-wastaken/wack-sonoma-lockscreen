@@ -81,6 +81,7 @@
     font-size: 28px;
     font-weight: 600; /* for Inter, it's better to use 500. safe to use 600 for SF Pro Text */
     letter-spacing: -2px; /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
+    text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.02);
     /* font-family: 'Inter'; */
 }
 
@@ -90,6 +91,7 @@
     font-weight: 600;
     font-feature-settings: "pnum" 1, "tnum" 0;
     letter-spacing: -4px;
+    text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.02);
     font-family: 'SF Pro Display';
 }
 
@@ -98,7 +100,7 @@
     font-weight: 500;
     font-size: 18px;
     font-family: 'Inter';
-    text-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+    text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.15);
 }
 
 /* Notification and media message styling */
@@ -110,6 +112,16 @@
     border-radius: 12px;
     padding: 8px 12px;
     margin-bottom: 4px;
-    text-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.08);
+    text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.08);
     /* box-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.08); */
+}
+
+.unlock-dialog-notification-icon {
+    box-shadow: 0 0 12px 2px rgba(0, 0, 0, 0.04);
+}
+
+#panel.unlock-screen .panel-button StIcon,
+#panel.unlock-screen .panel-button .system-status-icon {
+      icon-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.08);
+      text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.08);
 }

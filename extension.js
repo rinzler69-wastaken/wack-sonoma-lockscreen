@@ -35,6 +35,9 @@ const NOTIF_BLUR_RADIUS = 30;
 const NOTIF_BLUR_BRIGHTNESS = 1.0;
 const NOTIF_BLUR_NAME = 'wack-notif-blur';
 
+// Max visible notif cards before overflow text appears
+const MAX_VISIBLE_CARDS = 3;
+
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async');
 
 async function getPrettyDate() {
@@ -214,9 +217,11 @@ export default class WackLockscreenClockExtension extends Extension {
 
         this._notifHeightId = dialog._notificationsBox.connect('notify::height', () => {
             this._positionHint();
+            this._positionOverflow();
         });
         this._notifVisibleId = dialog._notificationsBox.connect('notify::visible', () => {
             this._positionHint();
+            this._positionOverflow();
         });
 
         // --- 2. Prompt blur — animate radius on background widgets via _showPrompt/_showClock ---
@@ -253,17 +258,43 @@ export default class WackLockscreenClockExtension extends Extension {
         const hint = dialog._clock._hint;
         lockDialogGroup.add_child(hint);
         this._hint = hint;
+        // _hintText caches the real hint string so overflow can inherit it
+        this._hintText = hint.text;
+        // keep hint text in sync if seat touch-mode changes
+        this._hintTextSyncId = hint.connect('notify::text', () => {
+            if (!this._overflowActive)
+                this._hintText = hint.text;
+        });
+        // hard wall — if idle watch tries to show hint while prompt is active, kill it
+        this._hintOpacityGuardId = hint.connect('notify::opacity', () => {
+            if (this._promptActive && hint.opacity > 0)
+                hint.set_opacity(0);
+        });
         this._positionHint();
+
+        // --- overflow label — spiritual successor to hint when active ---
+        this._overflowLabel = new St.Label({
+            style_class: 'unlock-dialog-clock-hint',
+            x_align: Clutter.ActorAlign.CENTER,
+            opacity: 255,
+            visible: false,
+        });
+        this._overflowActive = false;
+        lockDialogGroup.add_child(this._overflowLabel);
+        this._positionOverflow();
 
 
 
         // --- per-card notif blur ---
+        this._lastPlayingPlayer = null;
+        this._promptActive = false;
         this._setupNotifBlur(dialog._notificationsBox);
 
         // Monitor changes
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => {
             this._positionClock();
             this._positionHint();
+            this._positionOverflow();
         });
 
         // --- 4. Patch _setTransitionProgress for clock-only animation ---
@@ -290,13 +321,24 @@ export default class WackLockscreenClockExtension extends Extension {
             effect.set({radius: blurRadius, brightness: blurBrightness});
     }
 
-            // Hint: stow when prompt appears
-            if (progress > 0 && this._hint.opacity > 0) {
-                this._hintOpacity = this._hint.opacity;
-                this._hint.set_opacity(0);
-            } else if (progress === 0 && this._hintOpacity > 0) {
-                this._hint.set_opacity(this._hintOpacity);
-                this._hintOpacity = 0;
+            // stow whichever label is active on prompt, restore on clock
+            const activeLabel = this._overflowActive
+                ? this._overflowLabel
+                : this._hint;
+
+            if (progress > 0) {
+                if (activeLabel.opacity > 0) {
+                    this._activeLabelOpacity = activeLabel.opacity;
+                    activeLabel.set_opacity(0);
+                }
+            } else if (progress === 0) {
+                if (this._activeLabelOpacity > 0) {
+                    activeLabel.set_opacity(this._activeLabelOpacity);
+                    this._activeLabelOpacity = 0;
+                }
+                // re-enforce so overflow text is fresh
+                if (this._notifBox)
+                    this._enforceCardLimit(this._notifBox);
             }
         };
 
@@ -345,21 +387,171 @@ export default class WackLockscreenClockExtension extends Extension {
         }
     }
 
+    _isMediaCard(nb, actor) {
+        for (const msg of nb._players.values()) {
+            if (msg === actor) return true;
+        }
+        return false;
+    }
+
+    _getMediaPlayer(nb, actor) {
+        for (const [player, msg] of nb._players.entries()) {
+            if (msg === actor) return player;
+        }
+        return null;
+    }
+
+    _enforceMediaLimit(nb) {
+        // priority: last-to-go-Playing > any Playing > last Playing (now paused) > first
+        const players = [...nb._players.entries()];
+
+        // hide all first
+        for (const [, msg] of players) msg.visible = false;
+
+        // last player to go Playing wins if still Playing
+        if (this._lastPlayingPlayer) {
+            const msg = nb._players.get(this._lastPlayingPlayer);
+            if (msg && this._lastPlayingPlayer.status === 'Playing') {
+                msg.visible = true;
+                return;
+            }
+        }
+
+        // fallback: any Playing in insertion order
+        for (const [player, msg] of players) {
+            if (player.status === 'Playing') {
+                msg.visible = true;
+                return;
+            }
+        }
+
+        // nothing playing — show last playing player (now paused) if we have one
+        if (this._lastPlayingPlayer) {
+            const msg = nb._players.get(this._lastPlayingPlayer);
+            if (msg) { msg.visible = true; return; }
+        }
+
+        // cold start — show first
+        const firstMsg = nb._players.values().next().value;
+        if (firstMsg) firstMsg.visible = true;
+    }
+
     _setupNotifBlur(nb) {
-        // blur existing cards
+        // seed _lastPlayingPlayer from already-playing players
+        // last one in insertion order that's Playing wins as initial priority
+        for (const [player] of nb._players.entries()) {
+            if (player.status === 'Playing')
+                this._lastPlayingPlayer = player;
+        }
+
+        // blur + enforce limit on existing cards
         for (const child of nb._notificationBox.get_children())
             this._addCardBlur(child);
+        this._enforceCardLimit(nb);
 
-        // hook actor-added — covers both notif sourceBoxes and MediaMessages
-        // since both get inserted into _notificationBox
         this._actorAddedId = nb._notificationBox.connect('child-added', (container, actor) => {
             GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
                 this._addCardBlur(actor);
+                // track playback status transitions via player's changed signal
+                const player = this._getMediaPlayer(nb, actor);
+                if (player) {
+                    let prevStatus = player.status;
+                    const id = player.connect('changed', () => {
+                        const newStatus = player.status;
+                        // if this player just went Playing, it becomes the priority
+                        if (newStatus === 'Playing' && prevStatus !== 'Playing')
+                            this._lastPlayingPlayer = player;
+                        prevStatus = newStatus;
+                        this._enforceCardLimit(nb);
+                    });
+                    if (!this._playerSignalIds) this._playerSignalIds = new Map();
+                    this._playerSignalIds.set(player, id);
+                    // if already Playing on arrival, claim priority
+                    if (player.status === 'Playing')
+                        this._lastPlayingPlayer = player;
+                }
+                this._enforceCardLimit(nb);
+                return GLib.SOURCE_REMOVE;
+            });
+        });
+
+        this._actorRemovedId = nb._notificationBox.connect('child-removed', () => {
+            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                this._enforceCardLimit(nb);
                 return GLib.SOURCE_REMOVE;
             });
         });
 
         this._notifBox = nb;
+    }
+
+    _enforceCardLimit(nb) {
+        // enforce media limit first (independent of notif limit)
+        this._enforceMediaLimit(nb);
+
+        const children = nb._notificationBox.get_children();
+        let notifCount = 0;
+        let hiddenCount = 0;
+
+        children.forEach(child => {
+            if (this._isMediaCard(nb, child))
+                return; // already handled by _enforceMediaLimit
+            if (notifCount < MAX_VISIBLE_CARDS) {
+                child.visible = true;
+            } else {
+                child.visible = false;
+                hiddenCount++;
+            }
+            notifCount++;
+        });
+
+        this._updateOverflow(hiddenCount);
+    }
+
+    _updateOverflow(hiddenCount) {
+        if (!this._overflowLabel) return;
+        if (this._promptActive) return; // hard wall — prompt is sacred
+
+        if (hiddenCount <= 0) {
+            // overflow clears — hand full control back to hint
+            this._overflowActive = false;
+            this._overflowLabel.visible = false;
+            // restore hint to its natural state — let idle watch/touch-mode handle opacity
+            this._hint.visible = true;
+            this._positionHint();
+            return;
+        }
+
+        // overflow takes over — hint goes fully inert
+        this._overflowActive = true;
+        this._hint.visible = false;
+        this._hint.set_opacity(0);
+
+        const overflowText = `${hiddenCount}+ more`;
+        // inherit the hint string as spiritual successor
+        this._overflowLabel.text = `${overflowText}  ·  ${this._hintText}`;
+        this._overflowLabel.visible = true;
+        this._overflowLabel.set_opacity(255);
+        this._positionOverflow();
+    }
+
+    _positionOverflow() {
+        if (!this._overflowLabel) return;
+        const monitor = Main.layoutManager.primaryMonitor;
+        if (!monitor) return;
+
+        const [, natWidth] = this._overflowLabel.get_preferred_width(-1);
+        const [, natHeight] = this._overflowLabel.get_preferred_height(-1);
+
+        const notifBox = this._dialog?._notificationsBox;
+        const notifHeight = notifBox?.visible ? notifBox.height : 0;
+
+        const idealY = monitor.y + Math.floor(monitor.height * HINT_VERTICAL_FRACTION);
+        const notifTop = monitor.y + monitor.height - notifHeight - HINT_NOTIF_MARGIN - natHeight;
+        const y = Math.min(idealY, notifTop);
+        const x = monitor.x + Math.floor((monitor.width - natWidth) / 2);
+
+        this._overflowLabel.set_position(x, y);
     }
 
     _teardownNotifBlur() {
@@ -371,14 +563,33 @@ export default class WackLockscreenClockExtension extends Extension {
             this._actorAddedId = null;
         }
 
-        // remove blur from all existing cards
-        for (const child of nb._notificationBox.get_children())
+        if (this._actorRemovedId) {
+            nb._notificationBox.disconnect(this._actorRemovedId);
+            this._actorRemovedId = null;
+        }
+
+        // disconnect player changed signals
+        if (this._playerSignalIds) {
+            for (const [player, id] of this._playerSignalIds.entries()) {
+                try { player.disconnect(id); } catch (_) {}
+            }
+            this._playerSignalIds = null;
+        }
+
+        // restore all cards to visible
+        for (const child of nb._notificationBox.get_children()) {
+            child.visible = true;
             this._removeCardBlur(child);
+        }
+        for (const msg of nb._players.values())
+            msg.visible = true;
 
         this._notifBox = null;
     }
 
     _onPromptShow() {
+        this._promptActive = true;
+
         for (const widget of this._dialog._backgroundGroup) {
             widget.ease_property('@effects.blur.radius', PROMPT_BLUR_RADIUS, {
                 duration: PROMPT_BLUR_DURATION,
@@ -392,6 +603,11 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     _onPromptHide() {
+        this._promptActive = false;
+        // re-enforce now that the wall is down
+        if (this._notifBox)
+            this._enforceCardLimit(this._notifBox);
+
         for (const widget of this._dialog._backgroundGroup) {
             widget.ease_property('@effects.blur.radius', 0, {
                 duration: PROMPT_BLUR_DURATION,
@@ -476,8 +692,24 @@ export default class WackLockscreenClockExtension extends Extension {
         const lockDialogGroup = Main.screenShield?._lockDialogGroup;
 
         if (this._hint) {
+            if (this._hintTextSyncId) {
+                this._hint.disconnect(this._hintTextSyncId);
+                this._hintTextSyncId = null;
+            }
+            if (this._hintOpacityGuardId) {
+                this._hint.disconnect(this._hintOpacityGuardId);
+                this._hintOpacityGuardId = null;
+            }
+            // restore hint to visible in case overflow had it inert
+            this._hint.visible = true;
             lockDialogGroup?.remove_child(this._hint);
             this._hint = null;
+        }
+
+        if (this._overflowLabel) {
+            lockDialogGroup?.remove_child(this._overflowLabel);
+            this._overflowLabel.destroy();
+            this._overflowLabel = null;
         }
 
         if (this._dialog._clock) {
@@ -499,5 +731,9 @@ export default class WackLockscreenClockExtension extends Extension {
         this._mainBox = null;
         this._origLayout = null;
         this._hintOpacity = 0;
+        this._activeLabelOpacity = 0;
+        this._overflowActive = false;
+        this._hintText = null;
+        this._lastPlayingPlayer = null;
     }
 }
