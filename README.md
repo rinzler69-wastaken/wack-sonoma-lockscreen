@@ -23,10 +23,6 @@ macOS Sonoma‑style lock screen clock for GNOME Shell (unlock dialog session mo
   - `HINT_VERTICAL_FRACTION` and `HINT_NOTIF_MARGIN` — hint positioning relative to notifications.
   - `PROMPT_BLUR_RADIUS`, `PROMPT_BLUR_BRIGHTNESS`, `PROMPT_BLUR_DURATION` — prompt blur strength and animation.
   - `CROSSFADE_TIME`, `HINT_TIMEOUT` — hint fade timing.
-- Fonts (`stylesheet.css`):
-  - Time: `font-family: 'Open Runde';`
-  - Date/Hint stack: `'SF Pro Text', 'SF Pro Display', 'Inter', system-ui, 'Cantarell', sans-serif;`
-    - If you want pure system fonts, replace the stack; if you want SF, install it locally—nothing is bundled.
   - Uncomment the `text-shadow` in `.unlock-dialog-clock-hint` for a subtle glow; adjust blur/spread there.
 - Colors, sizes, and letter‑spacing are all in `stylesheet.css`; no rebuild required.
 
@@ -51,13 +47,13 @@ If you prefer one command after clone:
 make enable
 ```
 
+## Compatibility
+- Developed and tested on GNOME 50 (Fedora). Reported issues on GNOME 49 + NVIDIA. GNOME 48 support is experimental.
+
 ## Notes & limitations
 - Runs only on the lock screen (`unlock-dialog` session mode); won’t affect the regular shell.
 - No preferences dialog; edits are manual in `extension.js`/`stylesheet.css`.
 - Notifications currently render over the wallpaper without their own blur—keeps text crisp. Prompt blur still applies when the password prompt shows.
 - Date string comes from the `date` command; if it fails, falls back to JS locale formatting.
-- **Licenses:** Code is GPL-3.0-or-later. Fonts remain under their own licenses:
-  - Inter: SIL Open Font License 1.1 (see https://rsms.me/inter/).
-  - Open Runde: included for convenience; keep its license notice alongside the font files.
 
 Happy Sonoma‑ing! 🎐
