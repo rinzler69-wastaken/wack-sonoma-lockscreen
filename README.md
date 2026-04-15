@@ -1,30 +1,36 @@
 # WACK – Sonoma Lockscreen
 
-macOS Sonoma‑style lock screen clock for GNOME Shell (unlock dialog session mode). Drops in a custom clock layout, typography, and prompt blur, inspired by macOS but kept lightweight and preference‑free.
+This is a part of the WACK project (WACK Ain't Cupertino, Kid), a collection of tweaks aimed at bringing a refined, macOS-inspired aesthetic to the GNOME desktop.
 
-## What it does
-- Replaces the default lockscreen clock with a custom `WackClock` (date + large time + hint) and repositions it to the upper third of the screen.
-- Separates the hint from the clock stack so it can sit lower on the screen and adjust when notifications are present.
-- Smooth show/hide animations: the clock scales/fades during the transition; the hint stows when the prompt slides in.
-- Prompt blur: when the password prompt appears, the lockscreen background is blurred (`PROMPT_BLUR_RADIUS/BRIGHTNESS`); blur is cleared when the clock returns.
-- Uses bundled fonts for the time (Open Runde) and bundled Inter as the first fallback for date/hint; if the user has SF Pro installed, it will be picked up automatically via the font stack.
-- All styling is controlled via CSS—no gsettings schemas or prefs UI.
+This specific extension focuses on the lock screen (unlockDialog), replacing the standard clock with a clean, Sonoma-inspired layout.
 
-## Files
-- `extension.js` — logic, layout, blur/prompt hooks, and clock replacement.
-- `stylesheet.css` — typography, spacing, and (optional) shadows. Uses `@font-face` pointing at `fonts/`.
-- `fonts/` — bundled Open Runde (`OpenRunde-*.otf`) and `Inter-V.ttf` variable font.
-- `metadata.json` — declares support for GNOME Shell 45–50, `unlock-dialog` only.
-- `LICENSE` — GPL-3.0-or-later for code (see font licenses below).
+## Features, and What it does
+- Custom Clock Layout: Repositions the date and time to the upper third of the screen for a more balanced, spacious feel.
 
-## Tweaking (edit and reload)
-- Layout constants (top of `extension.js`):
-  - `CLOCK_TOP_FRACTION` — vertical position of the clock.
-  - `HINT_VERTICAL_FRACTION` and `HINT_NOTIF_MARGIN` — hint positioning relative to notifications.
-  - `PROMPT_BLUR_RADIUS`, `PROMPT_BLUR_BRIGHTNESS`, `PROMPT_BLUR_DURATION` — prompt blur strength and animation.
-  - `CROSSFADE_TIME`, `HINT_TIMEOUT` — hint fade timing.
-  - Uncomment the `text-shadow` in `.unlock-dialog-clock-hint` for a subtle glow; adjust blur/spread there.
-- Colors, sizes, and letter‑spacing are all in `stylesheet.css`; no rebuild required.
+- Focused Interaction: The background stays sharp and clear in its resting state. A deep, smooth blur only fades in when you're ready to enter your password, keeping the focus on the prompt.
+
+- Enhanced Readability: Notification cards feature an adaptive blur (which crossfades with the prompt blur), ensuring text remains crisp and legible regardless of your wallpaper.
+
+- Clean Notification Management: Limits the number of visible cards to prevent lockscreen clutter, capping them with a subtle "more" notice to keep things organized.
+
+
+## Best Used With
+This extension is designed to complement the default Adwaita theme (Adwaita Sans default font in mind),and various other GNOME desktop configurations, but works standalone. For the closest Sonoma feel:
+
+- **[Open Runde](https://github.com/lauridskern/open-runde)** — Recommended font for the clock numerals. Install and set `font-family: 'Open Runde'` in `stylesheet.css` under `.wack-time`. Approximates SF Pro Rounded's warmth at large sizes.
+
+- **[Inter](https://rsms.me/inter/)** — Recommended for date and hint text. Uncomment the `font-family: 'Inter'` line in `.wack-date` in `stylesheet.css`.
+
+> Neither font is bundled. Install system-wide (`~/.local/share/fonts/`) or per-user and run `fc-cache -fv` after.
+
+
+## Technical Details
+- Lightweight: No extra background processes or heavy setting schemas.
+
+- State-Aware: Uses ```set_enabled``` logic for blur effects (the notif blur-prompt blur crossfade) to keep your GPU happy.
+
+- Vanilla Compatibility: Built primarily for GNOME 45–50 (IMPORTANT: See Compatibility Below). 
+
 
 ## Install / update (one-step Makefile)
 Prereqs: `make`, `rsync`, GNOME Shell 45–50.
@@ -47,13 +53,10 @@ If you prefer one command after clone:
 make enable
 ```
 
+Manual Tweak: If you want to change the blur strength or clock position, you can find the constants right at the top of ```extension.js.```
+
 ## Compatibility
-- Developed and tested on GNOME 50 (Fedora). Reported issues on GNOME 49 + NVIDIA. GNOME 48 support is experimental.
+- Developed and tested on GNOME 50 (Fedora). Reported issues on GNOME 49 + NVIDIA. GNOME 48 support is experimental. More issues are yet to be known since tests are yet to be made for other configurations. Feel free to open an issue if bugs are found, or clone and contribute!
 
-## Notes & limitations
-- Runs only on the lock screen (`unlock-dialog` session mode); won’t affect the regular shell.
-- No preferences dialog; edits are manual in `extension.js`/`stylesheet.css`.
-- Notifications currently render over the wallpaper without their own blur—keeps text crisp. Prompt blur still applies when the password prompt shows.
-- Date string comes from the `date` command; if it fails, falls back to JS locale formatting.
-
-Happy Sonoma‑ing! 🎐
+## About the WACK Project
+- WACK (WACK Ain't Cupertino, Kid) brings the best design patterns and details from macOS to the GNOME Desktop — dock magnification, traffic-light window controls, lockscreen layout, quick settings layouts, and many more to come — built entirely within what GNOME already gives you.
