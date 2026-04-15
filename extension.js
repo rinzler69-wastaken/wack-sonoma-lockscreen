@@ -299,45 +299,64 @@ export default class WackLockscreenClockExtension extends Extension {
 
         // --- 4. Patch _setTransitionProgress for clock-only animation ---
         this._origSetTransitionProgress = dialog._setTransitionProgress.bind(dialog);
-        dialog._setTransitionProgress = (progress) => {
-            this._origSetTransitionProgress(progress);
+dialog._setTransitionProgress = (progress) => {
+    this._origSetTransitionProgress(progress);
 
-            // Clock: fade+scale in place, no translation
-            const clockOpacity = Math.round(255 * (1 - progress));
-            const clockScale = FADE_OUT_SCALE + (1 - FADE_OUT_SCALE) * (1 - progress);
-            dialog._clock.set({
-                opacity: clockOpacity,
-                scale_x: clockScale,
-                scale_y: clockScale,
-                translation_y: 0,
-            });
+    // 1. Clock: scale in place
+    const clockOpacity = Math.round(255 * (1 - progress));
+    const clockScale = FADE_OUT_SCALE + (1 - FADE_OUT_SCALE) * (1 - progress);
+    dialog._clock.set({
+        opacity: clockOpacity,
+        scale_x: clockScale,
+        scale_y: clockScale,
+        translation_y: 0,
+    });
 
-    // Blur: drive proportionally during swipe too
-    const blurRadius = PROMPT_BLUR_RADIUS * progress;
-    const blurBrightness = 1.0 - (1.0 - PROMPT_BLUR_BRIGHTNESS) * progress;
+    // 2. Global Background: Blur IN
+    const globalBlur = PROMPT_BLUR_RADIUS * progress;
+    const globalBrightness = 1.0 - (1.0 - PROMPT_BLUR_BRIGHTNESS) * progress;
+    
     for (const widget of dialog._backgroundGroup) {
         const effect = widget.get_effect('blur');
         if (effect)
-            effect.set({radius: blurRadius, brightness: blurBrightness});
+            effect.set({radius: globalBlur, brightness: globalBrightness});
     }
 
-            // stow whichever label is active on prompt, restore on clock
-const activeLabel = this._overflowActive ? this._overflowLabel : this._hint;
+    // 3. Notification Cards: Blur OUT (Crossfade)
+    const cardBlur = NOTIF_BLUR_RADIUS * (1 - progress);
+    if (this._notifBox) {
+        // Standard Cards
+        this._notifBox._notificationBox.get_children().forEach(child => {
+            let effect = child.get_effect(NOTIF_BLUR_NAME);
+            if (effect) {
+                effect.set({ radius: cardBlur });
+                effect.set_enabled(cardBlur > 0.5);
+            }
+        });
 
+        // Media Cards
+        this._notifBox._players.values().forEach(msg => {
+            let effect = msg.get_effect(NOTIF_BLUR_NAME);
+            if (effect) {
+                effect.set({ radius: cardBlur });
+                effect.set_enabled(cardBlur > 0.5);
+            }
+        });
+    }
+
+    // 4. Label Management
+    const activeLabel = this._overflowActive ? this._overflowLabel : this._hint;
     if (progress > 0) {
-        // Force hide everything during the transition to the prompt
         activeLabel.opacity = 0;
         if (this._overflowLabel) this._overflowLabel.visible = false;
     } else if (progress === 0) {
-        // Only restore when we are fully back at the clock face
         if (this._overflowActive) {
             this._overflowLabel.visible = true;
             this._overflowLabel.opacity = 255;
         }
-        // Final sanity check for notification updates that happened while locked
         this._enforceCardLimit(this._notifBox);
     }
-        };
+};
 
         // --- 5. Prompt-only layout ---
         const mainBox = dialog.get_child_at_index(dialog.get_n_children() - 1);
@@ -553,7 +572,14 @@ _updateOverflow(hiddenCount) {
     this._hint.visible = false;
     this._hint.set_opacity(0);
 
-    const overflowText = `${hiddenCount}+ more`;
+let moreText = Gettext.pgettext('calendar', 'More').toLowerCase();
+    
+    // If Italian/Indonesian fails, fall back to a safe Shell generic
+    if (moreText === 'more') {
+        moreText = shellGettext('More').toLowerCase();
+    }
+
+    const overflowText = `${hiddenCount}+ ${moreText}`;
     this._overflowLabel.text = `${overflowText}  ·  ${this._hintText}`;
     this._overflowLabel.visible = true;
     this._overflowLabel.set_opacity(255);
