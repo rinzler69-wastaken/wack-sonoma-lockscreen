@@ -38,7 +38,7 @@ This extension is designed to complement the default Adwaita theme (Adwaita Sans
 
 
 ## Install / update (one-step Makefile)
-Prereqs: `make`, `rsync`, GNOME Shell 45–50.
+Prereqs: `make`, `rsync`, GNOME Shell 48–50.
 
 ```bash
 git clone https://github.com/rinzler69-wastaken/wack-sonoma-lockscreen.git
