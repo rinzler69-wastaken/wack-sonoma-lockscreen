@@ -1,77 +1,3 @@
-/*
- * Font setup
- * - Time uses bundled Open Runde from ./fonts
- * - Date & hint inherit the shell's current font (user/theme controlled)
- */
-
-/* Open Runde Fonts - for the time, approximating macOS look and feel */
-
-@font-face {
-    font-family: 'Open Runde';
-    font-style: normal;
-    font-weight: 400;
-    src: url('fonts/OpenRunde-Regular.otf');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Open Runde';
-    font-style: normal;
-    font-weight: 500;
-    src: url('fonts/OpenRunde-Medium.otf');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Open Runde';
-    font-style: normal;
-    font-weight: 600;
-    src: url('fonts/OpenRunde-Semibold.otf');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Open Runde';
-    font-style: normal;
-    font-weight: 700;
-    src: url('fonts/OpenRunde-Bold.otf');
-    font-display: swap;
-}
-
-/* Inter Fonts - for the date and hint, approximating macOS look and feel */
-
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 400;
-    src: url('fonts/Inter-V.ttf');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 500;
-    src: url('fonts/Inter-V.ttf');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 600;
-    src: url('fonts/Inter-V.ttf');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 700;
-    src: url('fonts/Inter-V.ttf');
-    font-display: swap;
-}
-
 .unlock-dialog-clock {
     spacing: 0;
 }
@@ -82,7 +8,6 @@
     font-weight: 600; /* for Inter, it's better to use 500. safe to use 600 for SF Pro Text */
     letter-spacing: -2px; /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
     text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.02);
-    /* font-family: 'Inter'; */
 }
 
 .wack-time {
@@ -92,7 +17,6 @@
     font-feature-settings: "pnum" 1, "tnum" 0;
     letter-spacing: -4px;
     text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.02);
-    font-family: 'SF Pro Display';
 }
 
 .unlock-dialog-clock-hint {

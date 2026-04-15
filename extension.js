@@ -21,8 +21,8 @@ const CLOCK_TOP_FRACTION = 0.12;
 // Fractional distance from top of screen for hint (if no notifications). default is 0.85
 const HINT_VERTICAL_FRACTION = 0.85;
 
-// Margin between hint and notifications when notifications are present. default is 32
-const HINT_NOTIF_MARGIN = 32;
+// Margin between hint and notifications when notifications are present. default is 16
+const HINT_NOTIF_MARGIN = 16;
 const FADE_OUT_SCALE = 0.3;
 
 // Blur params
@@ -322,24 +322,21 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
             // stow whichever label is active on prompt, restore on clock
-            const activeLabel = this._overflowActive
-                ? this._overflowLabel
-                : this._hint;
+const activeLabel = this._overflowActive ? this._overflowLabel : this._hint;
 
-            if (progress > 0) {
-                if (activeLabel.opacity > 0) {
-                    this._activeLabelOpacity = activeLabel.opacity;
-                    activeLabel.set_opacity(0);
-                }
-            } else if (progress === 0) {
-                if (this._activeLabelOpacity > 0) {
-                    activeLabel.set_opacity(this._activeLabelOpacity);
-                    this._activeLabelOpacity = 0;
-                }
-                // re-enforce so overflow text is fresh
-                if (this._notifBox)
-                    this._enforceCardLimit(this._notifBox);
-            }
+    if (progress > 0) {
+        // Force hide everything during the transition to the prompt
+        activeLabel.opacity = 0;
+        if (this._overflowLabel) this._overflowLabel.visible = false;
+    } else if (progress === 0) {
+        // Only restore when we are fully back at the clock face
+        if (this._overflowActive) {
+            this._overflowLabel.visible = true;
+            this._overflowLabel.opacity = 255;
+        }
+        // Final sanity check for notification updates that happened while locked
+        this._enforceCardLimit(this._notifBox);
+    }
         };
 
         // --- 5. Prompt-only layout ---
@@ -458,7 +455,6 @@ export default class WackLockscreenClockExtension extends Extension {
                     let prevStatus = player.status;
                     const id = player.connect('changed', () => {
                         const newStatus = player.status;
-                        // if this player just went Playing, it becomes the priority
                         if (newStatus === 'Playing' && prevStatus !== 'Playing')
                             this._lastPlayingPlayer = player;
                         prevStatus = newStatus;
@@ -466,9 +462,19 @@ export default class WackLockscreenClockExtension extends Extension {
                     });
                     if (!this._playerSignalIds) this._playerSignalIds = new Map();
                     this._playerSignalIds.set(player, id);
-                    // if already Playing on arrival, claim priority
                     if (player.status === 'Playing')
                         this._lastPlayingPlayer = player;
+                } else {
+                    // notif card — re-enforce when shell changes its visibility
+                    // (e.g. user views notifs in-session, shell sets visible=false)
+                    const visId = actor.connect('notify::visible', () => {
+                        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                            this._enforceCardLimit(nb);
+                            return GLib.SOURCE_REMOVE;
+                        });
+                    });
+                    if (!this._cardVisSignalIds) this._cardVisSignalIds = new Map();
+                    this._cardVisSignalIds.set(actor, visId);
                 }
                 this._enforceCardLimit(nb);
                 return GLib.SOURCE_REMOVE;
@@ -485,55 +491,74 @@ export default class WackLockscreenClockExtension extends Extension {
         this._notifBox = nb;
     }
 
-    _enforceCardLimit(nb) {
-        // enforce media limit first (independent of notif limit)
-        this._enforceMediaLimit(nb);
+_enforceCardLimit(nb) {
+    this._enforceMediaLimit(nb);
 
-        const children = nb._notificationBox.get_children();
-        let notifCount = 0;
-        let hiddenCount = 0;
+    const children = nb._notificationBox.get_children();
+    let notifCount = 0;
+    let hiddenCount = 0;
 
-        children.forEach(child => {
-            if (this._isMediaCard(nb, child))
-                return; // already handled by _enforceMediaLimit
-            if (notifCount < MAX_VISIBLE_CARDS) {
-                child.visible = true;
-            } else {
-                child.visible = false;
-                hiddenCount++;
-            }
-            notifCount++;
-        });
-
-        this._updateOverflow(hiddenCount);
+    const shellVisible = new Set();
+    // Use the entries to get both the source state and the UI object
+    for (const [source, obj] of nb._sources.entries()) {
+        // NATIVE RULE: Only show if unseenCount > 0 AND policy allows it
+        // If you glanced at it in-session, unseenCount usually hits 0
+        if (obj.sourceBox && source.unseenCount > 0 && obj.visible) {
+            shellVisible.add(obj.sourceBox);
+        }
     }
 
-    _updateOverflow(hiddenCount) {
-        if (!this._overflowLabel) return;
-        if (this._promptActive) return; // hard wall — prompt is sacred
+    children.forEach(child => {
+        if (!child || this._isMediaCard(nb, child)) return;
 
-        if (hiddenCount <= 0) {
-            // overflow clears — hand full control back to hint
-            this._overflowActive = false;
-            this._overflowLabel.visible = false;
-            // restore hint to its natural state — let idle watch/touch-mode handle opacity
-            this._hint.visible = true;
-            this._positionHint();
+        // If it's not in our 'Strictly Unseen' set, kill it
+        if (!shellVisible.has(child)) {
+            child.visible = false;
             return;
         }
 
-        // overflow takes over — hint goes fully inert
-        this._overflowActive = true;
-        this._hint.visible = false;
-        this._hint.set_opacity(0);
+        if (notifCount < MAX_VISIBLE_CARDS) {
+            child.visible = true;
+        } else {
+            child.visible = false;
+            hiddenCount++;
+        }
+        notifCount++;
+    });
 
-        const overflowText = `${hiddenCount}+ more`;
-        // inherit the hint string as spiritual successor
-        this._overflowLabel.text = `${overflowText}  ·  ${this._hintText}`;
-        this._overflowLabel.visible = true;
-        this._overflowLabel.set_opacity(255);
-        this._positionOverflow();
+    this._updateOverflow(hiddenCount);
+}
+
+_updateOverflow(hiddenCount) {
+    if (!this._overflowLabel) return;
+
+    // Use the actual adjustment value to detect transition
+    // progress > 0 means the prompt is sliding in or visible
+    const progress = this._dialog._adjustment.value;
+    
+    if (progress > 0 || this._promptActive) {
+        this._overflowLabel.visible = false;
+        this._overflowLabel.opacity = 0;
+        return;
     }
+
+    if (hiddenCount <= 0) {
+        this._overflowActive = false;
+        this._overflowLabel.visible = false;
+        this._hint.visible = true; // Give control back to the original hint
+        return;
+    }
+
+    this._overflowActive = true;
+    this._hint.visible = false;
+    this._hint.set_opacity(0);
+
+    const overflowText = `${hiddenCount}+ more`;
+    this._overflowLabel.text = `${overflowText}  ·  ${this._hintText}`;
+    this._overflowLabel.visible = true;
+    this._overflowLabel.set_opacity(255);
+    this._positionOverflow();
+}
 
     _positionOverflow() {
         if (!this._overflowLabel) return;
@@ -574,6 +599,14 @@ export default class WackLockscreenClockExtension extends Extension {
                 try { player.disconnect(id); } catch (_) {}
             }
             this._playerSignalIds = null;
+        }
+
+        // disconnect per-card visibility signals
+        if (this._cardVisSignalIds) {
+            for (const [actor, id] of this._cardVisSignalIds.entries()) {
+                try { actor.disconnect(id); } catch (_) {}
+            }
+            this._cardVisSignalIds = null;
         }
 
         // restore all cards to visible
