@@ -1,5 +1,10 @@
 # WACK – Sonoma Lockscreen
 
+<p align="center">
+  <img src="screenshots/screenshot1.png" width="48%" />
+  <img src="screenshots/screenshot2.png" width="48%" />
+</p>
+
 This is a part of the WACK project (WACK Ain't Cupertino, Kid), a collection of tweaks aimed at bringing a refined, macOS-inspired aesthetic to the GNOME desktop.
 
 This specific extension focuses on the lock screen (unlockDialog), replacing the standard clock with a clean, Sonoma-inspired layout.
