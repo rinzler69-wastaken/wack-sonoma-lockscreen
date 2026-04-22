@@ -4,26 +4,28 @@
 
 .wack-date {
     color: rgba(255, 255, 255, 0.55);
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 600; /* for Inter, it's better to use 500. safe to use 600 for SF Pro Text */
     letter-spacing: -2px; /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
     text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.02);
+    
 }
 
 .wack-time {
     color: rgba(255, 255, 255, 0.55);
-    font-size: 112px;
+    font-size: 128px;
     font-weight: 600;
     font-feature-settings: "pnum" 1, "tnum" 0;
-    letter-spacing: -4px;
-    text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.02);
+    /* font-family: 'Inter'; */
+    letter-spacing: -8px;
+    text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0);
 }
 
 .unlock-dialog-clock-hint {
     color: rgba(255, 255, 255, 0.90);
-    font-weight: 500;
+    font-weight: 600;
     font-size: 18px;
-    font-family: 'Inter';
+    /* font-family: 'Inter'; */
     text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.15);
 }
 
@@ -31,14 +33,20 @@
 
 .unlock-dialog-notification-source,
 .media-message {
-    background-color: rgba(255, 255, 255, 0.16);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 8px 12px;
     margin-bottom: 4px;
     text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.08);
     /* box-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.08); */
 }
+
+.media-message:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+
 
 .unlock-dialog-notification-icon {
     box-shadow: 0 0 12px 2px rgba(0, 0, 0, 0.04);
