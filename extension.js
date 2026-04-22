@@ -19,10 +19,10 @@ const CROSSFADE_TIME = 300; // Animation duration for transitions
 const DATETIME_TOP_FRACTION = 0.085; // Date/Time offset from the top (percentage of screen height)
 const HINT_VERTICAL_FRACTION = 0.85; // Hint offset from the top
 const HINT_NOTIF_MARGIN = 16; // Minimum vertical gap between hint and notifications
-const FADE_OUT_SCALE = 0.3;
+const FADE_OUT_SCALE = 0.3; // Scale factor when the clock shrinks during unlock transition
 
 // Date label height from the clock
-const DATE_LABEL_HEIGHT = 30; 
+const DATE_LABEL_HEIGHT = 30;
 
 // Background blur settings when entering the password prompt
 const PROMPT_BLUR_RADIUS = 50;
@@ -305,19 +305,20 @@ export default class WackLockscreenClockExtension extends Extension {
         // Seamlessly replace the default shell clock with our custom WackClock instance.
         dialog._stack.remove_child(dialog._clock);
         dialog._clock = new WackClock();
-        dialog._clock.set_pivot_point(0.5, 0.5);
         lockDialogGroup.add_child(dialog._clock);
 
-        // Decouple date and time — extract them from the BoxLayout and position independently
-        // so we can control the gap precisely without BoxLayout fighting us
+        // Decouple date and time into a wrapper actor so they scale as one package
         const dateLabel = dialog._clock._dateOutput;
         const timeLabel = dialog._clock._time;
         dialog._clock.remove_child(dateLabel);
         dialog._clock.remove_child(timeLabel);
-        dateLabel.set_pivot_point(0.5, 0.5);
-        timeLabel.set_pivot_point(0.5, 0.5);
-        lockDialogGroup.add_child(dateLabel);
-        lockDialogGroup.add_child(timeLabel);
+
+        this._clockWrapper = new Clutter.Actor();
+        this._clockWrapper.set_pivot_point(0.5, 0.5);
+        this._clockWrapper.add_child(dateLabel);
+        this._clockWrapper.add_child(timeLabel);
+        lockDialogGroup.add_child(this._clockWrapper);
+
         this._dateLabel = dateLabel;
         this._timeLabel = timeLabel;
         this._positionClock();
@@ -371,11 +372,17 @@ export default class WackLockscreenClockExtension extends Extension {
         dialog._setTransitionProgress = (progress) => {
             this._origSetTransitionProgress(progress);
 
-            // 1. Clock: plain fade out, no scale
+            // 1. Clock: scale+fade the wrapper so date+time animate as one package
             const clockOpacity = Math.round(255 * (1 - progress));
+            const clockScale = FADE_OUT_SCALE + (1 - FADE_OUT_SCALE) * (1 - progress);
             dialog._clock.set({ opacity: clockOpacity });
-            if (this._dateLabel) this._dateLabel.set({ opacity: clockOpacity });
-            if (this._timeLabel) this._timeLabel.set({ opacity: clockOpacity });
+            if (this._clockWrapper) {
+                this._clockWrapper.set({
+                    opacity: clockOpacity,
+                    scale_x: clockScale,
+                    scale_y: clockScale,
+                });
+            }
 
             // 2. Global Background: Blur IN
             const globalBlur = PROMPT_BLUR_RADIUS * progress;
@@ -835,32 +842,34 @@ export default class WackLockscreenClockExtension extends Extension {
         const monitor = Main.layoutManager.primaryMonitor;
         if (!monitor) return;
 
+        const wrapper = this._clockWrapper;
         const dateLabel = this._dateLabel;
         const timeLabel = this._timeLabel;
-        if (!dateLabel || !timeLabel) return;
+        if (!wrapper || !dateLabel || !timeLabel) return;
 
         const topY = monitor.y + Math.floor(monitor.height * DATETIME_TOP_FRACTION);
 
-        // position Y immediately
-        dateLabel.set_position(monitor.x, topY);
-        timeLabel.set_position(monitor.x, topY + DATE_LABEL_HEIGHT);
+        // position labels relative to wrapper — date at top, time below by DATE_LABEL_HEIGHT
+        dateLabel.set_position(0, 0);
+        timeLabel.set_position(0, DATE_LABEL_HEIGHT);
 
-        // defer X centering until labels are allocated and have real widths
+        // wrapper spans full monitor width, positioned at topY
+        wrapper.set_position(monitor.x, topY);
+        wrapper.set_width(monitor.width);
+        wrapper.set_pivot_point(0.5, 0.5);
+
+        // defer x centering of each label until allocated
         const centerLabel = (label) => {
             const [, natWidth] = label.get_preferred_width(-1);
-            if (natWidth > 0) {
-                const x = monitor.x + Math.floor((monitor.width - natWidth) / 2);
-                label.set_x(x);
-            }
+            if (natWidth > 0)
+                label.set_x(Math.floor((monitor.width - natWidth) / 2));
         };
 
-        // try immediately in case already allocated
         centerLabel(dateLabel);
         centerLabel(timeLabel);
 
-        // also hook allocation in case not yet laid out
-        if (this._dateAllocId) dateLabel.disconnect(this._dateAllocId);
-        if (this._timeAllocId) timeLabel.disconnect(this._timeAllocId);
+        if (this._dateAllocId) { dateLabel.disconnect(this._dateAllocId); this._dateAllocId = null; }
+        if (this._timeAllocId) { timeLabel.disconnect(this._timeAllocId); this._timeAllocId = null; }
 
         this._dateAllocId = dateLabel.connect('notify::allocation', () => {
             centerLabel(dateLabel);
@@ -873,6 +882,7 @@ export default class WackLockscreenClockExtension extends Extension {
             this._timeAllocId = null;
         });
 
+        // keep WackClock actor in sync for any internal references
         const clock = this._dialog?._clock;
         if (clock) {
             clock.set_position(monitor.x, topY);
@@ -968,13 +978,12 @@ export default class WackLockscreenClockExtension extends Extension {
             this._overflowLabel = null;
         }
 
-        // Remove decoupled date/time labels
+        // Remove decoupled date/time labels and their wrapper
         if (this._dateLabel) {
             if (this._dateAllocId) {
                 this._dateLabel.disconnect(this._dateAllocId);
                 this._dateAllocId = null;
             }
-            lockDialogGroup?.remove_child(this._dateLabel);
             this._dateLabel = null;
         }
         if (this._timeLabel) {
@@ -982,8 +991,12 @@ export default class WackLockscreenClockExtension extends Extension {
                 this._timeLabel.disconnect(this._timeAllocId);
                 this._timeAllocId = null;
             }
-            lockDialogGroup?.remove_child(this._timeLabel);
             this._timeLabel = null;
+        }
+        if (this._clockWrapper) {
+            lockDialogGroup?.remove_child(this._clockWrapper);
+            this._clockWrapper.destroy();
+            this._clockWrapper = null;
         }
 
         // Destroy our custom clock and restore the original shell clock
@@ -1014,5 +1027,6 @@ export default class WackLockscreenClockExtension extends Extension {
         this._lastPlayingPlayer = null;
         this._dateLabel = null;
         this._timeLabel = null;
+        this._clockWrapper = null;
     }
 }
