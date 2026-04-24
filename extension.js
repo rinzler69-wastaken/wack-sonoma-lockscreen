@@ -5,6 +5,7 @@ import GnomeDesktop from 'gi://GnomeDesktop';
 import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
+import Blur from 'gi://Blur';
 
 import Gettext from 'gettext';
 import { Extension, InjectionManager } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -16,13 +17,13 @@ const HINT_TIMEOUT = 4; // Seconds before the "swipe to unlock" hint appears
 const CROSSFADE_TIME = 300; // Animation duration for transitions
 
 // Visual positioning constants
-const DATETIME_TOP_FRACTION = 0.085; // Date/Time offset from the top (percentage of screen height)
-const HINT_VERTICAL_FRACTION = 0.85; // Hint offset from the top
+const DATETIME_TOP_FRACTION = 0.09; // Date/Time offset from the top (percentage of screen height)
+const HINT_VERTICAL_FRACTION = 0.875; // Hint offset from the top
 const HINT_NOTIF_MARGIN = 16; // Minimum vertical gap between hint and notifications
 const FADE_OUT_SCALE = 0.3; // Scale factor when the clock shrinks during unlock transition
 
-// Date label height from the clock
-const DATE_LABEL_HEIGHT = 30;
+// Date label height/gap from the clock
+const DATE_LABEL_HEIGHT = 25;
 
 // Background blur settings when entering the password prompt
 const PROMPT_BLUR_RADIUS = 50;
@@ -33,6 +34,7 @@ const PROMPT_BLUR_DURATION = 300;
 const NOTIF_BLUR_RADIUS = 30;
 const NOTIF_BLUR_BRIGHTNESS = 1.0;
 const NOTIF_BLUR_NAME = 'wack-notif-blur';
+const NOTIF_CARD_RADIUS = 12;
 
 // UI limits
 const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
@@ -100,6 +102,13 @@ const WackClock = GObject.registerClass(
             this._wallClockId = this._wallClock.connect('notify::clock',
                 this._updateTime.bind(this));
 
+            // Track 12h/24h preference so we can un-pad hours in 24h mode.
+            this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
+            this._clockFormatChangedId = this._interfaceSettings.connect(
+                'changed::clock-format',
+                () => this._updateTime()
+            );
+
             // Update the hint based on whether the device is in touch mode
             const backend = this.get_context().get_backend();
             this._seat = backend.get_default_seat();
@@ -133,7 +142,15 @@ const WackClock = GObject.registerClass(
          * Updates the clock text, stripping AM/PM markers if present.
          */
         _updateTime() {
-            this._time.text = this._wallClock.clock.trim().replace(/\s*(AM|PM)\s*/i, '');
+            const raw = this._wallClock.clock.trim();
+            let timeText = raw.replace(/\s*(AM|PM)\s*/i, '').trim();
+
+            // In 24h mode GNOME often pads single-digit hours (e.g. "09:19").
+            // Display it without the leading zero ("9:19") to match the lock screen style.
+            if (this._interfaceSettings.get_string('clock-format') === '24h')
+                timeText = timeText.replace(/^0(?=\d[:.\u2236])/, '');
+
+            this._time.text = timeText;
         }
 
         /**
@@ -161,6 +178,12 @@ const WackClock = GObject.registerClass(
                 this._wallClockId = null;
             }
             this._wallClock = null;
+
+            if (this._clockFormatChangedId) {
+                this._interfaceSettings.disconnect(this._clockFormatChangedId);
+                this._clockFormatChangedId = null;
+            }
+            this._interfaceSettings = null;
 
             this._idleMonitor.remove_watch(this._idleWatchId);
             if (this._dateTimeoutId)
@@ -463,14 +486,15 @@ export default class WackLockscreenClockExtension extends Extension {
     /**
      * Creates a new blur effect for notification cards.
      * 
-     * @returns {Shell.BlurEffect} The configured blur effect.
+     * @returns {Blur.BlurEffect} The configured blur effect.
      */
     _makeCardBlur() {
-        return new Shell.BlurEffect({
+        return new Blur.BlurEffect({
             name: NOTIF_BLUR_NAME,
-            mode: Shell.BlurMode.BACKGROUND,
+            mode: Blur.BlurMode.BACKGROUND,
             radius: NOTIF_BLUR_RADIUS,
             brightness: NOTIF_BLUR_BRIGHTNESS,
+            corner_radius: NOTIF_CARD_RADIUS,
         });
     }
 
@@ -482,6 +506,7 @@ export default class WackLockscreenClockExtension extends Extension {
     _addCardBlur(actor) {
         if (!actor.get_effect(NOTIF_BLUR_NAME))
             actor.add_effect(this._makeCardBlur());
+            actor.set_style(`border-radius: ${NOTIF_CARD_RADIUS}px;`);
     }
 
     /**
@@ -492,6 +517,7 @@ export default class WackLockscreenClockExtension extends Extension {
     _removeCardBlur(actor) {
         const effect = actor.get_effect(NOTIF_BLUR_NAME);
         if (effect) actor.remove_effect(effect);
+        actor.set_style(null); // restore whatever the stylesheet had
     }
 
     /**
