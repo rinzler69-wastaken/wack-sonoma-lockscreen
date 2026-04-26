@@ -103,6 +103,7 @@ const WackClock = GObject.registerClass(
                 this._updateTime.bind(this));
 
             // Track 12h/24h preference so we can un-pad hours in 24h mode.
+            // Reading system schema (org.gnome.desktop.interface) — no custom .gschema.xml needed
             this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
             this._clockFormatChangedId = this._interfaceSettings.connect(
                 'changed::clock-format',
@@ -130,7 +131,6 @@ const WackClock = GObject.registerClass(
             this._dateTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 60,
                 () => { this._updateDate(); return GLib.SOURCE_CONTINUE; });
 
-            // Fire up updates
             this._updateTime();
             this._updateDate();
             this._updateHint();
@@ -138,9 +138,6 @@ const WackClock = GObject.registerClass(
             this.connect('destroy', this._onDestroy.bind(this));
         }
 
-        /**
-         * Updates the clock text, stripping AM/PM markers if present.
-         */
         _updateTime() {
             const raw = this._wallClock.clock.trim();
             let timeText = raw.replace(/\s*(AM|PM)\s*/i, '').trim();
@@ -153,9 +150,6 @@ const WackClock = GObject.registerClass(
             this._time.text = timeText;
         }
 
-        /**
-         * Refreshes the date label using the formatted system date.
-         */
         async _updateDate() {
             this._dateOutput.text = await getPrettyDate();
         }
@@ -865,57 +859,45 @@ export default class WackLockscreenClockExtension extends Extension {
     /**
      * Calculates and sets the position of the custom clock on the primary monitor.
      */
-    _positionClock() {
-        const monitor = Main.layoutManager.primaryMonitor;
-        if (!monitor) return;
+_positionClock() {
+    const monitor = Main.layoutManager.primaryMonitor;
+    if (!monitor) return;
 
-        const wrapper = this._clockWrapper;
-        const dateLabel = this._dateLabel;
-        const timeLabel = this._timeLabel;
-        if (!wrapper || !dateLabel || !timeLabel) return;
+    const wrapper = this._clockWrapper;
+    const dateLabel = this._dateLabel;
+    const timeLabel = this._timeLabel;
+    if (!wrapper || !dateLabel || !timeLabel) return;
 
-        const topY = monitor.y + Math.floor(monitor.height * DATETIME_TOP_FRACTION);
+    const topY = monitor.y + Math.floor(monitor.height * DATETIME_TOP_FRACTION);
 
-        // position labels relative to wrapper — date at top, time below by DATE_LABEL_HEIGHT
-        dateLabel.set_position(0, 0);
-        timeLabel.set_position(0, DATE_LABEL_HEIGHT);
+    dateLabel.set_position(0, 0);
+    timeLabel.set_position(0, DATE_LABEL_HEIGHT);
 
-        // wrapper spans full monitor width, positioned at topY
-        wrapper.set_position(monitor.x, topY);
-        wrapper.set_width(monitor.width);
-        wrapper.set_pivot_point(0.5, 0.5);
+    wrapper.set_position(monitor.x, topY);
+    wrapper.set_width(monitor.width);
+    wrapper.set_pivot_point(0.5, 0.5);
 
-        // defer x centering of each label until allocated
-        const centerLabel = (label) => {
-            const [, natWidth] = label.get_preferred_width(-1);
-            if (natWidth > 0)
-                label.set_x(Math.floor((monitor.width - natWidth) / 2));
-        };
-
-        centerLabel(dateLabel);
-        centerLabel(timeLabel);
-
-        if (this._dateAllocId) { dateLabel.disconnect(this._dateAllocId); this._dateAllocId = null; }
-        if (this._timeAllocId) { timeLabel.disconnect(this._timeAllocId); this._timeAllocId = null; }
-
-        this._dateAllocId = dateLabel.connect('notify::allocation', () => {
-            centerLabel(dateLabel);
-            dateLabel.disconnect(this._dateAllocId);
-            this._dateAllocId = null;
-        });
-        this._timeAllocId = timeLabel.connect('notify::allocation', () => {
-            centerLabel(timeLabel);
-            timeLabel.disconnect(this._timeAllocId);
-            this._timeAllocId = null;
-        });
-
-        // keep WackClock actor in sync for any internal references
-        const clock = this._dialog?._clock;
-        if (clock) {
-            clock.set_position(monitor.x, topY);
-            clock.set_width(monitor.width);
+    // NEW: Use the actual allocation box instead of preferred width
+    const centerLabel = (label) => {
+        const box = label.get_allocation_box();
+        const width = box.get_width();
+        if (width > 0) {
+            label.set_x(Math.floor((monitor.width - width) / 2));
         }
-    }
+    };
+
+    // Clean up old signals
+    if (this._dateAllocId) { dateLabel.disconnect(this._dateAllocId); this._dateAllocId = null; }
+    if (this._timeAllocId) { timeLabel.disconnect(this._timeAllocId); this._timeAllocId = null; }
+
+    // Connect the signals BEFORE forcing an allocation
+    this._dateAllocId = dateLabel.connect('notify::allocation', () => centerLabel(dateLabel));
+    this._timeAllocId = timeLabel.connect('notify::allocation', () => centerLabel(timeLabel));
+
+    // Force an initial update if the labels are already allocated
+    centerLabel(dateLabel);
+    centerLabel(timeLabel);
+}
 
     /**
      * Positions the interaction hint relative to the notifications area.
