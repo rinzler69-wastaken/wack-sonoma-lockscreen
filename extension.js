@@ -765,24 +765,29 @@ export default class WackLockscreenClockExtension extends Extension {
     /**
      * Positions the overflow label relative to the screen and notifications.
      */
-    _positionOverflow() {
-        if (!this._overflowLabel) return;
-        const monitor = Main.layoutManager.primaryMonitor;
-        if (!monitor) return;
+_positionOverflow() {
+    if (!this._overflowLabel) return;
+    const monitor = Main.layoutManager.primaryMonitor;
+    if (!monitor) return;
+    const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+    const monitorX = monitor.x / scaleFactor;
+    const monitorY = monitor.y / scaleFactor;
+    const monitorWidth = monitor.width / scaleFactor;
+    const monitorHeight = monitor.height / scaleFactor;
 
-        const [, natWidth] = this._overflowLabel.get_preferred_width(-1);
-        const [, natHeight] = this._overflowLabel.get_preferred_height(-1);
+    const [, natWidth] = this._overflowLabel.get_preferred_width(-1);
+    const [, natHeight] = this._overflowLabel.get_preferred_height(-1);
 
-        const notifBox = this._dialog?._notificationsBox;
-        const notifHeight = notifBox?.visible ? notifBox.height : 0;
+    const notifBox = this._dialog?._notificationsBox;
+    const notifHeight = notifBox?.visible ? notifBox.height : 0;
 
-        const idealY = monitor.y + Math.floor(monitor.height * HINT_VERTICAL_FRACTION);
-        const notifTop = monitor.y + monitor.height - notifHeight - HINT_NOTIF_MARGIN - natHeight;
-        const y = Math.min(idealY, notifTop);
-        const x = monitor.x + Math.floor((monitor.width - natWidth) / 2);
+    const idealY = monitorY + Math.floor(monitorHeight * HINT_VERTICAL_FRACTION);
+    const notifTop = monitorY + monitorHeight - notifHeight - HINT_NOTIF_MARGIN - natHeight;
+    const y = Math.min(idealY, notifTop);
+    const x = monitorX + Math.floor((monitorWidth - natWidth) / 2);
 
-        this._overflowLabel.set_position(x, y);
-    }
+    this._overflowLabel.set_position(x, y);
+}
 
     /**
      * Reverts all notification-related changes when the extension is disabled.
@@ -874,42 +879,44 @@ export default class WackLockscreenClockExtension extends Extension {
     /**
      * Calculates and sets the position of the custom clock on the primary monitor.
      */
+
+    
 _positionClock() {
     const monitor = Main.layoutManager.primaryMonitor;
     if (!monitor) return;
+    const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+    const monitorX = monitor.x / scaleFactor;
+    const monitorY = monitor.y / scaleFactor;
+    const monitorWidth = monitor.width / scaleFactor;
+    const monitorHeight = monitor.height / scaleFactor;
 
     const wrapper = this._clockWrapper;
     const dateLabel = this._dateLabel;
     const timeLabel = this._timeLabel;
     if (!wrapper || !dateLabel || !timeLabel) return;
 
-    const topY = monitor.y + Math.floor(monitor.height * DATETIME_TOP_FRACTION);
+    const topY = monitorY + Math.floor(monitorHeight * DATETIME_TOP_FRACTION);
 
     dateLabel.set_position(0, 0);
     timeLabel.set_position(0, DATE_LABEL_HEIGHT);
 
-    wrapper.set_position(monitor.x, topY);
-    wrapper.set_width(monitor.width);
+    wrapper.set_position(monitorX, topY);
+    wrapper.set_width(monitorWidth);
     wrapper.set_pivot_point(0.5, 0.5);
 
-    // NEW: Use the actual allocation box instead of preferred width
     const centerLabel = (label) => {
         const box = label.get_allocation_box();
         const width = box.get_width();
-        if (width > 0) {
-            label.set_x(Math.floor((monitor.width - width) / 2));
-        }
+        if (width > 0)
+            label.set_x(Math.floor((monitorWidth - width) / 2));
     };
 
-    // Clean up old signals
     if (this._dateAllocId) { dateLabel.disconnect(this._dateAllocId); this._dateAllocId = null; }
     if (this._timeAllocId) { timeLabel.disconnect(this._timeAllocId); this._timeAllocId = null; }
 
-    // Connect the signals BEFORE forcing an allocation
     this._dateAllocId = dateLabel.connect('notify::allocation', () => centerLabel(dateLabel));
     this._timeAllocId = timeLabel.connect('notify::allocation', () => centerLabel(timeLabel));
 
-    // Force an initial update if the labels are already allocated
     centerLabel(dateLabel);
     centerLabel(timeLabel);
 }
@@ -917,24 +924,30 @@ _positionClock() {
     /**
      * Positions the interaction hint relative to the notifications area.
      */
-    _positionHint() {
-        if (!this._hint) return;
-        const monitor = Main.layoutManager.primaryMonitor;
-        if (!monitor) return;
+_positionHint() {
+    if (!this._hint) return;
+    const monitor = Main.layoutManager.primaryMonitor;
+    if (!monitor) return;
+    const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+    const monitorX = monitor.x / scaleFactor;
+    const monitorY = monitor.y / scaleFactor;
+    const monitorWidth = monitor.width / scaleFactor;
+    const monitorHeight = monitor.height / scaleFactor;
 
-        const [, natWidth] = this._hint.get_preferred_width(-1);
-        const [, natHeight] = this._hint.get_preferred_height(-1);
+    const [, natWidth] = this._hint.get_preferred_width(-1);
+    const [, natHeight] = this._hint.get_preferred_height(-1);
 
-        const notifBox = this._dialog?._notificationsBox;
-        const notifHeight = notifBox?.visible ? notifBox.height : 0;
+    const notifBox = this._dialog?._notificationsBox;
+    const notifHeight = notifBox?.visible ? notifBox.height : 0;
 
-        const idealY = monitor.y + Math.floor(monitor.height * HINT_VERTICAL_FRACTION);
-        const notifTop = monitor.y + monitor.height - notifHeight - HINT_NOTIF_MARGIN - natHeight;
-        const y = Math.min(idealY, notifTop);
+    const idealY = monitorY + Math.floor(monitorHeight * HINT_VERTICAL_FRACTION);
+    const notifTop = monitorY + monitorHeight - notifHeight - HINT_NOTIF_MARGIN - natHeight;
+    const y = Math.min(idealY, notifTop);
 
-        const x = monitor.x + Math.floor((monitor.width - natWidth) / 2);
-        this._hint.set_position(x, y); this._hint.set_width(natWidth);
-    }
+    const x = monitorX + Math.floor((monitorWidth - natWidth) / 2);
+    this._hint.set_position(x, y);
+    this._hint.set_width(natWidth);
+}
 
     /**
      * Cleans up all modifications and returns the GNOME Shell lock screen to its original state.
