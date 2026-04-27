@@ -5,12 +5,12 @@ import GnomeDesktop from 'gi://GnomeDesktop';
 import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
-// let Blur = null;
-// try {
-//     Blur = (await import('gi://Blur')).default;
-// } catch (_) {
-//     // gnome-rounded-blur not installed — falling back to Shell.BlurEffect
-// }
+let Blur = null;
+try {
+    Blur = (await import('gi://Blur')).default;
+} catch (_) {
+    // gnome-rounded-blur not installed — falling back to Shell.BlurEffect
+}
 
 import Gettext from 'gettext';
 import { Extension, InjectionManager } from 'resource:///org/gnome/shell/extensions/extension.js';
