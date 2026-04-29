@@ -1,4 +1,5 @@
 # WACK – Sonoma Lockscreen
+A simple GNOME Extension that brings macOS Sonoma-inspired lockscreen to your GNOME Desktop.
 
 <p align="center">
   <img src="screenshots/screenshot1.png" width="48%" />
@@ -10,13 +11,17 @@ This is a part of the WACK project (WACK Ain't Cupertino, Kid), a collection of 
 This specific extension focuses on the lock screen (unlockDialog), replacing the standard clock with a clean, Sonoma-inspired layout.
 
 ## Features, and What it does
-- Custom Clock Layout: Repositions the date and time to the upper third of the screen for a more balanced, spacious feel.
+- **Custom Clock Layout** <br>
+Repositions the date and time to the upper third of the screen. <br><br>
 
-- Focused Interaction: The background stays sharp and clear in its resting state. A deep, smooth blur only fades in when you're ready to enter your password, keeping the focus on the prompt.
+- **Focused Interaction** <br>
+The background stays sharp and clear in its resting state. Blur only fades in when you're ready to enter your password, keeping the focus on the prompt. <br><br>
 
-- Enhanced Readability: Notification cards feature an adaptive blur (which crossfades with the prompt blur), ensuring text remains crisp and legible regardless of your wallpaper.
+- **Enhanced Readability** <br>
+Notification cards feature an adaptive blur (which crossfades with the prompt blur), ensuring text remains crisp and legible regardless of your wallpaper. <br><br>
 
-- Clean Notification Management: Limits the number of visible cards to prevent lockscreen clutter, capping them with a subtle "more" notice to keep things organized.
+- **Clean Notification Management** <br>
+Limits the number of visible cards to prevent lockscreen clutter, capping them with a subtle "N+ more" notice. <br><br>
 
 
 ## Best Used With
@@ -61,7 +66,7 @@ make enable
 Manual Tweak: If you want to change the blur strength or clock position, you can find the constants right at the top of ```extension.js.```
 
 ## Compatibility
-- Developed and tested on GNOME 50 (Fedora). Reported issues on GNOME 49 + NVIDIA. GNOME 48 support is experimental. More issues are yet to be known since tests are yet to be made for other configurations. Feel free to open an issue if bugs are found, or clone and contribute!
+Developed and tested on GNOME 50 (Fedora). Reported issues on GNOME 49 + NVIDIA. GNOME 48 support is experimental. More issues are yet to be known since tests are yet to be made for other configurations. Feel free to open an issue if bugs are found, or clone and contribute!
 
 ## About the WACK Project
-- WACK (WACK Ain't Cupertino, Kid) brings the best design patterns and details from macOS to the GNOME Desktop — dock magnification, traffic-light window controls, lockscreen layout, quick settings layouts, and many more to come — built entirely within what GNOME already gives you.
+WACK (WACK Ain't Cupertino, Kid) brings the best design patterns and details from macOS to the GNOME Desktop — dock magnification, traffic-light window controls, lockscreen layout, quick settings layouts, and many more to come — built entirely within what GNOME already gives you.
