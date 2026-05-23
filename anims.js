@@ -73,7 +73,7 @@ export function applyClockAnimation(animation, actor, clockActor, progress, para
             opacity = Math.round(255 * (1 - easedIn));
             translationY = 96 * easedIn;
         } else {
-            opacity = 255;
+            opacity = Math.round(255 * (1 - easedIn));
             translationY = -slideUpDistance * easedIn;
         }
         break;
