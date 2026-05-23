@@ -63,7 +63,7 @@ export function applyClockAnimation(animation, actor, clockActor, progress, para
 
     switch (animation) {
     case 'scale-down':
-        scale = fadeOutScale + (1 - fadeOutScale) * (1 - progress);
+        scale = 0.7 + 0.3 * (1 - progress);
         break;
     case 'zoom-up':
         scale = 1 + 0.18 * progress;
@@ -100,9 +100,7 @@ export function applyPromptAnimation(animation, actor, progress) {
         return;
 
     if (animation === 'shell') {
-        // Mirrors unlockDialog._setTransitionProgress exactly:
-        // FADE_OUT_SCALE = 0.3, FADE_OUT_TRANSLATION = 200
-        const scale = 0.3 + 0.7 * progress;
+        const scale = 0.5 + 0.5 * progress;
         actor.set({
             opacity: Math.round(255 * progress),
             scale_x: scale,
