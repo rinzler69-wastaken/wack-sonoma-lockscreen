@@ -794,6 +794,16 @@ export default class WackLockscreenClockExtension extends Extension {
     _hasVisibleNotifs() {
         const nb = this._notifBox;
         if (!nb) return false;
+
+        // If the user has globally disabled lockscreen notifications, assume empty
+        if (!this._notifSettings) {
+            const Gio = imports.gi.Gio;
+            this._notifSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.notifications' });
+        }
+        if (!this._notifSettings.get_boolean('show-in-lock-screen')) {
+            return false;
+        }
+
         const hasVisibleCard = nb._notificationBox?.get_children().some(c => c.visible) ?? false;
         const hasVisiblePlayer = [...(nb._players?.values() ?? [])].some(m => m.visible);
         return hasVisibleCard || hasVisiblePlayer;
