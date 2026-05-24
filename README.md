@@ -36,23 +36,29 @@ Limits the number of visible cards to prevent lockscreen clutter, capping them w
 - **NEW: Cupertino Mode** <br>
 Brings a macOS Sonoma-inspired lockscreen layout — clock stays persistent, a compact user widget sits at the bottom when notifications are empty, and the password prompt crossfades in on demand. Notification cards fade out gracefully when the prompt appears. You can make user widget **persistent** regardless of notification presence via `Lockscreen Mode > Always Show User Widget`. Need to see notifications? Hit `Shift + N`. <br><br>
 
+- **NEW: Custom Clock/Prompt Animations** <br>
+Choose how the clock exits and the prompt enters from a selection of animations — Scale Down, Zoom Up, Slide Up, and Fade for the clock; Rise, Zoom, Fade, and GNOME Default for the prompt. Disabled in Cupertino Mode. <br><br>
 
 ## Best Used With
-This extension is designed to complement the default Adwaita theme (Adwaita Sans default font in mind),and various other GNOME desktop configurations, but works standalone. For the closest Sonoma feel:
+This extension is designed to complement the default Adwaita theme (Adwaita Sans default font in mind),and various other GNOME desktop configurations, but works standalone. 
+For the closest Sonoma feel:
 
 - **[Open Runde](https://github.com/lauridskern/open-runde)** — Recommended font for the clock numerals. Install and set `font-family: 'Open Runde'` in `stylesheet.css` under `.wack-time`. Approximates SF Pro Rounded's warmth at large sizes.
 
-- **[Inter](https://rsms.me/inter/)** — Recommended for date and hint text. 
+- **[Inter](https://rsms.me/inter/)** — Recommended for date and hint text.
 
 > Neither font is bundled. Install system-wide (`~/.local/share/fonts/`) or per-user and run `fc-cache -fv` after.
 
+Pairs well with:
+
+- **[Live Lock Screen](https://github.com/nick-redwill/LiveLockScreen)** — Play any video as your lock screen background. Pairs seamlessly with Sonoma Lockscreen — the blur and prompt transitions layer on top of the live wallpaper with full compatibility (may need tweaks on blur characteristics on this extension's settings for Cupertino Mode.). May require GStreamer plugins.
+
 
 ## Technical Details
-- Lightweight: No extra background processes or heavy setting schemas.
-
 - State-Aware: Uses ```set_enabled``` logic for blur effects (the notif blur-prompt blur crossfade) to keep your GPU happy.
-
-- Vanilla Compatibility: Built primarily for GNOME 45–50 (IMPORTANT: See Compatibility Below). 
+- Vanilla Compatibility: Built primarily for GNOME 45–50 (IMPORTANT: See Compatibility Below).
+- Cupertino Mode: Achieves the macOS-style layout entirely through actor reparenting and opacity-driven crossfades — no extra processes, no compositing tricks.
+- LiveLockScreen Compatible: Swipe-to-unlock gestures correctly trigger blur transitions when used alongside Live Lock Screen, with no extra configuration needed.
 
 
 ## Install / update (one-step Makefile)
