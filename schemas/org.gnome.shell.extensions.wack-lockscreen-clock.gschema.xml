@@ -10,6 +10,11 @@
       <summary>Lockscreen mode</summary>
       <description>Visual style of the lock screen. WACK is the classic GNOME-compliant mode; Cupertino emulates macOS Sonoma style.</description>
     </key>
+    <key name="cupertino-always-show-user" type="b">
+      <default>false</default>
+      <summary>Always show user widget in Cupertino mode</summary>
+      <description>If true, the user widget is always shown in Cupertino mode. Notifications are hidden by default but can be toggled by pressing Shift+N.</description>
+    </key>
     <key name="clock-animation" type="s">
       <choices>
         <choice value="scale-down"/>

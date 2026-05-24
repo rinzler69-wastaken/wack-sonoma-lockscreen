@@ -348,6 +348,8 @@ export default class WackLockscreenClockExtension extends Extension {
         this._clockAnimation = DEFAULT_CLOCK_ANIMATION;
         this._promptAnimation = DEFAULT_PROMPT_ANIMATION;
         this._lockscreenMode = 'wack';
+        this._cupertinoAlwaysShowUser = false;
+        this._cupertinoShowNotifsOverride = false; // Toggled via Shift+N
         this._animationState = createAnimationState();
         this._loadSettings();
         const lockDialogGroup = Main.screenShield._lockDialogGroup;
@@ -447,6 +449,21 @@ export default class WackLockscreenClockExtension extends Extension {
         this._promptActor = dialog._promptBox ?? dialog._stack;
         this._promptActor?.set_pivot_point(0.5, 0.5);
 
+        this._keyPressId = dialog.connect('key-press-event', (actor, event) => {
+            if (this._lockscreenMode === 'cupertino' && this._cupertinoAlwaysShowUser && !this._promptActive) {
+                const keysym = event.get_key_symbol();
+                const state = event.get_state();
+                const shiftPressed = (state & imports.gi.Clutter.ModifierType.SHIFT_MASK) !== 0;
+
+                if (shiftPressed && (keysym === imports.gi.Clutter.KEY_N || keysym === imports.gi.Clutter.KEY_n)) {
+                    this._cupertinoShowNotifsOverride = !this._cupertinoShowNotifsOverride;
+                    this._updateCupertinoRestState(true);
+                    return imports.gi.Clutter.EVENT_STOP;
+                }
+            }
+            return imports.gi.Clutter.EVENT_PROPAGATE;
+        });
+
         this._applyPromptModeLayout();
 
         // Monitor changes
@@ -498,8 +515,10 @@ export default class WackLockscreenClockExtension extends Extension {
                     effect.set({ radius: globalBlur, brightness: globalBrightness });
             }
 
+            const hasNotifs = this._hasVisibleNotifs();
+
             // Notification Cards: Blur OUT (Crossfade)
-            const cardBlur = NOTIF_BLUR_RADIUS * (1 - progress);
+            const cardBlur = hasNotifs ? NOTIF_BLUR_RADIUS * (1 - progress) : 0;
             if (this._notifBox) {
                 this._notifBox._notificationBox.get_children().forEach(child => {
                     let effect = child.get_effect(NOTIF_BLUR_NAME);
@@ -517,8 +536,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 });
             }
 
-            const hasNotifs = this._hasVisibleNotifs();
-            const notifOpacity = Math.round(255 * (1 - progress));
+            const notifOpacity = hasNotifs ? Math.round(255 * (1 - progress)) : 0;
 
             // Hint/Overflow container opacity
             if (this._hintContainer) {
@@ -627,6 +645,9 @@ export default class WackLockscreenClockExtension extends Extension {
             }
             this._applyPromptModeLayout?.();
 
+            // Reset toggle state when mode changes
+            this._cupertinoShowNotifsOverride = false;
+
             // Resync background blur to current progress after mode switch.
             // Cupertino never touches blur, so switching to WACK while at the prompt
             // would leave blur at 0 until the next _setTransitionProgress tick.
@@ -654,10 +675,23 @@ export default class WackLockscreenClockExtension extends Extension {
         syncClockAnimation();
         syncPromptAnimation();
         syncLockscreenMode();
+        
+        const syncCupertinoAlwaysShowUser = () => {
+            try {
+                this._cupertinoAlwaysShowUser = this._settings.get_boolean('cupertino-always-show-user');
+            } catch (e) {
+                this._cupertinoAlwaysShowUser = false;
+            }
+            this._cupertinoShowNotifsOverride = false;
+            this._updateCupertinoRestState?.(true);
+        };
+        syncCupertinoAlwaysShowUser();
+
         this._settingsSignals.push(
             this._settings.connect('changed::clock-animation', syncClockAnimation),
             this._settings.connect('changed::prompt-animation', syncPromptAnimation),
-            this._settings.connect('changed::lockscreen-mode', syncLockscreenMode));
+            this._settings.connect('changed::lockscreen-mode', syncLockscreenMode),
+            this._settings.connect('changed::cupertino-always-show-user', syncCupertinoAlwaysShowUser));
     }
 
     _getClockAnimationParams() {
@@ -806,7 +840,17 @@ export default class WackLockscreenClockExtension extends Extension {
 
         const hasVisibleCard = nb._notificationBox?.get_children().some(c => c.visible) ?? false;
         const hasVisiblePlayer = [...(nb._players?.values() ?? [])].some(m => m.visible);
-        return hasVisibleCard || hasVisiblePlayer;
+        const nativelyHasNotifs = hasVisibleCard || hasVisiblePlayer;
+
+        // If Always Show User Widget is enabled in Cupertino mode,
+        // and we haven't toggled notifications on, pretend there are no notifications.
+        if (this._lockscreenMode === 'cupertino' && this._cupertinoAlwaysShowUser) {
+            if (!this._cupertinoShowNotifsOverride) {
+                return false;
+            }
+        }
+
+        return nativelyHasNotifs;
     }
 
     /**
@@ -1139,32 +1183,109 @@ export default class WackLockscreenClockExtension extends Extension {
      * In Cupertino mode the prompt sits at the bottom third of the screen at a reduced scale.
      * In WACK mode the prompt is left to WackLayout to allocate.
      */
-    _updateCupertinoRestState() {
+    _updateCupertinoRestState(animate = false) {
         if (this._lockscreenMode !== 'cupertino') return;
 
         const hasNotifs = this._hasVisibleNotifs();
 
         if (this._cupertinoRestPromptContainer) {
-            this._cupertinoRestPromptContainer.opacity = hasNotifs ? 0 : 255;
-            this._cupertinoRestPromptContainer.visible = !this._promptActive;
+            const targetOpacity = hasNotifs ? 0 : 255;
+            if (animate) {
+                this._cupertinoRestPromptContainer.visible = true;
+                this._cupertinoRestPromptContainer.ease({
+                    opacity: targetOpacity,
+                    duration: CROSSFADE_TIME,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        this._cupertinoRestPromptContainer.visible = targetOpacity > 0 && !this._promptActive;
+                    }
+                });
+            } else {
+                this._cupertinoRestPromptContainer.remove_all_transitions();
+                this._cupertinoRestPromptContainer.opacity = targetOpacity;
+                this._cupertinoRestPromptContainer.visible = !this._promptActive && targetOpacity > 0;
+            }
         }
 
         if (this._cupertinoAvatarContainer) {
             // Fades out ONLY if we are in rest mode AND notifications appear.
             // If we are in prompt mode (!this._promptActive == false), avatar stays solid.
-            this._cupertinoAvatarContainer.opacity = (!this._promptActive && hasNotifs) ? 0 : 255;
-            this._cupertinoAvatarContainer.visible = !(!this._promptActive && hasNotifs);
+            const targetOpacity = (!this._promptActive && hasNotifs) ? 0 : 255;
+            if (animate) {
+                this._cupertinoAvatarContainer.visible = true;
+                this._cupertinoAvatarContainer.ease({
+                    opacity: targetOpacity,
+                    duration: CROSSFADE_TIME,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        this._cupertinoAvatarContainer.visible = targetOpacity > 0;
+                    }
+                });
+            } else {
+                this._cupertinoAvatarContainer.remove_all_transitions();
+                this._cupertinoAvatarContainer.opacity = targetOpacity;
+                this._cupertinoAvatarContainer.visible = targetOpacity > 0;
+            }
         }
 
-        // Hint: suppress when rest widget visible (no notifs, no overflow)
-        // allow when notifs present and no overflow; overflow flow is unchanged
+        // Handle _notifBox visibility since GNOME Shell might want it visible
+        // but our override tells us to hide it.
+        if (this._notifBox) {
+            // we only touch opacity here; _setTransitionProgress also touches it
+            // but we are at rest if this is called natively during idle
+            const targetOpacity = (!this._promptActive && hasNotifs) ? 255 : 0;
+            const targetBlur = (!this._promptActive && hasNotifs) ? NOTIF_BLUR_RADIUS : 0;
+
+            if (animate) {
+                this._notifBox.ease({
+                    opacity: targetOpacity,
+                    duration: CROSSFADE_TIME,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                });
+
+                // Animate individual card blurs
+                const easeBlur = (actor) => {
+                    const effect = actor.get_effect(NOTIF_BLUR_NAME);
+                    if (effect) {
+                        effect.set_enabled(true);
+                        actor.ease_property(`@effects.${NOTIF_BLUR_NAME}.radius`, targetBlur, {
+                            duration: CROSSFADE_TIME,
+                            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                        });
+                    }
+                };
+                this._notifBox._notificationBox.get_children().forEach(easeBlur);
+                this._notifBox._players.values().forEach(easeBlur);
+            } else {
+                this._notifBox.remove_all_transitions();
+                this._notifBox.opacity = targetOpacity;
+
+                // Instantly apply blur target
+                const setBlur = (actor) => {
+                    const effect = actor.get_effect(NOTIF_BLUR_NAME);
+                    if (effect) {
+                        actor.remove_transition(`@effects.${NOTIF_BLUR_NAME}.radius`);
+                        effect.set({ radius: targetBlur });
+                        effect.set_enabled(targetBlur > 0.5);
+                    }
+                };
+                this._notifBox._notificationBox.get_children().forEach(setBlur);
+                this._notifBox._players.values().forEach(setBlur);
+            }
+        }
+
+        // Hint/Overflow container opacity
         if (this._hintContainer) {
-            if (!hasNotifs && !this._overflowActive) {
-                this._hint?.remove_all_transitions();
-                this._hint?.set_opacity(0);
-                this._hintContainer.opacity = 0;
-            } else if (hasNotifs && !this._overflowActive) {
-                this._hintContainer.opacity = 255;
+            const targetHintOpacity = hasNotifs ? 255 : 0;
+            if (animate) {
+                this._hintContainer.ease({
+                    opacity: targetHintOpacity,
+                    duration: CROSSFADE_TIME,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                });
+            } else {
+                this._hintContainer.remove_all_transitions();
+                this._hintContainer.opacity = targetHintOpacity;
             }
         }
     }
@@ -1430,6 +1551,10 @@ export default class WackLockscreenClockExtension extends Extension {
         if (this._monitorsChangedId) {
             Main.layoutManager.disconnect(this._monitorsChangedId);
             this._monitorsChangedId = null;
+        }
+        if (this._keyPressId) {
+            this._dialog?.disconnect(this._keyPressId);
+            this._keyPressId = null;
         }
 
         const lockDialogGroup = Main.screenShield?._lockDialogGroup;

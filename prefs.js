@@ -120,6 +120,35 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         modeBox.append(cupertinoLabel);
         modeRow.add_suffix(modeBox);
         modeGroup.add(modeRow);
+
+        // -- Cupertino options ----------------------------------------------
+        const alwaysShowUserRow = new Adw.ActionRow({
+            title: 'Always Show User Widget (Cupertino)',
+            subtitle: 'Always shows user widget, hides notifications by default. Press Shift+N to show notifications.',
+        });
+        const alwaysShowUserSwitch = new Gtk.Switch({
+            valign: Gtk.Align.CENTER,
+            active: settings.get_boolean('cupertino-always-show-user'),
+        });
+        alwaysShowUserSwitch.connect('notify::active', () => {
+            settings.set_boolean('cupertino-always-show-user', alwaysShowUserSwitch.active);
+        });
+        settings.connect('changed::cupertino-always-show-user', () => {
+            alwaysShowUserSwitch.active = settings.get_boolean('cupertino-always-show-user');
+        });
+        alwaysShowUserRow.add_suffix(alwaysShowUserSwitch);
+        alwaysShowUserRow.activatable_widget = alwaysShowUserSwitch;
+        alwaysShowUserRow.sensitive = settings.get_string('lockscreen-mode') === 'cupertino';
+
+        modeSwitch.connect('notify::active', () => {
+            alwaysShowUserRow.sensitive = modeSwitch.active;
+        });
+        settings.connect('changed::lockscreen-mode', () => {
+            alwaysShowUserRow.sensitive = settings.get_string('lockscreen-mode') === 'cupertino';
+        });
+
+        modeGroup.add(alwaysShowUserRow);
+
         animPage.add(modeGroup);
 
         // -- Animation options (greyed out in Cupertino mode) ---------------
