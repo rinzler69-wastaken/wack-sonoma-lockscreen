@@ -21,5 +21,5 @@ pack: ## Create a ZIP package for Extensions.gnome.org
 	@printf 'Packaging extension...\n'
 	@rm -f $(UUID).zip
 	@glib-compile-schemas schemas
-	@zip -qr $(UUID).zip extension.js prefs.js anims.js metadata.json stylesheet.css LICENSE schemas
+	@zip -qr $(UUID).zip extension.js prefs.js anims.js metadata.json stylesheet.css LICENSE schemas -x "schemas/gschemas.compiled"
 	@printf 'Created package: %s\n' "$(UUID).zip"

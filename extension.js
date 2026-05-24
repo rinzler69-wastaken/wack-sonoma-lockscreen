@@ -1318,11 +1318,18 @@ export default class WackLockscreenClockExtension extends Extension {
                 promptUserWidget._avatar.opacity = 0;
         }
 
-        authPrompt.connect('destroy', () => this._teardownCupertinoAvatarOverride());
+        if (!this._authPromptDestroyId) {
+            this._authPromptDestroyId = authPrompt.connect('destroy', () => this._teardownCupertinoAvatarOverride());
+        }
     }
 
     _teardownCupertinoAvatarOverride() {
         const authPrompt = this._dialog?._promptBox?._authPrompt;
+
+        if (this._authPromptDestroyId && authPrompt) {
+            authPrompt.disconnect(this._authPromptDestroyId);
+            this._authPromptDestroyId = null;
+        }
 
         if (authPrompt && this._cupertinoOrigUpdateUser) {
             authPrompt.updateUser = this._cupertinoOrigUpdateUser;
@@ -1412,15 +1419,21 @@ export default class WackLockscreenClockExtension extends Extension {
             this._seatTouchModeId = null;
             this._cupertinoSeat = null;
         }
+        if (this._cupertinoAvatar) {
+            this._cupertinoAvatar.destroy();
+            this._cupertinoAvatar = null;
+        }
         if (this._cupertinoAvatarContainer) {
             this._cupertinoAvatarContainer.destroy();
             this._cupertinoAvatarContainer = null;
-            this._cupertinoAvatar = null;
+        }
+        if (this._cupertinoRestPrompt) {
+            this._cupertinoRestPrompt.destroy();
+            this._cupertinoRestPrompt = null;
         }
         if (this._cupertinoRestPromptContainer) {
             this._cupertinoRestPromptContainer.destroy();
             this._cupertinoRestPromptContainer = null;
-            this._cupertinoRestPrompt = null;
         }
     }
 
@@ -1575,6 +1588,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
         // Remove our custom overflow label
         if (this._overflowLabel) {
+            this._overflowLabel.destroy();
             this._overflowLabel = null;
         }
 
@@ -1646,5 +1660,8 @@ export default class WackLockscreenClockExtension extends Extension {
         this._promptActor?.remove_style_class_name('wack-cupertino-prompt');
         this._promptActor = null;
         this._animationState = null;
+        if (this._notifSettings) {
+            this._notifSettings = null;
+        }
     }
 }
