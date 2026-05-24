@@ -62,34 +62,92 @@
 }
 
 
-/* ── Cupertino mode prompt ──────────────────────────────────────────────────
-   Applied via .wack-cupertino-prompt on the prompt actor in Cupertino mode.
-   Reduces avatar, username, and password field to match macOS Sonoma's
-   compact lock screen prompt aesthetic — no CSS scale transform needed.     */
+/* ── Cupertino mode ─────────────────────────────────────────────────────────
+   Two states on the same _promptActor:
+   .wack-cupertino-rest  — avatar + label visible, entry hidden via JS opacity
+   .wack-cupertino-prompt — entry visible, label suppressed                   */
 
+.wack-cupertino-rest .user-widget.vertical .user-icon,
 .wack-cupertino-prompt .user-widget.vertical .user-icon {
-    icon-size: 90px;
+    icon-size: 86px;
+    opacity: 0 !important;
 }
 
+
+
+.wack-cupertino-rest .user-widget.vertical .user-icon StIcon,
 .wack-cupertino-prompt .user-widget.vertical .user-icon StIcon {
     padding: 14px;
 }
 
-.wack-cupertino-prompt .user-widget.vertical {
-    spacing: 12px;
+.wack-cupertino-rest .user-widget.vertical {
+    spacing: 16px;
 }
 
+.wack-cupertino-prompt .user-widget.vertical {
+    spacing: 0px;
+}
+
+/* Rest state: label at full size */
+.wack-cupertino-rest .user-widget-label {
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: rgba(255, 255, 255, 0.9);
+    /* text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.15); */
+}
+
+/* Prompt state: label suppressed */
 .wack-cupertino-prompt .user-widget-label {
     font-size: 0px !important;
 }
 
+.wack-cupertino-rest .login-dialog-prompt-layout,
 .wack-cupertino-prompt .login-dialog-prompt-layout {
     width: 18em;
     spacing: 12px;
 }
 
+.wack-cupertino-rest .login-dialog-prompt-entry {
+    opacity: 255;
+}
+
 .wack-cupertino-prompt .login-dialog-prompt-entry {
-    font-size: 10pt;
-    padding: 6px 8px;
+    font-size: 14px;
+    padding: 4px 8px;
     border-radius: 9999px;
+}
+
+/* Tighten vertical spacing inside the rest-prompt widget */
+.wack-cupertino-rest .login-dialog-prompt-layout {
+    spacing: 2px;
+}
+
+/* Inline hint label anchored to the user widget in rest state */
+.wack-cupertino-hint {
+    color: rgba(255, 255, 255, 0.625);
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    padding-top: 0;
+}
+
+/* Unified caps-lock + auth-failure status label in prompt state */
+.wack-cupertino-status {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 0px 8px 1px rgba(0, 0, 0, 0.2);
+    padding-top: 0px;
+}
+
+/* The standalone persistent avatar container */
+.wack-cupertino-persistent-avatar {
+    /* Example: tweak margin-top to align vertically with the prompt text */
+    /* margin-top: 10px; */
+}
+
+.wack-cupertino-persistent-avatar .user-icon {
+    icon-size: 86px;
 }

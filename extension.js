@@ -3,6 +3,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GnomeDesktop from 'gi://GnomeDesktop';
 import GObject from 'gi://GObject';
+import Pango from 'gi://Pango';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 let Blur = null;
@@ -28,6 +29,7 @@ import {
 
 const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('gnome-shell'));
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as UserWidget from 'resource:///org/gnome/shell/ui/userWidget.js';
 
 const HINT_TIMEOUT = 4; // Seconds before the "swipe to unlock" hint appears
 const CROSSFADE_TIME = 500; // Animation duration for transitions
@@ -55,7 +57,7 @@ const NOTIF_BLUR_NAME = 'wack-notif-blur';
 const NOTIF_CARD_RADIUS = 12;
 
 // Cupertino mode prompt positioning
-const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.865; // Prompt center Y as fraction of screen height
+const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.86; // Prompt center Y as fraction of screen height
 // UI limits
 const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
 
@@ -75,6 +77,58 @@ function getPrettyDate() {
 }
 
 
+
+const WackCupertinoRestPrompt = GObject.registerClass(
+    class WackCupertinoRestPrompt extends St.BoxLayout {
+        _init(user) {
+            super._init({
+                style_class: 'login-dialog-prompt-layout',
+                orientation: Clutter.Orientation.VERTICAL,
+                x_expand: true,
+                x_align: Clutter.ActorAlign.CENTER,
+                reactive: false,
+            });
+
+            this._userWell = new St.Bin({
+                x_expand: true,
+                y_align: Clutter.ActorAlign.START,
+            });
+            this.add_child(this._userWell);
+
+            // Inline hint label — mirrors the regular unlock hint but is
+            // anchored to the user widget stack instead of floating separately.
+            // Only visible in rest state (no notif cards); fades out on prompt.
+            this._hintLabel = new St.Label({
+                style_class: 'wack-cupertino-hint',
+                x_align: Clutter.ActorAlign.CENTER,
+                x_expand: true,
+                opacity: 255,
+                text: '',
+            });
+            this._hintLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+            this._hintLabel.clutter_text.line_wrap = true;
+            this.add_child(this._hintLabel);
+
+            this.setUser(user);
+        }
+
+        setUser(user) {
+            let oldChild = this._userWell.get_child();
+            if (oldChild)
+                oldChild.destroy();
+
+            let userWidget = new UserWidget.UserWidget(user, Clutter.Orientation.VERTICAL);
+            // Headless: keep the avatar for spacing but make it invisible
+            if (userWidget._avatar)
+                userWidget._avatar.opacity = 0;
+            this._userWell.set_child(userWidget);
+        }
+
+        setHintText(text) {
+            if (this._hintLabel)
+                this._hintLabel.text = text ?? '';
+        }
+    });
 
 /**
  * WackClock handles the custom clock widget for the lock screen.
@@ -250,8 +304,9 @@ const WackLayout = GObject.registerClass(
             // Position the stack (which contains the auth prompt)
             let stackY;
             if (this._extension._lockscreenMode === 'cupertino') {
-                // When pivot is 0.5, the visual center stays at the allocation center regardless of scale.
-                stackY = Math.floor(height * CUPERTINO_PROMPT_VERTICAL_FRACTION) - Math.floor(stackHeight / 2);
+                const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+                const refHeight = 180 * scaleFactor;
+                stackY = Math.floor(height * CUPERTINO_PROMPT_VERTICAL_FRACTION) - Math.floor(refHeight / 2);
             } else {
                 stackY = Math.min(
                     Math.floor(height / 3.0),
@@ -358,6 +413,17 @@ export default class WackLockscreenClockExtension extends Extension {
             if (!this._overflowActive)
                 this._hintText = hint.text;
         });
+
+        // Guard: kill any idle-watch ease on the hint when it should be suppressed
+        this._hintOpacityGuardId = hint.connect('notify::opacity', () => {
+            const hasNotifs = this._hasVisibleNotifs();
+            const suppressHint = this._promptActive ||
+                (this._lockscreenMode === 'cupertino' && !hasNotifs && !this._overflowActive);
+            if (suppressHint && hint.opacity > 0) {
+                hint.remove_all_transitions();
+                hint.set_opacity(0);
+            }
+        });
         this._positionHint();
 
         // Initialize an overflow label to show when there are too many notifications.
@@ -380,6 +446,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._setupNotifBlur(dialog._notificationsBox);
         this._promptActor = dialog._promptBox ?? dialog._stack;
         this._promptActor?.set_pivot_point(0.5, 0.5);
+
         this._applyPromptModeLayout();
 
         // Monitor changes
@@ -450,6 +517,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 });
             }
 
+            const hasNotifs = this._hasVisibleNotifs();
             const notifOpacity = Math.round(255 * (1 - progress));
 
             // Hint/Overflow container opacity
@@ -461,13 +529,40 @@ export default class WackLockscreenClockExtension extends Extension {
 
             if (isCupertino) {
                 // ── Cupertino mode ──────────────────────────────────────────
-                applyPromptAnimation('fade', this._promptActor, progress);
+                const mainBox = this._dialog?._promptBox?._authPrompt?._mainBox;
+
+                // Headless architecture: the persistent avatar NEVER fades during
+                // rest <-> prompt transitions if there are NO notifications.
+                // If there ARE notifications, it crossfades so it's solid at prompt and hidden at rest.
+                if (this._cupertinoAvatarContainer) {
+                    this._cupertinoAvatarContainer.opacity = hasNotifs ? Math.round(255 * progress) : 255;
+                    this._cupertinoAvatarContainer.visible = progress > 0 || !hasNotifs;
+                }
+
+                // Both rest container and prompt container cross-fade smoothly below the avatar
+                if (this._cupertinoRestPromptContainer) {
+                    this._cupertinoRestPromptContainer.opacity = hasNotifs ? 0 : Math.round(255 * (1 - progress));
+                    this._cupertinoRestPromptContainer.visible = progress < 1 && !hasNotifs;
+                }
+
+                if (this._promptActor) {
+                    this._promptActor.set({
+                        opacity: Math.round(255 * progress),
+                        scale_x: 1, scale_y: 1, translation_y: 0,
+                    });
+                    this._promptActor.visible = progress > 0;
+                }
+
+                // If entering prompt state, the native password field and status label fade in
+                if (mainBox) mainBox.opacity = Math.round(255 * progress);
 
                 if (this._notifBox)
                     this._notifBox.opacity = notifOpacity;
 
-                if (progress === 0)
+                if (progress === 0) {
                     this._enforceCardLimit(this._notifBox);
+                    this._updateCupertinoRestState();
+                }
             } else {
                 // ── WACK mode (default) ─────────────────────────────────────
                 applyClockAnimation(
@@ -691,6 +786,20 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     /**
+     * Returns true only when at least one notification card or media player
+     * is actually visible on the lockscreen. This correctly excludes sources
+     * whose policy has showInLockScreen=false — those actors still exist in
+     * the tree but have visible=false after _enforceCardLimit runs.
+     */
+    _hasVisibleNotifs() {
+        const nb = this._notifBox;
+        if (!nb) return false;
+        const hasVisibleCard = nb._notificationBox?.get_children().some(c => c.visible) ?? false;
+        const hasVisiblePlayer = [...(nb._players?.values() ?? [])].some(m => m.visible);
+        return hasVisibleCard || hasVisiblePlayer;
+    }
+
+    /**
      * Ensures only one media player is visible at a time, prioritizing active sessions.
      * 
      * @param {object} nb The notifications box.
@@ -779,6 +888,7 @@ export default class WackLockscreenClockExtension extends Extension {
                     this._cardVisSignalIds.set(actor, visId);
                 }
                 this._enforceCardLimit(nb);
+                this._updateCupertinoRestState();
                 return GLib.SOURCE_REMOVE;
             });
         });
@@ -787,6 +897,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._actorRemovedId = nb._notificationBox.connect('child-removed', () => {
             this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
                 this._enforceCardLimit(nb);
+                this._updateCupertinoRestState();
                 return GLib.SOURCE_REMOVE;
             });
         });
@@ -956,6 +1067,15 @@ export default class WackLockscreenClockExtension extends Extension {
 
         const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         const isCupertino = this._lockscreenMode === 'cupertino';
+
+        if (isCupertino) {
+            this._promptActor?.remove_style_class_name('wack-cupertino-rest');
+            this._promptActor?.add_style_class_name('wack-cupertino-prompt');
+            this._cupertinoToPrompt = true;
+            // Wire up the unified status label (once per _authPrompt lifetime)
+            this._setupCupertinoStatus();
+        }
+
         const targetRadius = isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor;
         const targetBrightness = isCupertino ? 1.0 : PROMPT_BLUR_BRIGHTNESS;
         for (const widget of this._dialog._backgroundGroup) {
@@ -981,6 +1101,13 @@ export default class WackLockscreenClockExtension extends Extension {
         this._promptActive = false;
         if (this._notifBox)
             this._enforceCardLimit(this._notifBox);
+        this._updateCupertinoRestState();
+        if (this._lockscreenMode === 'cupertino') {
+            // Snapshot: no notifs → icon should snap back (no cross-fade)
+            const hasNotifs = this._hasVisibleNotifs();
+            this._cupertinoIconSnap = !hasNotifs;
+            this._cupertinoToPrompt = false;
+        }
 
         for (const widget of this._dialog._backgroundGroup) {
             const blurEffect = widget.get_effect('blur');
@@ -1002,19 +1129,315 @@ export default class WackLockscreenClockExtension extends Extension {
      * In Cupertino mode the prompt sits at the bottom third of the screen at a reduced scale.
      * In WACK mode the prompt is left to WackLayout to allocate.
      */
+    _updateCupertinoRestState() {
+        if (this._lockscreenMode !== 'cupertino') return;
+
+        const hasNotifs = this._hasVisibleNotifs();
+
+        if (this._cupertinoRestPromptContainer) {
+            this._cupertinoRestPromptContainer.opacity = hasNotifs ? 0 : 255;
+            this._cupertinoRestPromptContainer.visible = !this._promptActive;
+        }
+
+        if (this._cupertinoAvatarContainer) {
+            // Fades out ONLY if we are in rest mode AND notifications appear.
+            // If we are in prompt mode (!this._promptActive == false), avatar stays solid.
+            this._cupertinoAvatarContainer.opacity = (!this._promptActive && hasNotifs) ? 0 : 255;
+            this._cupertinoAvatarContainer.visible = !(!this._promptActive && hasNotifs);
+        }
+
+        // Hint: suppress when rest widget visible (no notifs, no overflow)
+        // allow when notifs present and no overflow; overflow flow is unchanged
+        if (this._hintContainer) {
+            if (!hasNotifs && !this._overflowActive) {
+                this._hint?.remove_all_transitions();
+                this._hint?.set_opacity(0);
+                this._hintContainer.opacity = 0;
+            } else if (hasNotifs && !this._overflowActive) {
+                this._hintContainer.opacity = 255;
+            }
+        }
+    }
+
+    /**
+     * Called once per AuthPrompt lifetime (from _onPromptShow).
+     * Hides GNOME Shell's separate capsLock + message labels and replaces
+     * them with a single unified label below the password entry.
+     */
+    _setupCupertinoStatus() {
+        if (this._cupertinoStatusSetup) return;
+        const authPrompt = this._dialog?._promptBox?._authPrompt;
+        if (!authPrompt) return;
+
+        this._cupertinoStatusSetup = true;
+
+        const capsWarn = authPrompt._capsLockWarningLabel;
+        const msg = authPrompt._message;
+
+        // ── Suppress Native Avatar (Headless) ──────────────────────────────
+        // AuthPrompt recreates the UserWidget via updateUser() multiple times
+        // during the unlock lifecycle. We override the method to ensure every
+        // new avatar is instantly hidden.
+        if (!this._cupertinoOrigUpdateUser) {
+            this._cupertinoOrigUpdateUser = authPrompt.updateUser.bind(authPrompt);
+            authPrompt.updateUser = (user) => {
+                this._cupertinoOrigUpdateUser(user);
+                const uw = authPrompt._userWell?.get_child();
+                if (uw && uw._avatar) uw._avatar.opacity = 0;
+            };
+            // Hide the currently existing one
+            const promptUserWidget = authPrompt._userWell?.get_child();
+            if (promptUserWidget && promptUserWidget._avatar) {
+                promptUserWidget._avatar.opacity = 0;
+            }
+        }
+
+        // ── Suppress CapsLockWarning ───────────────────────────────────────
+        if (capsWarn) {
+            // No-op _sync at instance level (stops keymap/mapped-triggered redraws)
+            capsWarn._sync = () => { };
+            capsWarn.remove_all_transitions();
+            capsWarn.set({ opacity: 0, height: 0 });
+
+            // Belt-and-suspenders: re-suppress any opacity the theme/GJS reapplies
+            this._cupertinoCapOpacityId = capsWarn.connect('notify::opacity', () => {
+                if (capsWarn.opacity !== 0) {
+                    capsWarn.remove_all_transitions();
+                    capsWarn.opacity = 0;
+                }
+            });
+
+            // Blank the anonymous spacer (child immediately before capsWarn)
+            const children = authPrompt.get_children();
+            const idx = children.indexOf(capsWarn);
+            if (idx > 0 && !children[idx - 1].style_class)
+                children[idx - 1].set({ opacity: 0, height: 0 });
+        }
+
+        // ── Suppress _message via instance method override ─────────────────
+        // setMessage() calls show() + opacity=255 every invocation.
+        // Override the method on this specific instance so we can re-blank
+        // immediately after the original logic runs (text/state are preserved).
+        if (msg) {
+            const origSetMessage = authPrompt.setMessage.bind(authPrompt);
+            authPrompt.setMessage = (message, type, wiggleParameters) => {
+                origSetMessage(message, type, wiggleParameters);
+                msg.remove_all_transitions();
+                msg.set({ opacity: 0, visible: false });
+                this._updateCupertinoStatus();
+            };
+            this._cupertinoOrigSetMessage = origSetMessage;
+
+            // Also suppress any direct opacity writes (e.g. from _fadeOutMessage)
+            this._cupertinoMsgOpacityId = msg.connect('notify::opacity', () => {
+                if (msg.opacity !== 0) {
+                    msg.remove_all_transitions();
+                    msg.opacity = 0;
+                }
+            });
+            this._cupertinoMsgVisibleId = msg.connect('notify::visible', () => {
+                if (msg.visible) msg.visible = false;
+            });
+            // Text changes drive our status label
+            this._cupertinoMsgTextId = msg.connect('notify::text',
+                () => this._updateCupertinoStatus());
+
+            msg.remove_all_transitions();
+            msg.set({ opacity: 0, visible: false });
+        }
+
+        // ── Unified status label ───────────────────────────────────────────
+        this._cupertinoStatusLabel = new St.Label({
+            style_class: 'wack-cupertino-status',
+            x_align: Clutter.ActorAlign.CENTER,
+            x_expand: true,
+            opacity: 0,
+            text: '',
+        });
+        this._cupertinoStatusLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+        this._cupertinoStatusLabel.clutter_text.line_wrap = true;
+
+        const mainBox = authPrompt._mainBox;
+        const insertIdx = mainBox
+            ? authPrompt.get_children().indexOf(mainBox) + 1
+            : authPrompt.get_n_children();
+        authPrompt.insert_child_at_index(this._cupertinoStatusLabel, insertIdx);
+
+        // ── Caps-lock state via keymap ─────────────────────────────────────
+        const keymap = capsWarn?._keymap;
+        if (keymap) {
+            this._cupertinoKeymap = keymap;
+            this._cupertinoKeymapId = keymap.connect(
+                'state-changed', () => this._updateCupertinoStatus());
+        }
+
+        authPrompt.connect('destroy', () => this._teardownCupertinoStatus());
+        this._updateCupertinoStatus();
+    }
+
+    _teardownCupertinoStatus() {
+        // Disconnect caps-lock guards
+        if (this._cupertinoKeymap && this._cupertinoKeymapId) {
+            this._cupertinoKeymap.disconnect(this._cupertinoKeymapId);
+            this._cupertinoKeymap = null;
+            this._cupertinoKeymapId = null;
+        }
+        const authPrompt = this._dialog?._promptBox?._authPrompt;
+        const capsWarn = authPrompt?._capsLockWarningLabel;
+        if (capsWarn && this._cupertinoCapOpacityId) {
+            capsWarn.disconnect(this._cupertinoCapOpacityId);
+            this._cupertinoCapOpacityId = null;
+        }
+        // Restore original setMessage and disconnect message guards
+        if (authPrompt && this._cupertinoOrigSetMessage) {
+            authPrompt.setMessage = this._cupertinoOrigSetMessage;
+            this._cupertinoOrigSetMessage = null;
+        }
+        // Restore original updateUser
+        if (authPrompt && this._cupertinoOrigUpdateUser) {
+            authPrompt.updateUser = this._cupertinoOrigUpdateUser;
+            this._cupertinoOrigUpdateUser = null;
+        }
+        const msg = authPrompt?._message;
+        if (msg) {
+            if (this._cupertinoMsgOpacityId) {
+                msg.disconnect(this._cupertinoMsgOpacityId);
+                this._cupertinoMsgOpacityId = null;
+            }
+            if (this._cupertinoMsgVisibleId) {
+                msg.disconnect(this._cupertinoMsgVisibleId);
+                this._cupertinoMsgVisibleId = null;
+            }
+            if (this._cupertinoMsgTextId) {
+                msg.disconnect(this._cupertinoMsgTextId);
+                this._cupertinoMsgTextId = null;
+            }
+        }
+        if (this._cupertinoStatusLabel) {
+            this._cupertinoStatusLabel.destroy();
+            this._cupertinoStatusLabel = null;
+        }
+
+        // Restore native avatar
+        const promptUserWidget = authPrompt?._userWell?.get_child();
+        if (promptUserWidget && promptUserWidget._avatar) {
+            promptUserWidget._avatar.opacity = 255;
+        }
+
+        this._cupertinoStatusSetup = false;
+    }
+
+    _updateCupertinoStatus() {
+        const authPrompt = this._dialog?._promptBox?._authPrompt;
+        // Read caps-lock directly from keymap (we disabled capsWarn._sync)
+        const capsLockOn = this._cupertinoKeymap?.get_caps_lock_state() ?? false;
+        // Read error state from msg.text (opacity is always kept at 0 by us)
+        const msg = authPrompt?._message;
+        const hasMsg = (msg?.text?.length ?? 0) > 0;
+
+        let text = '';
+        if (capsLockOn && hasMsg)
+            text = shellGettext('Caps lock is on') + ' • ' + _('Invalid Password');
+        else if (capsLockOn)
+            text = shellGettext('Caps lock is on');
+        else if (hasMsg)
+            text = _('Invalid Password');
+
+        if (this._cupertinoStatusLabel) {
+            this._cupertinoStatusLabel.text = text;
+            this._cupertinoStatusLabel.ease({
+                opacity: text ? 255 : 0,
+                duration: 150,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            });
+        }
+    }
+
     _applyPromptModeLayout() {
         if (!this._promptActor) return;
         const isCupertino = this._lockscreenMode === 'cupertino';
 
         if (isCupertino) {
+            this._createCupertinoRestPrompt();
+            this._promptActor.remove_style_class_name('wack-cupertino-rest');
             this._promptActor.add_style_class_name('wack-cupertino-prompt');
+            if (this._origPromptActorYAlign === undefined)
+                this._origPromptActorYAlign = this._promptActor.y_align;
+            this._promptActor.y_align = Clutter.ActorAlign.START;
         } else {
+            this._destroyCupertinoRestPrompt();
             this._promptActor.remove_style_class_name('wack-cupertino-prompt');
+            this._promptActor.remove_style_class_name('wack-cupertino-rest');
+            if (this._origPromptActorYAlign !== undefined) {
+                this._promptActor.y_align = this._origPromptActorYAlign;
+                this._origPromptActorYAlign = undefined;
+            }
         }
         this._promptActor.set({ scale_x: 1, scale_y: 1 });
-
-        // Hide/show the username label — St CSS doesn't support display:none,
+        this._updateCupertinoRestState();
         this._mainBox?.queue_relayout();
+    }
+
+    _createCupertinoRestPrompt() {
+        if (this._cupertinoRestPromptContainer) return;
+
+        this._cupertinoRestPromptContainer = new St.BoxLayout({
+            style_class: 'wack-cupertino-rest',
+            orientation: Clutter.Orientation.VERTICAL,
+            reactive: false,
+        });
+
+        this._cupertinoRestPrompt = new WackCupertinoRestPrompt(this._dialog._user);
+        this._cupertinoRestPromptContainer.add_child(this._cupertinoRestPrompt);
+
+        this._dialog._stack.add_child(this._cupertinoRestPromptContainer);
+
+        // Create the persistent, independent floating avatar
+        this._cupertinoAvatarContainer = new St.Bin({
+            style_class: 'wack-cupertino-persistent-avatar',
+            x_expand: true,
+            // y_expand: true,
+            x_align: Clutter.ActorAlign.CENTER,
+            y_align: Clutter.ActorAlign.START,
+        });
+        this._cupertinoAvatar = new UserWidget.Avatar(this._dialog._user);
+        this._cupertinoAvatarContainer.set_child(this._cupertinoAvatar);
+        this._dialog._stack.add_child(this._cupertinoAvatarContainer);
+
+        // Sync hint text from seat touch-mode (same logic as the regular hint)
+        if (!this._cupertinoSeat) {
+            const backend = Clutter.get_default_backend();
+            this._cupertinoSeat = backend.get_default_seat();
+            this._seatTouchModeId = this._cupertinoSeat.connect(
+                'notify::touch-mode', () => this._syncCupertinoHint());
+        }
+        this._syncCupertinoHint();
+    }
+
+    _syncCupertinoHint() {
+        const touchMode = this._cupertinoSeat?.touch_mode ?? false;
+        const text = touchMode
+            ? shellGettext('Swipe up to unlock')
+            : shellGettext('Click or press a key to unlock');
+        this._cupertinoRestPrompt?.setHintText(text);
+    }
+
+    _destroyCupertinoRestPrompt() {
+        if (this._seatTouchModeId && this._cupertinoSeat) {
+            this._cupertinoSeat.disconnect(this._seatTouchModeId);
+            this._seatTouchModeId = null;
+            this._cupertinoSeat = null;
+        }
+        if (this._cupertinoAvatarContainer) {
+            this._cupertinoAvatarContainer.destroy();
+            this._cupertinoAvatarContainer = null;
+            this._cupertinoAvatar = null;
+        }
+        if (this._cupertinoRestPromptContainer) {
+            this._cupertinoRestPromptContainer.destroy();
+            this._cupertinoRestPromptContainer = null;
+            this._cupertinoRestPrompt = null;
+        }
     }
 
     /**
@@ -1113,7 +1536,13 @@ export default class WackLockscreenClockExtension extends Extension {
             this._dialog._setTransitionProgress = this._origSetTransitionProgress;
             this._origSetTransitionProgress = null;
         }
+
+        this._teardownCupertinoStatus();
+        this._destroyCupertinoRestPrompt();
+
         resetAnimationActors(this._clockWrapper, this._promptActor);
+        const mainBox = this._dialog?._promptBox?._authPrompt?._mainBox;
+        if (mainBox) mainBox.opacity = 255;
 
         if (this._settings && this._settingsSignals) {
             for (const id of this._settingsSignals)
@@ -1146,6 +1575,10 @@ export default class WackLockscreenClockExtension extends Extension {
         if (this._hint) {
             if (this._hintTextSyncId) {
                 this._hint.disconnect(this._hintTextSyncId);
+                if (this._hintOpacityGuardId) {
+                    this._hint.disconnect(this._hintOpacityGuardId);
+                    this._hintOpacityGuardId = null;
+                }
                 this._hintTextSyncId = null;
             }
             this._hint.visible = true;
@@ -1218,6 +1651,10 @@ export default class WackLockscreenClockExtension extends Extension {
         this._dateLabel = null;
         this._timeLabel = null;
         this._clockWrapper = null;
+        if (this._promptActor && this._origPromptActorYAlign !== undefined) {
+            this._promptActor.y_align = this._origPromptActorYAlign;
+            this._origPromptActorYAlign = undefined;
+        }
         this._promptActor?.remove_style_class_name('wack-cupertino-prompt');
         this._promptActor = null;
         this._animationState = null;
