@@ -1072,8 +1072,8 @@ export default class WackLockscreenClockExtension extends Extension {
             this._promptActor?.remove_style_class_name('wack-cupertino-rest');
             this._promptActor?.add_style_class_name('wack-cupertino-prompt');
             this._cupertinoToPrompt = true;
-            // Wire up the unified status label (once per _authPrompt lifetime)
-            this._setupCupertinoStatus();
+            // Ensure native avatar remains hidden during prompt lifecycle
+            this._setupCupertinoAvatarOverride();
         }
 
         const targetRadius = isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor;
@@ -1161,18 +1161,14 @@ export default class WackLockscreenClockExtension extends Extension {
 
     /**
      * Called once per AuthPrompt lifetime (from _onPromptShow).
-     * Hides GNOME Shell's separate capsLock + message labels and replaces
-     * them with a single unified label below the password entry.
+     * Ensures the native UserWidget avatar is suppressed so our floating
+     * persistent avatar remains the only visible one.
      */
-    _setupCupertinoStatus() {
-        if (this._cupertinoStatusSetup) return;
+    _setupCupertinoAvatarOverride() {
+        if (this._cupertinoAvatarSetup) return;
         const authPrompt = this._dialog?._promptBox?._authPrompt;
         if (!authPrompt) return;
-
-        this._cupertinoStatusSetup = true;
-
-        const capsWarn = authPrompt._capsLockWarningLabel;
-        const msg = authPrompt._message;
+        this._cupertinoAvatarSetup = true;
 
         // ── Suppress Native Avatar (Headless) ──────────────────────────────
         // AuthPrompt recreates the UserWidget via updateUser() multiple times
@@ -1187,170 +1183,27 @@ export default class WackLockscreenClockExtension extends Extension {
             };
             // Hide the currently existing one
             const promptUserWidget = authPrompt._userWell?.get_child();
-            if (promptUserWidget && promptUserWidget._avatar) {
+            if (promptUserWidget?._avatar)
                 promptUserWidget._avatar.opacity = 0;
-            }
         }
 
-        // ── Suppress CapsLockWarning ───────────────────────────────────────
-        if (capsWarn) {
-            // No-op _sync at instance level (stops keymap/mapped-triggered redraws)
-            capsWarn._sync = () => { };
-            capsWarn.remove_all_transitions();
-            capsWarn.set({ opacity: 0, height: 0 });
-
-            // Belt-and-suspenders: re-suppress any opacity the theme/GJS reapplies
-            this._cupertinoCapOpacityId = capsWarn.connect('notify::opacity', () => {
-                if (capsWarn.opacity !== 0) {
-                    capsWarn.remove_all_transitions();
-                    capsWarn.opacity = 0;
-                }
-            });
-
-            // Blank the anonymous spacer (child immediately before capsWarn)
-            const children = authPrompt.get_children();
-            const idx = children.indexOf(capsWarn);
-            if (idx > 0 && !children[idx - 1].style_class)
-                children[idx - 1].set({ opacity: 0, height: 0 });
-        }
-
-        // ── Suppress _message via instance method override ─────────────────
-        // setMessage() calls show() + opacity=255 every invocation.
-        // Override the method on this specific instance so we can re-blank
-        // immediately after the original logic runs (text/state are preserved).
-        if (msg) {
-            const origSetMessage = authPrompt.setMessage.bind(authPrompt);
-            authPrompt.setMessage = (message, type, wiggleParameters) => {
-                origSetMessage(message, type, wiggleParameters);
-                msg.remove_all_transitions();
-                msg.set({ opacity: 0, visible: false });
-                this._updateCupertinoStatus();
-            };
-            this._cupertinoOrigSetMessage = origSetMessage;
-
-            // Also suppress any direct opacity writes (e.g. from _fadeOutMessage)
-            this._cupertinoMsgOpacityId = msg.connect('notify::opacity', () => {
-                if (msg.opacity !== 0) {
-                    msg.remove_all_transitions();
-                    msg.opacity = 0;
-                }
-            });
-            this._cupertinoMsgVisibleId = msg.connect('notify::visible', () => {
-                if (msg.visible) msg.visible = false;
-            });
-            // Text changes drive our status label
-            this._cupertinoMsgTextId = msg.connect('notify::text',
-                () => this._updateCupertinoStatus());
-
-            msg.remove_all_transitions();
-            msg.set({ opacity: 0, visible: false });
-        }
-
-        // ── Unified status label ───────────────────────────────────────────
-        this._cupertinoStatusLabel = new St.Label({
-            style_class: 'wack-cupertino-status',
-            x_align: Clutter.ActorAlign.CENTER,
-            x_expand: true,
-            opacity: 0,
-            text: '',
-        });
-        this._cupertinoStatusLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
-        this._cupertinoStatusLabel.clutter_text.line_wrap = true;
-
-        const mainBox = authPrompt._mainBox;
-        const insertIdx = mainBox
-            ? authPrompt.get_children().indexOf(mainBox) + 1
-            : authPrompt.get_n_children();
-        authPrompt.insert_child_at_index(this._cupertinoStatusLabel, insertIdx);
-
-        // ── Caps-lock state via keymap ─────────────────────────────────────
-        const keymap = capsWarn?._keymap;
-        if (keymap) {
-            this._cupertinoKeymap = keymap;
-            this._cupertinoKeymapId = keymap.connect(
-                'state-changed', () => this._updateCupertinoStatus());
-        }
-
-        authPrompt.connect('destroy', () => this._teardownCupertinoStatus());
-        this._updateCupertinoStatus();
+        authPrompt.connect('destroy', () => this._teardownCupertinoAvatarOverride());
     }
 
-    _teardownCupertinoStatus() {
-        // Disconnect caps-lock guards
-        if (this._cupertinoKeymap && this._cupertinoKeymapId) {
-            this._cupertinoKeymap.disconnect(this._cupertinoKeymapId);
-            this._cupertinoKeymap = null;
-            this._cupertinoKeymapId = null;
-        }
+    _teardownCupertinoAvatarOverride() {
         const authPrompt = this._dialog?._promptBox?._authPrompt;
-        const capsWarn = authPrompt?._capsLockWarningLabel;
-        if (capsWarn && this._cupertinoCapOpacityId) {
-            capsWarn.disconnect(this._cupertinoCapOpacityId);
-            this._cupertinoCapOpacityId = null;
-        }
-        // Restore original setMessage and disconnect message guards
-        if (authPrompt && this._cupertinoOrigSetMessage) {
-            authPrompt.setMessage = this._cupertinoOrigSetMessage;
-            this._cupertinoOrigSetMessage = null;
-        }
-        // Restore original updateUser
+
         if (authPrompt && this._cupertinoOrigUpdateUser) {
             authPrompt.updateUser = this._cupertinoOrigUpdateUser;
             this._cupertinoOrigUpdateUser = null;
         }
-        const msg = authPrompt?._message;
-        if (msg) {
-            if (this._cupertinoMsgOpacityId) {
-                msg.disconnect(this._cupertinoMsgOpacityId);
-                this._cupertinoMsgOpacityId = null;
-            }
-            if (this._cupertinoMsgVisibleId) {
-                msg.disconnect(this._cupertinoMsgVisibleId);
-                this._cupertinoMsgVisibleId = null;
-            }
-            if (this._cupertinoMsgTextId) {
-                msg.disconnect(this._cupertinoMsgTextId);
-                this._cupertinoMsgTextId = null;
-            }
-        }
-        if (this._cupertinoStatusLabel) {
-            this._cupertinoStatusLabel.destroy();
-            this._cupertinoStatusLabel = null;
-        }
-
+        
         // Restore native avatar
         const promptUserWidget = authPrompt?._userWell?.get_child();
-        if (promptUserWidget && promptUserWidget._avatar) {
+        if (promptUserWidget?._avatar)
             promptUserWidget._avatar.opacity = 255;
-        }
 
-        this._cupertinoStatusSetup = false;
-    }
-
-    _updateCupertinoStatus() {
-        const authPrompt = this._dialog?._promptBox?._authPrompt;
-        // Read caps-lock directly from keymap (we disabled capsWarn._sync)
-        const capsLockOn = this._cupertinoKeymap?.get_caps_lock_state() ?? false;
-        // Read error state from msg.text (opacity is always kept at 0 by us)
-        const msg = authPrompt?._message;
-        const hasMsg = (msg?.text?.length ?? 0) > 0;
-
-        let text = '';
-        if (capsLockOn && hasMsg)
-            text = shellGettext('Caps lock is on') + ' • ' + _('Invalid Password');
-        else if (capsLockOn)
-            text = shellGettext('Caps lock is on');
-        else if (hasMsg)
-            text = _('Invalid Password');
-
-        if (this._cupertinoStatusLabel) {
-            this._cupertinoStatusLabel.text = text;
-            this._cupertinoStatusLabel.ease({
-                opacity: text ? 255 : 0,
-                duration: 150,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-            });
-        }
+        this._cupertinoAvatarSetup = false;
     }
 
     _applyPromptModeLayout() {
@@ -1537,7 +1390,7 @@ export default class WackLockscreenClockExtension extends Extension {
             this._origSetTransitionProgress = null;
         }
 
-        this._teardownCupertinoStatus();
+        this._teardownCupertinoAvatarOverride();
         this._destroyCupertinoRestPrompt();
 
         resetAnimationActors(this._clockWrapper, this._promptActor);

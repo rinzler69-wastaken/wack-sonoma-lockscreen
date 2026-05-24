@@ -134,7 +134,7 @@
 
 /* Unified caps-lock + auth-failure status label in prompt state */
 .wack-cupertino-status {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.625);
     font-size: 16px;
     font-weight: 700;
     text-align: center;
@@ -150,4 +150,21 @@
 
 .wack-cupertino-persistent-avatar .user-icon {
     icon-size: 86px;
+}
+
+/* ── Cupertino: restyle native CapsLockWarning and PAM message ──────────────
+   Match the wack-cupertino-hint aesthetic — same weight, size, color, center.
+   Scoped to .wack-cupertino-no-status so only applies in Cupertino mode.    */
+
+.unlock-dialog .caps-lock-warning-label,
+.unlock-dialog .login-dialog-message,
+.unlock-dialog .login-dialog-message-hint,
+.unlock-dialog .login-dialog-message-warning {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    padding-top: 0 !important;
+    min-height: 0 !important;
+    margin-top: -1px !important;
+    spacing: 0 !important;
 }
