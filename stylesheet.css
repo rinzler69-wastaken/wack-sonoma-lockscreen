@@ -17,10 +17,9 @@
 .wack-time {
     color: rgba(255, 255, 255, 0.6);
     font-size: 128px;
-    font-family: '.SF Soft Numeric';
+    /* font-family: 'Adwaita Sans'; */
     font-weight: 600;
     font-feature-settings: "pnum" 1, "tnum" 0;
-    font-family: '.SF Soft Numeric';
     letter-spacing: 0;
     text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0);
 }
