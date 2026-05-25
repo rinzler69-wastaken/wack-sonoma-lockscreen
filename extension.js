@@ -57,7 +57,7 @@ const NOTIF_BLUR_NAME = 'wack-notif-blur';
 const NOTIF_CARD_RADIUS = 12;
 
 // Cupertino mode prompt positioning
-const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.86; // Prompt center Y as fraction of screen height
+const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.85; // Prompt center Y as fraction of screen height
 // UI limits
 const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
 
@@ -198,10 +198,10 @@ const WackCupertinoRestPrompt = GObject.registerClass(
 
         _updateHintLabel() {
             if (!this._hintLabel) return;
-            
+
             // Escape the text to prevent markup injection errors
             const safeText = GLib.markup_escape_text(this._currentText, -1);
-            
+
             if (this._currentCount > 0) {
                 this._hintLabel.clutter_text.use_markup = true;
                 // Scale down the bell emoji slightly so its taller metrics don't shift the baseline
@@ -657,8 +657,12 @@ export default class WackLockscreenClockExtension extends Extension {
                 // If entering prompt state, the native password field and status label fade in
                 if (mainBox) mainBox.opacity = Math.round(255 * progress);
 
-                if (this._notifBox)
+                if (this._notifBox) {
                     this._notifBox.opacity = notifOpacity;
+                    // Fully remove from hit-testing when invisible — opacity:0 alone
+                    // still leaves cards reactive, causing click-through bugs.
+                    this._notifBox.visible = notifOpacity > 0;
+                }
 
                 if (progress === 0) {
                     this._enforceCardLimit(this._notifBox);
@@ -1378,10 +1382,16 @@ export default class WackLockscreenClockExtension extends Extension {
             const targetBlur = (!this._promptActive && hasNotifs) ? NOTIF_BLUR_RADIUS : 0;
 
             if (animate) {
+                // Must be visible before ease starts so the fade-in is rendered
+                if (targetOpacity > 0)
+                    this._notifBox.visible = true;
                 this._notifBox.ease({
                     opacity: targetOpacity,
                     duration: CROSSFADE_TIME,
                     mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        this._notifBox.visible = targetOpacity > 0;
+                    },
                 });
 
                 // Animate individual card blurs
@@ -1400,6 +1410,7 @@ export default class WackLockscreenClockExtension extends Extension {
             } else {
                 this._notifBox.remove_all_transitions();
                 this._notifBox.opacity = targetOpacity;
+                this._notifBox.visible = targetOpacity > 0;
 
                 // Instantly apply blur target
                 const setBlur = (actor) => {
@@ -1612,7 +1623,7 @@ export default class WackLockscreenClockExtension extends Extension {
                             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                             onComplete: () => {
                                 if (!this._cupertinoRestPrompt) return; // Might have been destroyed
-                                
+
                                 this._cupertinoRestPrompt.setHintText(nextText);
 
                                 if (this._cupertinoHintIsToggle) {
