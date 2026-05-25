@@ -88,6 +88,32 @@ const MORE_LOCALIZATION = {
     'vi': 'thêm',
 };
 
+const TOGGLE_HINT_LOCALIZATION = {
+    'es': 'Presiona Shift + N para ver notificaciones',
+    'fr': 'Appuyez sur Maj+N pour voir les notifications',
+    'de': 'Shift + N drücken, um Benachrichtigungen anzuzeigen',
+    'it': 'Premi Maiusc + N per visualizzare le notifiche',
+    'pt': 'Pressione Shift + N para ver as notificações',
+    'ru': 'Нажмите Shift + N для просмотра уведомлений',
+    'zh': '按 Shift + N 查看通知',
+    'ja': 'Shift + N で通知を表示',
+    'ko': 'Shift + N을 눌러 알림 보기',
+    'ar': 'اضغط Shift + N لعرض الإشعارات',
+    'hi': 'सूचनाएं देखने के लिए Shift + N दबाएं',
+    'tr': 'Bildirimleri görmek için Shift + N\'ye basın',
+    'nl': 'Druk op Shift + N om meldingen te bekijken',
+    'pl': 'Naciśnij Shift + N, aby wyświetlić powiadomienia',
+    'sv': 'Tryck på Shift + N för att visa aviseringar',
+    'da': 'Tryk på Shift + N for at se notifikationer',
+    'no': 'Trykk Shift + N for å se varsler',
+    'fi': 'Paina Shift + N nähdäksesi ilmoitukset',
+    'el': 'Πατήστε Shift + N για προβολή ειδοποιήσεων',
+    'he': 'הקש Shift + N כדי לראות התראות',
+    'id': 'Tekan Shift + N untuk melihat notifikasi',
+    'th': 'กด Shift + N เพื่อดูการแจ้งเตือน',
+    'vi': 'Nhấn Shift + N để xem thông báo',
+};
+
 function getPrettyDate() {
     try {
         const now = GLib.DateTime.new_now_local();
@@ -131,30 +157,6 @@ const WackCupertinoRestPrompt = GObject.registerClass(
                 opacity: 255,
             });
 
-            this._notifCountLabel = new St.Label({
-                text: '',
-                y_align: Clutter.ActorAlign.CENTER,
-                visible: false,
-            });
-
-            this._notifIcon = new St.Icon({
-                icon_name: 'preferences-system-notifications-symbolic',
-                y_align: Clutter.ActorAlign.CENTER,
-            });
-
-            this._notifIconContainer = new St.Bin({
-                style_class: 'wack-cupertino-hint-icon',
-                y_align: Clutter.ActorAlign.CENTER,
-                visible: false,
-                child: this._notifIcon,
-            });
-
-            this._bulletPoint = new St.Label({
-                text: '  ·  ',
-                y_align: Clutter.ActorAlign.CENTER,
-                visible: false,
-            });
-
             this._hintLabel = new St.Label({
                 text: '',
                 y_align: Clutter.ActorAlign.CENTER,
@@ -162,12 +164,12 @@ const WackCupertinoRestPrompt = GObject.registerClass(
             this._hintLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
             this._hintLabel.clutter_text.line_wrap = true;
 
-            this._hintBox.add_child(this._notifCountLabel);
-            this._hintBox.add_child(this._notifIconContainer);
-            this._hintBox.add_child(this._bulletPoint);
             this._hintBox.add_child(this._hintLabel);
 
             this.add_child(this._hintBox);
+
+            this._currentText = '';
+            this._currentCount = 0;
 
             this.setUser(user);
         }
@@ -185,21 +187,28 @@ const WackCupertinoRestPrompt = GObject.registerClass(
         }
 
         setHintText(text) {
-            if (this._hintLabel)
-                this._hintLabel.text = text ?? '';
+            this._currentText = text ?? '';
+            this._updateHintLabel();
         }
 
         setNotifCount(count) {
-            if (!this._notifCountLabel) return;
-            if (count > 0) {
-                this._notifCountLabel.text = `${count} `;
-                this._notifCountLabel.visible = true;
-                this._notifIconContainer.visible = true;
-                this._bulletPoint.visible = true;
+            this._currentCount = count ?? 0;
+            this._updateHintLabel();
+        }
+
+        _updateHintLabel() {
+            if (!this._hintLabel) return;
+            
+            // Escape the text to prevent markup injection errors
+            const safeText = GLib.markup_escape_text(this._currentText, -1);
+            
+            if (this._currentCount > 0) {
+                this._hintLabel.clutter_text.use_markup = true;
+                // Scale down the bell emoji slightly so its taller metrics don't shift the baseline
+                this._hintLabel.clutter_text.set_markup(`${this._currentCount} <span size="smaller">🔔\uFE0E</span>  ·  ${safeText}`);
             } else {
-                this._notifCountLabel.visible = false;
-                this._notifIconContainer.visible = false;
-                this._bulletPoint.visible = false;
+                this._hintLabel.clutter_text.use_markup = true;
+                this._hintLabel.clutter_text.set_markup(safeText);
             }
         }
     });
@@ -1133,7 +1142,7 @@ export default class WackLockscreenClockExtension extends Extension {
         // Attempt to localize the "More" text
         const langs = GLib.get_language_names();
         let moreText = null;
-        
+
         for (const langStr of langs) {
             const langCode = langStr.split('.')[0].split('_')[0];
             if (MORE_LOCALIZATION[langCode]) {
@@ -1314,7 +1323,11 @@ export default class WackLockscreenClockExtension extends Extension {
             // Inline notification count updates
             const count = this._getNativeNotifCount();
             if (this._cupertinoAlwaysShowUser && count > 0 && !this._cupertinoShowNotifsOverride) {
-                this._cupertinoRestPrompt?.setNotifCount(count);
+                if (!this._cupertinoHintIsToggle) {
+                    this._cupertinoRestPrompt?.setNotifCount(count);
+                } else {
+                    this._cupertinoRestPrompt?.setNotifCount(0);
+                }
             } else {
                 this._cupertinoRestPrompt?.setNotifCount(0);
             }
@@ -1417,6 +1430,9 @@ export default class WackLockscreenClockExtension extends Extension {
                 this._hintContainer.opacity = targetHintOpacity;
             }
         }
+
+        // Update the Cupertino hint cycle based on the new state
+        this._updateCupertinoHintCycle();
     }
 
     /**
@@ -1536,13 +1552,107 @@ export default class WackLockscreenClockExtension extends Extension {
 
     _syncCupertinoHint() {
         const touchMode = this._cupertinoSeat?.touch_mode ?? false;
-        const text = touchMode
+        this._cupertinoBaseHintText = touchMode
             ? shellGettext('Swipe up to unlock')
             : shellGettext('Click or press a key to unlock');
-        this._cupertinoRestPrompt?.setHintText(text);
+
+        const langs = GLib.get_language_names();
+        let toggleText = null;
+        for (const langStr of langs) {
+            const langCode = langStr.split('.')[0].split('_')[0];
+            if (TOGGLE_HINT_LOCALIZATION[langCode]) {
+                toggleText = TOGGLE_HINT_LOCALIZATION[langCode];
+                break;
+            }
+        }
+
+        if (!toggleText) {
+            toggleText = shellGettext('Press Shift + N to view notifications');
+        }
+
+        this._cupertinoToggleHintText = toggleText;
+
+        this._updateCupertinoHintCycle();
+    }
+
+    _updateCupertinoHintCycle() {
+        if (!this._cupertinoRestPrompt) return;
+
+        const nativeCount = this._getNativeNotifCount();
+
+        // Cycle only if:
+        // - We are in Cupertino mode
+        // - Always show user widget is ON
+        // - Notifications are currently HIDDEN (override is false)
+        // - There are actual unread notifications (count > 0)
+        // - The prompt is not active (we are at rest)
+        const shouldCycle = this._lockscreenMode === 'cupertino' &&
+            this._cupertinoAlwaysShowUser &&
+            !this._cupertinoShowNotifsOverride &&
+            nativeCount > 0 &&
+            !this._promptActive;
+
+        if (shouldCycle) {
+            if (!this._cupertinoHintCycleId) {
+                this._cupertinoHintIsToggle = false;
+                this._cupertinoRestPrompt.setHintText(this._cupertinoBaseHintText);
+
+                this._cupertinoHintCycleId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 8, () => {
+                    this._cupertinoHintIsToggle = !this._cupertinoHintIsToggle;
+
+                    const nextText = this._cupertinoHintIsToggle
+                        ? this._cupertinoToggleHintText
+                        : this._cupertinoBaseHintText;
+
+                    if (this._cupertinoRestPrompt && this._cupertinoRestPrompt._hintBox) {
+                        const hintBox = this._cupertinoRestPrompt._hintBox;
+                        const label = this._cupertinoRestPrompt._hintLabel;
+                        hintBox.ease({
+                            opacity: 0,
+                            duration: CROSSFADE_TIME / 2,
+                            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                            onComplete: () => {
+                                if (!this._cupertinoRestPrompt) return; // Might have been destroyed
+                                
+                                this._cupertinoRestPrompt.setHintText(nextText);
+
+                                if (this._cupertinoHintIsToggle) {
+                                    this._cupertinoRestPrompt.setNotifCount(0);
+                                } else {
+                                    this._cupertinoRestPrompt.setNotifCount(this._getNativeNotifCount());
+                                }
+
+                                hintBox.ease({
+                                    opacity: 255,
+                                    duration: CROSSFADE_TIME / 2,
+                                    mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                                });
+                            }
+                        });
+                    }
+                    return GLib.SOURCE_CONTINUE;
+                });
+            }
+        } else {
+            if (this._cupertinoHintCycleId) {
+                GLib.source_remove(this._cupertinoHintCycleId);
+                this._cupertinoHintCycleId = null;
+            }
+            // Ensure we reset to base text immediately and restore opacity
+            if (this._cupertinoRestPrompt && this._cupertinoRestPrompt._hintBox) {
+                this._cupertinoRestPrompt._hintBox.remove_all_transitions();
+                this._cupertinoRestPrompt._hintBox.opacity = 255;
+                this._cupertinoRestPrompt.setHintText(this._cupertinoBaseHintText || '');
+                // Note: The rest state logic handles setting the notification count visibility
+            }
+        }
     }
 
     _destroyCupertinoRestPrompt() {
+        if (this._cupertinoHintCycleId) {
+            GLib.source_remove(this._cupertinoHintCycleId);
+            this._cupertinoHintCycleId = null;
+        }
         if (this._seatTouchModeId && this._cupertinoSeat) {
             this._cupertinoSeat.disconnect(this._seatTouchModeId);
             this._seatTouchModeId = null;
