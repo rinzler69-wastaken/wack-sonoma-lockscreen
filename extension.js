@@ -42,6 +42,7 @@ const FADE_OUT_SCALE = 0.3; // Scale factor when the clock shrinks during unlock
 
 // Date label height/gap from the clock
 const DATE_LABEL_HEIGHT = 25;
+const TIME_LABEL_HEIGHT_FALLBACK = 128; // Fallback natural height for the time label in logical px
 
 // Background blur settings when entering the password prompt
 const PROMPT_BLUR_RADIUS = 50;
@@ -207,8 +208,9 @@ const WackCupertinoRestPrompt = GObject.registerClass(
                 // Scale down the bell emoji slightly so its taller metrics don't shift the baseline
                 this._hintLabel.clutter_text.set_markup(`${this._currentCount} <span size="smaller">🔔\uFE0E</span>  ·  ${safeText}`);
             } else {
-                this._hintLabel.clutter_text.use_markup = true;
-                this._hintLabel.clutter_text.set_markup(safeText);
+                // Plain text path — disable markup parsing to avoid unnecessary Pango overhead
+                this._hintLabel.clutter_text.use_markup = false;
+                this._hintLabel.clutter_text.text = safeText;
             }
         }
     });
@@ -348,14 +350,14 @@ const WackLayout = GObject.registerClass(
         /**
          * Standard Clutter layout delegation for width requests.
          */
-        vfunc_get_preferred_width(container, forHeight) {
+        vfunc_get_preferred_width(_container, forHeight) {
             return this._stack.get_preferred_width(forHeight);
         }
 
         /**
          * Standard Clutter layout delegation for height requests.
          */
-        vfunc_get_preferred_height(container, forWidth) {
+        vfunc_get_preferred_height(_container, forWidth) {
             return this._stack.get_preferred_height(forWidth);
         }
 
@@ -363,7 +365,7 @@ const WackLayout = GObject.registerClass(
          * Orchestrates the spatial arrangement of the lock screen UI elements.
          * This is called by Clutter whenever the main box needs to be laid out.
          */
-        vfunc_allocate(container, box) {
+        vfunc_allocate(_container, box) {
             const [width, height] = box.get_size();
             const tenthOfHeight = height / 10.0;
 
@@ -425,6 +427,8 @@ export default class WackLockscreenClockExtension extends Extension {
 
         this._dialog = dialog;
         this._originalClock = dialog._clock;
+        // InjectionManager is held for potential future method overrides by sub-features.
+        // Currently no overrideMethod() calls are active — it is cleared in disable().
         this._injectionManager = new InjectionManager();
         this._idleSources = new Set();
         this._settingsSignals = [];
@@ -523,8 +527,6 @@ export default class WackLockscreenClockExtension extends Extension {
         this._hintContainer.add_child(this._overflowLabel);
         this._positionOverflow();
 
-
-
         // Configure individual background blurs for each notification card.
         this._lastPlayingPlayer = null;
         this._promptActive = false;
@@ -567,6 +569,8 @@ export default class WackLockscreenClockExtension extends Extension {
             // and manually fire _showPrompt/_showClock so other extensions hooking
             // those methods (e.g. LiveLockscreen) stay in sync on swipe gestures
             const wasActive = this._promptActive;
+            // _promptActive is also set in _onPromptShow/_onPromptHide for keyboard-triggered
+            // prompts. Here we derive it from progress to cover swipe gestures.
             this._promptActive = progress > 0;
             if (this._promptActive && !wasActive) {
                 this._onPromptShow();
@@ -774,6 +778,14 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         syncCupertinoAlwaysShowUser();
 
+        // Cache the desktop notifications show-in-lock-screen setting so _hasVisibleNotifs()
+        // can read it cheaply on every animation frame instead of hitting GSettings each time.
+        this._notifSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.notifications' });
+        this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
+        this._notifShowInLockScreenId = this._notifSettings.connect('changed::show-in-lock-screen', () => {
+            this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
+        });
+
         this._settingsSignals.push(
             this._settings.connect('changed::clock-animation', syncClockAnimation),
             this._settings.connect('changed::prompt-animation', syncPromptAnimation),
@@ -788,7 +800,7 @@ export default class WackLockscreenClockExtension extends Extension {
         const clockY = this._clockWrapper?.y ?? 0;
         const [, natHeight] = this._clockWrapper?.get_preferred_height(-1) ?? [0, 0];
         const [, dateHeight] = this._dateLabel?.get_preferred_height(-1) ?? [0, DATE_LABEL_HEIGHT];
-        const [, timeHeight] = this._timeLabel?.get_preferred_height(-1) ?? [0, 128];
+        const [, timeHeight] = this._timeLabel?.get_preferred_height(-1) ?? [0, TIME_LABEL_HEIGHT_FALLBACK];
         const clockHeight = Math.max(natHeight, dateHeight + timeHeight, DATE_LABEL_HEIGHT + timeHeight);
 
         return {
@@ -805,12 +817,30 @@ export default class WackLockscreenClockExtension extends Extension {
      * @returns {number} The source ID.
      */
     _idleAdd(priority, callback) {
+        // NOTE: 'id' is captured by the closure below. GLib idle callbacks are never
+        // fired synchronously, so 'id' is always assigned before the callback runs.
         let id = GLib.idle_add(priority, () => {
             this._idleSources.delete(id);
             return callback();
         });
         this._idleSources.add(id);
         return id;
+    }
+
+    /**
+     * Looks up a localized string from a map keyed by language code.
+     * Iterates GLib language names from most to least specific until a match is found.
+     *
+     * @param {Object} map   Key-value map of langCode → localized string.
+     * @param {*} fallback   Value to return when no match is found.
+     * @returns {string|*}   The localized string, or fallback.
+     */
+    _getLocalized(map, fallback) {
+        for (const lang of GLib.get_language_names()) {
+            const code = lang.split('.')[0].split('_')[0];
+            if (map[code]) return map[code];
+        }
+        return fallback;
     }
 
     /**
@@ -868,7 +898,7 @@ export default class WackLockscreenClockExtension extends Extension {
     _setNotifBlursEnabled(enabled) {
         const nb = this._dialog?._notificationsBox;
         if (!nb) return;
-        for (const child of nb._notificationBox) {
+        for (const child of nb._notificationBox.get_children()) {
             const effect = child.get_effect(NOTIF_BLUR_NAME);
             if (effect) effect.set_enabled(enabled);
         }
@@ -916,11 +946,10 @@ export default class WackLockscreenClockExtension extends Extension {
         const nb = this._notifBox;
         if (!nb) return false;
 
-        // If the user has globally disabled lockscreen notifications, assume empty
-        if (!this._notifSettings) {
-            this._notifSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.notifications' });
-        }
-        if (!this._notifSettings.get_boolean('show-in-lock-screen')) {
+        // If the user has globally disabled lockscreen notifications, assume empty.
+        // _notifShowInLockScreen is cached in enable() and kept current via a signal
+        // to avoid a synchronous GSettings read on every animation frame.
+        if (!this._notifShowInLockScreen) {
             return false;
         }
 
@@ -1084,7 +1113,8 @@ export default class WackLockscreenClockExtension extends Extension {
      * @param {object} nb The notifications box.
      */
     _enforceCardLimit(nb) {
-        this._enforceMediaLimit(nb);
+        if (nb._players.size > 0)
+            this._enforceMediaLimit(nb);
 
         const children = nb._notificationBox.get_children();
         let notifCount = 0;
@@ -1128,8 +1158,6 @@ export default class WackLockscreenClockExtension extends Extension {
     _updateOverflow(hiddenCount) {
         if (!this._overflowLabel) return;
 
-
-
         // Revert to standard hint if no notifications are overflowing
         if (hiddenCount <= 0) {
             this._overflowActive = false;
@@ -1143,16 +1171,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._hint.set_opacity(0);
 
         // Attempt to localize the "More" text
-        const langs = GLib.get_language_names();
-        let moreText = null;
-
-        for (const langStr of langs) {
-            const langCode = langStr.split('.')[0].split('_')[0];
-            if (MORE_LOCALIZATION[langCode]) {
-                moreText = MORE_LOCALIZATION[langCode];
-                break;
-            }
-        }
+        let moreText = this._getLocalized(MORE_LOCALIZATION, null);
 
         if (!moreText) {
             moreText = Gettext.pgettext('calendar', 'More').toLowerCase();
@@ -1542,7 +1561,6 @@ export default class WackLockscreenClockExtension extends Extension {
         this._cupertinoAvatarContainer = new St.Bin({
             style_class: 'wack-cupertino-persistent-avatar',
             x_expand: true,
-            // y_expand: true,
             x_align: Clutter.ActorAlign.CENTER,
             y_align: Clutter.ActorAlign.START,
         });
@@ -1566,15 +1584,7 @@ export default class WackLockscreenClockExtension extends Extension {
             ? shellGettext('Swipe up to unlock')
             : shellGettext('Click or press a key to unlock');
 
-        const langs = GLib.get_language_names();
-        let toggleText = null;
-        for (const langStr of langs) {
-            const langCode = langStr.split('.')[0].split('_')[0];
-            if (TOGGLE_HINT_LOCALIZATION[langCode]) {
-                toggleText = TOGGLE_HINT_LOCALIZATION[langCode];
-                break;
-            }
-        }
+        let toggleText = this._getLocalized(TOGGLE_HINT_LOCALIZATION, null);
 
         if (!toggleText) {
             toggleText = shellGettext('Press Shift + N to view notifications');
@@ -1689,8 +1699,6 @@ export default class WackLockscreenClockExtension extends Extension {
     /**
      * Calculates and sets the position of the custom clock on the primary monitor.
      */
-
-
     _positionClock() {
         const monitor = Main.layoutManager.primaryMonitor;
         if (!monitor) return;
@@ -1797,6 +1805,14 @@ export default class WackLockscreenClockExtension extends Extension {
         this._settingsSignals = [];
         this._settings = null;
 
+        // Tear down the notification show-in-lock-screen cache
+        if (this._notifSettings && this._notifShowInLockScreenId) {
+            this._notifSettings.disconnect(this._notifShowInLockScreenId);
+            this._notifShowInLockScreenId = null;
+        }
+        this._notifSettings = null;
+        this._notifShowInLockScreen = false;
+
         // Remove all method injections
         this._injectionManager?.clear();
         this._injectionManager = null;
@@ -1894,14 +1910,9 @@ export default class WackLockscreenClockExtension extends Extension {
         this._originalClock = null;
         this._mainBox = null;
         this._origLayout = null;
-        this._hintOpacity = 0;
-        this._activeLabelOpacity = 0;
         this._overflowActive = false;
         this._hintText = null;
         this._lastPlayingPlayer = null;
-        this._dateLabel = null;
-        this._timeLabel = null;
-        this._clockWrapper = null;
         if (this._promptActor && this._origPromptActorYAlign !== undefined) {
             this._promptActor.y_align = this._origPromptActorYAlign;
             this._origPromptActorYAlign = undefined;
@@ -1909,8 +1920,5 @@ export default class WackLockscreenClockExtension extends Extension {
         this._promptActor?.remove_style_class_name('wack-cupertino-prompt');
         this._promptActor = null;
         this._animationState = null;
-        if (this._notifSettings) {
-            this._notifSettings = null;
-        }
     }
 }
