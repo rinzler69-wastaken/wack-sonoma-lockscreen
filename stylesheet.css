@@ -17,6 +17,7 @@
 .wack-time {
     color: rgba(255, 255, 255, 0.6);
     font-size: 128px;
+    font-family: '.SF Soft Numeric';
     font-weight: 600;
     font-feature-settings: "pnum" 1, "tnum" 0;
     letter-spacing: 0;
@@ -76,7 +77,7 @@
 
 .wack-cupertino-rest .user-widget.vertical .user-icon StIcon,
 .wack-cupertino-prompt .user-widget.vertical .user-icon StIcon {
-    padding: 28px;
+    padding: 0px;
 }
 
 .wack-cupertino-rest .user-widget.vertical {
