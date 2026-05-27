@@ -1275,7 +1275,6 @@ export default class WackLockscreenClockExtension extends Extension {
     _onPromptShow() {
         this._promptActive = true;
 
-        const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         const isCupertino = this._lockscreenMode === 'cupertino';
 
         if (isCupertino) {
@@ -1284,22 +1283,6 @@ export default class WackLockscreenClockExtension extends Extension {
             this._cupertinoToPrompt = true;
             // Ensure native avatar remains hidden during prompt lifecycle
             this._setupCupertinoAvatarOverride();
-        }
-
-        const targetRadius = isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor;
-        const targetBrightness = isCupertino ? 1.0 : PROMPT_BLUR_BRIGHTNESS;
-        for (const widget of this._dialog._backgroundGroup) {
-            const blurEffect = widget.get_effect('blur');
-            if (!blurEffect) continue;
-
-            widget.ease_property('@effects.blur.radius', targetRadius, {
-                duration: PROMPT_BLUR_DURATION,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-            });
-            widget.ease_property('@effects.blur.brightness', targetBrightness, {
-                duration: PROMPT_BLUR_DURATION,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-            });
         }
     }
 
@@ -1317,20 +1300,6 @@ export default class WackLockscreenClockExtension extends Extension {
             const hasNotifs = this._hasVisibleNotifs();
             this._cupertinoIconSnap = !hasNotifs;
             this._cupertinoToPrompt = false;
-        }
-
-        for (const widget of this._dialog._backgroundGroup) {
-            const blurEffect = widget.get_effect('blur');
-            if (!blurEffect) continue;
-
-            widget.ease_property('@effects.blur.radius', 0, {
-                duration: PROMPT_BLUR_DURATION,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-            });
-            widget.ease_property('@effects.blur.brightness', 1.0, {
-                duration: PROMPT_BLUR_DURATION,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-            });
         }
     }
 
