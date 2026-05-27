@@ -1101,7 +1101,18 @@ export default class WackLockscreenClockExtension extends Extension {
         });
 
         // Listen for notifications being removed
-        this._actorRemovedId = nb._notificationBox.connect('child-removed', () => {
+        this._actorRemovedId = nb._notificationBox.connect('child-removed', (container, actor) => {
+            // Memory fix: explicitly disconnect signals and remove from Maps to prevent actor leaks
+            if (this._cardVisSignalIds && this._cardVisSignalIds.has(actor)) {
+                try { actor.disconnect(this._cardVisSignalIds.get(actor)); } catch (_) {}
+                this._cardVisSignalIds.delete(actor);
+            }
+            const player = this._getMediaPlayer(nb, actor);
+            if (player && this._playerSignalIds && this._playerSignalIds.has(player)) {
+                try { player.disconnect(this._playerSignalIds.get(player)); } catch (_) {}
+                this._playerSignalIds.delete(player);
+            }
+
             this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
                 this._enforceCardLimit(nb);
                 this._updateCupertinoRestState();
@@ -1823,11 +1834,11 @@ export default class WackLockscreenClockExtension extends Extension {
         if (this._hint) {
             if (this._hintTextSyncId) {
                 this._hint.disconnect(this._hintTextSyncId);
-                if (this._hintOpacityGuardId) {
-                    this._hint.disconnect(this._hintOpacityGuardId);
-                    this._hintOpacityGuardId = null;
-                }
                 this._hintTextSyncId = null;
+            }
+            if (this._hintOpacityGuardId) {
+                this._hint.disconnect(this._hintOpacityGuardId);
+                this._hintOpacityGuardId = null;
             }
             this._hint.visible = true;
             this._hint = null;
