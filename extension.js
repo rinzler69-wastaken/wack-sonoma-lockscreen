@@ -541,6 +541,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 const shiftPressed = (state & Clutter.ModifierType.SHIFT_MASK) !== 0;
 
                 if (shiftPressed && (keysym === Clutter.KEY_N || keysym === Clutter.KEY_n)) {
+                    this._cupertinoHintIsToggle = false;
                     this._cupertinoShowNotifsOverride = !this._cupertinoShowNotifsOverride;
                     this._updateCupertinoRestState(true);
                     return Clutter.EVENT_STOP;
@@ -1344,14 +1345,16 @@ export default class WackLockscreenClockExtension extends Extension {
 
             // Inline notification count updates
             const count = this._getNativeNotifCount();
+            let nextCount = 0;
             if (this._cupertinoAlwaysShowUser && count > 0 && !this._cupertinoShowNotifsOverride) {
                 if (!this._cupertinoHintIsToggle) {
-                    this._cupertinoRestPrompt?.setNotifCount(count);
-                } else {
-                    this._cupertinoRestPrompt?.setNotifCount(0);
+                    nextCount = count;
                 }
-            } else {
-                this._cupertinoRestPrompt?.setNotifCount(0);
+            }
+
+            // Prevent the counter from vanishing instantly before a fade-out crossfade completes
+            if (!(animate && targetOpacity === 0)) {
+                this._cupertinoRestPrompt?.setNotifCount(nextCount);
             }
 
             if (animate) {
@@ -1658,6 +1661,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 GLib.source_remove(this._cupertinoHintCycleId);
                 this._cupertinoHintCycleId = null;
             }
+            this._cupertinoHintIsToggle = false;
             // Ensure we reset to base text immediately and restore opacity
             if (this._cupertinoRestPrompt && this._cupertinoRestPrompt._hintBox) {
                 this._cupertinoRestPrompt._hintBox.remove_all_transitions();
