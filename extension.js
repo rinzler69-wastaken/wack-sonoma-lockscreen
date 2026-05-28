@@ -210,7 +210,7 @@ const WackCupertinoRestPrompt = GObject.registerClass(
             } else {
                 // Plain text path — disable markup parsing to avoid unnecessary Pango overhead
                 this._hintLabel.clutter_text.use_markup = false;
-                this._hintLabel.clutter_text.text = safeText;
+                this._hintLabel.clutter_text.text = this._currentText;
             }
         }
     });
@@ -326,9 +326,16 @@ const WackClock = GObject.registerClass(
             }
             this._interfaceSettings = null;
 
-            this._idleMonitor.remove_watch(this._idleWatchId);
-            if (this._dateTimeoutId)
+            if (this._idleMonitor && this._idleWatchId) {
+                this._idleMonitor.remove_watch(this._idleWatchId);
+                this._idleWatchId = null;
+            }
+            this._idleMonitor = null;
+
+            if (this._dateTimeoutId) {
                 GLib.source_remove(this._dateTimeoutId);
+                this._dateTimeoutId = null;
+            }
         }
     });
 
@@ -581,16 +588,22 @@ export default class WackLockscreenClockExtension extends Extension {
                 this._onPromptShow();
                 // Fire _showPrompt with adjustment stubbed so LLS and other hooks
                 // run without re-triggering the ease transition
-                const origEase = dialog._adjustment.ease.bind(dialog._adjustment);
+                const origEase = dialog._adjustment.ease;
                 dialog._adjustment.ease = () => { };
-                dialog._showPrompt();
-                dialog._adjustment.ease = origEase;
+                try {
+                    dialog._showPrompt();
+                } finally {
+                    dialog._adjustment.ease = origEase;
+                }
             } else if (!this._promptActive && wasActive) {
                 this._onPromptHide();
-                const origEase = dialog._adjustment.ease.bind(dialog._adjustment);
+                const origEase = dialog._adjustment.ease;
                 dialog._adjustment.ease = () => { };
-                dialog._showClock();
-                dialog._adjustment.ease = origEase;
+                try {
+                    dialog._showClock();
+                } finally {
+                    dialog._adjustment.ease = origEase;
+                }
             }
 
             // ── Global Background Blur (both modes) ────────────────────────
@@ -711,6 +724,21 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     _loadSettings() {
+        // This desktop schema is independent from our extension schema; keep it
+        // available even when a dev install is missing compiled extension schemas.
+        this._notifShowInLockScreen = true;
+        try {
+            this._notifSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.notifications' });
+            this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
+            this._notifShowInLockScreenId = this._notifSettings.connect('changed::show-in-lock-screen', () => {
+                this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
+            });
+        } catch (e) {
+            console.warn(`WACK lockscreen: notification settings unavailable, assuming lockscreen notifications are enabled: ${e.message}`);
+            this._notifSettings = null;
+            this._notifShowInLockScreenId = null;
+        }
+
         try {
             this._settings = this.getSettings(SETTINGS_SCHEMA);
         } catch (e) {
@@ -783,14 +811,6 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         syncCupertinoAlwaysShowUser();
 
-        // Cache the desktop notifications show-in-lock-screen setting so _hasVisibleNotifs()
-        // can read it cheaply on every animation frame instead of hitting GSettings each time.
-        this._notifSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.notifications' });
-        this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
-        this._notifShowInLockScreenId = this._notifSettings.connect('changed::show-in-lock-screen', () => {
-            this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
-        });
-
         this._settingsSignals.push(
             this._settings.connect('changed::clock-animation', syncClockAnimation),
             this._settings.connect('changed::prompt-animation', syncPromptAnimation),
@@ -825,8 +845,16 @@ export default class WackLockscreenClockExtension extends Extension {
         // NOTE: 'id' is captured by the closure below. GLib idle callbacks are never
         // fired synchronously, so 'id' is always assigned before the callback runs.
         let id = GLib.idle_add(priority, () => {
-            this._idleSources.delete(id);
-            return callback();
+            let result;
+            try {
+                result = callback();
+            } catch (e) {
+                this._idleSources.delete(id);
+                throw e;
+            }
+            if (result !== GLib.SOURCE_CONTINUE)
+                this._idleSources.delete(id);
+            return result;
         });
         this._idleSources.add(id);
         return id;
@@ -939,6 +967,35 @@ export default class WackLockscreenClockExtension extends Extension {
             if (msg === actor) return player;
         }
         return null;
+    }
+
+    _trackMediaPlayer(nb, player, actor) {
+        if (!player || !actor) return;
+
+        if (!this._playerSignalIds) this._playerSignalIds = new Map();
+        if (!this._playerActorIds) this._playerActorIds = new Map();
+
+        this._playerActorIds.set(actor, player);
+
+        if (this._playerSignalIds.has(player)) {
+            if (player.status === 'Playing')
+                this._lastPlayingPlayer = player;
+            return;
+        }
+
+        let prevStatus = player.status;
+        const id = player.connect('changed', () => {
+            const newStatus = player.status;
+            if (newStatus === 'Playing' && prevStatus !== 'Playing')
+                this._lastPlayingPlayer = player;
+            prevStatus = newStatus;
+            if (this._notifBox === nb)
+                this._enforceCardLimit(nb);
+        });
+
+        this._playerSignalIds.set(player, id);
+        if (player.status === 'Playing')
+            this._lastPlayingPlayer = player;
     }
 
     /**
@@ -1071,11 +1128,9 @@ export default class WackLockscreenClockExtension extends Extension {
      * @param {object} nb The notifications box.
      */
     _setupNotifBlur(nb) {
-        // Identify which media player was last playing to set initial priority
-        for (const [player] of nb._players.entries()) {
-            if (player.status === 'Playing')
-                this._lastPlayingPlayer = player;
-        }
+        // Track existing media players too; child-added only covers later arrivals.
+        for (const [player, actor] of nb._players.entries())
+            this._trackMediaPlayer(nb, player, actor);
 
         // Initialize blur effects and visibility constraints for existing notifications
         for (const child of nb._notificationBox.get_children())
@@ -1091,19 +1146,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
                 const player = this._getMediaPlayer(nb, actor);
                 if (player) {
-                    // Track playback status to prioritize active media players in the UI
-                    let prevStatus = player.status;
-                    const id = player.connect('changed', () => {
-                        const newStatus = player.status;
-                        if (newStatus === 'Playing' && prevStatus !== 'Playing')
-                            this._lastPlayingPlayer = player;
-                        prevStatus = newStatus;
-                        this._enforceCardLimit(nb);
-                    });
-                    if (!this._playerSignalIds) this._playerSignalIds = new Map();
-                    this._playerSignalIds.set(player, id);
-                    if (player.status === 'Playing')
-                        this._lastPlayingPlayer = player;
+                    this._trackMediaPlayer(nb, player, actor);
                 } else {
                     // Re-enforce limits if the shell explicitly changes a card's visibility
                     const visId = actor.connect('notify::visible', () => {
@@ -1128,11 +1171,12 @@ export default class WackLockscreenClockExtension extends Extension {
                 try { actor.disconnect(this._cardVisSignalIds.get(actor)); } catch (_) {}
                 this._cardVisSignalIds.delete(actor);
             }
-            const player = this._getMediaPlayer(nb, actor);
+            const player = this._playerActorIds?.get(actor) ?? this._getMediaPlayer(nb, actor);
             if (player && this._playerSignalIds && this._playerSignalIds.has(player)) {
                 try { player.disconnect(this._playerSignalIds.get(player)); } catch (_) {}
                 this._playerSignalIds.delete(player);
             }
+            this._playerActorIds?.delete(actor);
 
             this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
                 this._enforceCardLimit(nb);
@@ -1276,6 +1320,7 @@ export default class WackLockscreenClockExtension extends Extension {
             }
             this._playerSignalIds = null;
         }
+        this._playerActorIds = null;
 
         if (this._cardVisSignalIds) {
             for (const [actor, id] of this._cardVisSignalIds.entries()) {
@@ -1363,13 +1408,15 @@ export default class WackLockscreenClockExtension extends Extension {
             }
 
             if (animate) {
-                this._cupertinoRestPromptContainer.visible = true;
-                this._cupertinoRestPromptContainer.ease({
+                const restPromptContainer = this._cupertinoRestPromptContainer;
+                restPromptContainer.visible = true;
+                restPromptContainer.ease({
                     opacity: targetOpacity,
                     duration: CROSSFADE_TIME,
                     mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                     onComplete: () => {
-                        this._cupertinoRestPromptContainer.visible = targetOpacity > 0 && !this._promptActive;
+                        if (this._cupertinoRestPromptContainer === restPromptContainer)
+                            restPromptContainer.visible = targetOpacity > 0 && !this._promptActive;
                     }
                 });
             } else {
@@ -1384,13 +1431,15 @@ export default class WackLockscreenClockExtension extends Extension {
             // If we are in prompt mode (!this._promptActive == false), avatar stays solid.
             const targetOpacity = (!this._promptActive && hasNotifs) ? 0 : 255;
             if (animate) {
-                this._cupertinoAvatarContainer.visible = true;
-                this._cupertinoAvatarContainer.ease({
+                const avatarContainer = this._cupertinoAvatarContainer;
+                avatarContainer.visible = true;
+                avatarContainer.ease({
                     opacity: targetOpacity,
                     duration: CROSSFADE_TIME,
                     mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                     onComplete: () => {
-                        this._cupertinoAvatarContainer.visible = targetOpacity > 0;
+                        if (this._cupertinoAvatarContainer === avatarContainer)
+                            avatarContainer.visible = targetOpacity > 0;
                     }
                 });
             } else {
@@ -1409,15 +1458,17 @@ export default class WackLockscreenClockExtension extends Extension {
             const targetBlur = (!this._promptActive && hasNotifs) ? NOTIF_BLUR_RADIUS : 0;
 
             if (animate) {
+                const notifBox = this._notifBox;
                 // Must be visible before ease starts so the fade-in is rendered
                 if (targetOpacity > 0)
-                    this._notifBox.visible = true;
-                this._notifBox.ease({
+                    notifBox.visible = true;
+                notifBox.ease({
                     opacity: targetOpacity,
                     duration: CROSSFADE_TIME,
                     mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                     onComplete: () => {
-                        this._notifBox.visible = targetOpacity > 0;
+                        if (this._notifBox === notifBox)
+                            notifBox.visible = targetOpacity > 0;
                     },
                 });
 
@@ -1432,8 +1483,8 @@ export default class WackLockscreenClockExtension extends Extension {
                         });
                     }
                 };
-                this._notifBox._notificationBox.get_children().forEach(easeBlur);
-                this._notifBox._players.values().forEach(easeBlur);
+                notifBox._notificationBox.get_children().forEach(easeBlur);
+                notifBox._players.values().forEach(easeBlur);
             } else {
                 this._notifBox.remove_all_transitions();
                 this._notifBox.opacity = targetOpacity;
@@ -1634,7 +1685,6 @@ export default class WackLockscreenClockExtension extends Extension {
 
                     if (this._cupertinoRestPrompt && this._cupertinoRestPrompt._hintBox) {
                         const hintBox = this._cupertinoRestPrompt._hintBox;
-                        const label = this._cupertinoRestPrompt._hintLabel;
                         hintBox.ease({
                             opacity: 0,
                             duration: CROSSFADE_TIME / 2,
