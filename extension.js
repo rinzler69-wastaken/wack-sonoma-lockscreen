@@ -1060,7 +1060,10 @@ export default class WackLockscreenClockExtension extends Extension {
         let count = 0;
 
         // Count media players
-        count += [...(nb._players?.values() ?? [])].filter(m => m.visible).length;
+        for (const m of nb._players?.values() ?? []) {
+            if (m.visible)
+                count++;
+        }
 
         // Count unread notification cards based on GNOME Shell logic
         const shellVisible = new Set();
