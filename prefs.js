@@ -51,7 +51,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         homeBox.append(descriptionLabel);
 
         const versionButton = new Gtk.Button({
-            label: 'v1.0.0',
+            label: 'v1.0.2-beta.1',
             css_classes: ['app-version', 'text-button', 'pill'],
             halign: Gtk.Align.CENTER,
             margin_top: 24,
