@@ -1131,6 +1131,11 @@ export default class WackLockscreenClockExtension extends Extension {
      * @param {object} nb The notifications box.
      */
     _setupNotifBlur(nb) {
+        // GNOME 48 compatibility: _players was added in GNOME 49. Shim an empty
+        // Map so all downstream code can unconditionally call .values()/.entries()
+        // without crashing on older shells.
+        nb._players ??= new Map();
+
         // Track existing media players too; child-added only covers later arrivals.
         for (const [player, actor] of nb._players.entries())
             this._trackMediaPlayer(nb, player, actor);
