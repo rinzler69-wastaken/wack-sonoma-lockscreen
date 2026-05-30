@@ -3,6 +3,7 @@
   "description": "macOS Sonoma-inspired lock screen for GNOME Shell. Part of the WACK Project.",
   "uuid": "wack-lockscreen-clock@rinzler69-wastaken.github.com",
   "shell-version": [
+    "47",
     "48",
     "49",
     "50"

@@ -263,7 +263,8 @@ const WackClock = GObject.registerClass(
             );
 
             // Update the hint based on whether the device is in touch mode
-            const backend = this.get_context().get_backend();
+            // get_context() was added in GNOME 48; fall back to Clutter.get_default_backend() on 47.
+            const backend = this.get_context?.().get_backend() ?? Clutter.get_default_backend();
             this._seat = backend.get_default_seat();
             this._seat.connectObject('notify::touch-mode',
                 this._updateHint.bind(this), this);
