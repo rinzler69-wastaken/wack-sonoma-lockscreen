@@ -6,8 +6,9 @@
     color: rgba(255, 255, 255, 0.6);
     font-size: 30px;
     font-weight: 600;
+    /* font-family: 'SF Pro Display'; */
     /* for Inter, it's better to use 500. safe to use 600 for SF Pro Text */
-    letter-spacing: -2px;
+    letter-spacing: 0px;
     /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
     text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.02);
     /* font-family: 'Inter'; */
@@ -17,7 +18,7 @@
 .wack-time {
     color: rgba(255, 255, 255, 0.6);
     font-size: 128px;
-    font-family: '.SF Soft Numeric';
+    /* font-family: '.SF Soft Numeric'; */
     font-weight: 600;
     font-feature-settings: "pnum" 1, "tnum" 0;
     letter-spacing: 0;
@@ -27,7 +28,7 @@
 .unlock-dialog-clock-hint {
     color: rgba(255, 255, 255, 0.90);
     font-weight: 600;
-    font-size: 19px;
+    font-size: 18px;
     /* font-family: 'Inter'; */
     text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.15);
 }
@@ -39,7 +40,8 @@
     background-color: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04);
-    padding: 8px 12px;
+    padding: 14px;
+    font-size: 16px;
     margin-bottom: 4px;
     text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.08);
     /* box-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.08); */
@@ -53,6 +55,7 @@
 
 .unlock-dialog-notification-icon {
     box-shadow: 0 0 12px 2px rgba(0, 0, 0, 0.04);
+    icon-size: 24px;
 }
 
 #panel.unlock-screen .panel-button StIcon,
@@ -68,8 +71,9 @@
    .wack-cupertino-prompt — entry visible, label suppressed                   */
 
 .wack-cupertino-rest .user-widget.vertical .user-icon,
-.wack-cupertino-prompt .user-widget.vertical .user-icon {
-    icon-size: 86px;
+.wack-cupertino-prompt .user-widget.vertical .user-icon,
+.wack-cupertino-persistent-avatar .user-icon {
+    icon-size: 58px;
     opacity: 0 !important;
 }
 
@@ -77,20 +81,20 @@
 
 .wack-cupertino-rest .user-widget.vertical .user-icon StIcon,
 .wack-cupertino-prompt .user-widget.vertical .user-icon StIcon {
-    padding: 0px;
+    padding: 4px;
 }
 
 .wack-cupertino-rest .user-widget.vertical {
-    spacing: 16px;
+    spacing: 12px;
 }
 
 .wack-cupertino-prompt .user-widget.vertical {
-    spacing: 0px;
+    spacing: 2px;
 }
 
 /* Rest state: label at full size */
 .wack-cupertino-rest .user-widget-label {
-    font-size: 21px;
+    font-size: 19px;
     font-weight: 600;
     letter-spacing: 0;
     color: rgba(255, 255, 255, 0.9);
@@ -99,17 +103,17 @@
 
 /* Prompt state: label suppressed */
 .wack-cupertino-prompt .user-widget-label {
-    font-size: 0px !important;
+    font-size: 0 !important;
 }
 
 .wack-cupertino-rest .login-dialog-prompt-layout,
 .wack-cupertino-prompt .login-dialog-prompt-layout {
-    width: 22em;
-    spacing: 16px;
+    width: 18em;
+    spacing: 9px;
 }
 
 .wack-cupertino-prompt .login-dialog-button-box {
-    padding: 0 2em;
+    padding: 0 1.5em;
 }
 
 .wack-cupertino-rest .login-dialog-prompt-entry {
@@ -118,8 +122,9 @@
 
 .wack-cupertino-prompt .login-dialog-prompt-entry {
     font-size: 14px;
-    padding: 8px 8px;
-    margin-top: 4px;
+    padding: 2px 6px;
+    margin-top: 3px;
+    margin-bottom: 3px;
     border-radius: 9999px;
 }
 
@@ -130,25 +135,18 @@
 
 /* Tighten spacing in prompt mode so the caps lock warning sits flush to the entry */
 .wack-cupertino-prompt .login-dialog-prompt-layout {
-    spacing: 7px;
+    spacing: 4px;
 }
 
 /* Inline hint label anchored to the user widget in rest state */
 .wack-cupertino-hint {
     color: rgba(255, 255, 255, 0.625);
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     text-align: center;
     padding-top: 0;
-}
-
-/* The standalone persistent avatar container */
-.wack-cupertino-persistent-avatar {
-    /* margin-top: 10px; */
-}
-
-.wack-cupertino-persistent-avatar .user-icon {
-    icon-size: 86px;
+    text-align: center !important;
+    text-wrap: wrap !important;
 }
 
 /* ── Cupertino: restyle native CapsLockWarning and PAM message ──────────────
@@ -157,8 +155,8 @@
 
 .unlock-dialog .caps-lock-warning-label {
     color: rgba(255, 255, 255, 0.625) !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
     padding-top: 0 !important;
     min-height: 0 !important;
     margin-top: -1px !important;
@@ -169,10 +167,12 @@
 .unlock-dialog .login-dialog-message-hint,
 .unlock-dialog .login-dialog-message-warning {
     color: rgba(255, 255, 255, 0.625) !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
     padding-top: 0 !important;
-    min-height: 0 !important;
+    /* min-height: 0 !important; */
     margin-bottom: -1px !important;
     spacing: 0 !important;
+    text-align: center !important;
+    text-wrap: wrap !important;
 }

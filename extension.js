@@ -58,7 +58,7 @@ const NOTIF_BLUR_NAME = 'wack-notif-blur';
 const NOTIF_CARD_RADIUS = 12;
 
 // Cupertino mode prompt positioning
-const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.85; // Prompt center Y as fraction of screen height
+const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9075; // Prompt center Y as fraction of screen height
 // UI limits
 const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
 
@@ -1026,7 +1026,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 }
             }
         }
-        
+
         let hasVisiblePlayer = false;
         if (nb._players) {
             for (const m of nb._players.values()) {
@@ -1036,7 +1036,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 }
             }
         }
-        
+
         const nativelyHasNotifs = hasVisibleCard || hasVisiblePlayer;
 
         // If Always Show User Widget is enabled in Cupertino mode,
@@ -1177,12 +1177,12 @@ export default class WackLockscreenClockExtension extends Extension {
         this._actorRemovedId = nb._notificationBox.connect('child-removed', (container, actor) => {
             // Memory fix: explicitly disconnect signals and remove from Maps to prevent actor leaks
             if (this._cardVisSignalIds && this._cardVisSignalIds.has(actor)) {
-                try { actor.disconnect(this._cardVisSignalIds.get(actor)); } catch (_) {}
+                try { actor.disconnect(this._cardVisSignalIds.get(actor)); } catch (_) { }
                 this._cardVisSignalIds.delete(actor);
             }
             const player = this._playerActorIds?.get(actor) ?? this._getMediaPlayer(nb, actor);
             if (player && this._playerSignalIds && this._playerSignalIds.has(player)) {
-                try { player.disconnect(this._playerSignalIds.get(player)); } catch (_) {}
+                try { player.disconnect(this._playerSignalIds.get(player)); } catch (_) { }
                 this._playerSignalIds.delete(player);
             }
             this._playerActorIds?.delete(actor);
@@ -1730,7 +1730,7 @@ export default class WackLockscreenClockExtension extends Extension {
             if (this._cupertinoRestPrompt && this._cupertinoRestPrompt._hintBox) {
                 this._cupertinoRestPrompt._hintBox.remove_all_transitions();
                 this._cupertinoRestPrompt._hintBox.opacity = 255;
-                
+
                 // Only reset the text instantly if the container is staying visible.
                 // If it's fading out (hasNotifs is true or prompt is active), leave the text as-is to fade out smoothly.
                 if (!this._hasVisibleNotifs() && !this._promptActive) {
