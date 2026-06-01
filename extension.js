@@ -1493,7 +1493,7 @@ export default class WackLockscreenClockExtension extends Extension {
                     }
                 };
                 notifBox._notificationBox.get_children().forEach(easeBlur);
-                notifBox._players.values().forEach(easeBlur);
+                for (const actor of notifBox._players.values()) easeBlur(actor);
             } else {
                 this._notifBox.remove_all_transitions();
                 this._notifBox.opacity = targetOpacity;
@@ -1509,7 +1509,7 @@ export default class WackLockscreenClockExtension extends Extension {
                     }
                 };
                 this._notifBox._notificationBox.get_children().forEach(setBlur);
-                this._notifBox._players.values().forEach(setBlur);
+                for (const actor of this._notifBox._players.values()) setBlur(actor);
             }
         }
 
