@@ -58,7 +58,7 @@ const NOTIF_BLUR_NAME = 'wack-notif-blur';
 const NOTIF_CARD_RADIUS = 12;
 
 // Cupertino mode prompt positioning
-const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9075; // Prompt center Y as fraction of screen height
+const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9475; // Prompt center Y as fraction of screen height
 // UI limits
 const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
 
@@ -110,12 +110,18 @@ const WackCupertinoRestPrompt = GObject.registerClass(
                 text: '',
                 y_align: Clutter.ActorAlign.CENTER,
             });
+            this._currentText = '';
             this._hintLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
             this._hintLabel.clutter_text.line_wrap = true;
 
             this._hintBox.add_child(this._hintLabel);
 
-            this.add_child(this._hintBox);
+            this._hintBoxWrapper = new St.Bin({
+                x_expand: true,
+                opacity: 255,
+            });
+            this._hintBoxWrapper.set_child(this._hintBox);
+            this.add_child(this._hintBoxWrapper);
 
             this._currentText = '';
             this._currentCount = 0;
@@ -127,11 +133,7 @@ const WackCupertinoRestPrompt = GObject.registerClass(
             let oldChild = this._userWell.get_child();
             if (oldChild)
                 oldChild.destroy();
-
             let userWidget = new UserWidget.UserWidget(user, Clutter.Orientation.VERTICAL);
-            // Headless: keep the avatar for spacing but make it invisible
-            if (userWidget._avatar)
-                userWidget._avatar.opacity = 0;
             this._userWell.set_child(userWidget);
         }
 
@@ -151,14 +153,17 @@ const WackCupertinoRestPrompt = GObject.registerClass(
             // Escape the text to prevent markup injection errors
             const safeText = GLib.markup_escape_text(this._currentText, -1);
 
+            // Always use the same markup structure so Pango's line metrics are
+            // constant whether or not the bell emoji is present. Without this,
+            // switching between "N 🔔 · hint" and plain hint nudges the widget
+            // by ~2 px because the emoji has taller ascent/descent metrics.
             if (this._currentCount > 0) {
                 this._hintLabel.clutter_text.use_markup = true;
-                // Scale down the bell emoji slightly so its taller metrics don't shift the baseline
-                this._hintLabel.clutter_text.set_markup(`${this._currentCount} <span size="smaller">🔔\uFE0E</span>  ·  ${safeText}`);
+                this._hintLabel.clutter_text.set_markup(
+                    `${this._currentCount} <span size="smaller">🔔\uFE0E</span>  ·  ${safeText}`);
             } else {
-                // Plain text path — disable markup parsing to avoid unnecessary Pango overhead
                 this._hintLabel.clutter_text.use_markup = false;
-                this._hintLabel.clutter_text.text = this._currentText;
+                this._hintLabel.text = this._currentText;
             }
         }
     });
@@ -338,9 +343,20 @@ const WackLayout = GObject.registerClass(
             // Position the stack (which contains the auth prompt)
             let stackY;
             if (this._extension._lockscreenMode === 'cupertino') {
-                const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-                const refHeight = 180 * scaleFactor;
-                stackY = Math.floor(height * CUPERTINO_PROMPT_VERTICAL_FRACTION) - Math.floor(refHeight / 2);
+                // Anchor the full rest widget bottom at CUPERTINO_PROMPT_VERTICAL_FRACTION.
+                // We use the rest prompt container's preferred height (avatar spacing + name
+                // + hint) as the anchor. This value is stable across rest↔prompt transitions
+                // because the container stays in the actor tree regardless of visibility, so
+                // get_preferred_size() always returns the rest-state height even when the
+                // container is hidden during the prompt. The logical coordinate system
+                // already scales proportionally with display scale, so no fraction adjustment
+                // is needed — the visual fraction stays consistent at any DPI setting.
+                const restContainer = this._extension._cupertinoRestPromptContainer;
+                const [, , , restH] = restContainer
+                    ? restContainer.get_preferred_size()
+                    : [0, 0, 0, stackHeight];
+                const anchorH = restH > 0 ? restH : stackHeight;
+                stackY = Math.floor(height * CUPERTINO_PROMPT_VERTICAL_FRACTION) - anchorH;
             } else {
                 stackY = Math.min(
                     Math.floor(height / 3.0),
@@ -371,7 +387,6 @@ const WackLayout = GObject.registerClass(
 
 export default class WackLockscreenClockExtension extends Extension {
     enable() {
-        this.initTranslations();
         const dialog = Main.screenShield._dialog;
         if (!dialog) return;
 
@@ -599,18 +614,24 @@ export default class WackLockscreenClockExtension extends Extension {
                 // ── Cupertino mode ──────────────────────────────────────────
                 const mainBox = this._dialog?._promptBox?._authPrompt?._mainBox;
 
-                // Headless architecture: the persistent avatar NEVER fades during
-                // rest <-> prompt transitions if there are NO notifications.
-                // If there ARE notifications, it crossfades so it's solid at prompt and hidden at rest.
-                if (this._cupertinoAvatarContainer) {
-                    this._cupertinoAvatarContainer.opacity = hasNotifs ? Math.round(255 * progress) : 255;
-                    this._cupertinoAvatarContainer.visible = progress > 0 || !hasNotifs;
-                }
-
-                // Both rest container and prompt container cross-fade smoothly below the avatar
+                // The user-icon in the rest prompt stays at full opacity throughout
+                // rest↔prompt transitions — it never fades. Only the hint and name
+                // label fade out as the auth prompt fades in below the avatar.
                 if (this._cupertinoRestPromptContainer) {
-                    this._cupertinoRestPromptContainer.opacity = hasNotifs ? 0 : Math.round(255 * (1 - progress));
-                    this._cupertinoRestPromptContainer.visible = progress < 1 && !hasNotifs;
+                    if (hasNotifs) {
+                        // Notifications present: hide the whole rest widget so cards show
+                        this._cupertinoRestPromptContainer.opacity = 0;
+                        this._cupertinoRestPromptContainer.visible = false;
+                    } else {
+                        // No notifications: container always visible; fade only sub-content
+                        this._cupertinoRestPromptContainer.opacity = 255;
+                        this._cupertinoRestPromptContainer.visible = true;
+                        const subOpacity = Math.round(255 * (1 - progress));
+                        if (this._cupertinoRestPrompt?._hintBoxWrapper)
+                            this._cupertinoRestPrompt._hintBoxWrapper.opacity = subOpacity;
+                        const nameLabel = this._cupertinoRestPrompt?._userWell?.get_child()?._label;
+                        if (nameLabel) nameLabel.opacity = subOpacity;
+                    }
                 }
 
                 if (this._promptActor) {
@@ -1319,61 +1340,66 @@ export default class WackLockscreenClockExtension extends Extension {
         const hasNotifs = this._hasVisibleNotifs();
 
         if (this._cupertinoRestPromptContainer) {
-            const targetOpacity = hasNotifs ? 0 : 255;
-
             // Inline notification count updates
             const count = this._getNativeNotifCount();
             let nextCount = 0;
             if (this._cupertinoAlwaysShowUser && count > 0 && !this._cupertinoShowNotifsOverride) {
-                if (!this._cupertinoHintIsToggle) {
+                if (!this._cupertinoHintIsToggle)
                     nextCount = count;
+            }
+
+            if (hasNotifs) {
+                // Notifications: fade/hide the whole rest widget so cards can show
+                const targetOpacity = 0;
+                if (animate) {
+                    const restPromptContainer = this._cupertinoRestPromptContainer;
+                    restPromptContainer.visible = true;
+                    restPromptContainer.ease({
+                        opacity: targetOpacity,
+                        duration: CROSSFADE_TIME,
+                        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                        onComplete: () => {
+                            if (this._cupertinoRestPromptContainer === restPromptContainer)
+                                restPromptContainer.visible = false;
+                        },
+                    });
+                } else {
+                    this._cupertinoRestPromptContainer.remove_all_transitions();
+                    this._cupertinoRestPromptContainer.opacity = 0;
+                    this._cupertinoRestPromptContainer.visible = false;
                 }
-            }
-
-            // Prevent the counter from vanishing instantly before a fade-out crossfade completes
-            if (!(animate && targetOpacity === 0)) {
+            } else {
+                // No notifications: rest container should be visible.
+                // When called with animate=true (e.g. notifications just cleared),
+                // crossfade the container in so it doesn't pop abruptly over the cards.
                 this._cupertinoRestPrompt?.setNotifCount(nextCount);
-            }
 
-            if (animate) {
-                const restPromptContainer = this._cupertinoRestPromptContainer;
-                restPromptContainer.visible = true;
-                restPromptContainer.ease({
-                    opacity: targetOpacity,
-                    duration: CROSSFADE_TIME,
-                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                    onComplete: () => {
-                        if (this._cupertinoRestPromptContainer === restPromptContainer)
-                            restPromptContainer.visible = targetOpacity > 0 && !this._promptActive;
-                    }
-                });
-            } else {
-                this._cupertinoRestPromptContainer.remove_all_transitions();
-                this._cupertinoRestPromptContainer.opacity = targetOpacity;
-                this._cupertinoRestPromptContainer.visible = !this._promptActive && targetOpacity > 0;
-            }
-        }
+                const hintBoxWrapper = this._cupertinoRestPrompt?._hintBoxWrapper;
+                const nameLabel = this._cupertinoRestPrompt?._userWell?.get_child()?._label;
 
-        if (this._cupertinoAvatarContainer) {
-            // Fades out ONLY if we are in rest mode AND notifications appear.
-            // If we are in prompt mode (!this._promptActive == false), avatar stays solid.
-            const targetOpacity = (!this._promptActive && hasNotifs) ? 0 : 255;
-            if (animate) {
-                const avatarContainer = this._cupertinoAvatarContainer;
-                avatarContainer.visible = true;
-                avatarContainer.ease({
-                    opacity: targetOpacity,
-                    duration: CROSSFADE_TIME,
-                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                    onComplete: () => {
-                        if (this._cupertinoAvatarContainer === avatarContainer)
-                            avatarContainer.visible = targetOpacity > 0;
+                if (animate && !this._promptActive) {
+                    // Fade the container in from transparent
+                    this._cupertinoRestPromptContainer.remove_all_transitions();
+                    this._cupertinoRestPromptContainer.opacity = 0;
+                    this._cupertinoRestPromptContainer.visible = true;
+                    // Ensure sub-content is at full opacity before the fade starts
+                    if (hintBoxWrapper) { hintBoxWrapper.remove_all_transitions(); hintBoxWrapper.opacity = 255; }
+                    if (nameLabel) { nameLabel.remove_all_transitions(); nameLabel.opacity = 255; }
+                    this._cupertinoRestPromptContainer.ease({
+                        opacity: 255,
+                        duration: CROSSFADE_TIME,
+                        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    });
+                } else {
+                    this._cupertinoRestPromptContainer.remove_all_transitions();
+                    this._cupertinoRestPromptContainer.opacity = 255;
+                    this._cupertinoRestPromptContainer.visible = true;
+                    if (!this._promptActive) {
+                        // Returning to rest: restore hint and label immediately
+                        if (hintBoxWrapper) { hintBoxWrapper.remove_all_transitions(); hintBoxWrapper.opacity = 255; }
+                        if (nameLabel) { nameLabel.remove_all_transitions(); nameLabel.opacity = 255; }
                     }
-                });
-            } else {
-                this._cupertinoAvatarContainer.remove_all_transitions();
-                this._cupertinoAvatarContainer.opacity = targetOpacity;
-                this._cupertinoAvatarContainer.visible = targetOpacity > 0;
+                }
             }
         }
 
@@ -1542,17 +1568,6 @@ export default class WackLockscreenClockExtension extends Extension {
 
         this._dialog._stack.add_child(this._cupertinoRestPromptContainer);
 
-        // Create the persistent, independent floating avatar
-        this._cupertinoAvatarContainer = new St.Bin({
-            style_class: 'wack-cupertino-persistent-avatar',
-            x_expand: true,
-            x_align: Clutter.ActorAlign.CENTER,
-            y_align: Clutter.ActorAlign.START,
-        });
-        this._cupertinoAvatar = new UserWidget.Avatar(this._dialog._user);
-        this._cupertinoAvatarContainer.set_child(this._cupertinoAvatar);
-        this._dialog._stack.add_child(this._cupertinoAvatarContainer);
-
         // Sync hint text from seat touch-mode (same logic as the regular hint)
         if (!this._cupertinoSeat) {
             const backend = Clutter.get_default_backend();
@@ -1660,14 +1675,6 @@ export default class WackLockscreenClockExtension extends Extension {
         if (this._cupertinoSeat) {
             this._cupertinoSeat.disconnectObject(this);
             this._cupertinoSeat = null;
-        }
-        if (this._cupertinoAvatar) {
-            this._cupertinoAvatar.destroy();
-            this._cupertinoAvatar = null;
-        }
-        if (this._cupertinoAvatarContainer) {
-            this._cupertinoAvatarContainer.destroy();
-            this._cupertinoAvatarContainer = null;
         }
         if (this._cupertinoRestPrompt) {
             this._cupertinoRestPrompt.destroy();
