@@ -8,6 +8,9 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
 
+        // Increase default window size (width, height)
+        window.set_default_size(700, 800);
+
         // -- Home page -------------------------------------------------------
         const homePage = new Adw.PreferencesPage({
             title: 'Home',
@@ -89,7 +92,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         resourcesGroup.add(repoRow);
 
-        const supportGroup = new Adw.PreferencesGroup({ 
+        const supportGroup = new Adw.PreferencesGroup({
             title: 'Enjoying this extension?',
             description: 'Consider supporting its development!',
         });
