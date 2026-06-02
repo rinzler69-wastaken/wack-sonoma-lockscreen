@@ -14,5 +14,10 @@
   ],
   "settings-schema": "org.gnome.shell.extensions.wack-lockscreen-clock",
   "url": "https://github.com/rinzler69-wastaken/wack-sonoma-lockscreen",
-  "version": 1
+  "version": 1,
+  "donations": {
+    "paypal": "ArtFazil",
+    "kofi": "mikerinzler69",
+    "custom": "https://saweria.co/rinzler69"
+  }
 }
