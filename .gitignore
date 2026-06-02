@@ -3,3 +3,5 @@ venv
 .venv
 stylesheet.css
 schemas/gschemas.compiled
+locale/
+*.zip

@@ -62,12 +62,12 @@ Pairs well with:
 
 
 ## Install / update (one-step Makefile)
-Prereqs: `make`, `rsync`, GNOME Shell 48–50.
+Prereqs: `make`, `rsync`, `python3`, `gettext` (for locale compilation), GNOME Shell 46–50.
 
 ```bash
 git clone https://github.com/rinzler69-wastaken/wack-sonoma-lockscreen.git
 cd wack-sonoma-lockscreen
-make            # copies into ~/.local/share/gnome-shell/extensions/wack-lockscreen-clock@rinzler69-wastaken.github.com
+make            # compiles .mo locale files, copies everything into ~/.local/share/gnome-shell/extensions/
 ```
 
 Then reload GNOME Shell (`Alt+F2` → `r` on Xorg; logout/login on Wayland) and enable:
@@ -82,10 +82,16 @@ If you prefer one command after clone:
 make enable
 ```
 
+> **Locale files** (`locale/*.mo`) are build artifacts — they are generated automatically by `make` and excluded from the git repository. The source translations live in `po/`.
+
 Manual Tweak: If you want to change the blur strength or clock position, you can find the constants right at the top of ```extension.js.```
 
+## Usage Tips
+- **Best at 100% scaling** — The lockscreen layout is tuned for 100% (1×) display scaling. At fractional scaling (125%, 150%, etc.) the clock and prompt positions may appear slightly off. If you're on a HiDPI display, 100% + font scaling via GNOME Tweaks gives the cleanest result.
+- **Cupertino Mode** — Enable it in the extension preferences. Hit `Shift + N` on the lockscreen to toggle notification visibility when the user widget is always shown.
+
 ## Compatibility
-Developed and tested on GNOME 50 (Fedora). Reported issues on GNOME 49 + NVIDIA (works fine on GNOME 49 without NVIDIA. GNOME 48 support is untested. More issues are yet to be known since tests are yet to be made for other configurations. Feel free to open an issue if bugs are found, or clone and contribute!
+Developed and tested on GNOME 50 (Fedora). Backward compatibility tested down to GNOME 46 via GNOME Boxes VMs. Reported issues on GNOME 49 + NVIDIA (works fine on GNOME 49 without NVIDIA). Feel free to open an issue if bugs are found, or clone and contribute!
 
 ## About the WACK Project
 WACK (WACK Ain't Cupertino, Kid) brings the best design patterns and details from macOS to the GNOME Desktop — dock magnification, traffic-light window controls, lockscreen layout, quick settings layouts, and many more to come — built entirely within what GNOME already gives you.

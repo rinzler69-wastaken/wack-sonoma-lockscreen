@@ -62,58 +62,6 @@ const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9075; // Prompt center Y as fractio
 // UI limits
 const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
 
-// Localization for "More" text in overflow label
-const MORE_LOCALIZATION = {
-    'es': 'más',
-    'fr': 'plus',
-    'de': 'mehr',
-    'it': 'altro',
-    'pt': 'mais',
-    'ru': 'ещё',
-    'zh': '更多',
-    'ja': 'さらに',
-    'ko': '더 보기',
-    'ar': 'المزيد',
-    'hi': 'अधिक',
-    'tr': 'daha fazla',
-    'nl': 'meer',
-    'pl': 'więcej',
-    'sv': 'mer',
-    'da': 'mere',
-    'no': 'mer',
-    'fi': 'lisää',
-    'el': 'περισσότερα',
-    'he': 'עוד',
-    'id': 'lagi',
-    'th': 'เพิ่มเติม',
-    'vi': 'thêm',
-};
-
-const TOGGLE_HINT_LOCALIZATION = {
-    'es': 'Presiona Shift + N para ver notificaciones',
-    'fr': 'Appuyez sur Maj+N pour voir les notifications',
-    'de': 'Shift + N drücken, um Benachrichtigungen anzuzeigen',
-    'it': 'Premi Maiusc + N per visualizzare le notifiche',
-    'pt': 'Pressione Shift + N para ver as notificações',
-    'ru': 'Нажмите Shift + N для просмотра уведомлений',
-    'zh': '按 Shift + N 查看通知',
-    'ja': 'Shift + N で通知を表示',
-    'ko': 'Shift + N을 눌러 알림 보기',
-    'ar': 'اضغط Shift + N لعرض الإشعارات',
-    'hi': 'सूचनाएं देखने के लिए Shift + N दबाएं',
-    'tr': 'Bildirimleri görmek için Shift + N\'ye basın',
-    'nl': 'Druk op Shift + N om meldingen te bekijken',
-    'pl': 'Naciśnij Shift + N, aby wyświetlić powiadomienia',
-    'sv': 'Tryck på Shift + N för att visa aviseringar',
-    'da': 'Tryk på Shift + N for at se notifikationer',
-    'no': 'Trykk Shift + N for å se varsler',
-    'fi': 'Paina Shift + N nähdäksesi ilmoitukset',
-    'el': 'Πατήστε Shift + N για προβολή ειδοποιήσεων',
-    'he': 'הקש Shift + N כדי לראות התראות',
-    'id': 'Tekan Shift + N untuk melihat notifikasi',
-    'th': 'กด Shift + N เพื่อดูการแจ้งเตือน',
-    'vi': 'Nhấn Shift + N để xem thông báo',
-};
 
 function getPrettyDate() {
     try {
@@ -251,16 +199,14 @@ const WackClock = GObject.registerClass(
 
             // Setup the wall clock to update every minute
             this._wallClock = new GnomeDesktop.WallClock({ time_only: true });
-            this._wallClockId = this._wallClock.connect('notify::clock',
-                this._updateTime.bind(this));
+            this._wallClock.connectObject('notify::clock',
+                this._updateTime.bind(this), this);
 
             // Track 12h/24h preference so we can un-pad hours in 24h mode.
             // Reading system schema (org.gnome.desktop.interface) — no custom .gschema.xml needed
             this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
-            this._clockFormatChangedId = this._interfaceSettings.connect(
-                'changed::clock-format',
-                () => this._updateTime()
-            );
+            this._interfaceSettings.connectObject(
+                'changed::clock-format', () => this._updateTime(), this);
 
             // Update the hint based on whether the device is in touch mode
             // get_context() was added in GNOME 48; fall back to Clutter.get_default_backend() on 47.
@@ -288,7 +234,6 @@ const WackClock = GObject.registerClass(
             this._updateDate();
             this._updateHint();
 
-            this.connect('destroy', this._onDestroy.bind(this));
         }
 
         _updateTime() {
@@ -314,17 +259,11 @@ const WackClock = GObject.registerClass(
         /**
          * Clean up timers, monitors, and signal handlers.
          */
-        _onDestroy() {
-            if (this._wallClockId) {
-                this._wallClock.disconnect(this._wallClockId);
-                this._wallClockId = null;
-            }
+        destroy() {
+            this._wallClock.disconnectObject(this);
             this._wallClock = null;
 
-            if (this._clockFormatChangedId) {
-                this._interfaceSettings.disconnect(this._clockFormatChangedId);
-                this._clockFormatChangedId = null;
-            }
+            this._interfaceSettings.disconnectObject(this);
             this._interfaceSettings = null;
 
             if (this._idleMonitor && this._idleWatchId) {
@@ -337,6 +276,8 @@ const WackClock = GObject.registerClass(
                 GLib.source_remove(this._dateTimeoutId);
                 this._dateTimeoutId = null;
             }
+
+            super.destroy();
         }
     });
 
@@ -430,6 +371,7 @@ const WackLayout = GObject.registerClass(
 
 export default class WackLockscreenClockExtension extends Extension {
     enable() {
+        this.initTranslations();
         const dialog = Main.screenShield._dialog;
         if (!dialog) return;
 
@@ -439,7 +381,6 @@ export default class WackLockscreenClockExtension extends Extension {
         // Currently no overrideMethod() calls are active — it is cleared in disable().
         this._injectionManager = new InjectionManager();
         this._idleSources = new Set();
-        this._settingsSignals = [];
         this._clockAnimation = DEFAULT_CLOCK_ANIMATION;
         this._promptAnimation = DEFAULT_PROMPT_ANIMATION;
         this._lockscreenMode = 'wack';
@@ -464,14 +405,15 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         dialog._updateBackgroundEffects();
 
-        this._notifHeightId = dialog._notificationsBox.connect('notify::height', () => {
-            this._positionHint();
-            this._positionOverflow();
-        });
-        this._notifVisibleId = dialog._notificationsBox.connect('notify::visible', () => {
-            this._positionHint();
-            this._positionOverflow();
-        });
+        dialog._notificationsBox.connectObject(
+            'notify::height', () => {
+                this._positionHint();
+                this._positionOverflow();
+            },
+            'notify::visible', () => {
+                this._positionHint();
+                this._positionOverflow();
+            }, this);
 
         // Seamlessly replace the default shell clock with our custom WackClock instance.
         dialog._stack.remove_child(dialog._clock);
@@ -492,7 +434,11 @@ export default class WackLockscreenClockExtension extends Extension {
 
         this._dateLabel = dateLabel;
         this._timeLabel = timeLabel;
-        this._timeTextId = timeLabel.connect('notify::text', () => this._positionClock());
+        timeLabel.connectObject(
+            'notify::text', () => this._positionClock(),
+            'notify::allocation', () => this._centerClockLabel(timeLabel),
+            this);
+        dateLabel.connectObject('notify::allocation', () => this._centerClockLabel(dateLabel), this);
         this._positionClock();
 
         // Create a parent container actor for hint and overflow labels
@@ -505,22 +451,20 @@ export default class WackLockscreenClockExtension extends Extension {
         this._hint = hint;
         // _hintText caches the real hint string so overflow can inherit it
         this._hintText = hint.text;
-        // keep hint text in sync if seat touch-mode changes
-        this._hintTextSyncId = hint.connect('notify::text', () => {
-            if (!this._overflowActive)
-                this._hintText = hint.text;
-        });
-
-        // Guard: kill any idle-watch ease on the hint when it should be suppressed
-        this._hintOpacityGuardId = hint.connect('notify::opacity', () => {
-            const hasNotifs = this._hasVisibleNotifs();
-            const suppressHint = this._promptActive ||
-                (this._lockscreenMode === 'cupertino' && !hasNotifs && !this._overflowActive);
-            if (suppressHint && hint.opacity > 0) {
-                hint.remove_all_transitions();
-                hint.set_opacity(0);
-            }
-        });
+        hint.connectObject(
+            'notify::text', () => {
+                if (!this._overflowActive)
+                    this._hintText = hint.text;
+            },
+            'notify::opacity', () => {
+                const hasNotifs = this._hasVisibleNotifs();
+                const suppressHint = this._promptActive ||
+                    (this._lockscreenMode === 'cupertino' && !hasNotifs && !this._overflowActive);
+                if (suppressHint && hint.opacity > 0) {
+                    hint.remove_all_transitions();
+                    hint.set_opacity(0);
+                }
+            }, this);
         this._positionHint();
 
         // Initialize an overflow label to show when there are too many notifications.
@@ -542,7 +486,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._promptActor = dialog._promptBox ?? dialog._stack;
         this._promptActor?.set_pivot_point(0.5, 0.5);
 
-        this._keyPressId = dialog.connect('key-press-event', (actor, event) => {
+        dialog.connectObject('key-press-event', (actor, event) => {
             if (this._lockscreenMode === 'cupertino' && this._cupertinoAlwaysShowUser && !this._promptActive) {
                 const keysym = event.get_key_symbol();
                 const state = event.get_state();
@@ -560,17 +504,17 @@ export default class WackLockscreenClockExtension extends Extension {
                 }
             }
             return Clutter.EVENT_PROPAGATE;
-        });
+        }, this);
 
         this._applyPromptModeLayout();
 
         // Monitor changes
-        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => {
+        Main.layoutManager.connectObject('monitors-changed', () => {
             this._positionClock();
             this._positionHint();
             this._positionOverflow();
             this._applyPromptModeLayout();
-        });
+        }, this);
 
         // Patch the transition logic to implement our custom clock scaling and prompt blur transition
         this._origSetTransitionProgress = dialog._setTransitionProgress.bind(dialog);
@@ -731,13 +675,12 @@ export default class WackLockscreenClockExtension extends Extension {
         try {
             this._notifSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.notifications' });
             this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
-            this._notifShowInLockScreenId = this._notifSettings.connect('changed::show-in-lock-screen', () => {
+            this._notifSettings.connectObject('changed::show-in-lock-screen', () => {
                 this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
-            });
+            }, this);
         } catch (e) {
             console.warn(`WACK lockscreen: notification settings unavailable, assuming lockscreen notifications are enabled: ${e.message}`);
             this._notifSettings = null;
-            this._notifShowInLockScreenId = null;
         }
 
         try {
@@ -812,11 +755,12 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         syncCupertinoAlwaysShowUser();
 
-        this._settingsSignals.push(
-            this._settings.connect('changed::clock-animation', syncClockAnimation),
-            this._settings.connect('changed::prompt-animation', syncPromptAnimation),
-            this._settings.connect('changed::lockscreen-mode', syncLockscreenMode),
-            this._settings.connect('changed::cupertino-always-show-user', syncCupertinoAlwaysShowUser));
+        this._settings.connectObject(
+            'changed::clock-animation', syncClockAnimation,
+            'changed::prompt-animation', syncPromptAnimation,
+            'changed::lockscreen-mode', syncLockscreenMode,
+            'changed::cupertino-always-show-user', syncCupertinoAlwaysShowUser,
+            this);
     }
 
     _getClockAnimationParams() {
@@ -861,21 +805,6 @@ export default class WackLockscreenClockExtension extends Extension {
         return id;
     }
 
-    /**
-     * Looks up a localized string from a map keyed by language code.
-     * Iterates GLib language names from most to least specific until a match is found.
-     *
-     * @param {Object} map   Key-value map of langCode → localized string.
-     * @param {*} fallback   Value to return when no match is found.
-     * @returns {string|*}   The localized string, or fallback.
-     */
-    _getLocalized(map, fallback) {
-        for (const lang of GLib.get_language_names()) {
-            const code = lang.split('.')[0].split('_')[0];
-            if (map[code]) return map[code];
-        }
-        return fallback;
-    }
 
     /**
      * Creates a new blur effect for notification cards.
@@ -1146,53 +1075,52 @@ export default class WackLockscreenClockExtension extends Extension {
             this._addCardBlur(child);
         this._enforceCardLimit(nb);
 
-        // Listen for new notifications being added
-        this._actorAddedId = nb._notificationBox.connect('child-added', (container, actor) => {
-            this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                if (!actor.get_parent()) return GLib.SOURCE_REMOVE;
+        // Listen for new notifications being added / removed
+        nb._notificationBox.connectObject(
+            'child-added', (container, actor) => {
+                this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                    if (!actor.get_parent()) return GLib.SOURCE_REMOVE;
 
-                this._addCardBlur(actor);
+                    this._addCardBlur(actor);
 
-                const player = this._getMediaPlayer(nb, actor);
-                if (player) {
-                    this._trackMediaPlayer(nb, player, actor);
-                } else {
-                    // Re-enforce limits if the shell explicitly changes a card's visibility
-                    const visId = actor.connect('notify::visible', () => {
-                        this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                            this._enforceCardLimit(nb);
-                            return GLib.SOURCE_REMOVE;
+                    const player = this._getMediaPlayer(nb, actor);
+                    if (player) {
+                        this._trackMediaPlayer(nb, player, actor);
+                    } else {
+                        // Re-enforce limits if the shell explicitly changes a card's visibility
+                        const visId = actor.connect('notify::visible', () => {
+                            this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                                this._enforceCardLimit(nb);
+                                return GLib.SOURCE_REMOVE;
+                            });
                         });
-                    });
-                    if (!this._cardVisSignalIds) this._cardVisSignalIds = new Map();
-                    this._cardVisSignalIds.set(actor, visId);
+                        if (!this._cardVisSignalIds) this._cardVisSignalIds = new Map();
+                        this._cardVisSignalIds.set(actor, visId);
+                    }
+                    this._enforceCardLimit(nb);
+                    this._updateCupertinoRestState();
+                    return GLib.SOURCE_REMOVE;
+                });
+            },
+            'child-removed', (container, actor) => {
+                // Memory fix: explicitly disconnect signals and remove from Maps to prevent actor leaks
+                if (this._cardVisSignalIds && this._cardVisSignalIds.has(actor)) {
+                    try { actor.disconnect(this._cardVisSignalIds.get(actor)); } catch (_) { }
+                    this._cardVisSignalIds.delete(actor);
                 }
-                this._enforceCardLimit(nb);
-                this._updateCupertinoRestState();
-                return GLib.SOURCE_REMOVE;
-            });
-        });
+                const player = this._playerActorIds?.get(actor) ?? this._getMediaPlayer(nb, actor);
+                if (player && this._playerSignalIds && this._playerSignalIds.has(player)) {
+                    try { player.disconnect(this._playerSignalIds.get(player)); } catch (_) { }
+                    this._playerSignalIds.delete(player);
+                }
+                this._playerActorIds?.delete(actor);
 
-        // Listen for notifications being removed
-        this._actorRemovedId = nb._notificationBox.connect('child-removed', (container, actor) => {
-            // Memory fix: explicitly disconnect signals and remove from Maps to prevent actor leaks
-            if (this._cardVisSignalIds && this._cardVisSignalIds.has(actor)) {
-                try { actor.disconnect(this._cardVisSignalIds.get(actor)); } catch (_) { }
-                this._cardVisSignalIds.delete(actor);
-            }
-            const player = this._playerActorIds?.get(actor) ?? this._getMediaPlayer(nb, actor);
-            if (player && this._playerSignalIds && this._playerSignalIds.has(player)) {
-                try { player.disconnect(this._playerSignalIds.get(player)); } catch (_) { }
-                this._playerSignalIds.delete(player);
-            }
-            this._playerActorIds?.delete(actor);
-
-            this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                this._enforceCardLimit(nb);
-                this._updateCupertinoRestState();
-                return GLib.SOURCE_REMOVE;
-            });
-        });
+                this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                    this._enforceCardLimit(nb);
+                    this._updateCupertinoRestState();
+                    return GLib.SOURCE_REMOVE;
+                });
+            }, this);
 
         this._notifBox = nb;
     }
@@ -1260,14 +1188,13 @@ export default class WackLockscreenClockExtension extends Extension {
         this._hint.visible = false;
         this._hint.set_opacity(0);
 
-        // Attempt to localize the "More" text
-        let moreText = this._getLocalized(MORE_LOCALIZATION, null);
-
-        if (!moreText) {
+        // Localize the "more" overflow text via gettext, then fall back to
+        // GNOME Shell's own 'More' string (calendar context) if untranslated.
+        let moreText = this.gettext('more');
+        if (moreText === 'more') {
             moreText = Gettext.pgettext('calendar', 'More').toLowerCase();
-            if (moreText === 'more') {
+            if (moreText === 'more')
                 moreText = shellGettext('More').toLowerCase();
-            }
         }
 
         const overflowText = `${hiddenCount}+ ${moreText}`;
@@ -1313,15 +1240,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
         nb.opacity = 255;
 
-        if (this._actorAddedId) {
-            nb._notificationBox.disconnect(this._actorAddedId);
-            this._actorAddedId = null;
-        }
-
-        if (this._actorRemovedId) {
-            nb._notificationBox.disconnect(this._actorRemovedId);
-            this._actorRemovedId = null;
-        }
+        nb._notificationBox.disconnectObject(this);
 
         if (this._playerSignalIds) {
             for (const [player, id] of this._playerSignalIds.entries()) {
@@ -1560,18 +1479,16 @@ export default class WackLockscreenClockExtension extends Extension {
                 promptUserWidget._avatar.opacity = 0;
         }
 
-        if (!this._authPromptDestroyId) {
-            this._authPromptDestroyId = authPrompt.connect('destroy', () => this._teardownCupertinoAvatarOverride());
+        if (!this._cupertinoAvatarSetup) {
+            authPrompt.connectObject('destroy', () => this._teardownCupertinoAvatarOverride(), this);
         }
     }
 
     _teardownCupertinoAvatarOverride() {
         const authPrompt = this._dialog?._promptBox?._authPrompt;
 
-        if (this._authPromptDestroyId && authPrompt) {
-            authPrompt.disconnect(this._authPromptDestroyId);
-            this._authPromptDestroyId = null;
-        }
+        if (authPrompt)
+            authPrompt.disconnectObject(this);
 
         if (authPrompt && this._cupertinoOrigUpdateUser) {
             authPrompt.updateUser = this._cupertinoOrigUpdateUser;
@@ -1640,8 +1557,8 @@ export default class WackLockscreenClockExtension extends Extension {
         if (!this._cupertinoSeat) {
             const backend = Clutter.get_default_backend();
             this._cupertinoSeat = backend.get_default_seat();
-            this._seatTouchModeId = this._cupertinoSeat.connect(
-                'notify::touch-mode', () => this._syncCupertinoHint());
+            this._cupertinoSeat.connectObject(
+                'notify::touch-mode', () => this._syncCupertinoHint(), this);
         }
         this._syncCupertinoHint();
     }
@@ -1652,13 +1569,7 @@ export default class WackLockscreenClockExtension extends Extension {
             ? shellGettext('Swipe up to unlock')
             : shellGettext('Click or press a key to unlock');
 
-        let toggleText = this._getLocalized(TOGGLE_HINT_LOCALIZATION, null);
-
-        if (!toggleText) {
-            toggleText = shellGettext('Press Shift + N to view notifications');
-        }
-
-        this._cupertinoToggleHintText = toggleText;
+        this._cupertinoToggleHintText = this.gettext('Press Shift + N to view notifications');
 
         this._updateCupertinoHintCycle();
     }
@@ -1746,9 +1657,8 @@ export default class WackLockscreenClockExtension extends Extension {
             GLib.source_remove(this._cupertinoHintCycleId);
             this._cupertinoHintCycleId = null;
         }
-        if (this._seatTouchModeId && this._cupertinoSeat) {
-            this._cupertinoSeat.disconnect(this._seatTouchModeId);
-            this._seatTouchModeId = null;
+        if (this._cupertinoSeat) {
+            this._cupertinoSeat.disconnectObject(this);
             this._cupertinoSeat = null;
         }
         if (this._cupertinoAvatar) {
@@ -1795,21 +1705,23 @@ export default class WackLockscreenClockExtension extends Extension {
         wrapper.set_width(monitorWidth);
         wrapper.set_pivot_point(0.5, 0.5);
 
-        const centerLabel = (label) => {
-            const box = label.get_allocation_box();
-            const width = box.get_width();
-            if (width > 0)
-                label.set_x(Math.floor((monitorWidth - width) / 2));
-        };
+        this._centerClockLabel(dateLabel);
+        this._centerClockLabel(timeLabel);
+    }
 
-        if (this._dateAllocId) { dateLabel.disconnect(this._dateAllocId); this._dateAllocId = null; }
-        if (this._timeAllocId) { timeLabel.disconnect(this._timeAllocId); this._timeAllocId = null; }
-
-        this._dateAllocId = dateLabel.connect('notify::allocation', () => centerLabel(dateLabel));
-        this._timeAllocId = timeLabel.connect('notify::allocation', () => centerLabel(timeLabel));
-
-        centerLabel(dateLabel);
-        centerLabel(timeLabel);
+    /**
+     * Centers a clock label horizontally on the primary monitor.
+     * Called both directly and from notify::allocation handlers.
+     */
+    _centerClockLabel(label) {
+        const monitor = Main.layoutManager.primaryMonitor;
+        if (!monitor) return;
+        const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        const monitorWidth = monitor.width / scaleFactor;
+        const box = label.get_allocation_box();
+        const width = box.get_width();
+        if (width > 0)
+            label.set_x(Math.floor((monitorWidth - width) / 2));
     }
 
     /**
@@ -1871,18 +1783,13 @@ export default class WackLockscreenClockExtension extends Extension {
         const mainBox = this._dialog?._promptBox?._authPrompt?._mainBox;
         if (mainBox) mainBox.opacity = 255;
 
-        if (this._settings && this._settingsSignals) {
-            for (const id of this._settingsSignals)
-                this._settings.disconnect(id);
-        }
-        this._settingsSignals = [];
+        if (this._settings)
+            this._settings.disconnectObject(this);
         this._settings = null;
 
         // Tear down the notification show-in-lock-screen cache
-        if (this._notifSettings && this._notifShowInLockScreenId) {
-            this._notifSettings.disconnect(this._notifShowInLockScreenId);
-            this._notifShowInLockScreenId = null;
-        }
+        if (this._notifSettings)
+            this._notifSettings.disconnectObject(this);
         this._notifSettings = null;
         this._notifShowInLockScreen = false;
 
@@ -1891,35 +1798,15 @@ export default class WackLockscreenClockExtension extends Extension {
         this._injectionManager = null;
 
         // Disconnect from UI signals
-        if (this._notifHeightId) {
-            this._dialog._notificationsBox?.disconnect(this._notifHeightId);
-            this._notifHeightId = null;
-        }
-        if (this._notifVisibleId) {
-            this._dialog._notificationsBox?.disconnect(this._notifVisibleId);
-            this._notifVisibleId = null;
-        }
-        if (this._monitorsChangedId) {
-            Main.layoutManager.disconnect(this._monitorsChangedId);
-            this._monitorsChangedId = null;
-        }
-        if (this._keyPressId) {
-            this._dialog?.disconnect(this._keyPressId);
-            this._keyPressId = null;
-        }
+        this._dialog._notificationsBox?.disconnectObject(this);
+        Main.layoutManager.disconnectObject(this);
+        this._dialog.disconnectObject(this);
 
         const lockDialogGroup = Main.screenShield?._lockDialogGroup;
 
         // Restore the standard interaction hint
         if (this._hint) {
-            if (this._hintTextSyncId) {
-                this._hint.disconnect(this._hintTextSyncId);
-                this._hintTextSyncId = null;
-            }
-            if (this._hintOpacityGuardId) {
-                this._hint.disconnect(this._hintOpacityGuardId);
-                this._hintOpacityGuardId = null;
-            }
+            this._hint.disconnectObject(this);
             this._hint.visible = true;
             this._hint = null;
         }
@@ -1939,21 +1826,11 @@ export default class WackLockscreenClockExtension extends Extension {
 
         // Remove decoupled date/time labels and their wrapper
         if (this._dateLabel) {
-            if (this._dateAllocId) {
-                this._dateLabel.disconnect(this._dateAllocId);
-                this._dateAllocId = null;
-            }
+            this._dateLabel.disconnectObject(this);
             this._dateLabel = null;
         }
         if (this._timeLabel) {
-            if (this._timeAllocId) {
-                this._timeLabel.disconnect(this._timeAllocId);
-                this._timeAllocId = null;
-            }
-            if (this._timeTextId) {
-                this._timeLabel.disconnect(this._timeTextId);
-                this._timeTextId = null;
-            }
+            this._timeLabel.disconnectObject(this);
             this._timeLabel = null;
         }
         if (this._clockWrapper) {

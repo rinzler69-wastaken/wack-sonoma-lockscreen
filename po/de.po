@@ -1,0 +1,15 @@
+# WACK - Sonoma Lockscreen
+# Copyright (C) 2026 rinzler69-wastaken
+msgid ""
+msgstr ""
+"Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
+
+msgid "more"
+msgstr "mehr"
+
+msgid "Press Shift + N to view notifications"
+msgstr "Shift + N drücken, um Benachrichtigungen anzuzeigen"
