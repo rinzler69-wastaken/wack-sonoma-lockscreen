@@ -6,7 +6,7 @@
     color: rgba(255, 255, 255, 0.6);
     font-size: 30px;
     font-weight: 600;
-    font-family: 'SF Pro Display';
+    /* font-family: 'SF Pro Display'; */
     /* for Inter, it's better to use 500. safe to use 600 for SF Pro Text */
     letter-spacing: 0px;
     /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
@@ -18,7 +18,7 @@
 .wack-time {
     color: rgba(255, 255, 255, 0.6);
     font-size: 128px;
-    font-family: '.SF Soft Numeric';
+    /* font-family: '.SF Soft Numeric'; */
     font-weight: 600;
     font-feature-settings: "pnum" 1, "tnum" 0;
     letter-spacing: 0;
