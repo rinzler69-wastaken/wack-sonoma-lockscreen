@@ -4,7 +4,7 @@
   <a href="https://github.com/rinzler69-wastaken/wack-sonoma-lockscreen/stargazers"><img src="https://img.shields.io/github/stars/rinzler69-wastaken/wack-sonoma-lockscreen?style=flat&color=yellow" alt="Stars"/></a>
   <a href="https://github.com/rinzler69-wastaken/wack-sonoma-lockscreen/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="License"/></a>
   <a href="https://github.com/rinzler69-wastaken/wack-sonoma-lockscreen/releases"><img src="https://img.shields.io/github/v/release/rinzler69-wastaken/wack-sonoma-lockscreen" alt="Release"/></a>
-  <a href="https://extensions.gnome.org/"><img src="https://img.shields.io/badge/GNOME%20Extensions-Available-4A86CF?logo=GNOME&logoColor=white" alt="GNOME Extensions"/></a>
+  <a href="https://extensions.gnome.org/extension/9713/wack-sonoma-lockscreen/"><img src="https://img.shields.io/badge/GNOME%20Extensions-Available-4A86CF?logo=GNOME&logoColor=white" alt="GNOME Extensions"/></a>
   <img src="https://img.shields.io/badge/GNOME-46--50-77767B?logo=gnome&logoColor=white" alt="GNOME Version"/>
 </p>
 
