@@ -2,6 +2,7 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
+import Gdm from 'gi://Gdm';
 
 import Gettext from 'gettext';
 import { Extension, InjectionManager } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -78,6 +79,15 @@ export default class WackLockscreenClockExtension extends Extension {
             }
         };
         dialog._updateBackgroundEffects();
+
+        // Overwrite user-switch visibility update to hide the button in Cupertino mode
+        this._origUpdateUserSwitchVisibility = dialog._updateUserSwitchVisibility.bind(dialog);
+        dialog._updateUserSwitchVisibility = () => {
+            this._origUpdateUserSwitchVisibility();
+            if (this._lockscreenMode === 'cupertino')
+                dialog._otherUserButton.visible = false;
+        };
+        dialog._updateUserSwitchVisibility();
 
         dialog._notificationsBox.connectObject(
             'notify::height', () => {
@@ -275,19 +285,29 @@ export default class WackLockscreenClockExtension extends Extension {
                 // rest↔prompt transitions — it never fades. Only the hint and name
                 // label fade out as the auth prompt fades in below the avatar.
                 if (this._cupertinoRestPromptContainer) {
-                    if (hasNotifs) {
+                    if (hasNotifs && progress === 0) {
                         // Notifications present: hide the whole rest widget so cards show
                         this._cupertinoRestPromptContainer.opacity = 0;
                         this._cupertinoRestPromptContainer.visible = false;
                     } else {
-                        // No notifications: container always visible; fade only sub-content
-                        this._cupertinoRestPromptContainer.opacity = 255;
-                        this._cupertinoRestPromptContainer.visible = true;
+                        // No notifications OR prompt is active: container visible; fade only sub-content
+                        const targetOpacity = hasNotifs ? Math.round(255 * progress) : 255;
+                        this._cupertinoRestPromptContainer.opacity = targetOpacity;
+                        this._cupertinoRestPromptContainer.visible = targetOpacity > 0;
                         const subOpacity = Math.round(255 * (1 - progress));
                         if (this._cupertinoRestPrompt?._hintBoxWrapper)
                             this._cupertinoRestPrompt._hintBoxWrapper.opacity = subOpacity;
                         const nameLabel = this._cupertinoRestPrompt?._userWell?.get_child()?._label;
                         if (nameLabel) nameLabel.opacity = subOpacity;
+                    }
+                }
+
+                // Toggle clickability styling on avatar button
+                if (this._cupertinoRestPrompt?._avatarButton) {
+                    if (progress > 0) {
+                        this._cupertinoRestPrompt._avatarButton.add_style_class_name('wack-avatar-clickable');
+                    } else {
+                        this._cupertinoRestPrompt._avatarButton.remove_style_class_name('wack-avatar-clickable');
                     }
                 }
 
@@ -390,6 +410,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 this._lockscreenMode = 'wack';
             }
             this._applyPromptModeLayout?.();
+            this._dialog?._updateUserSwitchVisibility?.();
 
             // Reset toggle state when mode changes
             this._cupertinoShowNotifsOverride = false;
@@ -742,6 +763,20 @@ export default class WackLockscreenClockExtension extends Extension {
         this._mainBox?.queue_relayout();
     }
 
+    triggerSwitchUser() {
+        if (this._lockscreenMode !== 'cupertino') return;
+
+        try {
+            Gdm.goto_login_session_sync(null);
+        } catch (e) {
+            console.error(`WACK lockscreen: failed to switch user: ${e.message}`);
+        }
+
+        if (this._dialog?._authPrompt) {
+            this._dialog._authPrompt.cancel();
+        }
+    }
+
     _createCupertinoRestPrompt() {
         if (this._cupertinoRestPromptContainer) return;
 
@@ -751,7 +786,7 @@ export default class WackLockscreenClockExtension extends Extension {
             reactive: false,
         });
 
-        this._cupertinoRestPrompt = new WackCupertinoRestPrompt(this._dialog._user);
+        this._cupertinoRestPrompt = new WackCupertinoRestPrompt(this._dialog._user, this);
         this._cupertinoRestPromptContainer.add_child(this._cupertinoRestPrompt);
 
         this._dialog._stack.add_child(this._cupertinoRestPromptContainer);
@@ -969,6 +1004,13 @@ export default class WackLockscreenClockExtension extends Extension {
             this._dialog._updateBackgroundEffects = this._origUpdateBgEffects;
             this._origUpdateBgEffects = null;
             this._dialog._updateBackgroundEffects();
+        }
+
+        // Restore the original user switch visibility method
+        if (this._origUpdateUserSwitchVisibility) {
+            this._dialog._updateUserSwitchVisibility = this._origUpdateUserSwitchVisibility;
+            this._origUpdateUserSwitchVisibility = null;
+            this._dialog._updateUserSwitchVisibility();
         }
 
         this._notifManager.teardownNotifBlur();

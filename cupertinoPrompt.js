@@ -7,7 +7,7 @@ import * as UserWidget from 'resource:///org/gnome/shell/ui/userWidget.js';
 
 export const WackCupertinoRestPrompt = GObject.registerClass(
     class WackCupertinoRestPrompt extends St.BoxLayout {
-        _init(user) {
+        _init(user, extension) {
             super._init({
                 style_class: 'login-dialog-prompt-layout',
                 vertical: true,
@@ -16,9 +16,14 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
                 reactive: false,
             });
 
+            this._extension = extension;
+
+            this._avatarButton = null;
             this._userWell = new St.Bin({
                 x_expand: true,
+                x_align: Clutter.ActorAlign.CENTER,
                 y_align: Clutter.ActorAlign.START,
+                reactive: false,
             });
             this.add_child(this._userWell);
 
@@ -59,6 +64,27 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
             if (oldChild)
                 oldChild.destroy();
             let userWidget = new UserWidget.UserWidget(user, Clutter.Orientation.VERTICAL);
+
+            let avatar = userWidget._avatar;
+            if (avatar) {
+                userWidget.remove_child(avatar);
+                this._avatarButton = new St.Button({
+                    style_class: 'wack-avatar-well',
+                    x_expand: false,
+                    x_align: Clutter.ActorAlign.CENTER,
+                    y_align: Clutter.ActorAlign.START,
+                    can_focus: false,
+                    child: avatar,
+                });
+                userWidget.insert_child_at_index(this._avatarButton, 0);
+
+                this._avatarButton.connect('clicked', () => {
+                    if (this._extension && this._extension._promptActive) {
+                        this._extension.triggerSwitchUser();
+                    }
+                });
+            }
+
             this._userWell.set_child(userWidget);
         }
 
