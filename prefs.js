@@ -57,8 +57,25 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         });
         homeBox.append(descriptionLabel);
 
+        let versionName = this.metadata['version-name'] || this.metadata.version || '';
+        if (!versionName && this.dir) {
+            try {
+                const file = this.dir.get_child('metadata.json');
+                const [, contents] = file.load_contents(null);
+                const decoder = new TextDecoder('utf-8');
+                const parsedMetadata = JSON.parse(decoder.decode(contents));
+                versionName = parsedMetadata['version-name'] || parsedMetadata.version || '';
+            } catch (e) {
+                console.error('Failed to parse metadata.json:', e);
+            }
+        }
+
+        const versionLabel = versionName
+            ? (versionName.startsWith('v') ? versionName : `v${versionName}`)
+            : 'v1.1.0';
+
         const versionButton = new Gtk.Button({
-            label: 'v1.1.0',
+            label: versionLabel,
             css_classes: ['app-version', 'text-button', 'pill'],
             halign: Gtk.Align.CENTER,
             margin_top: 24,
