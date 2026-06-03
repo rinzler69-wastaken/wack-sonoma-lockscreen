@@ -161,11 +161,11 @@
 
 
 .wack-cupertino-rest .user-widget.vertical {
-    spacing: 10px;
+    spacing: 15px;
 }
 
 .wack-cupertino-prompt .user-widget.vertical {
-    spacing: 0;
+    spacing: 5px;
 }
 
 /* Rest state: label at full size */
@@ -211,7 +211,7 @@
 
 /* Tighten spacing in prompt mode so the caps lock warning sits flush to the entry */
 .wack-cupertino-prompt .login-dialog-prompt-layout {
-    spacing: 5px;
+    spacing: 4px;
 }
 
 /* Inline hint label anchored to the user widget in rest state */
@@ -219,7 +219,6 @@
     color: rgba(255, 255, 255, 0.625);
     font-size: 14px;
     font-weight: 700;
-    min-height: 1.75em;
     padding-top: 0;
     text-align: center !important;
     text-wrap: wrap !important;

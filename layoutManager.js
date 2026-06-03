@@ -60,19 +60,16 @@ export const WackLayout = GObject.registerClass(
             // Position the stack (which contains the auth prompt)
             let stackY;
             if (this._extension._lockscreenMode === 'cupertino') {
-                // Anchor the full rest widget bottom at CUPERTINO_PROMPT_VERTICAL_FRACTION.
-                // We use the rest prompt container's preferred height (avatar spacing + name
-                // + hint) as the anchor. This value is stable across rest↔prompt transitions
-                // because the container stays in the actor tree regardless of visibility, so
-                // get_preferred_size() always returns the rest-state height even when the
-                // container is hidden during the prompt. The logical coordinate system
-                // already scales proportionally with display scale, so no fraction adjustment
-                // is needed — the visual fraction stays consistent at any DPI setting.
-                const restContainer = this._extension._cupertinoRestPromptContainer;
-                const [, , , restH] = restContainer
-                    ? restContainer.get_preferred_size()
-                    : [0, 0, 0, stackHeight];
-                const anchorH = restH > 0 ? restH : stackHeight;
+                // Anchor the user widget (avatar + name) by allocating a static, scale-aware
+                // 30% height buffer for the hint text below it. This ensures the top of the
+                // stack remains perfectly stationary during text cycles, but is pushed
+                // upwards toward the screen center under higher display scaling.
+                const restPrompt = this._extension._cupertinoRestPrompt;
+                const userWell = restPrompt?._userWell;
+                const [, , , wellH] = userWell
+                    ? userWell.get_preferred_size()
+                    : [0, 0, 0, 0];
+                const anchorH = wellH > 0 ? Math.floor(wellH * 1.3) : stackHeight;
                 stackY = Math.floor(height * CUPERTINO_PROMPT_VERTICAL_FRACTION) - anchorH;
             } else {
                 stackY = Math.min(

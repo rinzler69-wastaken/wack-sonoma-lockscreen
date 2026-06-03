@@ -197,7 +197,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         // -- Mode selector --------------------------------------------------
         const modeGroup = new Adw.PreferencesGroup({
             title: 'Lockscreen Mode',
-            description: 'Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look.',
+            description: 'Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode).',
         });
 
         const modeRow = new Adw.ActionRow({

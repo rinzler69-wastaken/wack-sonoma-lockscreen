@@ -27,7 +27,7 @@ export const NOTIF_BLUR_NAME = 'wack-notif-blur';
 export const NOTIF_CARD_RADIUS = 12;
 
 // Cupertino mode prompt positioning
-export const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9475; // Prompt center Y as fraction of screen height
+export const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9575; // Prompt center Y as fraction of screen height
 // UI limits
 export const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
 
