@@ -30,6 +30,7 @@ export class NotificationManager {
         this._playerActorIds = new Map();
         this._cardVisSignalIds = new Map();
         this._notifBox = null;
+        this._origUpdateVisibility = null;
     }
 
     _makeCardBlur() {
@@ -223,6 +224,15 @@ export class NotificationManager {
 
         for (const child of nb._notificationBox.get_children())
             this._addCardBlur(child);
+
+        // Hook _updateVisibility to capture all notification changes (adds, removes, count updates)
+        this._origUpdateVisibility = nb._updateVisibility.bind(nb);
+        nb._updateVisibility = () => {
+            this._origUpdateVisibility();
+            this.enforceCardLimit(nb);
+            this._extension?._updateCupertinoRestState();
+        };
+
         this.enforceCardLimit(nb);
 
         nb._notificationBox.connectObject(
@@ -370,6 +380,11 @@ export class NotificationManager {
         nb.opacity = 255;
 
         nb._notificationBox.disconnectObject(this._extension);
+
+        if (this._origUpdateVisibility) {
+            nb._updateVisibility = this._origUpdateVisibility;
+            this._origUpdateVisibility = null;
+        }
 
         if (this._playerSignalIds) {
             for (const [player, id] of this._playerSignalIds.entries()) {
