@@ -308,13 +308,17 @@ export default class WackLockscreenClockExtension extends Extension {
                     }
                 }
 
-                // Toggle clickability styling on avatar button
+                // Toggle clickability styling and reactivity on avatar button
                 if (this._cupertinoRestPrompt?._avatarButton) {
-                    if (progress > 0) {
+                    const shouldBeClickable = progress > 0;
+                    if (shouldBeClickable) {
                         this._cupertinoRestPrompt._avatarButton.add_style_class_name('wack-avatar-clickable');
                     } else {
                         this._cupertinoRestPrompt._avatarButton.remove_style_class_name('wack-avatar-clickable');
                     }
+                    this._cupertinoRestPrompt._avatarButton.reactive = shouldBeClickable;
+                    if (!shouldBeClickable)
+                        this._cupertinoRestPrompt._avatarButton.hover = false;
                 }
 
                 if (this._promptActor) {
@@ -557,6 +561,11 @@ export default class WackLockscreenClockExtension extends Extension {
         const hasNotifs = this._notifManager.hasVisibleNotifs();
 
         if (this._cupertinoRestPromptContainer) {
+            if (this._cupertinoRestPrompt?._avatarButton) {
+                this._cupertinoRestPrompt._avatarButton.reactive = this._promptActive;
+                if (!this._promptActive)
+                    this._cupertinoRestPrompt._avatarButton.hover = false;
+            }
             // Inline notification count updates
             const count = this._notifManager.getNativeNotifCount();
             let nextCount = 0;
@@ -778,8 +787,9 @@ export default class WackLockscreenClockExtension extends Extension {
             console.error(`WACK lockscreen: failed to switch user: ${e.message}`);
         }
 
-        if (this._dialog?._authPrompt) {
-            this._dialog._authPrompt.cancel();
+        const authPrompt = this._dialog?._promptBox?._authPrompt;
+        if (authPrompt) {
+            authPrompt.cancel();
         }
     }
 

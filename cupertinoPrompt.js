@@ -61,8 +61,15 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
 
         setUser(user) {
             let oldChild = this._userWell.get_child();
-            if (oldChild)
+            if (oldChild) {
+                if (this._avatarButton) {
+                    this._avatarButton.disconnectObject(this);
+                    this._avatarButton = null;
+                }
                 oldChild.destroy();
+            }
+
+            this._avatarButton = null;
             let userWidget = new UserWidget.UserWidget(user, Clutter.Orientation.VERTICAL);
 
             let avatar = userWidget._avatar;
@@ -75,14 +82,15 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
                     y_align: Clutter.ActorAlign.START,
                     can_focus: false,
                     child: avatar,
+                    reactive: this._extension ? this._extension._promptActive : false,
                 });
                 userWidget.insert_child_at_index(this._avatarButton, 0);
 
-                this._avatarButton.connect('clicked', () => {
+                this._avatarButton.connectObject('clicked', () => {
                     if (this._extension && this._extension._promptActive) {
                         this._extension.triggerSwitchUser();
                     }
-                });
+                }, this);
             }
 
             this._userWell.set_child(userWidget);
