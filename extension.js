@@ -1,17 +1,7 @@
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import GnomeDesktop from 'gi://GnomeDesktop';
-import GObject from 'gi://GObject';
-import Pango from 'gi://Pango';
-import Shell from 'gi://Shell';
 import St from 'gi://St';
-let Blur = null;
-try {
-    Blur = (await import('gi://Blur')).default;
-} catch (_) {
-    // gnome-rounded-blur not installed — falling back to Shell.BlurEffect
-}
 
 import Gettext from 'gettext';
 import { Extension, InjectionManager } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -29,361 +19,27 @@ import {
 
 const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('gnome-shell'));
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as UserWidget from 'resource:///org/gnome/shell/ui/userWidget.js';
+import { WackClock } from './wackClock.js';
+import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
+import { WackLayout } from './layoutManager.js';
+import { NotificationManager } from './notificationManager.js';
+import {
+    PROMPT_BLUR_RADIUS,
+    PROMPT_BLUR_BRIGHTNESS,
+    NOTIF_BLUR_RADIUS,
+    NOTIF_BLUR_NAME,
+    CROSSFADE_TIME,
+    DATETIME_TOP_FRACTION,
+    HINT_VERTICAL_FRACTION,
+    HINT_NOTIF_MARGIN,
+    FADE_OUT_SCALE,
+    DATE_LABEL_HEIGHT,
+    TIME_LABEL_HEIGHT_FALLBACK,
+    SETTINGS_SCHEMA,
+    CUPERTINO_PROMPT_VERTICAL_FRACTION,
+    MAX_VISIBLE_CARDS,
+} from './constants.js';
 
-const HINT_TIMEOUT = 4; // Seconds before the "swipe to unlock" hint appears
-const CROSSFADE_TIME = 500; // Animation duration for transitions
-
-// Visual positioning constants
-const DATETIME_TOP_FRACTION = 0.09; // Date/Time offset from the top (percentage of screen height)
-const HINT_VERTICAL_FRACTION = 0.875; // Hint offset from the top
-const HINT_NOTIF_MARGIN = 16; // Minimum vertical gap between hint and notifications
-const FADE_OUT_SCALE = 0.3; // Scale factor when the clock shrinks during unlock transition
-
-// Date label height/gap from the clock
-const DATE_LABEL_HEIGHT = 25;
-const TIME_LABEL_HEIGHT_FALLBACK = 128; // Fallback natural height for the time label in logical px
-
-// Background blur settings when entering the password prompt
-const PROMPT_BLUR_RADIUS = 50;
-const PROMPT_BLUR_BRIGHTNESS = 0.85;
-const PROMPT_BLUR_DURATION = 300;
-
-const SETTINGS_SCHEMA = 'org.gnome.shell.extensions.wack-lockscreen-clock';
-
-// Individual notification card blur settings
-const NOTIF_BLUR_RADIUS = 30;
-const NOTIF_BLUR_BRIGHTNESS = 1.0;
-const NOTIF_BLUR_NAME = 'wack-notif-blur';
-const NOTIF_CARD_RADIUS = 12;
-
-// Cupertino mode prompt positioning
-const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9475; // Prompt center Y as fraction of screen height
-// UI limits
-const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
-
-
-function getPrettyDate() {
-    try {
-        const now = GLib.DateTime.new_now_local();
-        const day = now.get_day_of_month();
-        return `${now.format('%A, %B')} ${day}`;
-    } catch (e) {
-        const now = new Date();
-        return now.toLocaleDateString(undefined, {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-        });
-    }
-}
-
-
-
-const WackCupertinoRestPrompt = GObject.registerClass(
-    class WackCupertinoRestPrompt extends St.BoxLayout {
-        _init(user) {
-            super._init({
-                style_class: 'login-dialog-prompt-layout',
-                vertical: true,
-                x_expand: true,
-                x_align: Clutter.ActorAlign.CENTER,
-                reactive: false,
-            });
-
-            this._userWell = new St.Bin({
-                x_expand: true,
-                y_align: Clutter.ActorAlign.START,
-            });
-            this.add_child(this._userWell);
-
-            // Inline hint box — anchored to the user widget stack.
-            // Contains notification count/icon (if always-show-user hides them) and the unlock hint.
-            this._hintBox = new St.BoxLayout({
-                style_class: 'wack-cupertino-hint',
-                x_align: Clutter.ActorAlign.CENTER,
-                x_expand: true,
-                opacity: 255,
-            });
-
-            this._hintLabel = new St.Label({
-                text: '',
-                y_align: Clutter.ActorAlign.CENTER,
-            });
-            this._currentText = '';
-            this._hintLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
-            this._hintLabel.clutter_text.line_wrap = true;
-
-            this._hintBox.add_child(this._hintLabel);
-
-            this._hintBoxWrapper = new St.Bin({
-                x_expand: true,
-                opacity: 255,
-            });
-            this._hintBoxWrapper.set_child(this._hintBox);
-            this.add_child(this._hintBoxWrapper);
-
-            this._currentText = '';
-            this._currentCount = 0;
-
-            this.setUser(user);
-        }
-
-        setUser(user) {
-            let oldChild = this._userWell.get_child();
-            if (oldChild)
-                oldChild.destroy();
-            let userWidget = new UserWidget.UserWidget(user, Clutter.Orientation.VERTICAL);
-            this._userWell.set_child(userWidget);
-        }
-
-        setHintText(text) {
-            this._currentText = text ?? '';
-            this._updateHintLabel();
-        }
-
-        setNotifCount(count) {
-            this._currentCount = count ?? 0;
-            this._updateHintLabel();
-        }
-
-        _updateHintLabel() {
-            if (!this._hintLabel) return;
-
-            // Escape the text to prevent markup injection errors
-            const safeText = GLib.markup_escape_text(this._currentText, -1);
-
-            // Always use the same markup structure so Pango's line metrics are
-            // constant whether or not the bell emoji is present. Without this,
-            // switching between "N 🔔 · hint" and plain hint nudges the widget
-            // by ~2 px because the emoji has taller ascent/descent metrics.
-            if (this._currentCount > 0) {
-                this._hintLabel.clutter_text.use_markup = true;
-                this._hintLabel.clutter_text.set_markup(
-                    `${this._currentCount} <span size="smaller">🔔\uFE0E</span>  ·  ${safeText}`);
-            } else {
-                this._hintLabel.clutter_text.use_markup = false;
-                this._hintLabel.text = this._currentText;
-            }
-        }
-    });
-
-/**
- * WackClock handles the custom clock widget for the lock screen.
- * It manages the time, date, and the interaction hint (e.g., "Swipe up to unlock").
- */
-const WackClock = GObject.registerClass(
-    class WackClock extends St.BoxLayout {
-        _init() {
-            super._init({
-                style_class: 'unlock-dialog-clock',
-                vertical: true,
-                y_align: Clutter.ActorAlign.CENTER,
-            });
-
-            // Initialize UI components for the clock
-            this._dateOutput = new St.Label({
-                style_class: 'wack-date',
-                x_align: Clutter.ActorAlign.CENTER,
-            });
-
-            this._time = new St.Label({
-                style_class: 'unlock-dialog-clock-time wack-time',
-                x_align: Clutter.ActorAlign.CENTER,
-            });
-
-            this._hint = new St.Label({
-                style_class: 'unlock-dialog-clock-hint',
-                x_align: Clutter.ActorAlign.CENTER,
-                opacity: 0,
-                visible: true,
-            });
-
-            this.add_child(this._dateOutput);
-            this.add_child(this._time);
-
-            // Setup the wall clock to update every minute
-            this._wallClock = new GnomeDesktop.WallClock({ time_only: true });
-            this._wallClock.connectObject('notify::clock',
-                this._updateTime.bind(this), this);
-
-            // Track 12h/24h preference so we can un-pad hours in 24h mode.
-            // Reading system schema (org.gnome.desktop.interface) — no custom .gschema.xml needed
-            this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
-            this._interfaceSettings.connectObject(
-                'changed::clock-format', () => this._updateTime(), this);
-
-            // Update the hint based on whether the device is in touch mode
-            // get_context() was added in GNOME 48; fall back to Clutter.get_default_backend() on 47.
-            const backend = this.get_context?.().get_backend() ?? Clutter.get_default_backend();
-            this._seat = backend.get_default_seat();
-            this._seat.connectObject('notify::touch-mode',
-                this._updateHint.bind(this), this);
-
-            // Handle power save mode changes to prevent flicker
-            this._monitorManager = global.backend.get_monitor_manager();
-            this._monitorManager.connectObject('power-save-mode-changed',
-                () => (this._hint.opacity = 0), this);
-
-            // Show the hint only after a period of user inactivity
-            this._idleMonitor = global.backend.get_core_idle_monitor();
-            this._idleWatchId = this._idleMonitor.add_idle_watch(HINT_TIMEOUT * 1000, () => {
-                this._hint.ease({ opacity: 255, duration: CROSSFADE_TIME });
-            });
-
-            // Periodically refresh the date string
-            this._dateTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 60,
-                () => { this._updateDate(); return GLib.SOURCE_CONTINUE; });
-
-            this._updateTime();
-            this._updateDate();
-            this._updateHint();
-
-        }
-
-        _updateTime() {
-            const raw = this._wallClock.clock.trim();
-            let timeText = raw.replace(/\s*(AM|PM)\s*/i, '').trim();
-
-            this._time.text = timeText;
-        }
-
-        _updateDate() {
-            this._dateOutput.text = getPrettyDate();
-        }
-
-        /**
-         * Standardizes the unlock hint text for desktop and touch devices.
-         */
-        _updateHint() {
-            this._hint.text = this._seat.touch_mode
-                ? shellGettext('Swipe up to unlock')
-                : shellGettext('Click or press a key to unlock');
-        }
-
-        /**
-         * Clean up timers, monitors, and signal handlers.
-         */
-        destroy() {
-            this._wallClock.disconnectObject(this);
-            this._wallClock = null;
-
-            this._interfaceSettings.disconnectObject(this);
-            this._interfaceSettings = null;
-
-            if (this._idleMonitor && this._idleWatchId) {
-                this._idleMonitor.remove_watch(this._idleWatchId);
-                this._idleWatchId = null;
-            }
-            this._idleMonitor = null;
-
-            if (this._dateTimeoutId) {
-                GLib.source_remove(this._dateTimeoutId);
-                this._dateTimeoutId = null;
-            }
-
-            super.destroy();
-        }
-    });
-
-/**
- * WackLayout is a custom layout manager for the screen shield's main box.
- * It ensures that the clock and notifications are positioned correctly,
- * especially when the unlock prompt is visible.
- */
-const WackLayout = GObject.registerClass(
-    class WackLayout extends Clutter.LayoutManager {
-        _init(extension, stack, notifications, switchUserButton) {
-            super._init();
-            this._extension = extension;
-            this._stack = stack;
-            this._notifications = notifications;
-            this._switchUserButton = switchUserButton;
-        }
-
-        /**
-         * Standard Clutter layout delegation for width requests.
-         */
-        vfunc_get_preferred_width(_container, forHeight) {
-            return this._stack.get_preferred_width(forHeight);
-        }
-
-        /**
-         * Standard Clutter layout delegation for height requests.
-         */
-        vfunc_get_preferred_height(_container, forWidth) {
-            return this._stack.get_preferred_height(forWidth);
-        }
-
-        /**
-         * Orchestrates the spatial arrangement of the lock screen UI elements.
-         * This is called by Clutter whenever the main box needs to be laid out.
-         */
-        vfunc_allocate(_container, box) {
-            const [width, height] = box.get_size();
-            const tenthOfHeight = height / 10.0;
-
-            const [, , stackWidth, stackHeight] = this._stack.get_preferred_size();
-            const [, , notificationsWidth, notificationsHeight] = this._notifications.get_preferred_size();
-
-            const columnWidth = Math.max(stackWidth, notificationsWidth);
-            const columnX1 = Math.floor((width - columnWidth) / 2.0);
-            const actorBox = new Clutter.ActorBox();
-
-            // Calculate maximum allowed height for notifications to prevent overlap
-            const maxNotificationsHeight = Math.min(
-                notificationsHeight,
-                height - tenthOfHeight - stackHeight);
-            actorBox.x1 = columnX1;
-            actorBox.y1 = height - maxNotificationsHeight;
-            actorBox.x2 = columnX1 + columnWidth;
-            actorBox.y2 = actorBox.y1 + maxNotificationsHeight;
-            this._notifications.allocate(actorBox);
-
-            // Position the stack (which contains the auth prompt)
-            let stackY;
-            if (this._extension._lockscreenMode === 'cupertino') {
-                // Anchor the full rest widget bottom at CUPERTINO_PROMPT_VERTICAL_FRACTION.
-                // We use the rest prompt container's preferred height (avatar spacing + name
-                // + hint) as the anchor. This value is stable across rest↔prompt transitions
-                // because the container stays in the actor tree regardless of visibility, so
-                // get_preferred_size() always returns the rest-state height even when the
-                // container is hidden during the prompt. The logical coordinate system
-                // already scales proportionally with display scale, so no fraction adjustment
-                // is needed — the visual fraction stays consistent at any DPI setting.
-                const restContainer = this._extension._cupertinoRestPromptContainer;
-                const [, , , restH] = restContainer
-                    ? restContainer.get_preferred_size()
-                    : [0, 0, 0, stackHeight];
-                const anchorH = restH > 0 ? restH : stackHeight;
-                stackY = Math.floor(height * CUPERTINO_PROMPT_VERTICAL_FRACTION) - anchorH;
-            } else {
-                stackY = Math.min(
-                    Math.floor(height / 3.0),
-                    height - stackHeight - maxNotificationsHeight);
-            }
-
-            actorBox.x1 = columnX1;
-            actorBox.y1 = stackY;
-            actorBox.x2 = columnX1 + columnWidth;
-            actorBox.y2 = stackY + stackHeight;
-            this._stack.allocate(actorBox);
-
-            // Position the "Switch User" button if it's visible
-            if (this._switchUserButton.visible) {
-                const [, , natWidth, natHeight] = this._switchUserButton.get_preferred_size();
-                const textDirection = this._switchUserButton.get_text_direction();
-                if (textDirection === Clutter.TextDirection.RTL)
-                    actorBox.x1 = box.x1 + natWidth;
-                else
-                    actorBox.x1 = box.x2 - (natWidth * 2);
-                actorBox.y1 = box.y2 - (natHeight * 2);
-                actorBox.x2 = actorBox.x1 + natWidth;
-                actorBox.y2 = actorBox.y1 + natHeight;
-                this._switchUserButton.allocate(actorBox);
-            }
-        }
-    });
 
 export default class WackLockscreenClockExtension extends Extension {
     enable() {
@@ -402,6 +58,9 @@ export default class WackLockscreenClockExtension extends Extension {
         this._cupertinoAlwaysShowUser = false;
         this._cupertinoShowNotifsOverride = false; // Toggled via Shift+N
         this._animationState = createAnimationState();
+        // Instantiate NotificationManager before _loadSettings() so that
+        // syncLockscreenMode() and other settings callbacks can safely access it.
+        this._notifManager = new NotificationManager(this);
         this._loadSettings();
         const lockDialogGroup = Main.screenShield._lockDialogGroup;
 
@@ -423,11 +82,11 @@ export default class WackLockscreenClockExtension extends Extension {
         dialog._notificationsBox.connectObject(
             'notify::height', () => {
                 this._positionHint();
-                this._positionOverflow();
+                this._notifManager.positionOverflow();
             },
             'notify::visible', () => {
                 this._positionHint();
-                this._positionOverflow();
+                this._notifManager.positionOverflow();
             }, this);
 
         // Seamlessly replace the default shell clock with our custom WackClock instance.
@@ -472,7 +131,7 @@ export default class WackLockscreenClockExtension extends Extension {
                     this._hintText = hint.text;
             },
             'notify::opacity', () => {
-                const hasNotifs = this._hasVisibleNotifs();
+                const hasNotifs = this._notifManager.hasVisibleNotifs();
                 const suppressHint = this._promptActive ||
                     (this._lockscreenMode === 'cupertino' && !hasNotifs && !this._overflowActive);
                 if (suppressHint && hint.opacity > 0) {
@@ -492,12 +151,11 @@ export default class WackLockscreenClockExtension extends Extension {
         });
         this._overflowActive = false;
         this._hintContainer.add_child(this._overflowLabel);
-        this._positionOverflow();
 
         // Configure individual background blurs for each notification card.
         this._lastPlayingPlayer = null;
         this._promptActive = false;
-        this._setupNotifBlur(dialog._notificationsBox);
+        this._notifManager.setupNotifBlur(dialog._notificationsBox);
         this._promptActor = dialog._promptBox ?? dialog._stack;
         this._promptActor?.set_pivot_point(0.5, 0.5);
 
@@ -510,7 +168,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 if (shiftPressed && (keysym === Clutter.KEY_N || keysym === Clutter.KEY_n)) {
                     // Only allow toggling to "show notifications" mode if there are actually notifications present.
                     // If it is already overridden (true), we always allow toggling it back to false.
-                    if (this._getNativeNotifCount() > 0 || this._cupertinoShowNotifsOverride) {
+                    if (this._notifManager.getNativeNotifCount() > 0 || this._cupertinoShowNotifsOverride) {
                         this._cupertinoHintIsToggle = false;
                         this._cupertinoShowNotifsOverride = !this._cupertinoShowNotifsOverride;
                         this._updateCupertinoRestState(true);
@@ -527,7 +185,7 @@ export default class WackLockscreenClockExtension extends Extension {
         Main.layoutManager.connectObject('monitors-changed', () => {
             this._positionClock();
             this._positionHint();
-            this._positionOverflow();
+            this._notifManager.positionOverflow();
             this._applyPromptModeLayout();
         }, this);
 
@@ -580,19 +238,19 @@ export default class WackLockscreenClockExtension extends Extension {
                     effect.set({ radius: globalBlur, brightness: globalBrightness });
             }
 
-            const hasNotifs = this._hasVisibleNotifs();
+            const hasNotifs = this._notifManager.hasVisibleNotifs();
 
             // Notification Cards: Blur OUT (Crossfade)
             const cardBlur = hasNotifs ? NOTIF_BLUR_RADIUS * (1 - progress) : 0;
-            if (this._notifBox && this._notifBox._notificationBox) {
-                for (let child = this._notifBox._notificationBox.get_first_child(); child !== null; child = child.get_next_sibling()) {
+            if (this._notifManager._notifBox && this._notifManager._notifBox._notificationBox) {
+                for (let child = this._notifManager._notifBox._notificationBox.get_first_child(); child !== null; child = child.get_next_sibling()) {
                     let effect = child.get_effect(NOTIF_BLUR_NAME);
                     if (effect) {
                         effect.set({ radius: cardBlur });
                         effect.set_enabled(cardBlur > 0.5);
                     }
                 }
-                for (const msg of this._notifBox._players.values()) {
+                for (const msg of this._notifManager._notifBox._players.values()) {
                     let effect = msg.get_effect(NOTIF_BLUR_NAME);
                     if (effect) {
                         effect.set({ radius: cardBlur });
@@ -645,15 +303,15 @@ export default class WackLockscreenClockExtension extends Extension {
                 // If entering prompt state, the native password field and status label fade in
                 if (mainBox) mainBox.opacity = Math.round(255 * progress);
 
-                if (this._notifBox) {
-                    this._notifBox.opacity = notifOpacity;
+                if (this._notifManager._notifBox) {
+                    this._notifManager._notifBox.opacity = notifOpacity;
                     // Fully remove from hit-testing when invisible — opacity:0 alone
                     // still leaves cards reactive, causing click-through bugs.
-                    this._notifBox.visible = notifOpacity > 0;
+                    this._notifManager._notifBox.visible = notifOpacity > 0;
                 }
 
                 if (progress === 0) {
-                    this._enforceCardLimit(this._notifBox);
+                    this._notifManager.enforceCardLimit(this._notifManager._notifBox);
                     this._updateCupertinoRestState();
                 }
             } else {
@@ -667,11 +325,11 @@ export default class WackLockscreenClockExtension extends Extension {
                     this._animationState);
                 applyPromptAnimation(this._promptAnimation, this._promptActor, progress);
 
-                if (this._notifBox)
-                    this._notifBox.opacity = 255;
+                if (this._notifManager._notifBox)
+                    this._notifManager._notifBox.opacity = 255;
 
                 if (progress === 0)
-                    this._enforceCardLimit(this._notifBox);
+                    this._notifManager.enforceCardLimit(this._notifManager._notifBox);
             }
         };
 
@@ -751,8 +409,8 @@ export default class WackLockscreenClockExtension extends Extension {
                     effect.set({ radius: targetRadius, brightness: targetBrightness });
             }
 
-            if (this._notifBox) {
-                this._notifBox.opacity = isCupertino ? Math.round(255 * (1 - progress)) : 255;
+            if (this._notifManager._notifBox) {
+                this._notifManager._notifBox.opacity = isCupertino ? Math.round(255 * (1 - progress)) : 255;
             }
             if (this._hintContainer) {
                 this._hintContainer.opacity = isCupertino
@@ -829,68 +487,28 @@ export default class WackLockscreenClockExtension extends Extension {
 
     /**
      * Creates a new blur effect for notification cards.
-     * 
-     * @returns {Blur.BlurEffect} The configured blur effect.
      */
-    _makeCardBlur() {
-        if (Blur) {
-            return new Blur.BlurEffect({
-                name: NOTIF_BLUR_NAME,
-                mode: Blur.BlurMode.BACKGROUND,
-                radius: NOTIF_BLUR_RADIUS,
-                brightness: NOTIF_BLUR_BRIGHTNESS,
-                corner_radius: NOTIF_CARD_RADIUS,
-            });
-        } else {
-            // Fallback: use the stock "Shell.BlurEffect" (no background mode or corner radius)
-            return new Shell.BlurEffect({
-                name: NOTIF_BLUR_NAME,
-                mode: Shell.BlurMode.BACKGROUND,
-                radius: NOTIF_BLUR_RADIUS,
-                brightness: NOTIF_BLUR_BRIGHTNESS,
-            });
-        }
-    }
+
 
     /**
      * Attaches a blur effect to a notification actor if it doesn't already have one.
      * 
      * @param {Clutter.Actor} actor The notification card actor.
      */
-    _addCardBlur(actor) {
-        if (!actor.get_effect(NOTIF_BLUR_NAME)) {
-            actor.add_effect(this._makeCardBlur());
-            actor.set_style(`border-radius: ${NOTIF_CARD_RADIUS}px;`);
-        }
-    }
+
     /**
      * Removes the custom blur effect from a notification actor.
      * 
      * @param {Clutter.Actor} actor The notification card actor.
      */
-    _removeCardBlur(actor) {
-        const effect = actor.get_effect(NOTIF_BLUR_NAME);
-        if (effect) actor.remove_effect(effect);
-        actor.set_style(null); // restore whatever the stylesheet had
-    }
+
 
     /**
      * Toggles the enabled state of blur effects across all current notifications.
      * 
      * @param {boolean} enabled Whether the blurs should be active.
      */
-    _setNotifBlursEnabled(enabled) {
-        const nb = this._dialog?._notificationsBox;
-        if (!nb) return;
-        for (const child of nb._notificationBox.get_children()) {
-            const effect = child.get_effect(NOTIF_BLUR_NAME);
-            if (effect) effect.set_enabled(enabled);
-        }
-        for (const msg of nb._players.values()) {
-            const effect = msg.get_effect(NOTIF_BLUR_NAME);
-            if (effect) effect.set_enabled(enabled);
-        }
-    }
+
 
     /**
      * Checks if a given actor represents a media player card.
@@ -899,12 +517,7 @@ export default class WackLockscreenClockExtension extends Extension {
      * @param {Clutter.Actor} actor The actor to check.
      * @returns {boolean} True if it's a media card.
      */
-    _isMediaCard(nb, actor) {
-        for (const msg of nb._players.values()) {
-            if (msg === actor) return true;
-        }
-        return false;
-    }
+
 
     /**
      * Retrieves the media player associated with a specific UI actor.
@@ -913,41 +526,7 @@ export default class WackLockscreenClockExtension extends Extension {
      * @param {Clutter.Actor} actor The UI actor.
      * @returns {object|null} The media player object, or null if not found.
      */
-    _getMediaPlayer(nb, actor) {
-        for (const [player, msg] of nb._players.entries()) {
-            if (msg === actor) return player;
-        }
-        return null;
-    }
 
-    _trackMediaPlayer(nb, player, actor) {
-        if (!player || !actor) return;
-
-        if (!this._playerSignalIds) this._playerSignalIds = new Map();
-        if (!this._playerActorIds) this._playerActorIds = new Map();
-
-        this._playerActorIds.set(actor, player);
-
-        if (this._playerSignalIds.has(player)) {
-            if (player.status === 'Playing')
-                this._lastPlayingPlayer = player;
-            return;
-        }
-
-        let prevStatus = player.status;
-        const id = player.connect('changed', () => {
-            const newStatus = player.status;
-            if (newStatus === 'Playing' && prevStatus !== 'Playing')
-                this._lastPlayingPlayer = player;
-            prevStatus = newStatus;
-            if (this._notifBox === nb)
-                this._enforceCardLimit(nb);
-        });
-
-        this._playerSignalIds.set(player, id);
-        if (player.status === 'Playing')
-            this._lastPlayingPlayer = player;
-    }
 
     /**
      * Returns true only when at least one notification card or media player
@@ -955,344 +534,51 @@ export default class WackLockscreenClockExtension extends Extension {
      * whose policy has showInLockScreen=false — those actors still exist in
      * the tree but have visible=false after _enforceCardLimit runs.
      */
-    _hasVisibleNotifs() {
-        const nb = this._notifBox;
-        if (!nb) return false;
 
-        // If the user has globally disabled lockscreen notifications, assume empty.
-        // _notifShowInLockScreen is cached in enable() and kept current via a signal
-        // to avoid a synchronous GSettings read on every animation frame.
-        if (!this._notifShowInLockScreen) {
-            return false;
-        }
-
-        let hasVisibleCard = false;
-        const notifContainer = nb._notificationBox;
-        if (notifContainer) {
-            for (let child = notifContainer.get_first_child(); child !== null; child = child.get_next_sibling()) {
-                if (child.visible) {
-                    hasVisibleCard = true;
-                    break;
-                }
-            }
-        }
-
-        let hasVisiblePlayer = false;
-        if (nb._players) {
-            for (const m of nb._players.values()) {
-                if (m.visible) {
-                    hasVisiblePlayer = true;
-                    break;
-                }
-            }
-        }
-
-        const nativelyHasNotifs = hasVisibleCard || hasVisiblePlayer;
-
-        // If Always Show User Widget is enabled in Cupertino mode,
-        // and we haven't toggled notifications on, pretend there are no notifications.
-        if (this._lockscreenMode === 'cupertino' && this._cupertinoAlwaysShowUser) {
-            if (!this._cupertinoShowNotifsOverride) {
-                return false;
-            }
-        }
-
-        return nativelyHasNotifs;
-    }
 
     /**
      * Returns the exact number of notifications natively present, used for
      * the inline user widget counter when notifications are visually suppressed.
      */
-    _getNativeNotifCount() {
-        const nb = this._notifBox;
-        if (!nb) return 0;
 
-        let count = 0;
-
-        // Count media players
-        for (const m of nb._players?.values() ?? []) {
-            if (m.visible)
-                count++;
-        }
-
-        // Count unread notification cards based on GNOME Shell logic
-        const shellVisible = new Set();
-        if (nb._sources) {
-            for (const [source, obj] of nb._sources.entries()) {
-                if (obj.sourceBox && source.unseenCount > 0 && obj.visible) {
-                    shellVisible.add(obj.sourceBox);
-                }
-            }
-        }
-
-        const children = nb._notificationBox?.get_children() ?? [];
-        children.forEach(child => {
-            if (child && !this._isMediaCard(nb, child) && shellVisible.has(child)) {
-                count++;
-            }
-        });
-
-        return count;
-    }
 
     /**
      * Ensures only one media player is visible at a time, prioritizing active sessions.
      * 
      * @param {object} nb The notifications box.
      */
-    _enforceMediaLimit(nb) {
-        // Priority logic for media cards:
-        // 1. Currently playing player that was most recently active.
-        // 2. Any other currently playing player.
-        // 3. The last player to have been playing (even if now paused).
-        // 4. Default to the first available player.
-        const players = [...nb._players.entries()];
 
-        // Hide all players initially
-        for (const [, msg] of players) msg.visible = false;
-
-        if (this._lastPlayingPlayer) {
-            const msg = nb._players.get(this._lastPlayingPlayer);
-            if (msg && this._lastPlayingPlayer.status === 'Playing') {
-                msg.visible = true;
-                return;
-            }
-        }
-
-        for (const [player, msg] of players) {
-            if (player.status === 'Playing') {
-                msg.visible = true;
-                return;
-            }
-        }
-
-        if (this._lastPlayingPlayer) {
-            const msg = nb._players.get(this._lastPlayingPlayer);
-            if (msg) { msg.visible = true; return; }
-        }
-
-        const firstMsg = nb._players.values().next().value;
-        if (firstMsg) firstMsg.visible = true;
-    }
 
     /**
      * Sets up signal handlers to manage blurs and visibility for the notification container.
      * 
      * @param {object} nb The notifications box.
      */
-    _setupNotifBlur(nb) {
-        // GNOME 48 compatibility: _players was added in GNOME 49. Shim an empty
-        // Map so all downstream code can unconditionally call .values()/.entries()
-        // without crashing on older shells.
-        nb._players ??= new Map();
 
-        // Track existing media players too; child-added only covers later arrivals.
-        for (const [player, actor] of nb._players.entries())
-            this._trackMediaPlayer(nb, player, actor);
-
-        // Initialize blur effects and visibility constraints for existing notifications
-        for (const child of nb._notificationBox.get_children())
-            this._addCardBlur(child);
-        this._enforceCardLimit(nb);
-
-        // Listen for new notifications being added / removed
-        nb._notificationBox.connectObject(
-            'child-added', (container, actor) => {
-                this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                    if (!actor.get_parent()) return GLib.SOURCE_REMOVE;
-
-                    this._addCardBlur(actor);
-
-                    const player = this._getMediaPlayer(nb, actor);
-                    if (player) {
-                        this._trackMediaPlayer(nb, player, actor);
-                    } else {
-                        // Re-enforce limits if the shell explicitly changes a card's visibility
-                        const visId = actor.connect('notify::visible', () => {
-                            this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                                this._enforceCardLimit(nb);
-                                return GLib.SOURCE_REMOVE;
-                            });
-                        });
-                        if (!this._cardVisSignalIds) this._cardVisSignalIds = new Map();
-                        this._cardVisSignalIds.set(actor, visId);
-                    }
-                    this._enforceCardLimit(nb);
-                    this._updateCupertinoRestState();
-                    return GLib.SOURCE_REMOVE;
-                });
-            },
-            'child-removed', (container, actor) => {
-                // Memory fix: explicitly disconnect signals and remove from Maps to prevent actor leaks
-                if (this._cardVisSignalIds && this._cardVisSignalIds.has(actor)) {
-                    try { actor.disconnect(this._cardVisSignalIds.get(actor)); } catch (_) { }
-                    this._cardVisSignalIds.delete(actor);
-                }
-                const player = this._playerActorIds?.get(actor) ?? this._getMediaPlayer(nb, actor);
-                if (player && this._playerSignalIds && this._playerSignalIds.has(player)) {
-                    try { player.disconnect(this._playerSignalIds.get(player)); } catch (_) { }
-                    this._playerSignalIds.delete(player);
-                }
-                this._playerActorIds?.delete(actor);
-
-                this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                    this._enforceCardLimit(nb);
-                    this._updateCupertinoRestState();
-                    return GLib.SOURCE_REMOVE;
-                });
-            }, this);
-
-        this._notifBox = nb;
-    }
 
     /**
      * Manages the visibility of notification cards to respect the defined limits.
      * 
      * @param {object} nb The notifications box.
      */
-    _enforceCardLimit(nb) {
-        if (nb._players.size > 0)
-            this._enforceMediaLimit(nb);
 
-        const children = nb._notificationBox.get_children();
-        let notifCount = 0;
-        let hiddenCount = 0;
-
-        const shellVisible = new Set();
-        // Determine which notifications are actually intended to be shown by GNOME Shell
-        for (const [source, obj] of nb._sources.entries()) {
-            if (obj.sourceBox && source.unseenCount > 0 && obj.visible) {
-                shellVisible.add(obj.sourceBox);
-            }
-        }
-
-        children.forEach(child => {
-            if (!child || this._isMediaCard(nb, child)) return;
-
-            // Hide notifications that don't meet the shell's visibility criteria
-            if (!shellVisible.has(child)) {
-                child.visible = false;
-                return;
-            }
-
-            // Limit the total number of visible notification cards
-            if (notifCount < MAX_VISIBLE_CARDS) {
-                child.visible = true;
-            } else {
-                child.visible = false;
-                hiddenCount++;
-            }
-            notifCount++;
-        });
-
-        this._updateOverflow(hiddenCount);
-    }
 
     /**
      * Updates the text and visibility of the notification overflow label.
      * 
      * @param {number} hiddenCount The number of hidden notifications.
      */
-    _updateOverflow(hiddenCount) {
-        if (!this._overflowLabel) return;
 
-        // Revert to standard hint if no notifications are overflowing
-        if (hiddenCount <= 0) {
-            this._overflowActive = false;
-            this._overflowLabel.visible = false;
-            this._hint.visible = true;
-            return;
-        }
-
-        this._overflowActive = true;
-        this._hint.visible = false;
-        this._hint.set_opacity(0);
-
-        // Localize the "more" overflow text via gettext, then fall back to
-        // GNOME Shell's own 'More' string (calendar context) if untranslated.
-        let moreText = this.gettext('more');
-        if (moreText === 'more') {
-            moreText = Gettext.pgettext('calendar', 'More').toLowerCase();
-            if (moreText === 'more')
-                moreText = shellGettext('More').toLowerCase();
-        }
-
-        const overflowText = `${hiddenCount}+ ${moreText}`;
-        this._overflowLabel.text = `${overflowText}  ·  ${this._hintText}`;
-        this._overflowLabel.visible = true;
-        this._overflowLabel.set_opacity(255);
-        this._positionOverflow();
-    }
 
     /**
      * Positions the overflow label relative to the screen and notifications.
      */
-    _positionOverflow() {
-        if (!this._overflowLabel) return;
-        const monitor = Main.layoutManager.primaryMonitor;
-        if (!monitor) return;
-        const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        const monitorX = monitor.x / scaleFactor;
-        const monitorY = monitor.y / scaleFactor;
-        const monitorWidth = monitor.width / scaleFactor;
-        const monitorHeight = monitor.height / scaleFactor;
 
-        const [, natWidth] = this._overflowLabel.get_preferred_width(-1);
-        const [, natHeight] = this._overflowLabel.get_preferred_height(-1);
-
-        const notifBox = this._dialog?._notificationsBox;
-        const notifHeight = notifBox?.visible ? notifBox.height : 0;
-
-        const idealY = monitorY + Math.floor(monitorHeight * HINT_VERTICAL_FRACTION);
-        const notifTop = monitorY + monitorHeight - notifHeight - HINT_NOTIF_MARGIN - natHeight;
-        const y = Math.min(idealY, notifTop);
-        const x = monitorX + Math.floor((monitorWidth - natWidth) / 2);
-
-        this._overflowLabel.set_position(x, y);
-    }
 
     /**
      * Reverts all notification-related changes when the extension is disabled.
      */
-    _teardownNotifBlur() {
-        const nb = this._notifBox;
-        if (!nb) return;
 
-        nb.opacity = 255;
-
-        nb._notificationBox.disconnectObject(this);
-
-        if (this._playerSignalIds) {
-            for (const [player, id] of this._playerSignalIds.entries()) {
-                try { player.disconnect(id); } catch (_) { }
-            }
-            this._playerSignalIds = null;
-        }
-        this._playerActorIds = null;
-
-        if (this._cardVisSignalIds) {
-            for (const [actor, id] of this._cardVisSignalIds.entries()) {
-                try { actor.disconnect(id); } catch (_) { }
-            }
-            this._cardVisSignalIds = null;
-        }
-
-        // Explicitly restore visibility and remove effects from all cards
-        for (const child of nb._notificationBox.get_children()) {
-            child.visible = true;
-            this._removeCardBlur(child);
-        }
-        for (const msg of nb._players.values())
-            msg.visible = true;
-
-        if (this._idleSources) {
-            this._idleSources.forEach(id => GLib.source_remove(id));
-            this._idleSources.clear();
-        }
-
-        this._notifBox = null;
-    }
 
     /**
      * Triggered when the authentication prompt begins to show.
@@ -1318,12 +604,12 @@ export default class WackLockscreenClockExtension extends Extension {
      */
     _onPromptHide() {
         this._promptActive = false;
-        if (this._notifBox)
-            this._enforceCardLimit(this._notifBox);
+        if (this._notifManager._notifBox)
+            this._notifManager.enforceCardLimit(this._notifManager._notifBox);
         this._updateCupertinoRestState();
         if (this._lockscreenMode === 'cupertino') {
             // Snapshot: no notifs → icon should snap back (no cross-fade)
-            const hasNotifs = this._hasVisibleNotifs();
+            const hasNotifs = this._notifManager.hasVisibleNotifs();
             this._cupertinoIconSnap = !hasNotifs;
             this._cupertinoToPrompt = false;
         }
@@ -1337,11 +623,11 @@ export default class WackLockscreenClockExtension extends Extension {
     _updateCupertinoRestState(animate = false) {
         if (this._lockscreenMode !== 'cupertino') return;
 
-        const hasNotifs = this._hasVisibleNotifs();
+        const hasNotifs = this._notifManager.hasVisibleNotifs();
 
         if (this._cupertinoRestPromptContainer) {
             // Inline notification count updates
-            const count = this._getNativeNotifCount();
+            const count = this._notifManager.getNativeNotifCount();
             let nextCount = 0;
             if (this._cupertinoAlwaysShowUser && count > 0 && !this._cupertinoShowNotifsOverride) {
                 if (!this._cupertinoHintIsToggle)
@@ -1405,14 +691,14 @@ export default class WackLockscreenClockExtension extends Extension {
 
         // Handle _notifBox visibility since GNOME Shell might want it visible
         // but our override tells us to hide it.
-        if (this._notifBox) {
+        if (this._notifManager._notifBox) {
             // we only touch opacity here; _setTransitionProgress also touches it
             // but we are at rest if this is called natively during idle
             const targetOpacity = (!this._promptActive && hasNotifs) ? 255 : 0;
             const targetBlur = (!this._promptActive && hasNotifs) ? NOTIF_BLUR_RADIUS : 0;
 
             if (animate) {
-                const notifBox = this._notifBox;
+                const notifBox = this._notifManager._notifBox;
                 // Must be visible before ease starts so the fade-in is rendered
                 if (targetOpacity > 0)
                     notifBox.visible = true;
@@ -1421,7 +707,7 @@ export default class WackLockscreenClockExtension extends Extension {
                     duration: CROSSFADE_TIME,
                     mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                     onComplete: () => {
-                        if (this._notifBox === notifBox)
+                        if (this._notifManager._notifBox === notifBox)
                             notifBox.visible = targetOpacity > 0;
                     },
                 });
@@ -1440,9 +726,9 @@ export default class WackLockscreenClockExtension extends Extension {
                 notifBox._notificationBox.get_children().forEach(easeBlur);
                 for (const actor of notifBox._players.values()) easeBlur(actor);
             } else {
-                this._notifBox.remove_all_transitions();
-                this._notifBox.opacity = targetOpacity;
-                this._notifBox.visible = targetOpacity > 0;
+                this._notifManager._notifBox.remove_all_transitions();
+                this._notifManager._notifBox.opacity = targetOpacity;
+                this._notifManager._notifBox.visible = targetOpacity > 0;
 
                 // Instantly apply blur target
                 const setBlur = (actor) => {
@@ -1453,8 +739,8 @@ export default class WackLockscreenClockExtension extends Extension {
                         effect.set_enabled(targetBlur > 0.5);
                     }
                 };
-                this._notifBox._notificationBox.get_children().forEach(setBlur);
-                for (const actor of this._notifBox._players.values()) setBlur(actor);
+                this._notifManager._notifBox._notificationBox.get_children().forEach(setBlur);
+                for (const actor of this._notifManager._notifBox._players.values()) setBlur(actor);
             }
         }
 
@@ -1590,7 +876,7 @@ export default class WackLockscreenClockExtension extends Extension {
     _updateCupertinoHintCycle() {
         if (!this._cupertinoRestPrompt) return;
 
-        const nativeCount = this._getNativeNotifCount();
+        const nativeCount = this._notifManager.getNativeNotifCount();
 
         // Cycle only if:
         // - We are in Cupertino mode
@@ -1630,7 +916,7 @@ export default class WackLockscreenClockExtension extends Extension {
                                 if (this._cupertinoHintIsToggle) {
                                     this._cupertinoRestPrompt.setNotifCount(0);
                                 } else {
-                                    this._cupertinoRestPrompt.setNotifCount(this._getNativeNotifCount());
+                                    this._cupertinoRestPrompt.setNotifCount(this._notifManager.getNativeNotifCount());
                                 }
 
                                 hintBox.ease({
@@ -1657,7 +943,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
                 // Only reset the text instantly if the container is staying visible.
                 // If it's fading out (hasNotifs is true or prompt is active), leave the text as-is to fade out smoothly.
-                if (!this._hasVisibleNotifs() && !this._promptActive) {
+                if (!this._notifManager.hasVisibleNotifs() && !this._promptActive) {
                     this._cupertinoRestPrompt.setHintText(this._cupertinoBaseHintText || '');
                 }
                 // Note: The rest state logic handles setting the notification count visibility
@@ -1773,7 +1059,8 @@ export default class WackLockscreenClockExtension extends Extension {
             this._dialog._updateBackgroundEffects();
         }
 
-        this._teardownNotifBlur();
+        this._notifManager.teardownNotifBlur();
+        this._notifManager = null;
 
         // Restore the original transition progress handler
         if (this._origSetTransitionProgress) {
