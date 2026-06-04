@@ -36,7 +36,6 @@ import {
     FADE_OUT_SCALE,
     DATE_LABEL_HEIGHT,
     TIME_LABEL_HEIGHT_FALLBACK,
-    SETTINGS_SCHEMA,
     CUPERTINO_PROMPT_VERTICAL_FRACTION,
     MAX_VISIBLE_CARDS,
 } from './constants.js';
@@ -397,7 +396,7 @@ export default class WackLockscreenClockExtension extends Extension {
         }
 
         try {
-            this._settings = this.getSettings(SETTINGS_SCHEMA);
+            this._settings = this.getSettings();
         } catch (e) {
             console.warn(`WACK lockscreen: preferences schema unavailable, using animation defaults: ${e.message}`);
             this._settings = null;

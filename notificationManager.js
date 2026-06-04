@@ -263,12 +263,12 @@ export class NotificationManager {
             },
             'child-removed', (container, actor) => {
                 if (this._cardVisSignalIds.has(actor)) {
-                    try { actor.disconnect(this._cardVisSignalIds.get(actor)); } catch (_) { }
+                    actor.disconnect(this._cardVisSignalIds.get(actor));
                     this._cardVisSignalIds.delete(actor);
                 }
                 const player = this._playerActorIds.get(actor) ?? this._getMediaPlayer(nb, actor);
                 if (player && this._playerSignalIds.has(player)) {
-                    try { player.disconnect(this._playerSignalIds.get(player)); } catch (_) { }
+                    player.disconnect(this._playerSignalIds.get(player));
                     this._playerSignalIds.delete(player);
                 }
                 this._playerActorIds.delete(actor);
@@ -289,6 +289,67 @@ export class NotificationManager {
             this._enforceMediaLimit(nb);
 
         const children = nb._notificationBox.get_children();
+        const mediaCards = [];
+        const notificationCards = [];
+        children.forEach(child => {
+            if (child) {
+                if (this._isMediaCard(nb, child))
+                    mediaCards.push(child);
+                else
+                    notificationCards.push(child);
+            }
+        });
+
+        const boxToSource = new Map();
+        for (const [source, obj] of nb._sources.entries()) {
+            if (obj.sourceBox)
+                boxToSource.set(obj.sourceBox, source);
+        }
+
+        const getNewestTimestamp = (source) => {
+            if (!source || !source.notifications || source.notifications.length === 0)
+                return 0;
+            const activeNotifs = source.notifications.filter(n => !n.acknowledged);
+            if (activeNotifs.length === 0)
+                return 0;
+            let maxTime = 0;
+            for (const n of activeNotifs) {
+                if (n.datetime) {
+                    try {
+                        const time = n.datetime.to_unix();
+                        if (time > maxTime)
+                            maxTime = time;
+                    } catch (_) {}
+                }
+            }
+            return maxTime;
+        };
+
+        const cardTimestamps = new Map();
+        notificationCards.forEach(child => {
+            const source = boxToSource.get(child);
+            cardTimestamps.set(child, getNewestTimestamp(source));
+        });
+
+        notificationCards.sort((a, b) => {
+            const timeA = cardTimestamps.get(a) || 0;
+            const timeB = cardTimestamps.get(b) || 0;
+            return timeB - timeA;
+        });
+
+        const targetChildren = [...mediaCards, ...notificationCards];
+        targetChildren.forEach((child, targetIndex) => {
+            const currentIndex = children.indexOf(child);
+            if (currentIndex !== targetIndex) {
+                nb._notificationBox.set_child_at_index(child, targetIndex);
+                const oldIndex = children.indexOf(child);
+                if (oldIndex !== -1) {
+                    children.splice(oldIndex, 1);
+                    children.splice(targetIndex, 0, child);
+                }
+            }
+        });
+
         let notifCount = 0;
         let hiddenCount = 0;
 
@@ -299,9 +360,7 @@ export class NotificationManager {
             }
         }
 
-        children.forEach(child => {
-            if (!child || this._isMediaCard(nb, child)) return;
-
+        notificationCards.forEach(child => {
             if (!shellVisible.has(child)) {
                 child.visible = false;
                 return;
@@ -387,17 +446,15 @@ export class NotificationManager {
         }
 
         if (this._playerSignalIds) {
-            for (const [player, id] of this._playerSignalIds.entries()) {
-                try { player.disconnect(id); } catch (_) { }
-            }
+            for (const [player, id] of this._playerSignalIds.entries())
+                player.disconnect(id);
             this._playerSignalIds.clear();
         }
         this._playerActorIds.clear();
 
         if (this._cardVisSignalIds) {
-            for (const [actor, id] of this._cardVisSignalIds.entries()) {
-                try { actor.disconnect(id); } catch (_) { }
-            }
+            for (const [actor, id] of this._cardVisSignalIds.entries())
+                actor.disconnect(id);
             this._cardVisSignalIds.clear();
         }
 

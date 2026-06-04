@@ -320,8 +320,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         // Disconnect all settings signals when the window is destroyed so stale
         // closures don't hold refs to destroyed widget objects.
-        const windowSignalId = window.connect('destroy', () => {
-            window.disconnect(windowSignalId);
+        window.connect('destroy', () => {
             for (const id of settingsSignalIds)
                 settings.disconnect(id);
             settingsSignalIds.length = 0;

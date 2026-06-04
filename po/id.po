@@ -1,6 +1,5 @@
 # WACK - Sonoma Lockscreen
 # Copyright (C) 2026 rinzler69-wastaken
-#
 msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
