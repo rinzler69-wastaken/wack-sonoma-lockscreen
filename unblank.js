@@ -26,7 +26,7 @@ export class UnblankManager {
         const DisplayConfigProxy = Gio.DBusProxy.makeProxyWrapper(DisplayConfigIface);
         const UPowerProxy = Gio.DBusProxy.makeProxyWrapper(UPowerIface);
 
-        this._displayProxy = new DisplayConfigProxy(Gio.DBus.session, 'org.gnome.Mutter.DisplayConfig', '/org/gnome/Mutter/DisplayConfig', () => {});
+        this._displayProxy = new DisplayConfigProxy(Gio.DBus.session, 'org.gnome.Mutter.DisplayConfig', '/org/gnome/Mutter/DisplayConfig', () => { });
         this._upowerProxy = new UPowerProxy(Gio.DBus.system, 'org.freedesktop.UPower', '/org/freedesktop/UPower', (proxy, error) => {
             if (error) {
                 console.error(`[Sonoma Lockscreen] UPower proxy error: ${error.message}`);
@@ -221,18 +221,16 @@ export class UnblankManager {
             return;  // Timer already running — don't restart it
         let timeout = this._settings.get_int('unblank-timeout');
         if (timeout > 0) {
-            console.log(`[Sonoma Lockscreen] Unblank timer started: ${timeout}s`);
-            this._turnOffMonitorId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, timeout, () => {
+            console.log(`[Sonoma Lockscreen] Unblank timer started (idle watch): ${timeout}s`);
+            this._turnOffMonitorId = Main.screenShield.idleMonitor.add_idle_watch(timeout * 1000, () => {
                 this._changeToBlank();
-                this._turnOffMonitorId = 0;
-                return GLib.SOURCE_REMOVE;
             });
         }
     }
 
     _deactivateTimer() {
         if (this._turnOffMonitorId > 0) {
-            GLib.source_remove(this._turnOffMonitorId);
+            Main.screenShield.idleMonitor.remove_watch(this._turnOffMonitorId);
             this._turnOffMonitorId = 0;
         }
     }
