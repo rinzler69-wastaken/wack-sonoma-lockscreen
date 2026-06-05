@@ -67,6 +67,18 @@ export class UnblankManager {
             Main.screenShield._activateFade = this._customActivateFade.bind(this);
             Main.screenShield._resetLockScreen = this._customResetLockScreen.bind(this);
             Main.screenShield._onUserBecameActive = this._customOnUserBecameActive.bind(this);
+
+            Main.screenShield._loginManager.connectObject('prepare-for-sleep', (loginManager, suspending) => {
+                if (suspending) {
+                    this._deactivateTimer();
+                    if (this._wakeUpDelayId) {
+                        GLib.source_remove(this._wakeUpDelayId);
+                        this._wakeUpDelayId = 0;
+                    }
+                } else {
+                    this._activateTimer();
+                }
+            }, this);
         } else {
             this._restore();
         }
@@ -77,6 +89,7 @@ export class UnblankManager {
         Main.screenShield._activateFade = this._originalActivateFade;
         Main.screenShield._resetLockScreen = this._originalResetLockScreen;
         Main.screenShield._onUserBecameActive = this._originalOnUserBecameActive;
+        Main.screenShield._loginManager.disconnectObject(this);
     }
 
     destroy() {
@@ -207,12 +220,22 @@ export class UnblankManager {
             Main.screenShield.emit('active-changed');
             this._activeOnce = true;
             this._turnOffMonitor();
-            // Ensure a watch is live so user activity wakes the display promptly
-            if (Main.screenShield._becameActiveId == 0) {
-                Main.screenShield._becameActiveId = Main.screenShield.idleMonitor.add_user_active_watch(
-                    Main.screenShield._onUserBecameActive.bind(Main.screenShield)
-                );
+            
+            if (this._wakeUpDelayId) {
+                GLib.source_remove(this._wakeUpDelayId);
+                this._wakeUpDelayId = 0;
             }
+            
+            // Delay registration by 500ms to prevent Escape key release from waking the screen immediately
+            this._wakeUpDelayId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+                this._wakeUpDelayId = 0;
+                if (Main.screenShield._becameActiveId == 0) {
+                    Main.screenShield._becameActiveId = Main.screenShield.idleMonitor.add_user_active_watch(
+                        Main.screenShield._onUserBecameActive.bind(Main.screenShield)
+                    );
+                }
+                return GLib.SOURCE_REMOVE;
+            });
         }
     }
 
@@ -237,6 +260,10 @@ export class UnblankManager {
 
     _destroyTimer() {
         this._deactivateTimer();
+        if (this._wakeUpDelayId) {
+            GLib.source_remove(this._wakeUpDelayId);
+            this._wakeUpDelayId = 0;
+        }
     }
 
     _destroyLightboxTimer() {

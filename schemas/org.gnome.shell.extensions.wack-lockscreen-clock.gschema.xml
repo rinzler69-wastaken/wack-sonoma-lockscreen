@@ -55,5 +55,10 @@
       <summary>Blank timeout</summary>
       <description>Time in seconds to wait before blanking the screen (0 to keep on indefinitely).</description>
     </key>
+    <key name="esc-to-sleep" type="b">
+      <default>true</default>
+      <summary>Escape to Sleep</summary>
+      <description>Pressing Escape on the lock screen immediately blanks/sleeps the display (or suspends the system if Keep Screen On is disabled).</description>
+    </key>
   </schema>
 </schemalist>

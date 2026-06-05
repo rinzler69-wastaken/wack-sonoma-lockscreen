@@ -13,3 +13,145 @@ msgstr "더 보기"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Shift + N을 눌러 알림 보기"
+
+msgid "A process is preventing sleep"
+msgstr "프로세스가 절전 모드 진입을 방지하고 있습니다"
+
+msgid "1 minute"
+msgstr "1분"
+
+msgid "10 minutes"
+msgstr "10분"
+
+msgid "15 minutes"
+msgstr "15분"
+
+msgid "2 hours"
+msgstr "2시간"
+
+msgid "30 minutes"
+msgstr "30분"
+
+msgid "5 minutes"
+msgstr "5분"
+
+msgid "60 minutes"
+msgstr "60분"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "항상 사용자 위젯 표시(Cupertino)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "사용자 위젯을 항상 표시하고 기본적으로 알림을 숨깁니다. 알림을 보려면 Shift+N을 누르세요."
+
+msgid "Animations"
+msgstr "애니메이션"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "인증 프롬프트가 표시되는 동안 적용됩니다."
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "암호 입력창이 열리는 동안 날짜와 시간에 적용됩니다"
+
+msgid "Blank Timeout"
+msgstr "화면 끄기 시간 제한"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "기존 GNOME 레이아웃을 사용하려면 '클래식'을 선택하세요. macOS Sonoma 스타일을 원하면 '쿠퍼티노'를 선택하세요(쿠퍼티노 모드에서 사용자 아이콘을 클릭하면 사용자를 전환할 수 있습니다)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "클래식과 쿠퍼티노 스타일 중 선택"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "잠금 화면 시계가 사라질 때와 암호 입력창이 나타날 때의 애니메이션을 선택합니다."
+
+msgid "Clock Animation"
+msgstr "시계 애니메이션"
+
+msgid "Configuration"
+msgstr "구성"
+
+msgid "Consider supporting its development!"
+msgstr "개발 지원을 고려해보세요!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "잠금 화면에서 화면이 꺼지거나 대기 상태로 들어가는 시간을 제어합니다."
+
+msgid "Cupertino"
+msgstr "쿠퍼티노"
+
+msgid "Enjoying this extension?"
+msgstr "이 확장 프로그램이 마음에 드시나요?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc로 화면 끄기/절전"
+
+msgid "Extension Repo"
+msgstr "확장 레포"
+
+msgid "Home"
+msgstr "홈"
+
+msgid "Keep Screen On"
+msgstr "화면 켜짐 유지"
+
+msgid "Ko-fi"
+msgstr "코파이"
+
+msgid "Legacy"
+msgstr "클래식"
+
+msgid "Lockscreen Mode"
+msgstr "잠금화면 모드"
+
+msgid "Mode"
+msgstr "방법"
+
+msgid "Never"
+msgstr "절대"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "전원이 연결되어 있는 경우에만 화면 켜짐 유지"
+
+msgid "Only on AC Power"
+msgstr "전원 연결 시에만"
+
+msgid "Open Ko-fi"
+msgstr "Ko-fi 열기"
+
+msgid "Open Saweria"
+msgstr "Saweria 열기"
+
+msgid "Open on GitHub"
+msgstr "GitHub에서 열기"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "잠금 화면에서 Esc를 눌러 화면을 끄거나 절전 모드로 전환합니다"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "잠금 상태에서 화면이 꺼지거나 대기 상태로 들어가는 것을 방지합니다"
+
+msgid "Prompt Animation"
+msgstr "입력 프롬프트 애니메이션"
+
+msgid "Reset Animations"
+msgstr "애니메이션 재설정"
+
+msgid "Reset animations"
+msgstr "애니메이션 재설정"
+
+msgid "Resources"
+msgstr "자원"
+
+msgid "Restore defaults"
+msgstr "기본값 복원"
+
+msgid "Saweria"
+msgstr "사웨리아"
+
+msgid "Screen Timeout"
+msgstr "화면 시간 초과"
+
+msgid "Time to wait before turning off the screen"
+msgstr "화면이 꺼질 때까지 대기할 시간"
+

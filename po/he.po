@@ -13,3 +13,145 @@ msgstr "עוד"
 
 msgid "Press Shift + N to view notifications"
 msgstr "הקש Shift + N כדי לראות התראות"
+
+msgid "A process is preventing sleep"
+msgstr "תהליך מונע השהיה"
+
+msgid "1 minute"
+msgstr "דקה אחת"
+
+msgid "10 minutes"
+msgstr "10 דקות"
+
+msgid "15 minutes"
+msgstr "15 דקות"
+
+msgid "2 hours"
+msgstr "2 שעות"
+
+msgid "30 minutes"
+msgstr "30 דקות"
+
+msgid "5 minutes"
+msgstr "5 דקות"
+
+msgid "60 minutes"
+msgstr "60 דקות"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "הצג תמיד ווידג'ט למשתמש (קופרטינו)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "תמיד מציג את ווידג'ט המשתמש, ומסתיר התראות כברירת מחדل. לחץ על Shift+N כדי להציג התראות."
+
+msgid "Animations"
+msgstr "אנימציות"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "מוחל על בקשת האימות בזמן שהיא מופיעה"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "מוחל על התאריך והשעה בעת פתיחת תיבת הסיסמה"
+
+msgid "Blank Timeout"
+msgstr "פסק זמן לכיבוי המסך"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "בחר באפשרות \"קלאסי\" עבור פריסת GNOME הרגילה. בחר באפשרות \"קופרטיνο\" למראה בהשראת macOS Sonoma (לחץ על סמל המשתמש כדי להחליף משתמש במצב קופרTIנו)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "בחירה בין הסגנון הקלאסי לבין סגנון קופרטינו"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "בחר כיצד שעון מסך הנעילה נעלם וכיצד מופיעה תיבת הסיסמה."
+
+msgid "Clock Animation"
+msgstr "אנימציית שעון"
+
+msgid "Configuration"
+msgstr "תְצוּרָה"
+
+msgid "Consider supporting its development!"
+msgstr "שקול לתמוך בפיתוחו!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "שליטה מתי המסך יכבה או יוחשך במסך הנעيلة."
+
+msgid "Cupertino"
+msgstr "קופרטינו"
+
+msgid "Enjoying this extension?"
+msgstr "נהנה מהתוספת הזו?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc לכיβอย מסך / השהיה"
+
+msgid "Extension Repo"
+msgstr "Repo של הרחבה"
+
+msgid "Home"
+msgstr "בית"
+
+msgid "Keep Screen On"
+msgstr "השאר את המסך דולק"
+
+msgid "Ko-fi"
+msgstr "קו-פי"
+
+msgid "Legacy"
+msgstr "קלאסי"
+
+msgid "Lockscreen Mode"
+msgstr "מצב מסך נעילה"
+
+msgid "Mode"
+msgstr "מצב"
+
+msgid "Never"
+msgstr "לְעוֹלָם לֹא"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "השאר את המסך פעיל רק בחיבור לחשמל"
+
+msgid "Only on AC Power"
+msgstr "רק בחיבור לחשמל"
+
+msgid "Open Ko-fi"
+msgstr "פתח את Ko-fi"
+
+msgid "Open Saweria"
+msgstr "פתח את Saweria"
+
+msgid "Open on GitHub"
+msgstr "פתח ב-GitHub"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "לחץ על Esc במסך הנעילה כדי לכבות את המסך (או להשהות)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "מניעת כיבוי או החשכת המסך במצב נעול"
+
+msgid "Prompt Animation"
+msgstr "אניμציית תיבת הסיσמה"
+
+msgid "Reset Animations"
+msgstr "אפס אנימציות"
+
+msgid "Reset animations"
+msgstr "אפס אנימציות"
+
+msgid "Resources"
+msgstr "אֶמְצָעִי"
+
+msgid "Restore defaults"
+msgstr "שחזר ברירת מחדל"
+
+msgid "Saweria"
+msgstr "סוריה"
+
+msgid "Screen Timeout"
+msgstr "פסק זמן מסך"
+
+msgid "Time to wait before turning off the screen"
+msgstr "זמן ההמתנה לפני כיבוי המסך"
+

@@ -13,3 +13,145 @@ msgstr "daha fazla"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Bildirimleri görmek için Shift + N'ye basın"
+
+msgid "A process is preventing sleep"
+msgstr "Bir işlem askıya almayı engelliyor"
+
+msgid "1 minute"
+msgstr "1 dakika"
+
+msgid "10 minutes"
+msgstr "10 dakika"
+
+msgid "15 minutes"
+msgstr "15 dakika"
+
+msgid "2 hours"
+msgstr "2 saat"
+
+msgid "30 minutes"
+msgstr "30 dakika"
+
+msgid "5 minutes"
+msgstr "5 dakika"
+
+msgid "60 minutes"
+msgstr "60 dakika"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "Her Zaman Kullanıcı Widget'ını Göster (Cupertino)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "Kullanıcı widget'ını her zaman gösterir, bildirimleri varsayılan olarak gizler. Bildirimleri göstermek için Shift+N tuşlarına basın."
+
+msgid "Animations"
+msgstr "Animasyonlar"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Göründüğü sırada kimlik doğrulama istemine uygulandı"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "Parola istemi açılırken tarih ve saate uygulanır"
+
+msgid "Blank Timeout"
+msgstr "Ekran Kapanma Zaman Aşımı"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "Klasik, GNOME uyumlu düzen için 'Klasik' seçeneğini belirleyin. macOS Sonoma esintili bir görünüm için 'Cupertino' seçeneğini belirleyin (Cupertino Modunda kullanıcı değiştirmek için kullanıcı simgesine tıklayın)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "Klasik ve Cupertino stilleri arasından seçim yapın"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "Kilit ekranı saatinin nasıl kaybolacağını ve parola isteminin nasıl görüneceğini seçin."
+
+msgid "Clock Animation"
+msgstr "Saat Animasyonu"
+
+msgid "Configuration"
+msgstr "Yapılandırma"
+
+msgid "Consider supporting its development!"
+msgstr "Gelişimini desteklemeyi düşünün!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "Kilit ekranında ekranın ne zaman kapanacağını veya kararacağını kontrol edin."
+
+msgid "Cupertino"
+msgstr "Cupertino"
+
+msgid "Enjoying this extension?"
+msgstr "Bu uzantıyı beğeniyor musunuz?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Ekranı Kapatmak / Askıya Almak için Esc"
+
+msgid "Extension Repo"
+msgstr "Uzantı Deposu"
+
+msgid "Home"
+msgstr "Ana Sayfa"
+
+msgid "Keep Screen On"
+msgstr "Ekranı Açık Tut"
+
+msgid "Ko-fi"
+msgstr "Ko-fi"
+
+msgid "Legacy"
+msgstr "Klasik"
+
+msgid "Lockscreen Mode"
+msgstr "Kilit Ekranı Modu"
+
+msgid "Mode"
+msgstr "Mod"
+
+msgid "Never"
+msgstr "Asla"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "Ekranı yalnızca sistem fişe takılıyken açık tut"
+
+msgid "Only on AC Power"
+msgstr "Yalnızca AC Gücünde"
+
+msgid "Open Ko-fi"
+msgstr "Ko-fi'yi Aç"
+
+msgid "Open Saweria"
+msgstr "Saweria'yı Aç"
+
+msgid "Open on GitHub"
+msgstr "GitHub'da Aç"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "Ekranı kapatmak (veya askıya almak) için kilit ekranında Esc tuşuna basın"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "Kilitliyken ekranın kapanmasını veya kararmasını önler"
+
+msgid "Prompt Animation"
+msgstr "Parola İstemi Animasyonu"
+
+msgid "Reset Animations"
+msgstr "Animasyonları Sıfırla"
+
+msgid "Reset animations"
+msgstr "Animasyonları sıfırla"
+
+msgid "Resources"
+msgstr "Kaynaklar"
+
+msgid "Restore defaults"
+msgstr "Varsayılanları geri yükle"
+
+msgid "Saweria"
+msgstr "Saweria"
+
+msgid "Screen Timeout"
+msgstr "Ekran Zaman Aşımı"
+
+msgid "Time to wait before turning off the screen"
+msgstr "Ekran kapatılmadan önce beklenecek süre"
+

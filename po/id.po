@@ -13,3 +13,145 @@ msgstr "lagi"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Tekan Shift + N untuk melihat notifikasi"
+
+msgid "A process is preventing sleep"
+msgstr "Sebuah proses mencegah sleep"
+
+msgid "1 minute"
+msgstr "1 menit"
+
+msgid "10 minutes"
+msgstr "10 menit"
+
+msgid "15 minutes"
+msgstr "15 menit"
+
+msgid "2 hours"
+msgstr "2 jam"
+
+msgid "30 minutes"
+msgstr "30 menit"
+
+msgid "5 minutes"
+msgstr "5 menit"
+
+msgid "60 minutes"
+msgstr "60 menit"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "Selalu Tampilkan Widget Pengguna (Cupertino)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "Selalu menampilkan widget pengguna dan menyembunyikan notifikasi secara default. Tekan Shift+N untuk menampilkan notifikasi."
+
+msgid "Animations"
+msgstr "Animasi"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Diterapkan pada perintah autentikasi saat muncul"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "Diterapkan pada tanggal dan waktu saat membuka perintah kata sandi"
+
+msgid "Blank Timeout"
+msgstr "Batas Waktu Mematikan Layar"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "Pilih «Klasik» untuk tata letak klasik yang sesuai dengan GNOME. Pilih «Cupertino» untuk tampilan yang terinspirasi macOS Sonoma (Klik ikon pengguna untuk berpindah pengguna dalam Mode Cupertino)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "Pilih antara gaya Klasik dan Cupertino"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "Pilih bagaimana jam layar kunci keluar dan bagaimana perintah kata sandi masuk."
+
+msgid "Clock Animation"
+msgstr "Animasi Jam"
+
+msgid "Configuration"
+msgstr "Konfigurasi"
+
+msgid "Consider supporting its development!"
+msgstr "Pertimbangkan untuk mendukung pengembangannya!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "Kontrol kapan layar mati atau kosong di layar kunci."
+
+msgid "Cupertino"
+msgstr "Cupertino"
+
+msgid "Enjoying this extension?"
+msgstr "Menikmati ekstensi ini?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc untuk mematikan layar / sleep"
+
+msgid "Extension Repo"
+msgstr "Repo Ekstensi"
+
+msgid "Home"
+msgstr "Beranda"
+
+msgid "Keep Screen On"
+msgstr "Tetap Aktifkan Layar"
+
+msgid "Ko-fi"
+msgstr "Ko-fi"
+
+msgid "Legacy"
+msgstr "Klasik"
+
+msgid "Lockscreen Mode"
+msgstr "Mode Layar Kunci"
+
+msgid "Mode"
+msgstr "Mode"
+
+msgid "Never"
+msgstr "Tidak pernah"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "Hanya biarkan layar menyala saat menggunakan daya AC"
+
+msgid "Only on AC Power"
+msgstr "Hanya pada Daya AC"
+
+msgid "Open Ko-fi"
+msgstr "Buka Ko-fi"
+
+msgid "Open Saweria"
+msgstr "Buka Saweria"
+
+msgid "Open on GitHub"
+msgstr "Buka di GitHub"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "Tekan Esc di layar kunci untuk mematikan layar (atau sleep)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "Mencegah layar mati atau kosong saat terkunci"
+
+msgid "Prompt Animation"
+msgstr "Animasi Perintah Kata Sandi"
+
+msgid "Reset Animations"
+msgstr "Atur Ulang Animasi"
+
+msgid "Reset animations"
+msgstr "Setel ulang animasi"
+
+msgid "Resources"
+msgstr "Sumber daya"
+
+msgid "Restore defaults"
+msgstr "Kembalikan default"
+
+msgid "Saweria"
+msgstr "Saweria"
+
+msgid "Screen Timeout"
+msgstr "Batas Waktu Layar"
+
+msgid "Time to wait before turning off the screen"
+msgstr "Lama waktu sebelum layar mati"
+

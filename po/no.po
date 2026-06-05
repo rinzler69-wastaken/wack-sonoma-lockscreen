@@ -13,3 +13,145 @@ msgstr "mer"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Trykk Shift + N for å se varsler"
+
+msgid "A process is preventing sleep"
+msgstr "En prosess forhindrer hvilemodus"
+
+msgid "1 minute"
+msgstr "1 minutt"
+
+msgid "10 minutes"
+msgstr "10 minutter"
+
+msgid "15 minutes"
+msgstr "15 minutter"
+
+msgid "2 hours"
+msgstr "2 timer"
+
+msgid "30 minutes"
+msgstr "30 minutter"
+
+msgid "5 minutes"
+msgstr "5 minutter"
+
+msgid "60 minutes"
+msgstr "60 minutter"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "Vis alltid brukerwidget (Cupertino)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "Viser alltid brukerwidgeten, skjuler varsler som standard. Trykk Shift+N for å vise varsler."
+
+msgid "Animations"
+msgstr "Animasjoner"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Brukes på autentiseringsmeldingen mens den vises"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "Brukes på dato og tid når passordfeltet åpnes"
+
+msgid "Blank Timeout"
+msgstr "Tidsavbrudd for skjermslukking"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "Velg \"Klassisk\" for den tradisjonelle GNOME-layouten. Velg \"Cupertino\" for et macOS Sonoma-inspirert utseende (klikk på brukerikonet for å bytte bruker i Cupertino-modus)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "Velg mellom klassisk stil og Cupertino"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "Velg hvordan låseskjermens klokke forsvinner og passordfeltet vises."
+
+msgid "Clock Animation"
+msgstr "Klokkeanimasjon"
+
+msgid "Configuration"
+msgstr "Konfigurasjon"
+
+msgid "Consider supporting its development!"
+msgstr "Vurder å støtte utviklingen!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "Kontroller når skjermen slås av eller slukkes på låseskjermen."
+
+msgid "Cupertino"
+msgstr "Cupertino"
+
+msgid "Enjoying this extension?"
+msgstr "Liker du denne utvidelsen?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc for å slå av skjermen / hvilemodus"
+
+msgid "Extension Repo"
+msgstr "Utvidelse Repo"
+
+msgid "Home"
+msgstr "Hjem"
+
+msgid "Keep Screen On"
+msgstr "Hold skjermen på"
+
+msgid "Ko-fi"
+msgstr "Ko-fi"
+
+msgid "Legacy"
+msgstr "Klassisk"
+
+msgid "Lockscreen Mode"
+msgstr "Låseskjermmodus"
+
+msgid "Mode"
+msgstr "Modus"
+
+msgid "Never"
+msgstr "Aldri"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "Hold skjermen på bare ved nätstrøm"
+
+msgid "Only on AC Power"
+msgstr "Kun ved nätstrøm"
+
+msgid "Open Ko-fi"
+msgstr "Åpne Ko-fi"
+
+msgid "Open Saweria"
+msgstr "Åpne Saweria"
+
+msgid "Open on GitHub"
+msgstr "Åpne på GitHub"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "Trykk på Esc på låseskjermen for å slå av skjermen (eller gå til hvilemodus)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "Forhindre at skjermen slukkes når den er låst"
+
+msgid "Prompt Animation"
+msgstr "Passordprompt-animasjon"
+
+msgid "Reset Animations"
+msgstr "Tilbakestill animasjoner"
+
+msgid "Reset animations"
+msgstr "Tilbakestill animasjoner"
+
+msgid "Resources"
+msgstr "Ressurser"
+
+msgid "Restore defaults"
+msgstr "Gjenopprett standardinnstillinger"
+
+msgid "Saweria"
+msgstr "Saweria"
+
+msgid "Screen Timeout"
+msgstr "Skjermtidsavbrudd"
+
+msgid "Time to wait before turning off the screen"
+msgstr "Ventetid før skjermen slås av"
+

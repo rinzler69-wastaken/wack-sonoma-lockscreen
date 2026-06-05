@@ -13,3 +13,145 @@ msgstr "เพิ่มเติม"
 
 msgid "Press Shift + N to view notifications"
 msgstr "กด Shift + N เพื่อดูการแจ้งเตือน"
+
+msgid "A process is preventing sleep"
+msgstr "กระบวนการกำลังป้องกันการพักเครื่อง"
+
+msgid "1 minute"
+msgstr "1 นาที"
+
+msgid "10 minutes"
+msgstr "10 นาที"
+
+msgid "15 minutes"
+msgstr "15 นาที"
+
+msgid "2 hours"
+msgstr "2 ชั่วโมง"
+
+msgid "30 minutes"
+msgstr "30 นาที"
+
+msgid "5 minutes"
+msgstr "5 นาที"
+
+msgid "60 minutes"
+msgstr "60 นาที"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "แสดงวิดเจ็ตผู้ใช้เสมอ (คูเปอร์ติโน)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "แสดงวิดเจ็ตผู้ใช้เสมอ ซ่อนการแจ้งเตือนตามค่าเริ่มต้น กด Shift+N เพื่อแสดงการแจ้งเตือน"
+
+msgid "Animations"
+msgstr "ภาพเคลื่อนไหว"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "ใช้กับพรอมต์การรับรองความถูกต้องในขณะที่ปรากฏขึ้น"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "ใช้กับวันที่และเวลาขณะเปิดช่องใส่รหัสผ่าน"
+
+msgid "Blank Timeout"
+msgstr "ระยะเวลาก่อนปิดหน้าจอ"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "เลือก \"คลาสสิก\" สำหรับเค้าโครง GNOME แบบดั้งเดิม เลือก \"คูเปอร์ติโน\" สำหรับรูปลักษณ์ที่ได้รับแรงบันดาลใจจาก macOS Sonoma (คลิกไอคอนผู้ใช้เพื่อสลับผู้ใช้ในโหมดคูเปอร์ติโน)"
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "เลือกระหว่างสไตล์คลาสสิกและสไตล์คูเปอร์ติโน"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "เลือกว่าจะให้นาฬิกาบนหน้าจอล็อกหายไปอย่างไรและให้ช่องใส่รหัสผ่านแสดงขึ้นมาอย่างไร"
+
+msgid "Clock Animation"
+msgstr "ภาพเคลื่อนไหวนาฬิกา"
+
+msgid "Configuration"
+msgstr "การกำหนดค่า"
+
+msgid "Consider supporting its development!"
+msgstr "พิจารณาสนับสนุนการพัฒนาของมัน!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "ควบคุมการดับหรือปิดหน้าจอเมื่ออยู่บนหน้าจอล็อก"
+
+msgid "Cupertino"
+msgstr "คูเปอร์ติโน"
+
+msgid "Enjoying this extension?"
+msgstr "ชอบส่วนขยายนี้ไหม?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc เพื่อปิดหน้าจอ / พักเครื่อง"
+
+msgid "Extension Repo"
+msgstr "ส่วนขยาย Repo"
+
+msgid "Home"
+msgstr "หน้าแรก"
+
+msgid "Keep Screen On"
+msgstr "เปิดหน้าจอไว้"
+
+msgid "Ko-fi"
+msgstr "โค-ฟี่"
+
+msgid "Legacy"
+msgstr "คลาสสิก"
+
+msgid "Lockscreen Mode"
+msgstr "โหมดล็อคหน้าจอ"
+
+msgid "Mode"
+msgstr "โหมด"
+
+msgid "Never"
+msgstr "ไม่เคย"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "เปิดหน้าจอไว้เฉพาะเมื่อเสียบปลั๊กไฟเท่านั้น"
+
+msgid "Only on AC Power"
+msgstr "เฉพาะเมื่อเสียบปลั๊กไฟเท่านั้น"
+
+msgid "Open Ko-fi"
+msgstr "เปิด Ko-fi"
+
+msgid "Open Saweria"
+msgstr "เปิด Saweria"
+
+msgid "Open on GitHub"
+msgstr "เปิดบน GitHub"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "กด Esc บนหน้าจอล็อคเพื่อปิดหน้าจอ (หรือพักเครื่อง)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "ป้องกันไม่ให้หน้าจอดับหรือว่างเปล่าเมื่อล็อกเครื่อง"
+
+msgid "Prompt Animation"
+msgstr "ภาพเคลื่อนไหวของช่องรหัสผ่าน"
+
+msgid "Reset Animations"
+msgstr "รีเซ็ตภาพเคลื่อนไหว"
+
+msgid "Reset animations"
+msgstr "รีเซ็ตภาพเคลื่อนไหว"
+
+msgid "Resources"
+msgstr "ทรัพยากร"
+
+msgid "Restore defaults"
+msgstr "คืนค่าเริ่มต้น"
+
+msgid "Saweria"
+msgstr "ซาเวเรีย"
+
+msgid "Screen Timeout"
+msgstr "หมดเวลาหน้าจอ"
+
+msgid "Time to wait before turning off the screen"
+msgstr "ระยะเวลารอก่อนปิดหน้าจอ"
+

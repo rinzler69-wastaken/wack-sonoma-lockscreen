@@ -13,3 +13,145 @@ msgstr "mehr"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Shift + N drücken, um Benachrichtigungen anzuzeigen"
+
+msgid "A process is preventing sleep"
+msgstr "Ein Prozess verhindert die Bereitschaft"
+
+msgid "1 minute"
+msgstr "1 Minute"
+
+msgid "10 minutes"
+msgstr "10 Minuten"
+
+msgid "15 minutes"
+msgstr "15 Minuten"
+
+msgid "2 hours"
+msgstr "2 Stunden"
+
+msgid "30 minutes"
+msgstr "30 Minuten"
+
+msgid "5 minutes"
+msgstr "5 Minuten"
+
+msgid "60 minutes"
+msgstr "60 Minuten"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "Benutzer-Widget immer anzeigen (Cupertino)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "Zeigt das Benutzer-Widget immer an und blendet Benachrichtigungen standardmäßig aus. Drücken Sie Shift+N, um Benachrichtigungen anzuzeigen."
+
+msgid "Animations"
+msgstr "Animationen"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Wird auf die Authentifizierungsaufforderung angewendet, während sie angezeigt wird"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "Wird auf Datum und Uhrzeit angewendet, während die Passworteingabe geöffnet wird"
+
+msgid "Blank Timeout"
+msgstr "Ausschaltverzögerung"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "Wählen Sie „Klassisch“ für das klassische, GNOME-konforme Layout. Wählen Sie „Cupertino“ für ein von macOS Sonoma inspiriertes Aussehen (Benutzersymbol anklicken, um Benutzer im Cupertino-Modus zu wechseln)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "Zwischen dem klassischen und dem Cupertino-Stil wählen"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "Legt fest, wie die Sperrbildschirmuhr ausgeblendet und die Passworteingabe eingeblendet wird."
+
+msgid "Clock Animation"
+msgstr "Uhranimation"
+
+msgid "Configuration"
+msgstr "Konfiguration"
+
+msgid "Consider supporting its development!"
+msgstr "Erwägen Sie, seine Entwicklung zu unterstützen!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "Steuert das Ausschalten oder Abdunkeln des Bildschirms im Sperrbildschirm."
+
+msgid "Cupertino"
+msgstr "Cupertino"
+
+msgid "Enjoying this extension?"
+msgstr "Gefällt Ihnen diese Erweiterung?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Escape für Bildschirm aus / Bereitschaft"
+
+msgid "Extension Repo"
+msgstr "Erweiterungs-Repo"
+
+msgid "Home"
+msgstr "Startseite"
+
+msgid "Keep Screen On"
+msgstr "Bildschirm eingeschaltet lassen"
+
+msgid "Ko-fi"
+msgstr "Ko-fi"
+
+msgid "Legacy"
+msgstr "Klassisch"
+
+msgid "Lockscreen Mode"
+msgstr "Sperrbildschirmmodus"
+
+msgid "Mode"
+msgstr "Modus"
+
+msgid "Never"
+msgstr "Niemals"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "Bildschirm nur bei Netzbetrieb eingeschaltet lassen"
+
+msgid "Only on AC Power"
+msgstr "Nur bei Netzbetrieb"
+
+msgid "Open Ko-fi"
+msgstr "Ko-fi öffnen"
+
+msgid "Open Saweria"
+msgstr "Saweria öffnen"
+
+msgid "Open on GitHub"
+msgstr "Auf GitHub öffnen"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "Drücken Sie Escape auf dem Sperrbildschirm, um den Bildschirm auszuschalten (oder in Bereitschaft zu versetzen)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "Verhindert, dass der Bildschirm im gesperrten Zustand dunkel oder ausgeschaltet wird"
+
+msgid "Prompt Animation"
+msgstr "Animation der Passworteingabe"
+
+msgid "Reset Animations"
+msgstr "Animationen zurücksetzen"
+
+msgid "Reset animations"
+msgstr "Animationen zurücksetzen"
+
+msgid "Resources"
+msgstr "Ressourcen"
+
+msgid "Restore defaults"
+msgstr "Standardeinstellungen wiederherstellen"
+
+msgid "Saweria"
+msgstr "Saweria"
+
+msgid "Screen Timeout"
+msgstr "Bildschirm-Timeout"
+
+msgid "Time to wait before turning off the screen"
+msgstr "Wartezeit vor dem Ausschalten des Bildschirms"
+

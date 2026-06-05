@@ -13,3 +13,145 @@ msgstr "plus"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Appuyez sur Maj+N pour voir les notifications"
+
+msgid "A process is preventing sleep"
+msgstr "Un processus empêche la mise en veille"
+
+msgid "1 minute"
+msgstr "1 minute"
+
+msgid "10 minutes"
+msgstr "10 minutes"
+
+msgid "15 minutes"
+msgstr "15 minutes"
+
+msgid "2 hours"
+msgstr "2 heures"
+
+msgid "30 minutes"
+msgstr "30 minutes"
+
+msgid "5 minutes"
+msgstr "5 minutes"
+
+msgid "60 minutes"
+msgstr "60 minutes"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "Toujours afficher le widget utilisateur (Cupertino)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "Affiche toujours le widget utilisateur et masque les notifications par défaut. Appuyez sur Shift+N pour afficher les notifications."
+
+msgid "Animations"
+msgstr "Animations"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Appliqué à l'invite d'authentification lorsqu'elle apparaît"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "Appliqué à la date et à l'heure lors de l'ouverture de la saisie du mot de passe"
+
+msgid "Blank Timeout"
+msgstr "Délai d'extinction de l'écran"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "Choisissez « Classique » pour la disposition classique conforme à GNOME. Choisissez « Cupertino » pour un style inspiré de macOS Sonoma (cliquez sur l'icône utilisateur pour changer d'utilisateur en mode Cupertino)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "Choisir entre le style classique et le style Cupertino"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "Définit la façon dont l'horloge disparaît et l'invite de mot de passe apparaît."
+
+msgid "Clock Animation"
+msgstr "Animation d'horloge"
+
+msgid "Configuration"
+msgstr "Configuration"
+
+msgid "Consider supporting its development!"
+msgstr "Pensez à soutenir son développement !"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "Détermine quand l'écran s'éteint ou s'assombrit sur l'écran de verrouillage."
+
+msgid "Cupertino"
+msgstr "Cupertino"
+
+msgid "Enjoying this extension?"
+msgstr "Vous appréciez cette extension ?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Échap pour éteindre l'écran / mettre en veille"
+
+msgid "Extension Repo"
+msgstr "Dépôt d'extensions"
+
+msgid "Home"
+msgstr "Accueil"
+
+msgid "Keep Screen On"
+msgstr "Garder l'écran allumé"
+
+msgid "Ko-fi"
+msgstr "Kofi"
+
+msgid "Legacy"
+msgstr "Classique"
+
+msgid "Lockscreen Mode"
+msgstr "Mode écran de verrouillage"
+
+msgid "Mode"
+msgstr "Mode"
+
+msgid "Never"
+msgstr "Jamais"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "Ne laisser l'écran allumé que sur secteur"
+
+msgid "Only on AC Power"
+msgstr "Uniquement sur secteur"
+
+msgid "Open Ko-fi"
+msgstr "Ouvrir Ko-fi"
+
+msgid "Open Saweria"
+msgstr "Ouvrir Saweria"
+
+msgid "Open on GitHub"
+msgstr "Ouvrir sur GitHub"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "Appuyez sur Échap sur l'écran de verrouillage pour éteindre l'écran (ou mettre en veille)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "Empêche l'écran de s'éteindre ou de s'assombrir lorsqu'il est verrouillé"
+
+msgid "Prompt Animation"
+msgstr "Animation de la saisie du mot de passe"
+
+msgid "Reset Animations"
+msgstr "Réinitialiser les animations"
+
+msgid "Reset animations"
+msgstr "Réinitialiser les animations"
+
+msgid "Resources"
+msgstr "Ressources"
+
+msgid "Restore defaults"
+msgstr "Restaurer les valeurs par défaut"
+
+msgid "Saweria"
+msgstr "Sawéria"
+
+msgid "Screen Timeout"
+msgstr "Délai d'expiration de l'écran"
+
+msgid "Time to wait before turning off the screen"
+msgstr "Temps d'attente avant d'éteindre l'écran"
+

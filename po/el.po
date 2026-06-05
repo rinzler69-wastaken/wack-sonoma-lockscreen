@@ -13,3 +13,145 @@ msgstr "περισσότερα"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Πατήστε Shift + N για προβολή ειδοποιήσεων"
+
+msgid "A process is preventing sleep"
+msgstr "Μια διεργασία αποτρέπει την αναστολή λειτουργίας"
+
+msgid "1 minute"
+msgstr "1 λεπτό"
+
+msgid "10 minutes"
+msgstr "10 λεπτά"
+
+msgid "15 minutes"
+msgstr "15 λεπτά"
+
+msgid "2 hours"
+msgstr "2 ώρες"
+
+msgid "30 minutes"
+msgstr "30 λεπτά"
+
+msgid "5 minutes"
+msgstr "5 λεπτά"
+
+msgid "60 minutes"
+msgstr "60 λεπτά"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "Να εμφανίζεται πάντα το γραφικό στοιχείο χρήστη (Cupertino)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "Εμφανίζει πάντα το γραφικό στοιχείο χρήστη, αποκρύπτοντας τις ειδοποιήσεις από προεπιλογή. Πατήστε Shift+N για να εμφανιστούν οι ειδοποιήσεις."
+
+msgid "Animations"
+msgstr "Κινούμενα σχέδια"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Εφαρμόζεται στο μήνυμα ελέγχου ταυτότητας ενώ εμφανίζεται"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "Εφαρμόζεται στην ημερομηνία και την ώρα κατά το άνοιγμα του πλαισίου κωδικού"
+
+msgid "Blank Timeout"
+msgstr "Χρονικό όριο απενεργοποίησης οθόνης"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "Επιλέξτε «Κλασικό» για την παραδοσιακή διάταξη του GNOME. Επιλέξτε «Cupertino» για εμφάνιση εμπνευσμένη από το macOS Sonoma (κάντε κλικ στο εικονίδιο χρήστη για εναλλαγή χρηστών στη λειτουργία Cupertino)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "Επιλογή μεταξύ του κλασικού στυλ και του στυλ Cupertino"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "Επιλέξτε πώς εξαφανίζεται το ρολόι της οθόνης κλειδώματος και πώς εμφανίζεται το πλαίσιο κωδικού."
+
+msgid "Clock Animation"
+msgstr "Κινούμενα σχέδια ρολογιού"
+
+msgid "Configuration"
+msgstr "Διαμόρφωση"
+
+msgid "Consider supporting its development!"
+msgstr "Σκεφτείτε να υποστηρίξετε την ανάπτυξή του!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "Ελέγχει πότε η οθόνη απενεργοποιείται ή μαυρίζει στην οθόνη κλειδώματος."
+
+msgid "Cupertino"
+msgstr "Κουπερτίνο"
+
+msgid "Enjoying this extension?"
+msgstr "Σας αρέσει αυτή η επέκταση;"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc για απενεργοποίηση οθόνης / αναστολή"
+
+msgid "Extension Repo"
+msgstr "Επέκταση Repo"
+
+msgid "Home"
+msgstr "Αρχική"
+
+msgid "Keep Screen On"
+msgstr "Διατήρηση της οθόνης ενεργής"
+
+msgid "Ko-fi"
+msgstr "Κο-φι"
+
+msgid "Legacy"
+msgstr "Κλασικό"
+
+msgid "Lockscreen Mode"
+msgstr "Λειτουργία οθόνης κλειδώματος"
+
+msgid "Mode"
+msgstr "Τρόπος"
+
+msgid "Never"
+msgstr "Ποτέ"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "Διατήρηση της οθόνης ενεργής μόνο κατά τη σύνδεση στο ρεύμα"
+
+msgid "Only on AC Power"
+msgstr "Μόνο κατά τη σύνδεση στο ρεύμα"
+
+msgid "Open Ko-fi"
+msgstr "Άνοιγμα Ko-fi"
+
+msgid "Open Saweria"
+msgstr "Άνοιγμα Saweria"
+
+msgid "Open on GitHub"
+msgstr "Άνοιγμα στο GitHub"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "Πατήστε Esc στην οθόνη κλειδώματος για απενεργοποίηση της οθόνης (ή αναστολή)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "Αποτροπή απενεργοποίησης της οθόνης κατά το κλείδωμα"
+
+msgid "Prompt Animation"
+msgstr "Κινούμενα σχέδια πλαισίου κωδικού"
+
+msgid "Reset Animations"
+msgstr "Επαναφορά κινούμενων εικόνων"
+
+msgid "Reset animations"
+msgstr "Επαναφορά κινούμενων εικόνων"
+
+msgid "Resources"
+msgstr "Πόροι"
+
+msgid "Restore defaults"
+msgstr "Επαναφορά προεπιλογών"
+
+msgid "Saweria"
+msgstr "Saweria"
+
+msgid "Screen Timeout"
+msgstr "Λήξη χρονικού ορίου οθόνης"
+
+msgid "Time to wait before turning off the screen"
+msgstr "Χρόνος αναμονής πριν την απενεργοποίηση της οθόνης"
+

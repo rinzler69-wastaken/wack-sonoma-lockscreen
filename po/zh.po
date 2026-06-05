@@ -13,3 +13,145 @@ msgstr "更多"
 
 msgid "Press Shift + N to view notifications"
 msgstr "按 Shift + N 查看通知"
+
+msgid "A process is preventing sleep"
+msgstr "一个进程正在阻止挂起"
+
+msgid "1 minute"
+msgstr "1分钟"
+
+msgid "10 minutes"
+msgstr "10分钟"
+
+msgid "15 minutes"
+msgstr "15分钟"
+
+msgid "2 hours"
+msgstr "2小时"
+
+msgid "30 minutes"
+msgstr "30分钟"
+
+msgid "5 minutes"
+msgstr "5分钟"
+
+msgid "60 minutes"
+msgstr "60分钟"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "始终显示用户小部件 (库比蒂诺)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "始终显示用户小部件，默认隐藏通知。按 Shift+N 显示通知。"
+
+msgid "Animations"
+msgstr "动画"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "应用于出现的身份验证提示"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "在显示密码输入框时应用于日期和时间"
+
+msgid "Blank Timeout"
+msgstr "关闭屏幕超时"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "选择“经典”以使用传统的 GNOME 布局。选择“Cupertino”以使用受 macOS Sonoma 启发的布局（在 Cupertino 模式下点击用户图标以切换用户）。"
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "在经典与 Cupertino 样式之间选择"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "选择锁屏时钟消失及密码输入框出现的动画样式。"
+
+msgid "Clock Animation"
+msgstr "时钟动画"
+
+msgid "Configuration"
+msgstr "配置"
+
+msgid "Consider supporting its development!"
+msgstr "考虑支持它的发展！"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "控制锁屏时屏幕何时关闭或变黑。"
+
+msgid "Cupertino"
+msgstr "库比蒂诺"
+
+msgid "Enjoying this extension?"
+msgstr "喜欢这个扩展吗？"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc 键用于关闭屏幕/挂起"
+
+msgid "Extension Repo"
+msgstr "扩展仓库"
+
+msgid "Home"
+msgstr "主页"
+
+msgid "Keep Screen On"
+msgstr "保持屏幕开启"
+
+msgid "Ko-fi"
+msgstr "科菲"
+
+msgid "Legacy"
+msgstr "经典"
+
+msgid "Lockscreen Mode"
+msgstr "锁屏模式"
+
+msgid "Mode"
+msgstr "模式"
+
+msgid "Never"
+msgstr "绝不"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "仅在接通电源时保持屏幕开启"
+
+msgid "Only on AC Power"
+msgstr "仅在接通电源时"
+
+msgid "Open Ko-fi"
+msgstr "打开 Ko-fi"
+
+msgid "Open Saweria"
+msgstr "打开 Saweria"
+
+msgid "Open on GitHub"
+msgstr "在 GitHub 上打开"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "在锁定屏幕上按 Esc 键以关闭屏幕（或挂起）"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "防止锁屏时屏幕关闭或变黑"
+
+msgid "Prompt Animation"
+msgstr "密码输入框动画"
+
+msgid "Reset Animations"
+msgstr "重置动画"
+
+msgid "Reset animations"
+msgstr "重置动画"
+
+msgid "Resources"
+msgstr "资源"
+
+msgid "Restore defaults"
+msgstr "恢复默认设置"
+
+msgid "Saweria"
+msgstr "萨维利亚"
+
+msgid "Screen Timeout"
+msgstr "屏幕超时"
+
+msgid "Time to wait before turning off the screen"
+msgstr "关闭屏幕前的等待时间"
+

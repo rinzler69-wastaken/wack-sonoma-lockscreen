@@ -6,6 +6,7 @@ import { CLOCK_ANIMATION_OPTIONS, PROMPT_ANIMATION_OPTIONS } from './anims.js';
 
 export default class WackLockscreenClockPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
+        const _ = this.gettext.bind(this);
         const settings = this.getSettings();
         // Collect settings signal IDs so they can all be disconnected when the
         // prefs window is destroyed, preventing stale closures from keeping
@@ -17,7 +18,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         // -- Home page -------------------------------------------------------
         const homePage = new Adw.PreferencesPage({
-            title: 'Home',
+            title: _('Home'),
             icon_name: 'go-home-symbolic',
         });
 
@@ -91,10 +92,10 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         homeGroup.add(homeBox);
         homePage.add(homeGroup);
 
-        const resourcesGroup = new Adw.PreferencesGroup({ title: 'Resources' });
+        const resourcesGroup = new Adw.PreferencesGroup({ title: _('Resources') });
 
         const repoRow = new Adw.ActionRow({
-            title: 'Extension Repo',
+            title: _('Extension Repo'),
             subtitle: 'github.com/rinzler69-wastaken/wack-sonoma-lockscreen',
         });
 
@@ -107,7 +108,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         const openBtn = new Gtk.Button({
             icon_name: 'adw-external-link-symbolic',
-            tooltip_text: 'Open on GitHub',
+            tooltip_text: _('Open on GitHub'),
             css_classes: ['flat'],
             valign: Gtk.Align.CENTER,
         });
@@ -119,8 +120,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         resourcesGroup.add(repoRow);
 
         const supportGroup = new Adw.PreferencesGroup({
-            title: 'Enjoying this extension?',
-            description: 'Consider supporting its development!',
+            title: _('Enjoying this extension?'),
+            description: _('Consider supporting its development!'),
         });
 
         let donations = this.metadata.donations;
@@ -140,7 +141,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         };
 
         const kofiRow = new Adw.ActionRow({
-            title: 'Ko-fi',
+            title: _('Ko-fi'),
             subtitle: `ko-fi.com/${donations.kofi}`,
         });
 
@@ -153,7 +154,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         const kofiBtn = new Gtk.Button({
             icon_name: 'adw-external-link-symbolic',
-            tooltip_text: 'Open Ko-fi',
+            tooltip_text: _('Open Ko-fi'),
             css_classes: ['flat'],
             valign: Gtk.Align.CENTER,
         });
@@ -165,7 +166,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         supportGroup.add(kofiRow);
 
         const saweriaRow = new Adw.ActionRow({
-            title: 'Saweria',
+            title: _('Saweria'),
             subtitle: donations.custom.replace('https://', ''),
         });
 
@@ -178,7 +179,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         const saweriaBtn = new Gtk.Button({
             icon_name: 'adw-external-link-symbolic',
-            tooltip_text: 'Open Saweria',
+            tooltip_text: _('Open Saweria'),
             css_classes: ['flat'],
             valign: Gtk.Align.CENTER,
         });
@@ -195,34 +196,34 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         // -- Configuration page ----------------------------------------------
         const animPage = new Adw.PreferencesPage({
-            title: 'Configuration',
+            title: _('Configuration'),
             icon_name: 'system-lock-screen-symbolic',
         });
 
         // -- Mode selector --------------------------------------------------
         const modeGroup = new Adw.PreferencesGroup({
-            title: 'Lockscreen Mode',
-            description: 'Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode).',
+            title: _('Lockscreen Mode'),
+            description: _('Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode).'),
         });
 
         const modeOptions = [
-            ['wack', 'Legacy'],
-            ['cupertino', 'Cupertino']
+            ['wack', _('Legacy')],
+            ['cupertino', _('Cupertino')]
         ];
 
         const modeRow = this._buildComboRow(
             settings,
             'lockscreen-mode',
-            'Mode',
-            'Choose between Legacy and Cupertino styles',
+            _('Mode'),
+            _('Choose between Legacy and Cupertino styles'),
             modeOptions
         );
         modeGroup.add(modeRow);
 
         // -- Cupertino options ----------------------------------------------
         const alwaysShowUserRow = new Adw.ActionRow({
-            title: 'Always Show User Widget (Cupertino)',
-            subtitle: 'Always shows user widget, hides notifications by default. Press Shift+N to show notifications.',
+            title: _('Always Show User Widget (Cupertino)'),
+            subtitle: _('Always shows user widget, hides notifications by default. Press Shift+N to show notifications.'),
         });
         const alwaysShowUserSwitch = new Gtk.Switch({
             valign: Gtk.Align.CENTER,
@@ -244,8 +245,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         // -- Animation options (greyed out in Cupertino mode) ---------------
         const animationGroup = new Adw.PreferencesGroup({
-            title: 'Animations',
-            description: 'Choose how the lock screen clock leaves and how the password prompt enters.',
+            title: _('Animations'),
+            description: _('Choose how the lock screen clock leaves and how the password prompt enters.'),
         });
         animationGroup.sensitive = settings.get_string('lockscreen-mode') !== 'cupertino';
 
@@ -258,24 +259,24 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         animationGroup.add(this._buildComboRow(
             settings,
             'clock-animation',
-            'Clock Animation',
-            'Applied to the date and time while opening the password prompt',
+            _('Clock Animation'),
+            _('Applied to the date and time while opening the password prompt'),
             CLOCK_ANIMATION_OPTIONS));
 
         animationGroup.add(this._buildComboRow(
             settings,
             'prompt-animation',
-            'Prompt Animation',
-            'Applied to the authentication prompt while it appears',
+            _('Prompt Animation'),
+            _('Applied to the authentication prompt while it appears'),
             PROMPT_ANIMATION_OPTIONS));
 
         const resetRow = new Adw.ActionRow({
-            title: 'Reset Animations',
-            subtitle: 'Restore defaults',
+            title: _('Reset Animations'),
+            subtitle: _('Restore defaults'),
         });
         const resetButton = new Gtk.Button({
             icon_name: 'view-refresh-symbolic',
-            tooltip_text: 'Reset animations',
+            tooltip_text: _('Reset animations'),
             css_classes: ['flat'],
             valign: Gtk.Align.CENTER,
         });
@@ -291,13 +292,13 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         // -- Screen Timeout options -----------------------------------------
         const timeoutGroup = new Adw.PreferencesGroup({
-            title: 'Screen Timeout',
-            description: 'Control when the screen turns off or blanks on the lock screen.',
+            title: _('Screen Timeout'),
+            description: _('Control when the screen turns off or blanks on the lock screen.'),
         });
 
         const enableUnblankRow = new Adw.ActionRow({
-            title: 'Keep Screen On',
-            subtitle: 'Prevent the screen from blanking or turning off when locked',
+            title: _('Keep Screen On'),
+            subtitle: _('Prevent the screen from blanking or turning off when locked'),
         });
         const enableUnblankSwitch = new Gtk.Switch({
             valign: Gtk.Align.CENTER,
@@ -314,8 +315,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         timeoutGroup.add(enableUnblankRow);
 
         const unblankOnAcOnlyRow = new Adw.ActionRow({
-            title: 'Only on AC Power',
-            subtitle: 'Only keep the screen on if the system is plugged in',
+            title: _('Only on AC Power'),
+            subtitle: _('Only keep the screen on if the system is plugged in'),
         });
         const unblankOnAcOnlySwitch = new Gtk.Switch({
             valign: Gtk.Align.CENTER,
@@ -332,22 +333,22 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         timeoutGroup.add(unblankOnAcOnlyRow);
 
         const timeoutOptions = [
-            [0, 'Never'],
-            [60, '1 minute'],
-            [300, '5 minutes'],
-            [600, '10 minutes'],
-            [900, '15 minutes'],
-            [1800, '30 minutes'],
-            [3600, '60 minutes'],
-            [7200, '2 hours'],
+            [0, _('Never')],
+            [60, _('1 minute')],
+            [300, _('5 minutes')],
+            [600, _('10 minutes')],
+            [900, _('15 minutes')],
+            [1800, _('30 minutes')],
+            [3600, _('60 minutes')],
+            [7200, _('2 hours')],
         ];
         const timeoutModel = new Gtk.StringList();
         for (const [, label] of timeoutOptions) {
             timeoutModel.append(label);
         }
         const timeoutRow = new Adw.ComboRow({
-            title: 'Blank Timeout',
-            subtitle: 'Time to wait before turning off the screen',
+            title: _('Blank Timeout'),
+            subtitle: _('Time to wait before turning off the screen'),
             model: timeoutModel,
         });
         const syncTimeoutFromSettings = () => {
@@ -365,6 +366,24 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         const sigId = settings.connect('changed::unblank-timeout', syncTimeoutFromSettings);
         timeoutRow.connect('destroy', () => settings.disconnect(sigId));
         timeoutGroup.add(timeoutRow);
+
+        const escToSleepRow = new Adw.ActionRow({
+            title: _('Escape to Sleep / Suspend'),
+            subtitle: _('Press Escape on the lock screen to sleep display (or suspend)'),
+        });
+        const escToSleepSwitch = new Gtk.Switch({
+            valign: Gtk.Align.CENTER,
+            active: settings.get_boolean('esc-to-sleep'),
+        });
+        escToSleepSwitch.connect('notify::active', () => {
+            settings.set_boolean('esc-to-sleep', escToSleepSwitch.active);
+        });
+        settingsSignalIds.push(settings.connect('changed::esc-to-sleep', () => {
+            escToSleepSwitch.active = settings.get_boolean('esc-to-sleep');
+        }));
+        escToSleepRow.add_suffix(escToSleepSwitch);
+        escToSleepRow.activatable_widget = escToSleepSwitch;
+        timeoutGroup.add(escToSleepRow);
 
         const syncSensitivity = () => {
             const enabled = settings.get_boolean('enable-unblank');
@@ -387,9 +406,10 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
     }
 
     _buildComboRow(settings, key, title, subtitle, options) {
+        const _ = this.gettext.bind(this);
         const model = new Gtk.StringList();
         for (const [, label] of options)
-            model.append(label);
+            model.append(_(label));
 
         const row = new Adw.ComboRow({
             title,

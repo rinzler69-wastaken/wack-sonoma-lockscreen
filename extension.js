@@ -38,7 +38,7 @@ import {
     DATE_LABEL_HEIGHT,
     TIME_LABEL_HEIGHT_FALLBACK,
     CUPERTINO_PROMPT_VERTICAL_FRACTION,
-    } from './constants.js';
+} from './constants.js';
 
 
 export default class WackLockscreenClockExtension extends Extension {
@@ -63,6 +63,11 @@ export default class WackLockscreenClockExtension extends Extension {
         this._lockscreenMode = 'wack';
         this._cupertinoAlwaysShowUser = false;
         this._cupertinoShowNotifsOverride = false; // Toggled via Shift+N
+        this._showingInhibitHint = false;
+        this._inhibitHintTimeoutId = null;
+        this._originalWackText = null;
+        this._originalCupertinoText = null;
+        this._originalCupertinoCount = 0;
         this._animationState = createAnimationState();
         // Instantiate NotificationManager before _loadSettings() so that
         // syncLockscreenMode() and other settings callbacks can safely access it.
@@ -143,7 +148,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._hintText = hint.text;
         hint.connectObject(
             'notify::text', () => {
-                if (!this._overflowActive)
+                if (!this._overflowActive && !this._showingInhibitHint)
                     this._hintText = hint.text;
             },
             'notify::opacity', () => {
@@ -175,8 +180,30 @@ export default class WackLockscreenClockExtension extends Extension {
         this._promptActor?.set_pivot_point(0.5, 0.5);
 
         dialog.connectObject('key-press-event', (actor, event) => {
+            const keysym = event.get_key_symbol();
+            if (keysym === Clutter.KEY_Escape && !this._promptActive) {
+                if (this._escToSleep) {
+                    if (this._lockscreenMode === 'cupertino' && this._cupertinoAlwaysShowUser) {
+                        if (this._cupertinoShowNotifsOverride) {
+                            this._cupertinoShowNotifsOverride = false;
+                            this._updateCupertinoRestState(true);
+                            return Clutter.EVENT_STOP;
+                        }
+                    }
+
+                    // Escape key always suspends/sleeps the system
+                    if (Main.screenShield._loginManager) {
+                        if (this._isSleepInhibited()) {
+                            this._showInhibitHint(this.gettext('A process is preventing sleep'));
+                        } else {
+                            Main.screenShield._loginManager.suspend();
+                        }
+                        return Clutter.EVENT_STOP;
+                    }
+                }
+            }
+
             if (this._lockscreenMode === 'cupertino' && this._cupertinoAlwaysShowUser && !this._promptActive) {
-                const keysym = event.get_key_symbol();
                 const state = event.get_state();
                 const shiftPressed = (state & Clutter.ModifierType.SHIFT_MASK) !== 0;
 
@@ -188,12 +215,6 @@ export default class WackLockscreenClockExtension extends Extension {
                         this._cupertinoShowNotifsOverride = !this._cupertinoShowNotifsOverride;
                         this._updateCupertinoRestState(true);
                     }
-                    return Clutter.EVENT_STOP;
-                }
-
-                if (keysym === Clutter.KEY_Escape && this._cupertinoShowNotifsOverride) {
-                    this._cupertinoShowNotifsOverride = false;
-                    this._updateCupertinoRestState(true);
                     return Clutter.EVENT_STOP;
                 }
             }
@@ -456,11 +477,17 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         syncCupertinoAlwaysShowUser();
 
+        const syncEscToSleep = () => {
+            this._escToSleep = this._settings.get_boolean('esc-to-sleep');
+        };
+        syncEscToSleep();
+
         this._settings.connectObject(
             'changed::clock-animation', syncClockAnimation,
             'changed::prompt-animation', syncPromptAnimation,
             'changed::lockscreen-mode', syncLockscreenMode,
             'changed::cupertino-always-show-user', syncCupertinoAlwaysShowUser,
+            'changed::esc-to-sleep', syncEscToSleep,
             this);
     }
 
@@ -830,6 +857,146 @@ export default class WackLockscreenClockExtension extends Extension {
         this._updateCupertinoHintCycle();
     }
 
+    _showInhibitHint(message) {
+        if (this._inhibitHintTimeoutId) {
+            GLib.source_remove(this._inhibitHintTimeoutId);
+            this._inhibitHintTimeoutId = null;
+        }
+
+        const wackActor = this._overflowActive ? this._overflowLabel : this._hint;
+        const cupertinoActor = (this._lockscreenMode === 'cupertino' && this._cupertinoRestPrompt)
+            ? this._cupertinoRestPrompt._hintBox : null;
+
+        // Track that we are showing the warning
+        const wasShowing = this._showingInhibitHint;
+        this._showingInhibitHint = true;
+
+        // Cancel running hint cycle in Cupertino mode
+        if (this._lockscreenMode === 'cupertino' && this._cupertinoHintCycleId) {
+            GLib.source_remove(this._cupertinoHintCycleId);
+            this._cupertinoHintCycleId = null;
+        }
+
+        // Stop any running transitions
+        wackActor?.remove_all_transitions();
+        cupertinoActor?.remove_all_transitions();
+
+        // 1. BLIP IN INSTANTLY
+        if (wackActor) {
+            wackActor.opacity = 255;
+            wackActor.visible = true;
+            if (this._overflowActive) {
+                // If warning was already showing, wackActor.text is already "X+ more · Warning".
+                // Otherwise it is "X+ more · originalHint".
+                // In either case, split by '  ·  ' and get the prefix (the count note)
+                const prefix = wackActor.text.split('  ·  ')[0];
+                wackActor.text = `${prefix}  ·  ${message}`;
+                this._notifManager.positionOverflow();
+            } else {
+                wackActor.text = message;
+                this._positionHint();
+            }
+        }
+
+        if (this._cupertinoRestPrompt) {
+            if (cupertinoActor) {
+                cupertinoActor.opacity = 255;
+                cupertinoActor.visible = true;
+            }
+            this._cupertinoRestPrompt.setHintText(message);
+            this._cupertinoRestPrompt.setNotifCount(0);
+        }
+
+        // 2. Set timeout to restore original text (fade out -> restore text -> fade in)
+        this._inhibitHintTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
+            this._showingInhibitHint = false;
+            this._inhibitHintTimeoutId = null;
+
+            wackActor?.remove_all_transitions();
+            cupertinoActor?.remove_all_transitions();
+
+            const fadeOutDuration = 150;
+            const fadeInDuration = 150;
+
+            if (wackActor) {
+                wackActor.ease({
+                    opacity: 0,
+                    duration: fadeOutDuration,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        if (this._overflowActive) {
+                            this._notifManager.enforceCardLimit(this._dialog._notificationsBox);
+                        } else {
+                            wackActor.text = this._hintText;
+                            this._positionHint();
+                        }
+
+                        wackActor.ease({
+                            opacity: 255,
+                            duration: fadeInDuration,
+                            mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                        });
+                    }
+                });
+            }
+
+            if (cupertinoActor) {
+                cupertinoActor.ease({
+                    opacity: 0,
+                    duration: fadeOutDuration,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        if (this._cupertinoRestPrompt) {
+                            // Reset cycle back to the base state (with counter)
+                            this._cupertinoHintIsToggle = false;
+                            const nativeCount = this._notifManager.getNativeNotifCount();
+                            const count = (this._cupertinoAlwaysShowUser && !this._cupertinoShowNotifsOverride) ? nativeCount : 0;
+                            const baseText = this._cupertinoShowNotifsOverride
+                                ? shellGettext('Swipe up to unlock')
+                                : shellGettext('Click or press a key to unlock');
+
+                            this._cupertinoRestPrompt.setHintText(baseText);
+                            this._cupertinoRestPrompt.setNotifCount(count);
+                            this._updateCupertinoHintCycle();
+                        }
+
+                        cupertinoActor.ease({
+                            opacity: 255,
+                            duration: fadeInDuration,
+                            mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                        });
+                    }
+                });
+            }
+
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    _isSleepInhibited() {
+        try {
+            const result = Gio.DBus.system.call_sync(
+                'org.freedesktop.login1',
+                '/org/freedesktop/login1',
+                'org.freedesktop.login1.Manager',
+                'ListInhibitors',
+                null,
+                null,
+                Gio.DBusCallFlags.NONE,
+                -1,
+                null
+            );
+            const [inhibitors] = result.deepUnpack();
+            for (const [what, who, why, mode] of inhibitors) {
+                if (what.includes('sleep') && mode === 'block')
+                    return true;
+            }
+        } catch (err) {
+            // Ignore and assume not inhibited
+        }
+        return false;
+    }
+
     _updateCupertinoHintCycle() {
         if (!this._cupertinoRestPrompt) return;
 
@@ -985,6 +1152,9 @@ export default class WackLockscreenClockExtension extends Extension {
         const monitorWidth = monitor.width / scaleFactor;
         const monitorHeight = monitor.height / scaleFactor;
 
+        // Reset explicit width constraint to let Clutter measure the actual text size
+        this._hint.set_width(-1);
+
         const [, natWidth] = this._hint.get_preferred_width(-1);
         const [, natHeight] = this._hint.get_preferred_height(-1);
 
@@ -1049,6 +1219,11 @@ export default class WackLockscreenClockExtension extends Extension {
         if (this._origSetTransitionProgress) {
             this._dialog._setTransitionProgress = this._origSetTransitionProgress;
             this._origSetTransitionProgress = null;
+        }
+
+        if (this._inhibitHintTimeoutId) {
+            GLib.source_remove(this._inhibitHintTimeoutId);
+            this._inhibitHintTimeoutId = null;
         }
 
         this._teardownCupertinoAvatarOverride();

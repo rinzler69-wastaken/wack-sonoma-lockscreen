@@ -1,23 +1,157 @@
 # WACK - Sonoma Lockscreen
 # Copyright (C) 2026 rinzler69-wastaken
-# This file is distributed under the same license as the WACK - Sonoma Lockscreen extension.
-#
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-01 00:00+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 
 msgid "more"
 msgstr ""
 
 msgid "Press Shift + N to view notifications"
 msgstr ""
+
+msgid "A process is preventing sleep"
+msgstr ""
+
+msgid "1 minute"
+msgstr ""
+
+msgid "10 minutes"
+msgstr ""
+
+msgid "15 minutes"
+msgstr ""
+
+msgid "2 hours"
+msgstr ""
+
+msgid "30 minutes"
+msgstr ""
+
+msgid "5 minutes"
+msgstr ""
+
+msgid "60 minutes"
+msgstr ""
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr ""
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr ""
+
+msgid "Animations"
+msgstr ""
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr ""
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr ""
+
+msgid "Blank Timeout"
+msgstr ""
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr ""
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr ""
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr ""
+
+msgid "Clock Animation"
+msgstr ""
+
+msgid "Configuration"
+msgstr ""
+
+msgid "Consider supporting its development!"
+msgstr ""
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr ""
+
+msgid "Cupertino"
+msgstr ""
+
+msgid "Enjoying this extension?"
+msgstr ""
+
+msgid "Escape to Sleep / Suspend"
+msgstr ""
+
+msgid "Extension Repo"
+msgstr ""
+
+msgid "Home"
+msgstr ""
+
+msgid "Keep Screen On"
+msgstr ""
+
+msgid "Ko-fi"
+msgstr ""
+
+msgid "Legacy"
+msgstr ""
+
+msgid "Lockscreen Mode"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "Never"
+msgstr ""
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr ""
+
+msgid "Only on AC Power"
+msgstr ""
+
+msgid "Open Ko-fi"
+msgstr ""
+
+msgid "Open Saweria"
+msgstr ""
+
+msgid "Open on GitHub"
+msgstr ""
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr ""
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr ""
+
+msgid "Prompt Animation"
+msgstr ""
+
+msgid "Reset Animations"
+msgstr ""
+
+msgid "Reset animations"
+msgstr ""
+
+msgid "Resources"
+msgstr ""
+
+msgid "Restore defaults"
+msgstr ""
+
+msgid "Saweria"
+msgstr ""
+
+msgid "Screen Timeout"
+msgstr ""
+
+msgid "Time to wait before turning off the screen"
+msgstr ""
+

@@ -13,3 +13,145 @@ msgstr "lisää"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Paina Shift + N nähdäksesi ilmoitukset"
+
+msgid "A process is preventing sleep"
+msgstr "Prosessi estää valmiustilan"
+
+msgid "1 minute"
+msgstr "1 minuutti"
+
+msgid "10 minutes"
+msgstr "10 minuuttia"
+
+msgid "15 minutes"
+msgstr "15 minuuttia"
+
+msgid "2 hours"
+msgstr "2 tuntia"
+
+msgid "30 minutes"
+msgstr "30 minuuttia"
+
+msgid "5 minutes"
+msgstr "5 minuuttia"
+
+msgid "60 minutes"
+msgstr "60 minuuttia"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "Näytä aina käyttäjän widget (Cupertino)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "Näyttää aina käyttäjän widgetin, piilottaa ilmoitukset oletuksena. Näytä ilmoitukset painamalla Shift+N."
+
+msgid "Animations"
+msgstr "Animaatiot"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Käytetään todennuskehotteessa, kun se näkyy"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "Käytetään päivämäärässä ja ajassa, kun salasanakenttää avataan"
+
+msgid "Blank Timeout"
+msgstr "Näytön sammutuksen aikakatkaisu"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "Valitse \"Klassinen\" perinteistä, GNOME-yhteensopivaa asettelua varten. Valitse \"Cupertino\" macOS Sonoman kaltaista tyyliä varten (napsauta käyttäjäkuvaketta vaihtaa käyttäjää Cupertino-tilassa)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "Valitse klassisen ja Cupertino-tyylin välillä"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "Valitse, miten lukitusnäytön kello poistuu ja miten salasanakenttä tulee näkyviin."
+
+msgid "Clock Animation"
+msgstr "Kello-animaatio"
+
+msgid "Configuration"
+msgstr "Kokoonpano"
+
+msgid "Consider supporting its development!"
+msgstr "Harkitse sen kehittämisen tukemista!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "Määrittää, milloin näyttö sammuu tai himmenee lukitusnäytöllä."
+
+msgid "Cupertino"
+msgstr "Cupertino"
+
+msgid "Enjoying this extension?"
+msgstr "Pidätkö tästä laajennuksesta?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc näytön sammuttamiseksi / valmiustilaan"
+
+msgid "Extension Repo"
+msgstr "Laajennus Repo"
+
+msgid "Home"
+msgstr "Aloitus"
+
+msgid "Keep Screen On"
+msgstr "Pidä näyttö päällä"
+
+msgid "Ko-fi"
+msgstr "Ko-fi"
+
+msgid "Legacy"
+msgstr "Klassinen"
+
+msgid "Lockscreen Mode"
+msgstr "Lukitusnäytön tila"
+
+msgid "Mode"
+msgstr "tila"
+
+msgid "Never"
+msgstr "Ei koskaan"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "Pidä näyttö päällä vain verkkovirralla"
+
+msgid "Only on AC Power"
+msgstr "Vain verkkovirralla"
+
+msgid "Open Ko-fi"
+msgstr "Avaa Ko-fi"
+
+msgid "Open Saweria"
+msgstr "Avaa Saweria"
+
+msgid "Open on GitHub"
+msgstr "Avaa GitHubissa"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "Paina Esc-näppäintä lukitusnäytöllä sammuttaaksesi näytön (tai siirtyäksesi valmiustilaan)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "Estää näytön sammumisen lukittuna"
+
+msgid "Prompt Animation"
+msgstr "Salasanakentän animaatio"
+
+msgid "Reset Animations"
+msgstr "Palauta animaatiot"
+
+msgid "Reset animations"
+msgstr "Nollaa animaatiot"
+
+msgid "Resources"
+msgstr "Resurssit"
+
+msgid "Restore defaults"
+msgstr "Palauta oletusasetukset"
+
+msgid "Saweria"
+msgstr "Saweria"
+
+msgid "Screen Timeout"
+msgstr "Näytön aikakatkaisu"
+
+msgid "Time to wait before turning off the screen"
+msgstr "Odotusaika ennen näytön sammuttamista"
+

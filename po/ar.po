@@ -13,3 +13,145 @@ msgstr "المزيد"
 
 msgid "Press Shift + N to view notifications"
 msgstr "اضغط Shift + N لعرض الإشعارات"
+
+msgid "A process is preventing sleep"
+msgstr "عملية تمنع التعليق"
+
+msgid "1 minute"
+msgstr "1 دقيقة"
+
+msgid "10 minutes"
+msgstr "10 دقائق"
+
+msgid "15 minutes"
+msgstr "15 دقيقة"
+
+msgid "2 hours"
+msgstr "ساعاتين"
+
+msgid "30 minutes"
+msgstr "30 دقيقة"
+
+msgid "5 minutes"
+msgstr "5 دقائق"
+
+msgid "60 minutes"
+msgstr "60 دقيقة"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "إظهار أداة المستخدم دائمًا (كوبرتينو)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "يعرض دائمًا عنصر واجهة المستخدم للمستخدم، ويخفي الإشعارات افتراضيًا. اضغط على Shift+N لإظهار الإشعارات."
+
+msgid "Animations"
+msgstr "الرسوم المتحركة"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "يتم تطبيقه على موجه المصادقة أثناء ظهوره"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "تطبق على التاريخ والوقت أثناء فتح حقل كلمة المرور"
+
+msgid "Blank Timeout"
+msgstr "مهلة إطفاء الشاشة"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "اختر \"كلاسيكي\" لمظهر الواجهة الافتراضي لـ GNOME. اختر \"Cupertino\" لمظهر مستوحى من macOS Sonoma (انقر على أيقونة المستخدم للتبديل بين المستخدمين في وضع Cupertino)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "اختر بين النمط الكلاسيكي ونمط Cupertino"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "اختر حركة اختفاء ساعة قفل الشاشة وحركة ظهور حقل كلمة المرور."
+
+msgid "Clock Animation"
+msgstr "الرسوم المتحركة على مدار الساعة"
+
+msgid "Configuration"
+msgstr "إعدادات"
+
+msgid "Consider supporting its development!"
+msgstr "النظر في دعم تطويرها!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "التحكم في وقت إطفاء الشاشة أو تعتيمها على شاشة القفل."
+
+msgid "Cupertino"
+msgstr "كوبرتينو"
+
+msgid "Enjoying this extension?"
+msgstr "هل تستمتع بهذا الامتداد؟"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc لإطفاء الشاشة / التعليق"
+
+msgid "Extension Repo"
+msgstr "تمديد الريبو"
+
+msgid "Home"
+msgstr "الرئيسية"
+
+msgid "Keep Screen On"
+msgstr "إبقاء الشاشة قيد التشغيل"
+
+msgid "Ko-fi"
+msgstr "كو فاي"
+
+msgid "Legacy"
+msgstr "كلاسيكي"
+
+msgid "Lockscreen Mode"
+msgstr "وضع قفل الشاشة"
+
+msgid "Mode"
+msgstr "وضع"
+
+msgid "Never"
+msgstr "أبداً"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "إبقاء الشاشة تعمل فقط عند التوصيل بالكهرباء"
+
+msgid "Only on AC Power"
+msgstr "عند التوصيل بالكهرباء فقط"
+
+msgid "Open Ko-fi"
+msgstr "افتح Ko-fi"
+
+msgid "Open Saweria"
+msgstr "افتح Saweria"
+
+msgid "Open on GitHub"
+msgstr "افتح على GitHub"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "اضغط على Esc في شاشة القفل لإطفاء الشاشة (أو التعليق)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "منع الشاشة من الانطفاء أو التعتيم عند القفل"
+
+msgid "Prompt Animation"
+msgstr "حركة حقل كلمة المرور"
+
+msgid "Reset Animations"
+msgstr "إعادة تعيين الرسوم المتحركة"
+
+msgid "Reset animations"
+msgstr "إعادة تعيين الرسوم المتحركة"
+
+msgid "Resources"
+msgstr "موارد"
+
+msgid "Restore defaults"
+msgstr "استعادة الإعدادات الافتراضية"
+
+msgid "Saweria"
+msgstr "ساويرية"
+
+msgid "Screen Timeout"
+msgstr "مهلة الشاشة"
+
+msgid "Time to wait before turning off the screen"
+msgstr "المدة الزمنية sebelum إطفاء الشاشة"
+

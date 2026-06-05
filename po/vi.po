@@ -13,3 +13,145 @@ msgstr "thêm"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Nhấn Shift + N để xem thông báo"
+
+msgid "A process is preventing sleep"
+msgstr "Một quy trình đang ngăn cản việc tạm dừng"
+
+msgid "1 minute"
+msgstr "1 phút"
+
+msgid "10 minutes"
+msgstr "10 phút"
+
+msgid "15 minutes"
+msgstr "15 phút"
+
+msgid "2 hours"
+msgstr "2 giờ"
+
+msgid "30 minutes"
+msgstr "30 phút"
+
+msgid "5 minutes"
+msgstr "5 phút"
+
+msgid "60 minutes"
+msgstr "60 phút"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "Luôn hiển thị tiện ích người dùng (Cupertino)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "Luôn hiển thị tiện ích người dùng, ẩn thông báo theo mặc định. Nhấn Shift+N để hiển thị thông báo."
+
+msgid "Animations"
+msgstr "Hoạt hình"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Áp dụng cho lời nhắc xác thực khi nó xuất hiện"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "Áp dụng cho ngày và giờ trong khi mở hộp nhập mật khẩu"
+
+msgid "Blank Timeout"
+msgstr "Thời gian chờ tắt màn hình"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "Chọn \"Cổ điển\" cho bố cục GNOME tiêu chuẩn. Chọn \"Cupertino\" cho giao diện lấy cảm hứng từ macOS Sonoma (Nhấp vào biểu tượng người dùng để chuyển đổi người dùng trong Chế độ Cupertino)."
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "Chọn giữa phong cách Cổ điển và Cupertino"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "Chọn cách đồng hồ màn hình khóa biến mất và hộp nhập mật khẩu xuất hiện."
+
+msgid "Clock Animation"
+msgstr "Hoạt hình đồng hồ"
+
+msgid "Configuration"
+msgstr "Cấu hình"
+
+msgid "Consider supporting its development!"
+msgstr "Hãy xem xét hỗ trợ sự phát triển của nó!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "Kiểm soát thời điểm màn hình tắt hoặc tối đi trên màn hình khóa."
+
+msgid "Cupertino"
+msgstr "Cupertino"
+
+msgid "Enjoying this extension?"
+msgstr "Bạn có thích tiện ích mở rộng này?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Esc để tắt màn hình / tạm dừng"
+
+msgid "Extension Repo"
+msgstr "Kho lưu trữ tiện ích mở rộng"
+
+msgid "Home"
+msgstr "Trang chủ"
+
+msgid "Keep Screen On"
+msgstr "Giữ màn hình luôn bật"
+
+msgid "Ko-fi"
+msgstr "Ko-fi"
+
+msgid "Legacy"
+msgstr "Cổ điển"
+
+msgid "Lockscreen Mode"
+msgstr "Chế độ khóa màn hình"
+
+msgid "Mode"
+msgstr "Cách thức"
+
+msgid "Never"
+msgstr "Không bao giờ"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "Chỉ giữ màn hình bật khi cắm sạc"
+
+msgid "Only on AC Power"
+msgstr "Chỉ khi cắm sạc"
+
+msgid "Open Ko-fi"
+msgstr "Mở Ko-fi"
+
+msgid "Open Saweria"
+msgstr "Mở Saweria"
+
+msgid "Open on GitHub"
+msgstr "Mở trên GitHub"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "Nhấn Esc trên màn hình khóa để tắt màn hình (hoặc tạm dừng)"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "Ngăn màn hình bị tắt hoặc tối khi bị khóa"
+
+msgid "Prompt Animation"
+msgstr "Hoạt ảnh của hộp nhập mật khẩu"
+
+msgid "Reset Animations"
+msgstr "Đặt lại ảnh động"
+
+msgid "Reset animations"
+msgstr "Đặt lại hình ảnh động"
+
+msgid "Resources"
+msgstr "Tài nguyên"
+
+msgid "Restore defaults"
+msgstr "Khôi phục mặc định"
+
+msgid "Saweria"
+msgstr "Saweria"
+
+msgid "Screen Timeout"
+msgstr "Hết thời gian chờ màn hình"
+
+msgid "Time to wait before turning off the screen"
+msgstr "Thời gian chờ trước khi tắt màn hình"
+

@@ -13,3 +13,145 @@ msgstr "さらに"
 
 msgid "Press Shift + N to view notifications"
 msgstr "Shift + N で通知を表示"
+
+msgid "A process is preventing sleep"
+msgstr "プロセスがサスペンドを妨げています"
+
+msgid "1 minute"
+msgstr "1分"
+
+msgid "10 minutes"
+msgstr "10分"
+
+msgid "15 minutes"
+msgstr "15分"
+
+msgid "2 hours"
+msgstr "2時間"
+
+msgid "30 minutes"
+msgstr "30分"
+
+msgid "5 minutes"
+msgstr "5分"
+
+msgid "60 minutes"
+msgstr "60分"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "ユーザー ウィジェットを常に表示 (クパチーノ)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "常にユーザーウィジェットを表示し、デフォルトで通知を非表示にします。Shift+N キーで通知を表示します。"
+
+msgid "Animations"
+msgstr "アニメーション"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "認証プロンプトが表示されている間、認証プロンプトに適用されます"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "パスワード入力画面を開く際、日付と時刻に適用されます"
+
+msgid "Blank Timeout"
+msgstr "画面オフのタイムアウト"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "標準の GNOME レイアウトには「クラシック」を選択します。macOS Sonoma 風の外観には「クパチーノ」を選択します（クパチーノモードではユーザーアイコンをクリックしてユーザーを切り替えます）。"
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "クラシックとクパチーノスタイルから選択"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "ロック画面の時計が消える時のアニメーションと、パスワード入力画面が表示される時のアニメーションを選択します。"
+
+msgid "Clock Animation"
+msgstr "時計アニメーション"
+
+msgid "Configuration"
+msgstr "構成"
+
+msgid "Consider supporting its development!"
+msgstr "その開発をサポートすることを検討してください。"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "ロック画面で画面がオフになったり消灯したりするタイミングを制御します。"
+
+msgid "Cupertino"
+msgstr "クパチーノ"
+
+msgid "Enjoying this extension?"
+msgstr "この拡張機能は気に入りましたか？"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "Escで画面オフ/サスペンド"
+
+msgid "Extension Repo"
+msgstr "拡張機能リポジトリ"
+
+msgid "Home"
+msgstr "ホーム"
+
+msgid "Keep Screen On"
+msgstr "画面をオンのままにする"
+
+msgid "Ko-fi"
+msgstr "コフィ"
+
+msgid "Legacy"
+msgstr "クラシック"
+
+msgid "Lockscreen Mode"
+msgstr "ロック画面モード"
+
+msgid "Mode"
+msgstr "モード"
+
+msgid "Never"
+msgstr "一度もない"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "電源に接続されている場合のみ画面をオンにする"
+
+msgid "Only on AC Power"
+msgstr "AC電源使用時のみ"
+
+msgid "Open Ko-fi"
+msgstr "Ko-fi で開く"
+
+msgid "Open Saweria"
+msgstr "Saweria で開く"
+
+msgid "Open on GitHub"
+msgstr "GitHub で開く"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "ロック画面で Esc を押すと、画面をオフ（またはサスペンド）にします"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "ロック時に画面がオフになったりブランクになったりするのを防ぎます"
+
+msgid "Prompt Animation"
+msgstr "入力プロンプトのアニメーション"
+
+msgid "Reset Animations"
+msgstr "アニメーションをリセットする"
+
+msgid "Reset animations"
+msgstr "アニメーションをリセットする"
+
+msgid "Resources"
+msgstr "リソース"
+
+msgid "Restore defaults"
+msgstr "デフォルトに戻す"
+
+msgid "Saweria"
+msgstr "サウェリア"
+
+msgid "Screen Timeout"
+msgstr "画面のタイムアウト"
+
+msgid "Time to wait before turning off the screen"
+msgstr "画面をオフにするまでの待ち時間"
+

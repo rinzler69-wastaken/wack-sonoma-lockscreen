@@ -13,3 +13,145 @@ msgstr "अधिक"
 
 msgid "Press Shift + N to view notifications"
 msgstr "सूचनाएं देखने के लिए Shift + N दबाएं"
+
+msgid "A process is preventing sleep"
+msgstr "एक प्रक्रिया निलंबन को रोक रही है"
+
+msgid "1 minute"
+msgstr "1 मिनट"
+
+msgid "10 minutes"
+msgstr "10 मिनटों"
+
+msgid "15 minutes"
+msgstr "15 मिनटों"
+
+msgid "2 hours"
+msgstr "2 घंटे"
+
+msgid "30 minutes"
+msgstr "30 मिनट"
+
+msgid "5 minutes"
+msgstr "5 मिनट"
+
+msgid "60 minutes"
+msgstr "60 मिनट"
+
+msgid "Always Show User Widget (Cupertino)"
+msgstr "हमेशा उपयोगकर्ता विजेट दिखाएँ (क्यूपर्टिनो)"
+
+msgid "Always shows user widget, hides notifications by default. Press Shift+N to show notifications."
+msgstr "हमेशा उपयोगकर्ता विजेट दिखाता है, डिफ़ॉल्ट रूप से सूचनाएं छुपाता है। सूचनाएं दिखाने के लिए Shift+N दबाएं।"
+
+msgid "Animations"
+msgstr "एनिमेशन"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "प्रमाणीकरण संकेत प्रकट होने पर उस पर लागू किया गया"
+
+msgid "Applied to the date and time while opening the password prompt"
+msgstr "पासवर्ड संकेत खोलते समय दिनांक और समय पर लागू होता है"
+
+msgid "Blank Timeout"
+msgstr "स्क्रीन बंद होने का समय"
+
+msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgstr "क्लासिक, जीनोम-अनुरूप लेआउट के लिए 'क्लासिक' चुनें। macOS सोनोमा-प्रेरित लुक के लिए 'क्यूपर्टिनो' चुनें (क्यूपर्टिनो मोड में उपयोगकर्ताओं को बदलने के लिए उपयोगकर्ता-आइकन पर क्लिक करें)।"
+
+msgid "Choose between Legacy and Cupertino styles"
+msgstr "क्लासिक और क्यूपर्टिनो शैलियों के बीच चयन करें"
+
+msgid "Choose how the lock screen clock leaves and how the password prompt enters."
+msgstr "चुनें कि लॉक स्क्रीन घड़ी कैसे गायब होती है और पासवर्ड प्रॉम्प्ट कैसे प्रवेश करता है।"
+
+msgid "Clock Animation"
+msgstr "घड़ी एनीमेशन"
+
+msgid "Configuration"
+msgstr "विन्यास"
+
+msgid "Consider supporting its development!"
+msgstr "इसके विकास का समर्थन करने पर विचार करें!"
+
+msgid "Control when the screen turns off or blanks on the lock screen."
+msgstr "नियंत्रित करें कि लॉक स्क्रीन पर स्क्रीन कब बंद या धुंधली होती है।"
+
+msgid "Cupertino"
+msgstr "क्यूपर्टिनो"
+
+msgid "Enjoying this extension?"
+msgstr "इस विस्तार का आनंद ले रहे हैं?"
+
+msgid "Escape to Sleep / Suspend"
+msgstr "स्क्रीन बंद / निलंबित करने के लिए Esc"
+
+msgid "Extension Repo"
+msgstr "एक्सटेंशन रेपो"
+
+msgid "Home"
+msgstr "मुख्य पृष्ठ"
+
+msgid "Keep Screen On"
+msgstr "स्क्रीन चालू रखें"
+
+msgid "Ko-fi"
+msgstr "को-फाई"
+
+msgid "Legacy"
+msgstr "क्लासिक"
+
+msgid "Lockscreen Mode"
+msgstr "लॉकस्क्रीन मोड"
+
+msgid "Mode"
+msgstr "तरीका"
+
+msgid "Never"
+msgstr "कभी नहीं"
+
+msgid "Only keep the screen on if the system is plugged in"
+msgstr "स्क्रीन केवल तब चालू रखें जब सिस्टम प्लग इन हो"
+
+msgid "Only on AC Power"
+msgstr "केवल एसी पावर पर"
+
+msgid "Open Ko-fi"
+msgstr "Ko-fi खोलें"
+
+msgid "Open Saweria"
+msgstr "Saweria खोलें"
+
+msgid "Open on GitHub"
+msgstr "GitHub पर खोलें"
+
+msgid "Press Escape on the lock screen to sleep display (or suspend)"
+msgstr "स्क्रीन बंद करने (या निलंबित करने) के लिए लॉक स्क्रीन पर Esc दबाएं"
+
+msgid "Prevent the screen from blanking or turning off when locked"
+msgstr "लॉक होने पर स्क्रीन को धुंधला या बंद होने से रोकें"
+
+msgid "Prompt Animation"
+msgstr "पासवर्ड संकेत एनीमेशन"
+
+msgid "Reset Animations"
+msgstr "एनिमेशन रीसेट करें"
+
+msgid "Reset animations"
+msgstr "एनिमेशन रीसेट करें"
+
+msgid "Resources"
+msgstr "संसाधन"
+
+msgid "Restore defaults"
+msgstr "डिफॉल्ट्स का पुनःस्थापन"
+
+msgid "Saweria"
+msgstr "सवेरिया"
+
+msgid "Screen Timeout"
+msgstr "स्क्रीन काल समापन"
+
+msgid "Time to wait before turning off the screen"
+msgstr "स्क्रीन बंद करने से पहले प्रतीक्षा समय"
+
