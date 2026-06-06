@@ -128,8 +128,8 @@ msgstr "Avaa GitHubissa"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Paina Esc-näppäintä lukitusnäytöllä sammuttaaksesi näytön (tai siirtyäksesi valmiustilaan)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Estää näytön sammumisen lukittuna"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Estää näytön sammumisen heti, kun se on lukittu. Näyttö sammuu edelleen järjestelmän asetuksissa määritetyn normaalin ajan kuluttua."
 
 msgid "Prompt Animation"
 msgstr "Salasanakentän animaatio"

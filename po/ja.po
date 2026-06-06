@@ -128,8 +128,8 @@ msgstr "GitHub で開く"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "ロック画面で Esc を押すと、画面をオフ（またはサスペンド）にします"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "ロック時に画面がオフになったりブランクになったりするのを防ぎます"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "ロック時に画面がすぐにオフになるのを防ぎます。システム設定で設定された通常のタイムアウト時間が経過すると、画面はオフになります。"
 
 msgid "Prompt Animation"
 msgstr "入力プロンプトのアニメーション"

@@ -128,8 +128,8 @@ msgstr "Auf GitHub öffnen"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Drücken Sie Escape auf dem Sperrbildschirm, um den Bildschirm auszuschalten (oder in Bereitschaft zu versetzen)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Verhindert, dass der Bildschirm im gesperrten Zustand dunkel oder ausgeschaltet wird"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Verhindert, dass sich der Bildschirm im gesperrten Zustand sofort ausschaltet. Der Bildschirm schaltet sich nach der in den Systemeinstellungen festgelegten normalen Zeitspanne aus."
 
 msgid "Prompt Animation"
 msgstr "Animation der Passworteingabe"

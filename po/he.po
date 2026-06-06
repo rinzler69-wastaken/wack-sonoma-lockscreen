@@ -128,8 +128,8 @@ msgstr "פתח ב-GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "לחץ על Esc במסך הנעילה כדי לכבות את המסך (או להשהות)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "מניעת כיבוי או החשכת המסך במצב נעול"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "מניעת כיבוי מיידי של המסך במצב נעול. המסך עדיין יכבה לאחר זמן ההמתנה הרגיל שהוגדר בהגדרות המערכת."
 
 msgid "Prompt Animation"
 msgstr "אניμציית תיבת הסיσמה"

@@ -128,8 +128,8 @@ msgstr "Ouvrir sur GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Appuyez sur Échap sur l'écran de verrouillage pour éteindre l'écran (ou mettre en veille)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Empêche l'écran de s'éteindre ou de s'assombrir lorsqu'il est verrouillé"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Empêche l'écran de s'éteindre immédiatement lorsqu'il est verrouillé. L'écran s'éteindra toujours après le délai d'attente normal défini dans les paramètres système."
 
 msgid "Prompt Animation"
 msgstr "Animation de la saisie du mot de passe"

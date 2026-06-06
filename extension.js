@@ -407,16 +407,11 @@ export default class WackLockscreenClockExtension extends Extension {
         // This desktop schema is independent from our extension schema; keep it
         // available even when a dev install is missing compiled extension schemas.
         this._notifShowInLockScreen = true;
-        try {
-            this._notifSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.notifications' });
+        this._notifSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.notifications' });
+        this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
+        this._notifSettings.connectObject('changed::show-in-lock-screen', () => {
             this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
-            this._notifSettings.connectObject('changed::show-in-lock-screen', () => {
-                this._notifShowInLockScreen = this._notifSettings.get_boolean('show-in-lock-screen');
-            }, this);
-        } catch (e) {
-            console.warn(`WACK lockscreen: notification settings unavailable, assuming lockscreen notifications are enabled: ${e.message}`);
-            this._notifSettings = null;
-        }
+        }, this);
 
         this._settings = this.getSettings();
 
@@ -489,6 +484,7 @@ export default class WackLockscreenClockExtension extends Extension {
             'changed::cupertino-always-show-user', syncCupertinoAlwaysShowUser,
             'changed::esc-to-sleep', syncEscToSleep,
             this);
+
     }
 
     _getClockAnimationParams() {
@@ -988,8 +984,19 @@ export default class WackLockscreenClockExtension extends Extension {
             );
             const [inhibitors] = result.deepUnpack();
             for (const [what, who, why, mode] of inhibitors) {
-                if (what.includes('sleep') && mode === 'block')
+                if (what.includes('sleep') && mode === 'block') {
+                    // Ignore internal GNOME/session-level inhibitors
+                    if (why === 'user-active-inhibitor' ||
+                        who === 'gnome-session-binary' ||
+                        who === 'gnome-session-service' ||
+                        who === 'gnome-session-s' ||
+                        who === 'gnome-shell' ||
+                        who === 'gsd-power' ||
+                        who === 'gsd-media-keys') {
+                        continue;
+                    }
                     return true;
+                }
             }
         } catch (err) {
             // Ignore and assume not inhibited
@@ -1178,6 +1185,7 @@ export default class WackLockscreenClockExtension extends Extension {
         // We modify the unlock dialog to replace the default clock with our custom WackClock
         // and to implement custom background blur transitions.
         if (!this._dialog) return;
+
 
         if (this._unblankManager) {
             this._unblankManager.destroy();

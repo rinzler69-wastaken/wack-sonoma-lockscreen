@@ -128,8 +128,8 @@ msgstr "GitHub'da Aç"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Ekranı kapatmak (veya askıya almak) için kilit ekranında Esc tuşuna basın"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Kilitliyken ekranın kapanmasını veya kararmasını önler"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Kilitliyken ekranın hemen kapanmasını önler. Ekran, sistem ayarlarında belirlenen normal süre sonunda kapanmaya devam edecektir."
 
 msgid "Prompt Animation"
 msgstr "Parola İstemi Animasyonu"

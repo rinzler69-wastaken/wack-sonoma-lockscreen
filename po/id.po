@@ -128,8 +128,8 @@ msgstr "Buka di GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Tekan Esc di layar kunci untuk mematikan layar (atau sleep)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Mencegah layar mati atau kosong saat terkunci"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Mencegah layar langsung mati saat terkunci. Layar akan tetap mati setelah durasi batas waktu normal yang diatur dalam pengaturan sistem."
 
 msgid "Prompt Animation"
 msgstr "Animasi Perintah Kata Sandi"

@@ -128,8 +128,8 @@ msgstr "Abrir no GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Pressione Esc na tela de bloco para desligar a tela (ou suspender)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Evita que a tela apague ou fique em branco ao bloquear"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Evita que a tela se apague imediatamente quando bloqueada. A tela ainda se apagará após o tempo limite normal definido nas configurações do sistema."
 
 msgid "Prompt Animation"
 msgstr "Animação do campo de senha"

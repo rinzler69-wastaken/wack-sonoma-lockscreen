@@ -128,8 +128,8 @@ msgstr "Открыть на GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Нажмите Esc на экране блокировки для выключения экрана (или перехода в режим ожидания)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Предотвращает выключение или гашение экрана при блокировке"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Предотвращает немедленное выключение экрана при блокировке. Экран все равно выключится по истечении обычного времени ожидания, установленного в системных настройках."
 
 msgid "Prompt Animation"
 msgstr "Анимация окна ввода пароля"

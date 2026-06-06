@@ -128,8 +128,8 @@ msgstr "Άνοιγμα στο GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Πατήστε Esc στην οθόνη κλειδώματος για απενεργοποίηση της οθόνης (ή αναστολή)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Αποτροπή απενεργοποίησης της οθόνης κατά το κλείδωμα"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Αποτρέπει την άμεση απενεργοποίηση της οθόνης κατά το κλείδωμα. Η οθόνη θα απενεργοποιηθεί μετά την κανονική διάρκεια που έχει οριστεί στις ρυθμίσεις συστήματος."
 
 msgid "Prompt Animation"
 msgstr "Κινούμενα σχέδια πλαισίου κωδικού"

@@ -128,8 +128,8 @@ msgstr "GitHub पर खोलें"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "स्क्रीन बंद करने (या निलंबित करने) के लिए लॉक स्क्रीन पर Esc दबाएं"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "लॉक होने पर स्क्रीन को धुंधला या बंद होने से रोकें"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "लॉक होने पर स्क्रीन को तुरंत बंद होने से रोकें. स्क्रीन अभी भी सिस्टम सेटिंग्स में निर्धारित सामान्य समय के बाद बंद हो जाएगी."
 
 msgid "Prompt Animation"
 msgstr "पासवर्ड संकेत एनीमेशन"

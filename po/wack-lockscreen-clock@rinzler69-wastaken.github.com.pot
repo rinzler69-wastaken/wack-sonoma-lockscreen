@@ -128,7 +128,7 @@ msgstr ""
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr ""
 
-msgid "Prevent the screen from blanking or turning off when locked"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
 msgstr ""
 
 msgid "Prompt Animation"

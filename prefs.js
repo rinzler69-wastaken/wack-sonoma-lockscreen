@@ -298,7 +298,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         const enableUnblankRow = new Adw.ActionRow({
             title: _('Keep Screen On'),
-            subtitle: _('Prevent the screen from blanking or turning off when locked'),
+            subtitle: _('Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings.'),
         });
         const enableUnblankSwitch = new Gtk.Switch({
             valign: Gtk.Align.CENTER,
@@ -332,41 +332,6 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         unblankOnAcOnlyRow.activatable_widget = unblankOnAcOnlySwitch;
         timeoutGroup.add(unblankOnAcOnlyRow);
 
-        const timeoutOptions = [
-            [0, _('Never')],
-            [60, _('1 minute')],
-            [300, _('5 minutes')],
-            [600, _('10 minutes')],
-            [900, _('15 minutes')],
-            [1800, _('30 minutes')],
-            [3600, _('60 minutes')],
-            [7200, _('2 hours')],
-        ];
-        const timeoutModel = new Gtk.StringList();
-        for (const [, label] of timeoutOptions) {
-            timeoutModel.append(label);
-        }
-        const timeoutRow = new Adw.ComboRow({
-            title: _('Blank Timeout'),
-            subtitle: _('Time to wait before turning off the screen'),
-            model: timeoutModel,
-        });
-        const syncTimeoutFromSettings = () => {
-            const current = settings.get_int('unblank-timeout');
-            const selected = Math.max(0, timeoutOptions.findIndex(([value]) => value === current));
-            timeoutRow.selected = selected;
-        };
-        syncTimeoutFromSettings();
-        timeoutRow.connect('notify::selected', () => {
-            const [value] = timeoutOptions[timeoutRow.selected] ?? timeoutOptions[0];
-            if (settings.get_int('unblank-timeout') !== value) {
-                settings.set_int('unblank-timeout', value);
-            }
-        });
-        const sigId = settings.connect('changed::unblank-timeout', syncTimeoutFromSettings);
-        timeoutRow.connect('destroy', () => settings.disconnect(sigId));
-        timeoutGroup.add(timeoutRow);
-
         const escToSleepRow = new Adw.ActionRow({
             title: _('Escape to Sleep / Suspend'),
             subtitle: _('Press Escape on the lock screen to sleep display (or suspend)'),
@@ -388,7 +353,6 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         const syncSensitivity = () => {
             const enabled = settings.get_boolean('enable-unblank');
             unblankOnAcOnlyRow.sensitive = enabled;
-            timeoutRow.sensitive = enabled;
         };
         syncSensitivity();
         settingsSignalIds.push(settings.connect('changed::enable-unblank', syncSensitivity));

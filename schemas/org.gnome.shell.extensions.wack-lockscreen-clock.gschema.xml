@@ -50,11 +50,6 @@
       <summary>Only on AC power</summary>
       <description>Only keep the screen on if the system is plugged into AC power.</description>
     </key>
-    <key name="unblank-timeout" type="i">
-      <default>0</default>
-      <summary>Blank timeout</summary>
-      <description>Time in seconds to wait before blanking the screen (0 to keep on indefinitely).</description>
-    </key>
     <key name="esc-to-sleep" type="b">
       <default>true</default>
       <summary>Escape to Sleep</summary>

@@ -128,8 +128,8 @@ msgstr "Åbn på GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Tryk på Esc på låseskærmen for at slukke skærmen (eller gå i hviletilstand)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Forhindr skærmslukning, når den er låst"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Forhindrer skærmen i at slukke med det samme, når den er låst. Skærmen vil stadig slukke efter det normale tidsrum, der er angivet i systemindstillingerne."
 
 msgid "Prompt Animation"
 msgstr "Adgangskodeprompt-animation"

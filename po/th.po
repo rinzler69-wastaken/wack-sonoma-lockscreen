@@ -128,8 +128,8 @@ msgstr "เปิดบน GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "กด Esc บนหน้าจอล็อคเพื่อปิดหน้าจอ (หรือพักเครื่อง)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "ป้องกันไม่ให้หน้าจอดับหรือว่างเปล่าเมื่อล็อกเครื่อง"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "ป้องกันไม่ให้หน้าจอดับลงทันทีเมื่อล็อกเครื่อง หน้าจอจะยังคงดับลงหลังจากหมดเวลาปกติที่ตั้งค่าไว้ในการตั้งค่าระบบ"
 
 msgid "Prompt Animation"
 msgstr "ภาพเคลื่อนไหวของช่องรหัสผ่าน"

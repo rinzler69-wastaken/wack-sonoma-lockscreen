@@ -128,8 +128,8 @@ msgstr "Openen op GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Druk op Esc op het vergrendelscherm om het scherm uit te schakelen (of stand-by te zetten)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Voorkomt dat het scherm wordt uitgeschakeld of zwart wordt bij vergrendeling"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Voorkomt dat het scherm onmiddellijk wordt uitgeschakeld bij vergrendeling. Het scherm wordt nog steeds uitgeschakeld na de normale time-outduur ingesteld in de systeeminstellingen."
 
 msgid "Prompt Animation"
 msgstr "Animatie van wachtwoordprompt"

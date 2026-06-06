@@ -128,8 +128,8 @@ msgstr "在 GitHub 上打开"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "在锁定屏幕上按 Esc 键以关闭屏幕（或挂起）"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "防止锁屏时屏幕关闭或变黑"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "防止锁屏时屏幕立即关闭。屏幕仍会在系统设置中设定的常规超时时间后关闭。"
 
 msgid "Prompt Animation"
 msgstr "密码输入框动画"

@@ -128,8 +128,8 @@ msgstr "GitHub에서 열기"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "잠금 화면에서 Esc를 눌러 화면을 끄거나 절전 모드로 전환합니다"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "잠금 상태에서 화면이 꺼지거나 대기 상태로 들어가는 것을 방지합니다"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "잠금 상태에서 화면이 즉시 꺼지는 것을 방지합니다. 화면은 시스템 설정에 구성된 일반 대기 시간이 지나면 꺼집니다."
 
 msgid "Prompt Animation"
 msgstr "입력 프롬프트 애니메이션"

@@ -128,8 +128,8 @@ msgstr "Mở trên GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Nhấn Esc trên màn hình khóa để tắt màn hình (hoặc tạm dừng)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Ngăn màn hình bị tắt hoặc tối khi bị khóa"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Ngăn màn hình tắt ngay lập tức khi bị khóa. Màn hình sẽ vẫn tắt sau khoảng thời gian chờ thông thường được thiết lập trong cài đặt hệ thống."
 
 msgid "Prompt Animation"
 msgstr "Hoạt ảnh của hộp nhập mật khẩu"

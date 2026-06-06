@@ -78,7 +78,7 @@ msgid "Control when the screen turns off or blanks on the lock screen."
 msgstr "Controlla quando lo schermo si spegne o si oscura nella schermata di blocco."
 
 msgid "Cupertino"
-msgstr "Copertino"
+msgstr "Cupertino"
 
 msgid "Enjoying this extension?"
 msgstr "Ti piace questa estensione?"
@@ -128,8 +128,8 @@ msgstr "Apri su GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Premi Esc nella schermata di blocco per spegnere lo schermo (o sospendere)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "Evita lo spegnimento o l'oscuramento dello schermo quando bloccato"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "Evita che lo schermo si spenga immediatamente quando è bloccato. Lo schermo si spegnerà comunque dopo il normale tempo di inattività impostato nelle impostazioni di sistema."
 
 msgid "Prompt Animation"
 msgstr "Animazione del prompt della password"

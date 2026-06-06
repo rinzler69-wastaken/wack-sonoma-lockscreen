@@ -128,8 +128,8 @@ msgstr "افتح على GitHub"
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "اضغط على Esc في شاشة القفل لإطفاء الشاشة (أو التعليق)"
 
-msgid "Prevent the screen from blanking or turning off when locked"
-msgstr "منع الشاشة من الانطفاء أو التعتيم عند القفل"
+msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
+msgstr "منع الشاشة من الانطفاء فورًا عند القفل. ستستمر الشاشة في الانطفاء بعد فترة المهلة العادية المحددة في إعدادات النظام."
 
 msgid "Prompt Animation"
 msgstr "حركة حقل كلمة المرور"
