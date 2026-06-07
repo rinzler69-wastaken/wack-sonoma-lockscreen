@@ -14,8 +14,8 @@ msgstr "ещё"
 msgid "Press Shift + N to view notifications"
 msgstr "Нажмите Shift + N для просмотра уведомлений"
 
-msgid "A process is preventing sleep"
-msgstr "Процесс препятствует переходу в режим ожидания"
+msgid "Sleep prevented by an active process"
+msgstr "Режим ожидания заблокирован активным процессом"
 
 msgid "1 minute"
 msgstr "1 минута"

@@ -14,8 +14,8 @@ msgstr "mais"
 msgid "Press Shift + N to view notifications"
 msgstr "Pressione Shift + N para ver as notifications"
 
-msgid "A process is preventing sleep"
-msgstr "Um processo impide a suspensão"
+msgid "Sleep prevented by an active process"
+msgstr "Suspensão impedida por um processo ativo"
 
 msgid "1 minute"
 msgstr "1 minuto"

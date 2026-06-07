@@ -14,8 +14,8 @@ msgstr "mehr"
 msgid "Press Shift + N to view notifications"
 msgstr "Shift + N drücken, um Benachrichtigungen anzuzeigen"
 
-msgid "A process is preventing sleep"
-msgstr "Ein Prozess verhindert die Bereitschaft"
+msgid "Sleep prevented by an active process"
+msgstr "Bereitschaft durch einen aktiven Prozess verhindert"
 
 msgid "1 minute"
 msgstr "1 Minute"

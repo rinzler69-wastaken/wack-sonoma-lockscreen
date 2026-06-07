@@ -14,8 +14,8 @@ msgstr "περισσότερα"
 msgid "Press Shift + N to view notifications"
 msgstr "Πατήστε Shift + N για προβολή ειδοποιήσεων"
 
-msgid "A process is preventing sleep"
-msgstr "Μια διεργασία αποτρέπει την αναστολή λειτουργίας"
+msgid "Sleep prevented by an active process"
+msgstr "Η αναστολή λειτουργίας αποτράπηκε από μια ενεργή διεργασία"
 
 msgid "1 minute"
 msgstr "1 λεπτό"

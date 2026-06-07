@@ -14,8 +14,8 @@ msgstr "さらに"
 msgid "Press Shift + N to view notifications"
 msgstr "Shift + N で通知を表示"
 
-msgid "A process is preventing sleep"
-msgstr "プロセスがサスペンドを妨げています"
+msgid "Sleep prevented by an active process"
+msgstr "アクティブなプロセスによりサスペンドが妨げられています"
 
 msgid "1 minute"
 msgstr "1分"

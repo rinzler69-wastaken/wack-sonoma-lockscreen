@@ -14,8 +14,8 @@ msgstr "المزيد"
 msgid "Press Shift + N to view notifications"
 msgstr "اضغط Shift + N لعرض الإشعارات"
 
-msgid "A process is preventing sleep"
-msgstr "عملية تمنع التعليق"
+msgid "Sleep prevented by an active process"
+msgstr "تم منع التعليق بواسطة عملية نشطة"
 
 msgid "1 minute"
 msgstr "1 دقيقة"

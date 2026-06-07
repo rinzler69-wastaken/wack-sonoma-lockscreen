@@ -14,8 +14,8 @@ msgstr "altro"
 msgid "Press Shift + N to view notifications"
 msgstr "Premi Maiusc + N per visualizzare le notifiche"
 
-msgid "A process is preventing sleep"
-msgstr "Un processo impide la sospensione"
+msgid "Sleep prevented by an active process"
+msgstr "Sospensione impedita da un processo attivo"
 
 msgid "1 minute"
 msgstr "1 minuto"

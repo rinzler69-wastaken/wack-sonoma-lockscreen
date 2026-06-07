@@ -14,8 +14,8 @@ msgstr "더 보기"
 msgid "Press Shift + N to view notifications"
 msgstr "Shift + N을 눌러 알림 보기"
 
-msgid "A process is preventing sleep"
-msgstr "프로세스가 절전 모드 진입을 방지하고 있습니다"
+msgid "Sleep prevented by an active process"
+msgstr "활성 프로세스로 인해 절전 모드 진입이 방지되었습니다"
 
 msgid "1 minute"
 msgstr "1분"

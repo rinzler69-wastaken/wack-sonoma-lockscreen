@@ -14,8 +14,8 @@ msgstr "mer"
 msgid "Press Shift + N to view notifications"
 msgstr "Tryck på Shift + N för att visa aviseringar"
 
-msgid "A process is preventing sleep"
-msgstr "En process förhindrar vänteläge"
+msgid "Sleep prevented by an active process"
+msgstr "Vänteläge förhindras av en aktiv process"
 
 msgid "1 minute"
 msgstr "1 minut"

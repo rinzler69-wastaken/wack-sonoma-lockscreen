@@ -14,8 +14,8 @@ msgstr "lisää"
 msgid "Press Shift + N to view notifications"
 msgstr "Paina Shift + N nähdäksesi ilmoitukset"
 
-msgid "A process is preventing sleep"
-msgstr "Prosessi estää valmiustilan"
+msgid "Sleep prevented by an active process"
+msgstr "Valmiustila estetty aktiivisen prosessin toimesta"
 
 msgid "1 minute"
 msgstr "1 minuutti"

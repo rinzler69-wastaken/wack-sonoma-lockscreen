@@ -13,7 +13,31 @@ MORE = {'es': 'más', 'fr': 'plus', 'de': 'mehr', 'it': 'altro', 'pt': 'mais', '
 
 TOGGLE = {'es': 'Presiona Shift + N para ver notificaciones', 'fr': 'Appuyez sur Maj+N pour voir les notifications', 'de': 'Shift + N drücken, um Benachrichtigungen anzuzeigen', 'it': 'Premi Maiusc + N per visualizzare le notifiche', 'pt': 'Pressione Shift + N para ver as notifications', 'ru': 'Нажмите Shift + N для просмотра уведомлений', 'zh': '按 Shift + N 查看通知', 'ja': 'Shift + N で通知を表示', 'ko': 'Shift + N을 눌러 알림 보기', 'ar': 'اضغط Shift + N لعرض الإشعارات', 'hi': 'सूचनाएं देखने के लिए Shift + N दबाएं', 'tr': "Bildirimleri görmek için Shift + N'ye basın", 'nl': 'Druk op Shift + N om meldingen te bekijken', 'pl': 'Naciśnij Shift + N, aby wyświetlić powiadomienia', 'sv': 'Tryck på Shift + N för att visa aviseringar', 'da': 'Tryk på Shift + N for at se notifikationer', 'no': 'Trykk Shift + N for å se varsler', 'fi': 'Paina Shift + N nähdäksesi ilmoitukset', 'el': 'Πατήστε Shift + N για προβολή ειδοποιήσεων', 'he': 'הקש Shift + N כדי לראות התראות', 'id': 'Tekan Shift + N untuk melihat notifikasi', 'th': 'กด Shift + N เพื่อดูการแจ้งเตือน', 'vi': 'Nhấn Shift + N để xem thông báo'}
 
-INHIBIT = {'es': 'Un proceso impide la suspensión', 'fr': 'Un processus empêche la mise en veille', 'de': 'Ein Prozess verhindert die Bereitschaft', 'it': 'Un processo impide la sospensione', 'pt': 'Um processo impide a suspensão', 'ru': 'Процесс препятствует переходу в режим ожидания', 'zh': '一个进程正在阻止挂起', 'ja': 'プロセスがサスペンドを妨げています', 'ko': '프로세스가 절전 모드 진입을 방지하고 있습니다', 'ar': 'عملية تمنع التعليق', 'hi': 'एक प्रक्रिया निलंबन को रोक रही है', 'tr': 'Bir işlem askıya almayı engelliyor', 'nl': 'Een proces verhindert de slaapmodus', 'pl': 'Proces uniemożliwia uśpienie', 'sv': 'En process förhindrar vänteläge', 'da': 'En proces forhindrer hviletilstand', 'no': 'En prosess forhindrer hvilemodus', 'fi': 'Prosessi estää valmiustilan', 'el': 'Μια διεργασία αποτρέπει την αναστολή λειτουργίας', 'he': 'תהליך מונע השהיה', 'id': 'Sebuah proses mencegah sleep', 'th': 'กระบวนการกำลังป้องกันการพักเครื่อง', 'vi': 'Một quy trình đang ngăn cản việc tạm dừng'}
+INHIBIT = {
+    'es': 'Suspensión impedida por un proceso activo',
+    'fr': 'Mise en veille empêchée par un processus actif',
+    'de': 'Bereitschaft durch einen aktiven Prozess verhindert',
+    'it': 'Sospensione impedita da un processo attivo',
+    'pt': 'Suspensão impedida por um processo ativo',
+    'ru': 'Режим ожидания заблокирован активным процессом',
+    'zh': '系统挂起被活动进程阻止',
+    'ja': 'アクティブなプロセスによりサスペンドが妨げられています',
+    'ko': '활성 프로세스로 인해 절전 모드 진입이 방지되었습니다',
+    'ar': 'تم منع التعليق بواسطة عملية نشطة',
+    'hi': 'एक सक्रिय प्रक्रिया द्वारा निलंबن रोका गया',
+    'tr': 'Askıya alma etkin bir işlem tarafından engellendi',
+    'nl': 'Slaapmodus verhinderd door een actief proces',
+    'pl': 'Uśpienie zablokowane przez aktywny proces',
+    'sv': 'Vänteläge förhindras av en aktiv process',
+    'da': 'Hviletilstand forhindres af en aktiv proces',
+    'no': 'Hvilemodus forhindres av en aktiv prosess',
+    'fi': 'Valmiustila estetty aktiivisen prosessin toimesta',
+    'el': 'Η αναστολή λειτουργίας αποτράπηκε από μια ενεργή διεργασία',
+    'he': 'ההשהיה נמנעה על ידי תהליך פעיל',
+    'id': 'Mode tidur dicegah oleh proses aktif',
+    'th': 'การพักเครื่องถูกป้องกันโดยกระบวนการที่ทำงานอยู่',
+    'vi': 'Việc tạm dừng bị ngăn cản bởi một quy trình đang hoạt động'
+}
 
 # Prefs translations
 PREFS_STRINGS = {
@@ -1191,7 +1215,7 @@ for lang in MORE:
     content = PO_HEADER.format(domain=DOMAIN, lang=lang)
     content += f'msgid "more"\nmsgstr "{MORE[lang]}"\n\n'
     content += f'msgid "Press Shift + N to view notifications"\nmsgstr "{TOGGLE[lang]}"\n\n'
-    content += f'msgid "A process is preventing sleep"\nmsgstr "{INHIBIT[lang]}"\n\n'
+    content += f'msgid "Sleep prevented by an active process"\nmsgstr "{INHIBIT[lang]}"\n\n'
     
     # Add prefs strings
     for eng_str, lang_map in PREFS_STRINGS.items():
@@ -1212,7 +1236,7 @@ pot_path = os.path.join(PO_DIR, f"{DOMAIN}.pot")
 pot_content = PO_HEADER.format(domain=DOMAIN, lang="")
 pot_content += 'msgid "more"\nmsgstr ""\n\n'
 pot_content += 'msgid "Press Shift + N to view notifications"\nmsgstr ""\n\n'
-pot_content += 'msgid "A process is preventing sleep"\nmsgstr ""\n\n'
+pot_content += 'msgid "Sleep prevented by an active process"\nmsgstr ""\n\n'
 for eng_str in PREFS_STRINGS:
     escaped_eng = eng_str.replace('"', '\\"')
     pot_content += f'msgid "{escaped_eng}"\nmsgstr ""\n\n'

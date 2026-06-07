@@ -14,8 +14,8 @@ msgstr "lagi"
 msgid "Press Shift + N to view notifications"
 msgstr "Tekan Shift + N untuk melihat notifikasi"
 
-msgid "A process is preventing sleep"
-msgstr "Sebuah proses mencegah sleep"
+msgid "Sleep prevented by an active process"
+msgstr "Mode tidur dicegah oleh proses aktif"
 
 msgid "1 minute"
 msgstr "1 menit"

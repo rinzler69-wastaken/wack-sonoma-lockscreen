@@ -14,8 +14,8 @@ msgstr "更多"
 msgid "Press Shift + N to view notifications"
 msgstr "按 Shift + N 查看通知"
 
-msgid "A process is preventing sleep"
-msgstr "一个进程正在阻止挂起"
+msgid "Sleep prevented by an active process"
+msgstr "系统挂起被活动进程阻止"
 
 msgid "1 minute"
 msgstr "1分钟"

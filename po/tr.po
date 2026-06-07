@@ -14,8 +14,8 @@ msgstr "daha fazla"
 msgid "Press Shift + N to view notifications"
 msgstr "Bildirimleri görmek için Shift + N'ye basın"
 
-msgid "A process is preventing sleep"
-msgstr "Bir işlem askıya almayı engelliyor"
+msgid "Sleep prevented by an active process"
+msgstr "Askıya alma etkin bir işlem tarafından engellendi"
 
 msgid "1 minute"
 msgstr "1 dakika"

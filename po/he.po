@@ -14,8 +14,8 @@ msgstr "עוד"
 msgid "Press Shift + N to view notifications"
 msgstr "הקש Shift + N כדי לראות התראות"
 
-msgid "A process is preventing sleep"
-msgstr "תהליך מונע השהיה"
+msgid "Sleep prevented by an active process"
+msgstr "ההשהיה נמנעה על ידי תהליך פעיל"
 
 msgid "1 minute"
 msgstr "דקה אחת"

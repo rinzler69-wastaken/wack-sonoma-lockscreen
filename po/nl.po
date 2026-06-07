@@ -14,8 +14,8 @@ msgstr "meer"
 msgid "Press Shift + N to view notifications"
 msgstr "Druk op Shift + N om meldingen te bekijken"
 
-msgid "A process is preventing sleep"
-msgstr "Een proces verhindert de slaapmodus"
+msgid "Sleep prevented by an active process"
+msgstr "Slaapmodus verhinderd door een actief proces"
 
 msgid "1 minute"
 msgstr "1 minuut"

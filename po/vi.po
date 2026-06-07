@@ -14,8 +14,8 @@ msgstr "thêm"
 msgid "Press Shift + N to view notifications"
 msgstr "Nhấn Shift + N để xem thông báo"
 
-msgid "A process is preventing sleep"
-msgstr "Một quy trình đang ngăn cản việc tạm dừng"
+msgid "Sleep prevented by an active process"
+msgstr "Việc tạm dừng bị ngăn cản bởi một quy trình đang hoạt động"
 
 msgid "1 minute"
 msgstr "1 phút"

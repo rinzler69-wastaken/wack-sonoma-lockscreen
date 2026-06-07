@@ -14,8 +14,8 @@ msgstr "अधिक"
 msgid "Press Shift + N to view notifications"
 msgstr "सूचनाएं देखने के लिए Shift + N दबाएं"
 
-msgid "A process is preventing sleep"
-msgstr "एक प्रक्रिया निलंबन को रोक रही है"
+msgid "Sleep prevented by an active process"
+msgstr "एक सक्रिय प्रक्रिया द्वारा निलंबن रोका गया"
 
 msgid "1 minute"
 msgstr "1 मिनट"

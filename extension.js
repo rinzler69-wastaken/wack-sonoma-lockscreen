@@ -194,7 +194,7 @@ export default class WackLockscreenClockExtension extends Extension {
                     // Escape key always suspends/sleeps the system
                     if (Main.screenShield._loginManager) {
                         if (this._isSleepInhibited()) {
-                            this._showInhibitHint(this.gettext('A process is preventing sleep'));
+                            this._showInhibitHint(this.gettext('Sleep prevented by an active process'));
                         } else {
                             Main.screenShield._loginManager.suspend();
                         }
