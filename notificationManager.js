@@ -162,6 +162,10 @@ export class NotificationManager {
         const nb = this._notifBox;
         if (!nb) return 0;
 
+        if (!this._extension?._notifShowInLockScreen) {
+            return 0;
+        }
+
         let count = 0;
 
         for (const m of nb._players?.values() ?? []) {

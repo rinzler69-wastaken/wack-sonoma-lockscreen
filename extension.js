@@ -47,6 +47,14 @@ export default class WackLockscreenClockExtension extends Extension {
         console.log(`[Sonoma Lockscreen] enable() called, dialog=${!!dialog}`);
         if (!dialog) return;
 
+        this._origStylesheet = undefined;
+        const userThemeFile = this._getUserThemeFile();
+        if (userThemeFile) {
+            this._origStylesheet = Main.getThemeStylesheet();
+            Main.setThemeStylesheet(userThemeFile.get_path());
+            Main.loadTheme();
+        }
+
         if (Main.panel?.statusArea?.dateMenu?.container) {
             this._wasDateMenuVisible = Main.panel.statusArea.dateMenu.container.visible;
             Main.panel.statusArea.dateMenu.container.hide();
@@ -99,6 +107,125 @@ export default class WackLockscreenClockExtension extends Extension {
                 dialog._otherUserButton.visible = false;
         };
         dialog._updateUserSwitchVisibility();
+
+        // Intercept UnlockDialog's finish() method to implement smooth Cupertino fade-out
+        this._origFinish = dialog.finish.bind(dialog);
+        dialog.finish = (onComplete) => {
+            const isCupertino = this._lockscreenMode === 'cupertino';
+            if (isCupertino) {
+                const panel = Main.panel;
+
+                // 1. Immediately fade out the current lockscreen panel (only quick settings)
+                if (panel) {
+                    panel.ease({
+                        opacity: 0,
+                        duration: 150,
+                        mode: Clutter.AnimationMode.EASE_OUT_QUAD
+                    });
+                }
+
+                // 2. Wait 300ms for shell elements (windows, panels) to finish loading/drawing
+                this._finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
+                    this._finishTimeoutId = null;
+
+                    // Apply the session mode override to populate all panel buttons (desktop layout)
+                    this._tempSessionModeOverride();
+
+                    const duration = 400;
+                    const mode = Clutter.AnimationMode.EASE_OUT_QUAD;
+
+                    // Position the panel off-screen and restore its opacity to 255
+                    if (panel) {
+                        panel.remove_all_transitions();
+                        const panelHeight = panel.height || 60;
+                        panel.translation_y = -panelHeight;
+                        panel.opacity = 255;
+
+                        // Slide the panel down hand-in-hand with the widget fade-out
+                        panel.ease({
+                            translation_y: 0,
+                            duration,
+                            mode
+                        });
+                    }
+
+                    // 3. Fade out all the lockscreen widgets/elements EXCEPT the background
+                    const actorsToFade = [
+                        this._clockWrapper,
+                        this._hintContainer,
+                        this._mainBox
+                    ].filter(actor => actor !== null && actor !== undefined);
+
+                    let completedCount = 0;
+                    const onFadeComplete = () => {
+                        completedCount++;
+                        if (completedCount === actorsToFade.length) {
+                            // 4. Restore original sessionMode properties
+                            this._restoreSessionMode();
+
+                            // 5. Call the original finish callback
+                            this._origFinish(onComplete);
+                        }
+                    };
+
+                    if (actorsToFade.length === 0) {
+                        this._restoreSessionMode();
+                        this._origFinish(onComplete);
+                    } else {
+                        actorsToFade.forEach(actor => {
+                            actor.ease({
+                                opacity: 0,
+                                duration,
+                                mode,
+                                onComplete: onFadeComplete
+                            });
+                        });
+                    }
+                    return GLib.SOURCE_REMOVE;
+                });
+            } else {
+                this._origFinish(onComplete);
+            }
+        };
+
+        // Intercept ScreenShield's _continueDeactivate to skip the slide-up animation in Cupertino Mode
+        const shield = Main.screenShield;
+        this._origContinueDeactivate = shield._continueDeactivate.bind(shield);
+        shield._continueDeactivate = (animate) => {
+            const isCupertino = this._lockscreenMode === 'cupertino';
+            if (isCupertino) {
+                shield._hideLockScreen(false);
+
+                if (Main.sessionMode.currentMode === 'unlock-dialog')
+                    Main.sessionMode.popMode('unlock-dialog');
+
+                shield.emit('wake-up-screen');
+
+                if (shield._isGreeter) {
+                    shield._activationTime = 0;
+                    shield._setActive(false);
+                    return;
+                }
+
+                if (shield._dialog && !shield._isGreeter)
+                    shield._dialog.popModal();
+
+                if (shield._isModal) {
+                    Main.popModal(shield._grab);
+                    shield._grab = null;
+                    shield._isModal = false;
+                }
+
+                shield._longLightbox.lightOff();
+                shield._shortLightbox.lightOff();
+
+                // Immediately position the dialog group offscreen and complete deactivation
+                shield._lockDialogGroup.translation_y = -global.screen_height;
+                shield._completeDeactivate();
+            } else {
+                this._origContinueDeactivate(animate);
+            }
+        };
 
         dialog._notificationsBox.connectObject(
             'notify::height', () => {
@@ -953,13 +1080,15 @@ export default class WackLockscreenClockExtension extends Extension {
 
                             this._cupertinoRestPrompt.setHintText(baseText);
                             this._cupertinoRestPrompt.setNotifCount(count);
-                            this._updateCupertinoHintCycle();
                         }
 
                         cupertinoActor.ease({
                             opacity: 255,
                             duration: fadeInDuration,
                             mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                            onComplete: () => {
+                                this._updateCupertinoHintCycle();
+                            }
                         });
                     }
                 });
@@ -1177,6 +1306,79 @@ export default class WackLockscreenClockExtension extends Extension {
         this._hint.set_width(natWidth);
     }
 
+    _tempSessionModeOverride() {
+        if (this._origSessionModeProps) return;
+
+        this._origSessionModeProps = {
+            hasWindows: Main.sessionMode.hasWindows,
+            hasWorkspaces: Main.sessionMode.hasWorkspaces,
+            panel: Main.sessionMode.panel,
+            panelStyle: Main.sessionMode.panelStyle,
+        };
+
+        Main.sessionMode.hasWindows = true;
+        Main.sessionMode.hasWorkspaces = true;
+        Main.sessionMode.panel = {
+            left: ['activities'],
+            center: ['dateMenu'],
+            right: ['screenRecording', 'screenSharing', 'dwellClick', 'a11y', 'keyboard', 'quickSettings'],
+        };
+        Main.sessionMode.panelStyle = null;
+
+        Main.sessionMode.emit('updated');
+    }
+
+    _restoreSessionMode() {
+        if (!this._origSessionModeProps) return;
+
+        Main.sessionMode.hasWindows = this._origSessionModeProps.hasWindows;
+        Main.sessionMode.hasWorkspaces = this._origSessionModeProps.hasWorkspaces;
+        Main.sessionMode.panel = this._origSessionModeProps.panel;
+        Main.sessionMode.panelStyle = this._origSessionModeProps.panelStyle;
+
+        this._origSessionModeProps = null;
+
+        Main.sessionMode.emit('updated');
+    }
+
+    _getUserThemeFile() {
+        const shellSettings = new Gio.Settings({ schema_id: 'org.gnome.shell' });
+        const enabledExtensions = shellSettings.get_strv('enabled-extensions');
+        if (!enabledExtensions.includes('user-theme@gnome-shell-extensions.gcampax.github.com')) {
+            return null;
+        }
+
+        const schemaSource = Gio.SettingsSchemaSource.get_default();
+        if (!schemaSource) {
+            return null;
+        }
+        const schema = schemaSource.lookup('org.gnome.shell.extensions.user-theme', true);
+        if (!schema) {
+            return null;
+        }
+
+        const themeSettings = new Gio.Settings({ settings_schema: schema });
+        const themeName = themeSettings.get_string('name');
+
+        if (!themeName)
+            return null;
+
+        const paths = [
+            GLib.build_filenamev([GLib.get_home_dir(), '.themes', themeName, 'gnome-shell', 'gnome-shell.css']),
+            GLib.build_filenamev([GLib.get_user_data_dir(), 'themes', themeName, 'gnome-shell', 'gnome-shell.css']),
+            GLib.build_filenamev(['/usr/share/themes', themeName, 'gnome-shell', 'gnome-shell.css'])
+        ];
+
+        for (const path of paths) {
+            const file = Gio.File.new_for_path(path);
+            if (file.query_exists(null))
+                return file;
+        }
+
+        return null;
+    }
+
+
     /**
      * Cleans up all modifications and returns the GNOME Shell lock screen to its original state.
      */
@@ -1185,6 +1387,46 @@ export default class WackLockscreenClockExtension extends Extension {
         // We modify the unlock dialog to replace the default clock with our custom WackClock
         // and to implement custom background blur transitions.
         if (!this._dialog) return;
+
+        // Restore our deactivation and finish flow overrides
+        if (this._origFinish) {
+            this._dialog.finish = this._origFinish;
+            this._origFinish = null;
+        }
+
+        if (this._origStylesheet !== undefined) {
+            if (Main.sessionMode.currentMode !== 'user') {
+                Main.setThemeStylesheet(this._origStylesheet ? this._origStylesheet.get_path() : null);
+                Main.loadTheme();
+            }
+            this._origStylesheet = undefined;
+        }
+
+        if (this._origContinueDeactivate) {
+            if (Main.screenShield)
+                Main.screenShield._continueDeactivate = this._origContinueDeactivate;
+            this._origContinueDeactivate = null;
+        }
+
+        if (this._finishTimeoutId) {
+            GLib.source_remove(this._finishTimeoutId);
+            this._finishTimeoutId = null;
+        }
+
+        if (this._origSessionModeProps) {
+            Main.sessionMode.hasWindows = this._origSessionModeProps.hasWindows;
+            Main.sessionMode.hasWorkspaces = this._origSessionModeProps.hasWorkspaces;
+            Main.sessionMode.panel = this._origSessionModeProps.panel;
+            Main.sessionMode.panelStyle = this._origSessionModeProps.panelStyle;
+            this._origSessionModeProps = null;
+            Main.sessionMode.emit('updated');
+        }
+
+        if (Main.panel) {
+            Main.panel.remove_all_transitions();
+            Main.panel.translation_y = 0;
+            Main.panel.opacity = 255;
+        }
 
 
         if (this._unblankManager) {
@@ -1247,6 +1489,7 @@ export default class WackLockscreenClockExtension extends Extension {
         resetAnimationActors(this._clockWrapper, this._promptActor);
         const mainBox = this._dialog?._promptBox?._authPrompt?._mainBox;
         if (mainBox) mainBox.opacity = 255;
+        if (this._dialog) this._dialog.opacity = 255;
 
         if (this._settings)
             this._settings.disconnectObject(this);
@@ -1323,6 +1566,7 @@ export default class WackLockscreenClockExtension extends Extension {
             // still hold a ref to the old layout manager (M4).
             if (oldLayout && oldLayout !== this._origLayout)
                 oldLayout._extension = null;
+            this._mainBox.opacity = 255;
             this._mainBox.queue_relayout();
         }
 
