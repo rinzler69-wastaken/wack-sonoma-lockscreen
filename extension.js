@@ -79,6 +79,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._cupertinoShowNotifsOverride = false; // Toggled via Shift+N
         this._showingInhibitHint = false;
         this._inhibitHintTimeoutId = null;
+        this._finishTimeoutId = null;
         this._originalWackText = null;
         this._originalCupertinoText = null;
         this._originalCupertinoCount = 0;
@@ -131,6 +132,10 @@ export default class WackLockscreenClockExtension extends Extension {
                 }
 
                 // 2. Wait 300ms for shell elements (windows, panels) to finish loading/drawing
+                if (this._finishTimeoutId) {
+                    GLib.source_remove(this._finishTimeoutId);
+                    this._finishTimeoutId = null;
+                }
                 this._finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
                     this._finishTimeoutId = null;
 
@@ -1476,10 +1481,9 @@ export default class WackLockscreenClockExtension extends Extension {
         // Guideline EGO-M-008: Documenting use of unlock-dialog
         // We modify the unlock dialog to replace the default clock with our custom WackClock
         // and to implement custom background blur transitions.
-        if (!this._dialog) return;
 
         // Restore our deactivation and finish flow overrides
-        if (this._origFinish) {
+        if (this._dialog && this._origFinish) {
             this._dialog.finish = this._origFinish;
             this._origFinish = null;
         }
@@ -1539,24 +1543,26 @@ export default class WackLockscreenClockExtension extends Extension {
         }
 
         // Restore the original background effect update method
-        if (this._origUpdateBgEffects) {
+        if (this._dialog && this._origUpdateBgEffects) {
             this._dialog._updateBackgroundEffects = this._origUpdateBgEffects;
             this._origUpdateBgEffects = null;
             this._dialog._updateBackgroundEffects();
         }
 
         // Restore the original user switch visibility method
-        if (this._origUpdateUserSwitchVisibility) {
+        if (this._dialog && this._origUpdateUserSwitchVisibility) {
             this._dialog._updateUserSwitchVisibility = this._origUpdateUserSwitchVisibility;
             this._origUpdateUserSwitchVisibility = null;
             this._dialog._updateUserSwitchVisibility();
         }
 
-        this._notifManager.teardownNotifBlur();
-        this._notifManager = null;
+        if (this._notifManager) {
+            this._notifManager.teardownNotifBlur();
+            this._notifManager = null;
+        }
 
         // Restore the original transition progress handler
-        if (this._origSetTransitionProgress) {
+        if (this._dialog && this._origSetTransitionProgress) {
             this._dialog._setTransitionProgress = this._origSetTransitionProgress;
             this._origSetTransitionProgress = null;
         }
@@ -1596,9 +1602,11 @@ export default class WackLockscreenClockExtension extends Extension {
         this._injectionManager = null;
 
         // Disconnect from UI signals
-        this._dialog._notificationsBox?.disconnectObject(this);
+        if (this._dialog) {
+            this._dialog._notificationsBox?.disconnectObject(this);
+            this._dialog.disconnectObject(this);
+        }
         Main.layoutManager.disconnectObject(this);
-        this._dialog.disconnectObject(this);
 
         const lockDialogGroup = Main.screenShield?._lockDialogGroup;
 
@@ -1638,14 +1646,16 @@ export default class WackLockscreenClockExtension extends Extension {
         }
 
         // Destroy our custom clock and restore the original shell clock
-        if (this._dialog._clock) {
+        if (this._dialog && this._dialog._clock) {
             lockDialogGroup?.remove_child(this._dialog._clock);
             this._dialog._clock.destroy();
             this._dialog._clock = null;
         }
 
-        this._dialog._clock = this._originalClock;
-        this._dialog._stack.add_child(this._originalClock);
+        if (this._dialog && this._originalClock) {
+            this._dialog._clock = this._originalClock;
+            this._dialog._stack.add_child(this._originalClock);
+        }
 
         // Restore the original layout manager for the main container
         if (this._mainBox && this._origLayout) {
