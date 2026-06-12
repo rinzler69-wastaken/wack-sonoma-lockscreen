@@ -4,17 +4,19 @@ import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import GDesktopEnums from 'gi://GDesktopEnums';
 import GLib from 'gi://GLib';
+import St from 'gi://St';
+import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 import { WackClock } from './wackClock.js';
+import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
 import {
     GDM_USER_STACK_VERTICAL_FRACTION,
     GDM_CROSSFADE_DURATION,
     GDM_DATETIME_TOP_FRACTION,
     DATE_LABEL_HEIGHT,
+    CUPERTINO_PROMPT_VERTICAL_FRACTION,
 } from './constants.js';
-
-// Vertical fraction for the auth prompt (avatar + password field) in GDM
-const GDM_AUTH_PROMPT_VERTICAL_FRACTION = 0.8235;
 
 export class GdmManager {
     constructor(extension) {
@@ -25,11 +27,16 @@ export class GdmManager {
         this._gdmClock = null;
         this._gdmClockWrapper = null;
         this._findDialogTimeoutId = null;
-        this._origOnUserListActivated = null;
+        this._origShowPrompt = null;
         this._origOnReset = null;
         this._allocationHandlers = [];
         this._opacityId = null;
         this._timeLabel = null;
+        this._cupertinoRestPromptContainer = null;
+        this._cupertinoRestPrompt = null;
+        this._backgroundGroup = null;
+        this._bgManagers = [];
+        this._monitorsChangedId = null;
     }
 
     enable() {
@@ -111,6 +118,18 @@ export class GdmManager {
         const dialog = this._dialog;
         this._dialogParent = dialog.get_parent();
 
+        // Setup background group and managers (similar to UnlockDialog)
+        this._backgroundGroup = new Clutter.Actor();
+        dialog.add_child(this._backgroundGroup);
+        dialog.set_child_below_sibling(this._backgroundGroup, null);
+
+        this._bgManagers = [];
+        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => {
+            this._updateBackgrounds();
+        });
+
+        this._updateBackgrounds();
+
         // 1. Clock wrapper setup to decouple date/time and enforce DATE_LABEL_HEIGHT spacing
         this._gdmClock = new WackClock();
         const dateLabel = this._gdmClock._dateOutput;
@@ -163,17 +182,17 @@ export class GdmManager {
             }
         });
 
-        // 5. On user selection: reposition native _authPrompt and show its avatar
-        this._origOnUserListActivated = dialog._onUserListActivated.bind(dialog);
-        dialog._onUserListActivated = (activatedItem) => {
-            this._origOnUserListActivated(activatedItem);
+        // 5. On prompt show: reposition native _authPrompt and style as Cupertino
+        this._origShowPrompt = dialog._showPrompt.bind(dialog);
+        dialog._showPrompt = (...args) => {
+            this._origShowPrompt(...args);
             this._onUserSelected();
         };
 
         // 6. On reset: restore _authPrompt position and avatar
         this._origOnReset = dialog._onReset.bind(dialog);
-        dialog._onReset = () => {
-            this._origOnReset();
+        dialog._onReset = (...args) => {
+            this._origOnReset(...args);
             this._onReset();
         };
     }
@@ -182,6 +201,29 @@ export class GdmManager {
 
     _teardown() {
         const dialog = this._dialog;
+
+        if (this._monitorsChangedId) {
+            Main.layoutManager.disconnect(this._monitorsChangedId);
+            this._monitorsChangedId = null;
+        }
+
+        if (this._bgManagers) {
+            for (let i = 0; i < this._bgManagers.length; i++) {
+                this._bgManagers[i].destroy();
+            }
+            this._bgManagers = [];
+        }
+
+        if (this._backgroundGroup) {
+            this._backgroundGroup.destroy();
+            this._backgroundGroup = null;
+        }
+
+        if (this._cupertinoRestPromptContainer) {
+            this._cupertinoRestPromptContainer.destroy();
+            this._cupertinoRestPromptContainer = null;
+            this._cupertinoRestPrompt = null;
+        }
 
         if (this._opacityId && dialog) {
             dialog.disconnect(this._opacityId);
@@ -192,9 +234,9 @@ export class GdmManager {
             actor.disconnect(id);
         this._allocationHandlers = [];
 
-        if (this._origOnUserListActivated && dialog) {
-            dialog._onUserListActivated = this._origOnUserListActivated;
-            this._origOnUserListActivated = null;
+        if (this._origShowPrompt && dialog) {
+            dialog._showPrompt = this._origShowPrompt;
+            this._origShowPrompt = null;
         }
         if (this._origOnReset && dialog) {
             dialog._onReset = this._origOnReset;
@@ -228,8 +270,15 @@ export class GdmManager {
 
         // Restore _authPrompt position
         if (dialog?._authPrompt) {
+            dialog._authPrompt.translation_x = 0;
             dialog._authPrompt.translation_y = 0;
             dialog._authPrompt.remove_style_class_name('wack-cupertino-prompt');
+            if (dialog._authPrompt._message) {
+                dialog._authPrompt._message.remove_style_class_name('wack-cupertino-message');
+            }
+            if (dialog._authPrompt._capsLockWarningLabel) {
+                dialog._authPrompt._capsLockWarningLabel.remove_style_class_name('wack-cupertino-caps-lock-warning');
+            }
         }
 
         // Restore userSelectionBox position
@@ -304,53 +353,135 @@ export class GdmManager {
     _positionAuthPrompt() {
         const authPrompt = this._dialog?._authPrompt;
         if (!authPrompt) return;
-        const { h } = this._dialogSize();
-        const [, , , promptH] = authPrompt.get_preferred_size();
-        const targetY = Math.floor(h * GDM_AUTH_PROMPT_VERTICAL_FRACTION);
+        const { w, h } = this._dialogSize();
+
+        const restPrompt = this._cupertinoRestPrompt;
+        const userWell = restPrompt?._userWell;
+        const [, , , wellH] = userWell
+            ? userWell.get_preferred_size()
+            : [0, 0, 0, 0];
+        const [, , promptW, promptH] = authPrompt.get_preferred_size();
+
+        const anchorH = wellH > 0 ? Math.floor(wellH * 1.3) : promptH;
+
+        // entryY is where the prompt entry box should start
+        const targetY = Math.floor(h * CUPERTINO_PROMPT_VERTICAL_FRACTION) - anchorH;
+
         const currentY = authPrompt.get_allocation_box().y1;
         authPrompt.translation_y = targetY - currentY;
-        console.log('[WACK/GdmManager] positionAuthPrompt currentY:', currentY, 'targetY:', targetY, 'translation_y:', authPrompt.translation_y);
+
+        authPrompt.translation_x = Math.floor(w / 2 - promptW / 2) - (authPrompt.x || 0) - 1;
+        console.log('[WACK/GdmManager] positionAuthPrompt currentY:', currentY, 'targetY:', targetY, 'translation_y:', authPrompt.translation_y, 'translation_x:', authPrompt.translation_x, 'wellH:', wellH, 'anchorH:', anchorH);
+    }
+
+    _createBackground(monitorIndex) {
+        let monitor = Main.layoutManager.monitors[monitorIndex];
+        let widget = new St.Widget({
+            style_class: 'screen-shield-background',
+            x: monitor.x,
+            y: monitor.y,
+            width: monitor.width,
+            height: monitor.height,
+            effect: new Shell.BlurEffect({ name: 'blur' }),
+        });
+
+        let bgManager = new Background.BackgroundManager({
+            container: widget,
+            monitorIndex,
+            controlPosition: false,
+        });
+
+        this._bgManagers.push(bgManager);
+        this._backgroundGroup.add_child(widget);
+    }
+
+    _updateBackgroundEffects() {
+        for (const widget of this._backgroundGroup) {
+            const effect = widget.get_effect('blur');
+            if (effect) {
+                effect.set({
+                    brightness: 1.0,
+                    radius: 0,
+                });
+            }
+        }
+    }
+
+    _updateBackgrounds() {
+        if (!this._bgManagers || !this._backgroundGroup)
+            return;
+
+        for (let i = 0; i < this._bgManagers.length; i++)
+            this._bgManagers[i].destroy();
+
+        this._bgManagers = [];
+        this._backgroundGroup.destroy_all_children();
+
+        for (let i = 0; i < Main.layoutManager.monitors.length; i++)
+            this._createBackground(i);
+
+        this._updateBackgroundEffects();
+        this._applyWallpaper();
     }
 
     // ── Wallpaper application ────────────────────────────────────────────────
 
-    _applyWallpaper() {
+    _applyWallpaper(userName = null) {
         try {
-            const metaFile = Gio.File.new_for_path('/tmp/wack-shared-wallpaper.json');
-            if (!metaFile.query_exists(null))
+            if (!this._bgManagers || this._bgManagers.length === 0)
                 return;
 
-            const [success, contents] = metaFile.load_contents(null);
-            if (!success)
-                return;
+            let user = this._dialog?._user;
+            let selectedUserName = userName || (user ? user.get_user_name() : null);
 
-            const metadata = JSON.parse(new TextDecoder().decode(contents));
-            if (!metadata)
-                return;
-
-            const systemBgActor = Main.layoutManager?._systemBackground;
-            if (!systemBgActor || !systemBgActor.content)
-                return;
-
-            const bg = systemBgActor.content.background;
-            if (!bg)
-                return;
-
-            if (metadata.is_color) {
-                let [res, color] = Cogl.Color.from_string(metadata.primary_color);
-                if (res) {
-                    if (metadata.shading_type === 0) { // SOLID
-                        bg.set_color(color);
-                    } else {
-                        let [res2, secondColor] = Cogl.Color.from_string(metadata.secondary_color);
-                        if (res2) {
-                            bg.set_gradient(metadata.shading_type, color, secondColor);
+            let success = false;
+            if (selectedUserName) {
+                const metaFile = Gio.File.new_for_path(`/tmp/wack-shared-wallpaper-${selectedUserName}.json`);
+                if (metaFile.query_exists(null)) {
+                    const [loadSuccess, contents] = metaFile.load_contents(null);
+                    if (loadSuccess) {
+                        const metadata = JSON.parse(new TextDecoder().decode(contents));
+                        if (metadata) {
+                            for (const bgManager of this._bgManagers) {
+                                const bg = bgManager.backgroundActor?.content?.background;
+                                if (bg) {
+                                    if (metadata.is_color) {
+                                        let [res, color] = Cogl.Color.from_string(metadata.primary_color);
+                                        if (res) {
+                                            if (metadata.shading_type === 0) { // SOLID
+                                                bg.set_color(color);
+                                            } else {
+                                                let [res2, secondColor] = Cogl.Color.from_string(metadata.secondary_color);
+                                                if (res2) {
+                                                    bg.set_gradient(metadata.shading_type, color, secondColor);
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        const file = Gio.File.new_for_uri(metadata.uri);
+                                        bg.set_file(file, metadata.style);
+                                    }
+                                }
+                            }
+                            success = true;
                         }
                     }
                 }
-            } else {
-                const file = Gio.File.new_for_uri(metadata.uri);
-                bg.set_file(file, metadata.style);
+            }
+
+            if (!success) {
+                const bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
+                const uri = bgSettings.get_string('picture-uri');
+                const style = bgSettings.get_enum('picture-options');
+                if (uri) {
+                    const file = Gio.File.new_for_uri(uri);
+                    for (const bgManager of this._bgManagers) {
+                        const bg = bgManager.backgroundActor?.content?.background;
+                        if (bg) {
+                            bg.set_file(file, style);
+                        }
+                    }
+                }
             }
         } catch (e) {
             console.log('[WACK/GdmManager] Failed to apply wallpaper: ' + e);
@@ -363,8 +494,34 @@ export class GdmManager {
         const authPrompt = this._dialog?._authPrompt;
         if (!authPrompt) return;
 
+        // Apply selected user's wallpaper
+        this._applyWallpaper();
+
+        // Recreate the dummy rest prompt with the current GDM user to get exact same font/avatar metrics
+        if (this._cupertinoRestPromptContainer) {
+            this._cupertinoRestPromptContainer.destroy();
+        }
+
+        this._cupertinoRestPromptContainer = new St.BoxLayout({
+            vertical: true,
+            style_class: 'wack-cupertino-rest',
+            opacity: 0,
+            visible: true,
+        });
+        this._cupertinoRestPromptContainer.set_position(-1000, -1000);
+        this._cupertinoRestPrompt = new WackCupertinoRestPrompt(this._dialog._user, this._extension);
+        this._cupertinoRestPromptContainer.add_child(this._cupertinoRestPrompt);
+        this._dialog.add_child(this._cupertinoRestPromptContainer);
+
         // Style as Cupertino prompt (hides password field chrome, etc.)
         authPrompt.add_style_class_name('wack-cupertino-prompt');
+
+        if (authPrompt._message) {
+            authPrompt._message.add_style_class_name('wack-cupertino-message');
+        }
+        if (authPrompt._capsLockWarningLabel) {
+            authPrompt._capsLockWarningLabel.add_style_class_name('wack-cupertino-caps-lock-warning');
+        }
 
         // Make native avatar visible — don't suppress it
         const avatar = authPrompt._userWell?.get_child()?._avatar;
@@ -379,8 +536,25 @@ export class GdmManager {
         const authPrompt = this._dialog?._authPrompt;
         if (!authPrompt) return;
 
+        // Revert to GDM default background
+        this._applyWallpaper(null);
+
+        if (this._cupertinoRestPromptContainer) {
+            this._cupertinoRestPromptContainer.destroy();
+            this._cupertinoRestPromptContainer = null;
+            this._cupertinoRestPrompt = null;
+        }
+
+        authPrompt.translation_x = 0;
         authPrompt.translation_y = 0;
         authPrompt.remove_style_class_name('wack-cupertino-prompt');
+
+        if (authPrompt._message) {
+            authPrompt._message.remove_style_class_name('wack-cupertino-message');
+        }
+        if (authPrompt._capsLockWarningLabel) {
+            authPrompt._capsLockWarningLabel.remove_style_class_name('wack-cupertino-caps-lock-warning');
+        }
 
         // Disconnect the auth prompt allocation handler
         this._allocationHandlers = this._allocationHandlers.filter(({ actor, id }) => {

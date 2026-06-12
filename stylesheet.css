@@ -144,36 +144,40 @@
    .wack-cupertino-prompt — entry visible, label suppressed                   */
 
 .wack-cupertino-rest .user-widget.vertical .user-icon {
-    icon-size: 58px;
+    icon-size: 58px !important;
 }
 
-.wack-cupertino-prompt .user-widget.vertical .user-icon {
+.unlock-dialog .wack-cupertino-prompt .user-widget.vertical .user-icon {
     icon-size: 58px !important;
     opacity: 0 !important;
 }
 
+.login-dialog .wack-cupertino-prompt .user-widget.vertical .user-icon {
+    icon-size: 58px !important;
+    opacity: 1 !important;
+}
+
 .wack-cupertino-rest .user-widget.vertical .user-icon StIcon,
 .wack-cupertino-prompt .user-widget.vertical .user-icon StIcon {
-    padding: 10px;
+    padding: 10px !important;
 }
 
 
 
 .wack-cupertino-rest .user-widget.vertical {
-    spacing: 15px;
+    spacing: 15px !important;
 }
 
 .wack-cupertino-prompt .user-widget.vertical {
-    spacing: 5px;
+    spacing: 5px !important;
 }
 
 /* Rest state: label at full size */
 .wack-cupertino-rest .user-widget-label {
-    font-size: 19px;
-    font-weight: 600;
-    letter-spacing: 0;
-    color: rgba(255, 255, 255, 0.9);
-    /* text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.15); */
+    font-size: 19px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 /* Prompt state: label suppressed */
@@ -182,35 +186,37 @@
 }
 
 .wack-cupertino-rest .login-dialog-prompt-layout,
-.wack-cupertino-prompt .login-dialog-prompt-layout {
-    width: 18em;
-    spacing: 9px;
+.wack-cupertino-prompt .login-dialog-prompt-layout,
+.wack-cupertino-prompt.login-dialog-prompt-layout {
+    width: 18em !important;
+    spacing: 9px !important;
 }
 
 .wack-cupertino-prompt .login-dialog-button-box {
-    padding: 0 1.5em;
+    padding: 0 1.5em !important;
 }
 
 .wack-cupertino-rest .login-dialog-prompt-entry {
-    opacity: 255;
+    opacity: 255 !important;
 }
 
 .wack-cupertino-prompt .login-dialog-prompt-entry {
-    font-size: 14px;
-    padding: 2px 6px;
-    margin-top: 3px;
-    margin-bottom: 3px;
-    border-radius: 9999px;
+    font-size: 14px !important;
+    padding: 2px 6px !important;
+    margin-top: 3px !important;
+    margin-bottom: 3px !important;
+    border-radius: 9999px !important;
 }
 
 /* Tighten vertical spacing inside the rest-prompt widget */
 .wack-cupertino-rest .login-dialog-prompt-layout {
-    spacing: 0;
+    spacing: 0 !important;
 }
 
 /* Tighten spacing in prompt mode so the caps lock warning sits flush to the entry */
-.wack-cupertino-prompt .login-dialog-prompt-layout {
-    spacing: 4px;
+.wack-cupertino-prompt .login-dialog-prompt-layout,
+.wack-cupertino-prompt.login-dialog-prompt-layout {
+    spacing: 4px !important;
 }
 
 /* Inline hint label anchored to the user widget in rest state */
@@ -226,7 +232,8 @@
 /* ── Cupertino: restyle native CapsLockWarning and PAM message ──────────────
    Match the wack-cupertino-hint aesthetic — same weight, size, color, center.    */
 
-.unlock-dialog .caps-lock-warning-label {
+.unlock-dialog .caps-lock-warning-label,
+.wack-cupertino-caps-lock-warning {
     color: rgba(255, 255, 255, 0.625) !important;
     font-size: 14px !important;
     font-weight: 600 !important;
@@ -238,7 +245,11 @@
 
 .unlock-dialog .login-dialog-message,
 .unlock-dialog .login-dialog-message-hint,
-.unlock-dialog .login-dialog-message-warning {
+.unlock-dialog .login-dialog-message-warning,
+.login-dialog .login-dialog-message,
+.login-dialog .login-dialog-message-hint,
+.login-dialog .login-dialog-message-warning,
+.wack-cupertino-message {
     color: rgba(255, 255, 255, 0.625) !important;
     font-size: 14px !important;
     font-weight: 600 !important;

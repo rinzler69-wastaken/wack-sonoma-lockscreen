@@ -33,7 +33,7 @@ export const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9575; // Prompt center Y as 
 export const GDM_USER_STACK_VERTICAL_FRACTION = 0.8; // User selection list center Y in GDM mode
 export const GDM_DATETIME_TOP_FRACTION = 0.09; // Date/Time offset from the top (percentage of screen height)
 export const GDM_CROSSFADE_DURATION = 300; // Transition duration for selection changes in ms
-export const GDM_REST_PROMPT_VERTICAL_FRACTION = 0.65;
+export const GDM_REST_PROMPT_VERTICAL_FRACTION = 0.66; // Prompt center Y when returning to lock screen from GDM
 
 // UI limits
 export const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously

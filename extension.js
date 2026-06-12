@@ -1414,6 +1414,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
     _saveWallpaper() {
         try {
+            const userName = GLib.get_user_name();
             const colorScheme = this._interfaceSettings.get_enum('color-scheme');
             const style = this._bgSettings.get_enum('picture-options');
             const uri = this._bgSettings.get_string(
@@ -1423,12 +1424,11 @@ export default class WackLockscreenClockExtension extends Extension {
             );
 
             let isColor = (style === 0);
-            let targetPath = '/tmp/wack-shared-wallpaper.jpg';
+            let targetPath = `/tmp/wack-shared-wallpaper-${userName}.jpg`;
             let success = false;
 
             if (uri && uri.startsWith('file://') && !isColor) {
-                const srcPath = uri.slice(7);
-                const srcFile = Gio.File.new_for_path(srcPath);
+                const srcFile = Gio.File.new_for_uri(uri);
                 if (srcFile.query_exists(null)) {
                     const destFile = Gio.File.new_for_path(targetPath);
                     srcFile.copy(destFile, Gio.FileCopyFlags.OVERWRITE, null, null);
@@ -1446,7 +1446,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 is_color: !success
             };
 
-            const metaFile = Gio.File.new_for_path('/tmp/wack-shared-wallpaper.json');
+            const metaFile = Gio.File.new_for_path(`/tmp/wack-shared-wallpaper-${userName}.json`);
             metaFile.replace_contents(
                 JSON.stringify(metadata),
                 null,

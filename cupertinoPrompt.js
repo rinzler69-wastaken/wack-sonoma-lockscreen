@@ -82,7 +82,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
                     y_align: Clutter.ActorAlign.START,
                     can_focus: false,
                     child: avatar,
-                    reactive: this._extension ? this._extension._promptActive : false,
+                    reactive: (this._extension && this._extension._promptActive) || false,
                 });
                 userWidget.insert_child_at_index(this._avatarButton, 0);
 
