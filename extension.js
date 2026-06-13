@@ -147,24 +147,20 @@ export default class WackLockscreenClockExtension extends Extension {
                     }
 
                     const actorsToFade = [this._clockWrapper, this._hintContainer, this._mainBox].filter(a => a != null);
-                    let completedCount = 0;
-                    
-                    const onFadeComplete = () => {
-                        completedCount++;
-                        if (completedCount === actorsToFade.length) {
-                            this._restoreSessionMode();
-                            this._origFinish(onComplete);
-                        }
-                    };
+                    actorsToFade.forEach(actor => {
+                        actor.ease({ opacity: 0, duration, mode });
+                    });
 
-                    if (actorsToFade.length === 0) {
+                    if (this._finishTimeoutId) {
+                        GLib.source_remove(this._finishTimeoutId);
+                        this._finishTimeoutId = null;
+                    }
+                    this._finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, duration, () => {
+                        this._finishTimeoutId = null;
                         this._restoreSessionMode();
                         this._origFinish(onComplete);
-                    } else {
-                        actorsToFade.forEach(actor => {
-                            actor.ease({ opacity: 0, duration, mode, onComplete: onFadeComplete });
-                        });
-                    }
+                        return GLib.SOURCE_REMOVE;
+                    });
                     return GLib.SOURCE_REMOVE;
                 });
             } else {
