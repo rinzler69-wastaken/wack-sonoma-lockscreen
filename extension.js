@@ -401,7 +401,8 @@ export default class WackLockscreenClockExtension extends Extension {
             }
 
             if (isCupertino) {
-                const mainBox = this._dialog?._promptBox?._authPrompt?._mainBox;
+                const authPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
+                const mainBox = authPrompt?._mainBox;
 
                 if (this._cupertinoRestPromptContainer) {
                     if (hasNotifs && progress === 0) {
@@ -713,35 +714,47 @@ export default class WackLockscreenClockExtension extends Extension {
 
     _setupCupertinoAvatarOverride() {
         if (this._cupertinoAvatarSetup) return;
-        const authPrompt = this._dialog?._promptBox?._authPrompt;
+        const authPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
         if (!authPrompt) return;
         this._cupertinoAvatarSetup = true;
 
         if (!this._cupertinoOrigUpdateUser) {
-            this._cupertinoOrigUpdateUser = authPrompt.updateUser.bind(authPrompt);
-            authPrompt.updateUser = (user) => {
+            const methodName = authPrompt.setUser ? 'setUser' : 'updateUser';
+            this._cupertinoOrigMethodName = methodName;
+            this._cupertinoOrigUpdateUser = authPrompt[methodName].bind(authPrompt);
+            authPrompt[methodName] = (user) => {
                 this._cupertinoOrigUpdateUser(user);
                 const uw = authPrompt._userWell?.get_child();
-                if (uw && uw._avatar) uw._avatar.opacity = 0;
+                if (uw && uw._avatar) {
+                    uw._avatar.visible = true;
+                    uw._avatar.opacity = 0;
+                }
             };
             const promptUserWidget = authPrompt._userWell?.get_child();
-            if (promptUserWidget?._avatar) promptUserWidget._avatar.opacity = 0;
+            if (promptUserWidget?._avatar) {
+                promptUserWidget._avatar.visible = true;
+                promptUserWidget._avatar.opacity = 0;
+            }
         }
 
         authPrompt.connectObject('destroy', () => this._teardownCupertinoAvatarOverride(), this);
     }
 
     _teardownCupertinoAvatarOverride() {
-        const authPrompt = this._dialog?._promptBox?._authPrompt;
+        const authPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
         if (authPrompt) authPrompt.disconnectObject(this);
 
-        if (authPrompt && this._cupertinoOrigUpdateUser) {
-            authPrompt.updateUser = this._cupertinoOrigUpdateUser;
+        if (authPrompt && this._cupertinoOrigUpdateUser && this._cupertinoOrigMethodName) {
+            authPrompt[this._cupertinoOrigMethodName] = this._cupertinoOrigUpdateUser;
         }
         this._cupertinoOrigUpdateUser = null;
+        this._cupertinoOrigMethodName = null;
 
         const promptUserWidget = authPrompt?._userWell?.get_child();
-        if (promptUserWidget?._avatar) promptUserWidget._avatar.opacity = 255;
+        if (promptUserWidget?._avatar) {
+            promptUserWidget._avatar.visible = true;
+            promptUserWidget._avatar.opacity = 255;
+        }
         this._cupertinoAvatarSetup = false;
     }
 
@@ -1248,7 +1261,8 @@ export default class WackLockscreenClockExtension extends Extension {
         this._destroyCupertinoRestPrompt();
 
         resetAnimationActors(this._clockWrapper, this._promptActor);
-        const mainBox = this._dialog?._promptBox?._authPrompt?._mainBox;
+        const authPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
+        const mainBox = authPrompt?._mainBox;
         if (mainBox) mainBox.opacity = 255;
         if (this._dialog) this._dialog.opacity = 255;
 

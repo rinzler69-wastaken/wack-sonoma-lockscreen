@@ -142,7 +142,11 @@
    .wack-cupertino-rest  — avatar + label visible, entry hidden via JS opacity
    .wack-cupertino-prompt — entry visible, label suppressed                   */
 
-.wack-cupertino-rest .user-widget.vertical .user-icon {
+.wack-cupertino-rest .wack-avatar-well .user-icon {
+    icon-size: 58px;
+}
+
+.wack-cupertino-prompt .wack-avatar-well .user-icon {
     icon-size: 58px;
 }
 
@@ -151,8 +155,7 @@
     opacity: 0 !important;
 }
 
-.wack-cupertino-rest .user-widget.vertical .user-icon StIcon,
-.wack-cupertino-prompt .user-widget.vertical .user-icon StIcon {
+.wack-cupertino-rest .wack-avatar-well .user-icon StIcon {
     padding: 10px;
 }
 
