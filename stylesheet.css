@@ -110,22 +110,72 @@
 
 .login-dialog .user-widget .user-widget-label {
     font-weight: 600;
-    font-size: 18px;
+    font-size: 16px;
+    color: 0.85;
     text-shadow: 0 1px 10px rgba(0, 0, 0, 0.575);
 }
 
 .login-dialog-not-listed-button {
-    border: none;
-    box-shadow: none;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 16px;
-    font-weight: 400 !important;
-    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.275);
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
 }
 
-  .login-dialog-not-listed-button:focus {
-    box-shadow: none;
-    background-color: rgba(255, 255, 255, 0.15); }
+.login-dialog-not-listed-button .login-dialog-not-listed-label {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.275);
+    color: rgba(255, 255, 255, 0.75) !important;
+    transition-duration: 150ms;
+}
+
+.login-dialog-not-listed-button:hover,
+.login-dialog-not-listed-button:focus,
+.login-dialog-not-listed-button:active {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.login-dialog-not-listed-button:hover .login-dialog-not-listed-label,
+.login-dialog-not-listed-button:focus .login-dialog-not-listed-label,
+.login-dialog-not-listed-button:active .login-dialog-not-listed-label {
+    color: rgba(255, 255, 255, 1.0) !important;
+}
+
+.login-dialog-not-listed-button:focus {
+    background-color: none !important;
+}
+
+.login-dialog-not-listed-button .login-dialog-not-listed-label:focus {
+    background-color: none !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.login-dialog-user-list {
+    spacing: 0 !important;
+}
+
+.login-dialog-user-list-view {
+    width: 180px !important;
+}
+
+.login-dialog-user-list-item {
+    height: 58px;
+    padding: 6px;
+}
+
+.login-dialog-user-list-item .user-widget {
+    spacing: 8px;
+    /* Spacing between the avatar and the text label */
+}
+
+.login-dialog-user-list-item .user-icon {
+    icon-size: 58px !important;
+    width: 58px !important;
+    height: 58px !important;
+}
+
+
 
 .wack-avatar-well {
     transition-duration: 150ms;
@@ -293,6 +343,33 @@
 .login-dialog-user-list-item:hover,
 .login-dialog-user-list-item:selected,
 .login-dialog-user-list-item:focus {
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: transparent !important;
     box-shadow: none !important;
+}
+
+.login-dialog-user-list-item .user-widget-label {
+    color: rgba(255, 255, 255, 0.85) !important;
+    transition-duration: 150ms;
+}
+
+.login-dialog-user-list-item:hover .user-widget-label,
+.login-dialog-user-list-item:selected .user-widget-label,
+.login-dialog-user-list-item:focus .user-widget-label {
+    color: rgba(255, 255, 255, 1.0) !important;
+}
+
+.login-dialog-user-list-item .user-icon {
+    transition-duration: 150ms;
+    border-radius: 99px !important;
+    box-shadow: inset 0 0 0 0px rgba(255, 255, 255, 0) !important;
+}
+
+.login-dialog-user-list-item:hover .user-icon {
+    opacity: 0.85 !important;
+    box-shadow: inset 0 0 15px 3px rgba(255, 255, 255, 0.275) !important;
+}
+
+.login-dialog-user-list-item:active .user-icon {
+    opacity: 0.7 !important;
+    box-shadow: inset 0 0 0px 99px rgba(255, 255, 255, 0.175) !important;
 }
