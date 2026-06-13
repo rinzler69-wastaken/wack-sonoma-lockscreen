@@ -158,7 +158,22 @@ export default class WackLockscreenClockExtension extends Extension {
                     this._finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, duration, () => {
                         this._finishTimeoutId = null;
                         this._restoreSessionMode();
-                        this._origFinish(onComplete);
+
+                        let called = false;
+                        const safeOnComplete = () => {
+                            if (called) return;
+                            called = true;
+                            onComplete();
+                        };
+
+                        this._origFinish(safeOnComplete);
+
+                        // Fallback in case GDM's finish hangs or never calls onComplete
+                        this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                            safeOnComplete();
+                            return GLib.SOURCE_REMOVE;
+                        });
+
                         return GLib.SOURCE_REMOVE;
                     });
                     return GLib.SOURCE_REMOVE;
