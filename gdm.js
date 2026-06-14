@@ -13,7 +13,6 @@ import { WackClock } from './wackClock.js';
 import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
 import {
     GDM_USER_STACK_VERTICAL_FRACTION,
-    GDM_CROSSFADE_DURATION,
     GDM_DATETIME_TOP_FRACTION,
     DATE_LABEL_HEIGHT,
     CUPERTINO_PROMPT_VERTICAL_FRACTION,
@@ -25,16 +24,6 @@ function _log(msg) {
 
 function _logError(msg) {
     console.error(msg);
-}
-
-function isDisposed(gobj) {
-    if (!gobj) return true;
-    try {
-        gobj.toString();
-        return false;
-    } catch (e) {
-        return true;
-    }
 }
 
 export class GdmManager {
