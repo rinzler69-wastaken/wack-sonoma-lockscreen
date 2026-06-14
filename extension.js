@@ -42,6 +42,14 @@ import {
     TIME_LABEL_HEIGHT_FALLBACK,
 } from './constants.js';
 
+function _log(msg) {
+    console.log(msg);
+}
+
+function _logError(msg) {
+    console.error(msg);
+}
+
 export default class WackLockscreenClockExtension extends Extension {
     // ── Single Source of Truth for Prompt State ───────────────────────────
     get _promptActive() {
@@ -55,7 +63,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._setupWallpaperMonitoring();
 
         const dialog = Main.screenShield._dialog;
-        console.log(`[WACK] enable() called, dialog=${!!dialog}`);
+        _log(`[WACK] enable() called, dialog=${!!dialog}`);
         if (!dialog) return;
 
         this._origStylesheet = undefined;
@@ -87,7 +95,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._originalCupertinoText = null;
         this._originalCupertinoCount = 0;
         this._animationState = createAnimationState();
-        
+
         // Track state transitions to prevent redundant side-effects
         this._wasPromptActive = false;
 
@@ -249,12 +257,12 @@ export default class WackLockscreenClockExtension extends Extension {
 
         this._dateLabel = dateLabel;
         this._timeLabel = timeLabel;
-        
+
         timeLabel.connectObject('notify::text', () => this._positionClock(), this);
         // Allocation changes are now handled cleanly by Clutter constraints
         timeLabel.connectObject('notify::allocation', () => this._centerClockLabel(timeLabel), this);
         dateLabel.connectObject('notify::allocation', () => this._centerClockLabel(dateLabel), this);
-        
+
         this._positionClock();
 
         // ── Hint Container Setup ──────────────────────────────────────────
@@ -265,7 +273,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._hintContainer.add_child(hint);
         this._hint = hint;
         this._hintText = hint.text;
-        
+
         hint.connectObject(
             'notify::text', () => {
                 if (!this._overflowActive && !this._showingInhibitHint) {
@@ -300,7 +308,7 @@ export default class WackLockscreenClockExtension extends Extension {
         // ── Input Handling ────────────────────────────────────────────────
         dialog.connectObject('key-press-event', (actor, event) => {
             const keysym = event.get_key_symbol();
-            
+
             if (keysym === Clutter.KEY_Escape && !this._promptActive) {
                 if (this._escToSleep) {
                     if (this._lockscreenMode === 'cupertino' && this._cupertinoAlwaysShowUser) {
@@ -353,18 +361,18 @@ export default class WackLockscreenClockExtension extends Extension {
 
             // Unified state derivation: no more redundant assignments
             const isNowActive = this._promptActive;
-            
+
             if (isNowActive && !this._wasPromptActive) {
                 this._onPromptShow();
                 const origEase = dialog._adjustment.ease;
                 dialog._adjustment.ease = () => { };
-                try { dialog._showPrompt(); } 
+                try { dialog._showPrompt(); }
                 finally { dialog._adjustment.ease = origEase; }
             } else if (!isNowActive && this._wasPromptActive) {
                 this._onPromptHide();
                 const origEase = dialog._adjustment.ease;
                 dialog._adjustment.ease = () => { };
-                try { dialog._showClock(); } 
+                try { dialog._showClock(); }
                 finally { dialog._adjustment.ease = origEase; }
             }
             this._wasPromptActive = isNowActive;
@@ -381,7 +389,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
             const hasNotifs = this._notifManager.hasVisibleNotifs();
             const cardBlur = hasNotifs ? NOTIF_BLUR_RADIUS * (1 - progress) : 0;
-            
+
             if (this._notifManager._notifBox && this._notifManager._notifBox._notificationBox) {
                 for (let child = this._notifManager._notifBox._notificationBox.get_first_child(); child !== null; child = child.get_next_sibling()) {
                     let effect = child.get_effect(NOTIF_BLUR_NAME);
@@ -498,7 +506,7 @@ export default class WackLockscreenClockExtension extends Extension {
             const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
             const targetRadius = isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor * progress;
             const targetBrightness = isCupertino ? 1.0 : 1.0 - (1.0 - PROMPT_BLUR_BRIGHTNESS) * progress;
-            
+
             for (const widget of this._dialog?._backgroundGroup ?? []) {
                 const effect = widget.get_effect('blur');
                 if (effect) effect.set({ radius: targetRadius, brightness: targetBrightness });
@@ -586,7 +594,7 @@ export default class WackLockscreenClockExtension extends Extension {
             this._notifManager.enforceCardLimit(this._notifManager._notifBox);
         }
         this._updateCupertinoRestState();
-        
+
         if (this._lockscreenMode === 'cupertino') {
             const hasNotifs = this._notifManager.hasVisibleNotifs();
             this._cupertinoIconSnap = !hasNotifs;
@@ -795,7 +803,7 @@ export default class WackLockscreenClockExtension extends Extension {
         try {
             Gdm.goto_login_session_sync(null);
         } catch (e) {
-            console.error(`WACK lockscreen: failed to switch user: ${e.message}`);
+            _logError(`WACK lockscreen: failed to switch user: ${e.message}`);
         }
     }
 
@@ -1206,7 +1214,7 @@ export default class WackLockscreenClockExtension extends Extension {
             let isColor = (style === 0);
             let isXml = uri && uri.toLowerCase().endsWith('.xml');
             let targetPath = `/var/tmp/wack-shared-wallpaper-${userName}.jpg`;
-            
+
             let resolvedSlidePath = null;
             if (isXml && uri.startsWith('file://')) {
                 try {
@@ -1215,7 +1223,7 @@ export default class WackLockscreenClockExtension extends Extension {
                         const [loadSuccess, contents] = srcFile.load_contents(null);
                         if (loadSuccess) {
                             const xmlText = new TextDecoder().decode(contents);
-                            
+
                             // Parse starttime
                             const yearMatch = xmlText.match(/<year>\s*(\d+)\s*<\/year>/);
                             const monthMatch = xmlText.match(/<month>\s*(\d+)\s*<\/month>/);
@@ -1225,7 +1233,7 @@ export default class WackLockscreenClockExtension extends Extension {
                             const secondMatch = xmlText.match(/<second>\s*(\d+)\s*<\/second>/);
 
                             const hasStartTime = yearMatch && monthMatch && dayMatch;
-                            
+
                             // Parse elements
                             const items = [];
                             const blockRegex = /<(static|transition)[^>]*>([\s\S]*?)<\/\1>/g;
@@ -1310,10 +1318,10 @@ export default class WackLockscreenClockExtension extends Extension {
                         }
                     }
                 } catch (xmlErr) {
-                    console.log('[WACK/Extension] Failed to parse XML slideshow: ' + xmlErr);
+                    _log('[WACK/Extension] Failed to parse XML slideshow: ' + xmlErr);
                 }
             }
-            
+
             // Check if existing wallpaper metadata matches current settings
             const metaFile = Gio.File.new_for_path(`/var/tmp/wack-shared-wallpaper-${userName}.json`);
             let metadataMatches = false;
@@ -1327,14 +1335,14 @@ export default class WackLockscreenClockExtension extends Extension {
                         const currentPrimary = this._bgSettings.get_string('primary-color');
                         const currentSecondary = this._bgSettings.get_string('secondary-color');
                         const currentShading = this._bgSettings.get_enum('color-shading-type');
-                        
+
                         if (existingMetadata &&
                             existingMetadata.source_uri === uri &&
                             existingMetadata.style === style &&
                             existingMetadata.primary_color === currentPrimary &&
                             existingMetadata.secondary_color === currentSecondary &&
                             existingMetadata.shading_type === currentShading) {
-                            
+
                             if (isXml) {
                                 if (existingMetadata.resolved_slide_path === resolvedSlidePath) {
                                     metadataMatches = true;
@@ -1342,7 +1350,7 @@ export default class WackLockscreenClockExtension extends Extension {
                             } else {
                                 metadataMatches = true;
                             }
-                            
+
                             if (metadataMatches) {
                                 if (isColor) {
                                     // Color settings matched
@@ -1358,7 +1366,7 @@ export default class WackLockscreenClockExtension extends Extension {
                         }
                     }
                 } catch (e) {
-                    console.log('[WACK/Extension] Failed to verify existing metadata: ' + e);
+                    _log('[WACK/Extension] Failed to verify existing metadata: ' + e);
                 }
             }
 
@@ -1368,7 +1376,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 let realSrcFile = null;
                 if (isXml && resolvedSlidePath) {
                     realSrcFile = Gio.File.new_for_path(resolvedSlidePath);
-                    console.log('[WACK/Extension] XML slideshow: using resolved active slide path ' + resolvedSlidePath);
+                    _log('[WACK/Extension] XML slideshow: using resolved active slide path ' + resolvedSlidePath);
                 } else {
                     realSrcFile = Gio.File.new_for_uri(uri);
                 }
@@ -1379,7 +1387,7 @@ export default class WackLockscreenClockExtension extends Extension {
                         const pixbuf = GdkPixbuf.Pixbuf.new_from_file(srcPath);
                         const w = pixbuf.get_width();
                         const h = pixbuf.get_height();
-                        
+
                         const MAX_DIM = 2560;
                         let scaleW = w;
                         let scaleH = h;
@@ -1392,16 +1400,16 @@ export default class WackLockscreenClockExtension extends Extension {
                                 scaleW = Math.round((w * MAX_DIM) / h);
                             }
                         }
-                        
+
                         const scaled = pixbuf.scale_simple(scaleW, scaleH, GdkPixbuf.InterpType.BILINEAR);
                         scaled.savev(targetPath, 'jpeg', ['quality'], ['80']);
-                        
+
                         const destFile = Gio.File.new_for_path(targetPath);
                         destFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
                         success = true;
-                        console.log('[WACK/Extension] Successfully optimized and saved resolved wallpaper JPEG');
+                        _log('[WACK/Extension] Successfully optimized and saved resolved wallpaper JPEG');
                     } catch (err) {
-                        console.log('[WACK/Extension] Fallback to direct copy due to GdkPixbuf error: ' + err);
+                        _log('[WACK/Extension] Fallback to direct copy due to GdkPixbuf error: ' + err);
                         const srcPath = realSrcFile.get_path();
                         let srcExt = '.jpg';
                         const lastDot = srcPath.lastIndexOf('.');
@@ -1441,13 +1449,23 @@ export default class WackLockscreenClockExtension extends Extension {
             );
             metaFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
         } catch (e) {
-            console.log('[WACK/Extension] Failed to save wallpaper: ' + e);
+            _log('[WACK/Extension] Failed to save wallpaper: ' + e);
         }
     }
 
-    /**
-     * Cleans up all modifications and returns the GNOME Shell lock screen to its original state.
-     */
+    // Guideline EGO-M-008: Documenting use of unlock-dialog.
+    // This extension runs in the 'unlock-dialog' session mode to customize the
+    // GNOME Shell lock screen. We perform the following modifications:
+    // - Replace the default clock widget (dialog._clock) with our custom clock
+    //   wrapper to display a macOS Sonoma-style clock layout.
+    // - Override dialog._updateBackgroundEffects to customize background blur.
+    // - Override dialog._updateUserSwitchVisibility to hide/show user options.
+    // - Intercept dialog.finish to animate custom transitions when unlocking.
+    //
+    // In this disable() method, we cleanly revert all changes, restore all overridden
+    // methods/injections to their original implementations, and destroy/nullify all
+    // custom UI elements, ensuring no resource leaks or state contamination in the
+    // GNOME Shell session.
     disable() {
         if (this._gdmManager) {
             this._gdmManager.disable();
@@ -1639,7 +1657,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._origLayout = null;
         this._overflowActive = false;
         this._hintText = null;
-        
+
         if (this._promptActor && this._origPromptActorYAlign !== undefined) {
             this._promptActor.y_align = this._origPromptActorYAlign;
             this._origPromptActorYAlign = undefined;
