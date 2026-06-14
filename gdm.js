@@ -487,29 +487,46 @@ export class GdmManager {
             let selectedUserName = userName || (user ? user.get_user_name() : null);
 
             let metaFile = null;
-            let isUsingActiveFallback = false;
+            let resolvedUserName = selectedUserName;
 
             if (!selectedUserName) {
-                const activeMetaFile = Gio.File.new_for_path('/var/tmp/wack-active-wallpaper.json');
-                if (activeMetaFile.query_exists(null)) {
-                    metaFile = activeMetaFile;
-                    isUsingActiveFallback = true;
-                }
-            }
+                // Find the most recently modified user metadata file to determine the last active user
+                try {
+                    const dir = Gio.File.new_for_path('/var/tmp');
+                    if (dir.query_exists(null)) {
+                        const enumerator = dir.enumerate_children(
+                            'standard::name,time::modified',
+                            Gio.FileQueryInfoFlags.NONE,
+                            null
+                        );
 
-            if (!metaFile && selectedUserName) {
+                        let maxMtime = 0;
+                        let info;
+                        while ((info = enumerator.next_file(null)) !== null) {
+                            const name = info.get_name();
+                            if (name.startsWith('wack-shared-wallpaper-') && name.endsWith('.json')) {
+                                const mtime = info.get_attribute_uint64('time::modified');
+                                if (mtime > maxMtime) {
+                                    maxMtime = mtime;
+                                    metaFile = Gio.File.new_for_path(`/var/tmp/${name}`);
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.log('[WACK/GdmManager] Failed to find most recent user wallpaper: ' + err);
+                }
+            } else {
                 metaFile = Gio.File.new_for_path(`/var/tmp/wack-shared-wallpaper-${selectedUserName}.json`);
             }
 
-            let resolvedUserName = selectedUserName;
             let metadata = null;
-
             if (metaFile && metaFile.query_exists(null)) {
                 const [loadSuccess, contents] = metaFile.load_contents(null);
                 if (loadSuccess) {
                     metadata = JSON.parse(new TextDecoder().decode(contents));
-                    if (metadata && isUsingActiveFallback) {
-                        resolvedUserName = metadata.username || null;
+                    if (metadata) {
+                        resolvedUserName = metadata.username || selectedUserName;
                     }
                 }
             }

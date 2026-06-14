@@ -110,9 +110,9 @@
 
 .login-dialog .user-widget .user-widget-label {
     font-weight: 600;
-    font-size: 19px;
+    font-size: 16px;
     color: rgba(255, 255, 255, 0.8);
-    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.575);
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.275);
 }
 
 .login-dialog-not-listed-button {
@@ -367,7 +367,9 @@
     box-shadow: inset 0 0 0 0px rgba(255, 255, 255, 0) !important;
 }
 
-.login-dialog-user-list-item:hover .user-icon {
+.login-dialog-user-list-item:hover .user-icon,
+.login-dialog-user-list-item:selected .user-icon,
+.login-dialog-user-list-item:focus .user-icon {
     opacity: 0.85 !important;
     box-shadow: inset 0 0 15px 3px rgba(255, 255, 255, 0.275) !important;
 }
@@ -375,4 +377,16 @@
 .login-dialog-user-list-item:active .user-icon {
     opacity: 0.7 !important;
     box-shadow: inset 0 0 0px 99px rgba(255, 255, 255, 0.175) !important;
+}
+
+/* Base transparent border to match box models between prompt and list */
+.login-dialog-user-list-item .user-icon,
+.wack-cupertino-rest .user-widget.vertical .user-icon,
+.login-dialog .wack-cupertino-prompt .user-widget.vertical .user-icon {
+    border: 2px solid transparent !important;
+}
+
+/* Highlight logged-in users with the system accent color */
+.login-dialog-user-list-item:logged-in .user-icon {
+    border-color: -st-accent-color !important;
 }
