@@ -153,12 +153,12 @@ export default class WackLockscreenClockExtension extends Extension {
                     }
                     this._finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, duration, () => {
                         this._finishTimeoutId = null;
-                        this._restoreSessionMode();
 
                         let called = false;
                         const safeOnComplete = () => {
                             if (called) return;
                             called = true;
+                            this._restoreSessionMode();
                             onComplete();
                         };
 
