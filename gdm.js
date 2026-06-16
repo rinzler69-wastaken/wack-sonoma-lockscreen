@@ -376,30 +376,35 @@ export class GdmManager {
     _positionAuthPrompt() {
         const authPrompt = this._dialog?._authPrompt;
         if (!authPrompt) return;
-        const { w, h } = this._dialogSize();
+
+        const parent = authPrompt.get_parent();
+        const parentAlloc = parent?.get_allocation_box();
+        const h = parentAlloc ? parentAlloc.y2 - parentAlloc.y1 : this._dialogSize().h;
+        const w = this._dialogSize().w;
+
+        const [, , promptW, promptH] = authPrompt.get_preferred_size();
 
         const restPrompt = this._cupertinoRestPrompt;
         const userWell = restPrompt?._userWell;
-        const [, , , wellH] = userWell
-            ? userWell.get_preferred_size()
-            : [0, 0, 0, 0];
-        const [, , promptW, promptH] = authPrompt.get_preferred_size();
 
-        const anchorH = wellH > 0 ? Math.floor(wellH * 1.3) : promptH;
+        let wellH = userWell?.get_height() ?? 0;
+        if (wellH === 0) {
+            const [, , , preferredH] = userWell ? userWell.get_preferred_size() : [0, 0, 0, 0];
+            wellH = preferredH > 0 ? preferredH : promptH;
+        }
 
-        // entryY is where the prompt entry box should start
+        const anchorH = Math.floor(wellH * 1.3);
         const targetY = Math.floor(h * CUPERTINO_PROMPT_VERTICAL_FRACTION) - anchorH;
 
         const currentY = authPrompt.get_allocation_box().y1;
         authPrompt.translation_y = targetY - currentY;
-
         authPrompt.translation_x = Math.floor(w / 2 - promptW / 2) - (authPrompt.x || 0);
         _log('[WACK/GdmManager] positionAuthPrompt currentY: ' + currentY + ' targetY: ' + targetY + ' translation_y: ' + authPrompt.translation_y + ' translation_x: ' + authPrompt.translation_x + ' wellH: ' + wellH + ' anchorH: ' + anchorH);
     }
 
     _createBackground(monitorIndex) {
         let monitor = Main.layoutManager.monitors[monitorIndex];
-        
+
         let createWidget = () => new St.Widget({
             style_class: 'screen-shield-background',
             x: monitor.x,
@@ -411,7 +416,7 @@ export class GdmManager {
 
         let widgetA = createWidget();
         let widgetB = createWidget();
-        
+
         widgetB.opacity = 0; // Starts hidden
 
         this._backgroundGroup.add_child(widgetA);
@@ -794,7 +799,7 @@ export class GdmManager {
             const avatar = uw._avatar;
             _log('[WACK/GdmManager] _wrapGdmAvatar: wrapping avatar in St.Button');
             uw.remove_child(avatar);
-            
+
             uw._avatarButton = new St.Button({
                 style_class: 'wack-avatar-well',
                 x_expand: false,
