@@ -810,6 +810,21 @@ export class GdmManager {
                 reactive: false,
             });
             uw.insert_child_at_index(uw._avatarButton, 0);
+
+            const label = uw?._label;
+            if (label && label.vfunc_allocate) {
+                label.vfunc_allocate = function (box) {
+                    this.set_allocation(box);
+                    const availWidth = box.x2 - box.x1;
+                    const availHeight = box.y2 - box.y1;
+                    const childBox = new Clutter.ActorBox();
+                    this._currentLabel = this._userNameLabel;
+                    this.label_actor = this._currentLabel;
+                    this._realNameLabel.allocate(childBox); // hidden, zero-sized
+                    childBox.set_size(availWidth, availHeight);
+                    this._userNameLabel.allocate(childBox);
+                };
+            }
             _log('[WACK/GdmManager] _wrapGdmAvatar: wrapping completed successfully');
         }
     }
