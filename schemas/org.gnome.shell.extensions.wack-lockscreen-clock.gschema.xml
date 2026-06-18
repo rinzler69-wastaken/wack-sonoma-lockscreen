@@ -15,6 +15,11 @@
       <summary>Always show user widget in Cupertino mode</summary>
       <description>If true, the user widget is always shown in Cupertino mode. Notifications are hidden by default but can be toggled by pressing Shift+N.</description>
     </key>
+    <key name="cupertino-unlock-fade" type="b">
+      <default>true</default>
+      <summary>Cupertino unlock fade animation</summary>
+      <description>If true, unlocking in Cupertino mode plays a fade-out animation with a panel slide-in. Disable for an instant unlock.</description>
+    </key>
     <key name="clock-animation" type="s">
       <choices>
         <choice value="scale-down"/>

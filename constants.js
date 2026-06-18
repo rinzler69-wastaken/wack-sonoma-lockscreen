@@ -38,6 +38,11 @@ export const GDM_REST_PROMPT_VERTICAL_FRACTION = 0.66; // Prompt center Y when r
 // UI limits
 export const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
 
+// Cupertino unlock transition timings
+export const CUPERTINO_UNLOCK_PANEL_FADE = 0;  // ms — panel fades out before the override fires
+export const CUPERTINO_UNLOCK_TSO_DELAY = 0;   // ms — wait after panel fade before session mode override + slide-in
+export const CUPERTINO_UNLOCK_FADE_DURATION = 300; // ms — duration of the actors fade-out + panel slide-in
+
 export function getPrettyDate() {
     try {
         const now = GLib.DateTime.new_now_local();

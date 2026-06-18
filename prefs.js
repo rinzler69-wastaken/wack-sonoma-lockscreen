@@ -241,6 +241,25 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         modeGroup.add(alwaysShowUserRow);
 
+        const unlockFadeRow = new Adw.ActionRow({
+            title: _('Cupertino Unlock Fade'),
+            subtitle: _('Fade out the lock screen with a panel slide-in when unlocking.'),
+        });
+        const unlockFadeSwitch = new Gtk.Switch({
+            valign: Gtk.Align.CENTER,
+            active: settings.get_boolean('cupertino-unlock-fade'),
+        });
+        unlockFadeSwitch.connect('notify::active', () => {
+            settings.set_boolean('cupertino-unlock-fade', unlockFadeSwitch.active);
+        });
+        settingsSignalIds.push(settings.connect('changed::cupertino-unlock-fade', () => {
+            unlockFadeSwitch.active = settings.get_boolean('cupertino-unlock-fade');
+        }));
+        unlockFadeRow.add_suffix(unlockFadeSwitch);
+        unlockFadeRow.activatable_widget = unlockFadeSwitch;
+        unlockFadeRow.sensitive = settings.get_string('lockscreen-mode') === 'cupertino';
+        modeGroup.add(unlockFadeRow);
+
         animPage.add(modeGroup);
 
         // -- Animation options (greyed out in Cupertino mode) ---------------
@@ -253,6 +272,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         settingsSignalIds.push(settings.connect('changed::lockscreen-mode', () => {
             const isCup = settings.get_string('lockscreen-mode') === 'cupertino';
             alwaysShowUserRow.sensitive = isCup;
+            unlockFadeRow.sensitive = isCup;
             animationGroup.sensitive = !isCup;
         }));
 
