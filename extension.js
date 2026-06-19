@@ -24,7 +24,7 @@ const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { WackClock } from './wackClock.js';
 import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
-import { getWallpaperAlpha, clearCache } from './alphaManager.js';
+import { getWallpaperAlpha, clearCache, initCache } from './alphaManager.js';
 import { WackLayout } from './layoutManager.js';
 import { NotificationManager } from './notificationManager.js';
 import { GdmManager } from './gdm.js';
@@ -105,6 +105,8 @@ export default class WackLockscreenClockExtension extends Extension {
 
         // Track state transitions to prevent redundant side-effects
         this._wasPromptActive = false;
+
+        initCache();
 
         this._notifManager = new NotificationManager(this);
         this._loadSettings();
@@ -529,16 +531,19 @@ export default class WackLockscreenClockExtension extends Extension {
             const shadingType = this._bgSettings.get_enum('color-shading-type');
 
             const textLuminance = dialog._clock.getTextLuminance();
-            const alpha = getWallpaperAlpha({
+            getWallpaperAlpha({
                 uri,
                 isColor,
                 primaryColor,
                 secondaryColor,
                 shadingType,
                 textLuminance,
+            }).then(alpha => {
+                if (dialog._clock && typeof dialog._clock.setWallpaperAlpha === 'function')
+                    dialog._clock.setWallpaperAlpha(alpha);
+            }).catch(e => {
+                console.error(`[WACK/Extension] Failed to get wallpaper alpha: ${e}`);
             });
-
-            dialog._clock.setWallpaperAlpha(alpha);
         } catch (e) {
             console.error(`[WACK/Extension] Failed to update clock alpha: ${e}`);
         }
