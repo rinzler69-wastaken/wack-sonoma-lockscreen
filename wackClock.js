@@ -104,6 +104,25 @@ export const WackClock = GObject.registerClass(
         }
 
         /**
+         * Gets the relative luminance of the clock's current base text color.
+         * @returns {number}
+         */
+        getTextLuminance() {
+            return 1.0; // Statically white text
+        }
+
+        setWallpaperAlpha(alpha) {
+            try {
+                this._time.set_style(`color: rgba(255, 255, 255, ${alpha});`);
+                this._dateOutput.set_style(`color: rgba(255, 255, 255, ${alpha});`);
+            } catch (e) {
+                console.error(`[WACK/Clock] Failed to set wallpaper alpha: ${e}`);
+            }
+        }
+
+
+
+        /**
          * Clean up timers, monitors, and signal handlers.
          */
         destroy() {
