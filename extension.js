@@ -24,6 +24,7 @@ const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { WackClock } from './wackClock.js';
 import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
+import { getWallpaperAlpha, clearCache } from './alphaManager.js';
 import { WackLayout } from './layoutManager.js';
 import { NotificationManager } from './notificationManager.js';
 import { GdmManager } from './gdm.js';
@@ -273,6 +274,23 @@ export default class WackLockscreenClockExtension extends Extension {
 
         this._positionClock();
 
+        this._bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
+        this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
+
+        const syncAlpha = () => this._updateClockAlpha();
+        this._bgSettings.connectObject(
+            'changed::picture-uri', syncAlpha,
+            'changed::picture-uri-dark', syncAlpha,
+            'changed::picture-options', syncAlpha,
+            this
+        );
+        this._interfaceSettings.connectObject(
+            'changed::color-scheme', syncAlpha,
+            this
+        );
+
+        this._updateClockAlpha();
+
         // ── Hint Container Setup ──────────────────────────────────────────
         this._hintContainer = new Clutter.Actor();
         lockDialogGroup.add_child(this._hintContainer);
@@ -484,6 +502,45 @@ export default class WackLockscreenClockExtension extends Extension {
             mainBox.layout_manager = new WackLayout(this, dialog._stack, dialog._notificationsBox, dialog._otherUserButton);
             mainBox.queue_relayout();
             this._mainBox = mainBox;
+        }
+    }
+
+    _updateClockAlpha() {
+        const dialog = this._dialog;
+        if (!dialog || !dialog._clock || typeof dialog._clock.setWallpaperAlpha !== 'function')
+            return;
+
+        try {
+            if (!this._bgSettings)
+                this._bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
+            if (!this._interfaceSettings)
+                this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
+
+            const colorScheme = this._interfaceSettings.get_enum('color-scheme');
+            const style = this._bgSettings.get_enum('picture-options');
+            const uri = this._bgSettings.get_string(
+                colorScheme === 1
+                    ? 'picture-uri-dark'
+                    : 'picture-uri'
+            );
+            const isColor = (style === 0);
+            const primaryColor = this._bgSettings.get_string('primary-color');
+            const secondaryColor = this._bgSettings.get_string('secondary-color');
+            const shadingType = this._bgSettings.get_enum('color-shading-type');
+
+            const textLuminance = dialog._clock.getTextLuminance();
+            const alpha = getWallpaperAlpha({
+                uri,
+                isColor,
+                primaryColor,
+                secondaryColor,
+                shadingType,
+                textLuminance,
+            });
+
+            dialog._clock.setWallpaperAlpha(alpha);
+        } catch (e) {
+            console.error(`[WACK/Extension] Failed to update clock alpha: ${e}`);
         }
     }
 
@@ -1216,11 +1273,18 @@ export default class WackLockscreenClockExtension extends Extension {
             this._crossSessionManager = null;
         }
 
-        // Guideline EGO-M-008: Documenting use of unlock-dialog
-        // We modify the unlock dialog to replace the default clock with our custom WackClock
-        // and to implement custom background blur transitions.
+        if (this._bgSettings) {
+            this._bgSettings.disconnectObject(this);
+            this._bgSettings = null;
+        }
 
-        // Restore our deactivation and finish flow overrides
+        if (this._interfaceSettings) {
+            this._interfaceSettings.disconnectObject(this);
+            this._interfaceSettings = null;
+        }
+
+        clearCache();
+
         if (this._dialog && this._origFinish) {
             this._dialog.finish = this._origFinish;
             this._origFinish = null;

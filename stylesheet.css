@@ -10,7 +10,7 @@
     /* for Inter, it's better to use 500. safe to use 600 for SF Pro Text */
     letter-spacing: 0px;
     /* for Inter, it's better to use -1px. safe to use -2px for SF Pro Text */
-    text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0.02);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.035);
 
 }
 
@@ -21,7 +21,7 @@
     font-weight: 600;
     font-feature-settings: "pnum" 1, "tnum" 0;
     letter-spacing: 0;
-    text-shadow: 0 0px 12px 2px rgba(0, 0, 0, 0);
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
 }
 
 .unlock-dialog-clock-hint {
