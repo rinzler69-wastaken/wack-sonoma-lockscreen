@@ -103,28 +103,7 @@ export class GdmManager {
     // ── Discovery ────────────────────────────────────────────────────────────
 
     _findLoginDialog() {
-        try {
-            return this._searchActorTree(Main.layoutManager.uiGroup, 0);
-        } catch (e) {
-            _logError('[WACK/GdmManager] _findLoginDialog error: ' + e);
-        }
-        return null;
-    }
-
-    _searchActorTree(actor, depth) {
-        if (depth > 6) return null;
-        const n = actor.get_n_children();
-        for (let i = 0; i < n; i++) {
-            const child = actor.get_child_at_index(i);
-            if (!child) continue;
-            if (child.style_class?.includes('login-dialog') || child.constructor?.name === 'LoginDialog') {
-                _log('[WACK/GdmManager] FOUND at depth ' + depth + ' ' + (child.constructor?.name ?? ''));
-                return child;
-            }
-            const found = this._searchActorTree(child, depth + 1);
-            if (found) return found;
-        }
-        return null;
+        return Main.screenShield?._dialog || null;
     }
 
     // ── Setup ─────────────────────────────────────────────────────────────────
