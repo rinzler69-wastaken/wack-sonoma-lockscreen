@@ -56,8 +56,17 @@ msgstr "Parola istemi açılırken tarih ve saate uygulanır"
 msgid "Blank Timeout"
 msgstr "Ekran Kapanma Zaman Aşımı"
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
-msgstr "Klasik, GNOME uyumlu düzen için 'Klasik' seçeneğini belirleyin. macOS Sonoma esintili bir görünüm için 'Cupertino' seçeneğini belirleyin (Cupertino Modunda kullanıcı değiştirmek için kullanıcı simgesine tıklayın)."
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr "macOS Sonoma esintili eksiksiz kilit ekranı düzeni (Kullanıcı değiştirmek için kullanıcı simgesine tıklayın)."
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr "Klasik, GNOME uyumlu düzen ve akış üzerinde macOS Sonoma tarzı saat."
+
+msgid "Cupertino Unlock Fade"
+msgstr "Cupertino Kilit Açma Solması"
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
+msgstr "Kilit açılırken panelin içeri kaymasıyla kilit ekranını yavaşça soldurur."
 
 msgid "Choose between Legacy and Cupertino styles"
 msgstr "Klasik ve Cupertino stilleri arasından seçim yapın"

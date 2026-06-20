@@ -56,8 +56,17 @@ msgstr "在显示密码输入框时应用于日期和时间"
 msgid "Blank Timeout"
 msgstr "关闭屏幕超时"
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
-msgstr "选择“经典”以使用传统的 GNOME 布局。选择“Cupertino”以使用受 macOS Sonoma 启发的布局（在 Cupertino 模式下点击用户图标以切换用户）。"
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr "完整的 macOS Sonoma 启发锁屏布局（点击用户图标以切换用户）。"
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr "在传统的 GNOME 布局和流程之上显示 macOS Sonoma 风格的时钟。"
+
+msgid "Cupertino Unlock Fade"
+msgstr "库比蒂诺解锁淡出"
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
+msgstr "解锁时使锁屏淡出，同时面板滑入。"
 
 msgid "Choose between Legacy and Cupertino styles"
 msgstr "在经典与 Cupertino 样式之间选择"

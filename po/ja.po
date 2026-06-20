@@ -56,8 +56,17 @@ msgstr "パスワード入力画面を開く際、日付と時刻に適用され
 msgid "Blank Timeout"
 msgstr "画面オフのタイムアウト"
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
-msgstr "標準の GNOME レイアウトには「クラシック」を選択します。macOS Sonoma 風の外観には「クパチーノ」を選択します（クパチーノモードではユーザーアイコンをクリックしてユーザーを切り替えます）。"
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr "完全に macOS Sonoma にインスパイアされたロック画面レイアウト（ユーザーアイコンをクリックしてユーザーを切り替え）。"
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr "標準の GNOME レイアウトとフロー上に macOS Sonoma 風の時計を表示します。"
+
+msgid "Cupertino Unlock Fade"
+msgstr "クパチーノのロック解除フェード"
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
+msgstr "ロック解除時に、パネルのスライドインと同時にロック画面をフェードアウトします。"
 
 msgid "Choose between Legacy and Cupertino styles"
 msgstr "クラシックとクパチーノスタイルから選択"

@@ -56,8 +56,17 @@ msgstr "Tillämpas på datum och tid när lösenordsfältet öppnas"
 msgid "Blank Timeout"
 msgstr "Släck skärmen efter"
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
-msgstr "Välj \"Klassisk\" för den traditionella GNOME-layouten. Välj \"Cupertino\" för ett macOS Sonoma-inspirerat utseende (klicka på användarikonen för att byta användare i Cupertino-läge)."
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr "En komplett macOS Sonoma-inspirerad låsskärmslayout (klicka på användarikonen för att byta användare)."
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr "macOS Sonoma-stilklocka över den traditionella GNOME-kompatibla layouten och flödet."
+
+msgid "Cupertino Unlock Fade"
+msgstr "Cupertino-avtoning vid upplåsning"
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
+msgstr "Tona ut låsskärmen med en glidande panel när du låser upp."
 
 msgid "Choose between Legacy and Cupertino styles"
 msgstr "Välj mellan klassisk stil och Cupertino"

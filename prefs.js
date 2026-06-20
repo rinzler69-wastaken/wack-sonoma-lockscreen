@@ -203,22 +203,31 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         // -- Mode selector --------------------------------------------------
         const modeGroup = new Adw.PreferencesGroup({
             title: _('Lockscreen Mode'),
-            description: _('Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode).'),
         });
 
-        const modeOptions = [
-            ['wack', _('Legacy')],
-            ['cupertino', _('Cupertino')]
-        ];
-
-        const modeRow = this._buildComboRow(
-            settings,
-            'lockscreen-mode',
-            _('Mode'),
-            _('Choose between Legacy and Cupertino styles'),
-            modeOptions
-        );
+        const modeRow = new Adw.ActionRow({
+            title: _('Mode'),
+        });
         modeGroup.add(modeRow);
+
+        const modeBox = new Gtk.Box({
+            valign: Gtk.Align.CENTER,
+        });
+
+        const linkedBox = new Gtk.Box({ css_classes: ['linked'] });
+        const btnLegacy = new Gtk.ToggleButton({ label: _('Legacy') });
+        const btnCupertino = new Gtk.ToggleButton({ label: _('Cupertino'), group: btnLegacy });
+        linkedBox.append(btnLegacy);
+        linkedBox.append(btnCupertino);
+
+        const dropdown = new Gtk.DropDown({
+            valign: Gtk.Align.CENTER,
+            model: Gtk.StringList.new([_('Legacy'), _('Cupertino')])
+        });
+
+        modeBox.append(linkedBox);
+        modeBox.append(dropdown);
+        modeRow.add_suffix(modeBox);
 
         // -- Cupertino options ----------------------------------------------
         const alwaysShowUserRow = new Adw.ActionRow({
@@ -264,17 +273,60 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         // -- Animation options (greyed out in Cupertino mode) ---------------
         const animationGroup = new Adw.PreferencesGroup({
-            title: _('Animations'),
-            description: _('Choose how the lock screen clock leaves and how the password prompt enters.'),
+            title: _('Lockscreen Animations'),
         });
         animationGroup.sensitive = settings.get_string('lockscreen-mode') !== 'cupertino';
 
-        settingsSignalIds.push(settings.connect('changed::lockscreen-mode', () => {
-            const isCup = settings.get_string('lockscreen-mode') === 'cupertino';
+        let selfChangeMode = false;
+        const syncModeFromSettings = () => {
+            const val = settings.get_string('lockscreen-mode');
+            const isCup = val === 'cupertino';
+            const index = isCup ? 1 : 0;
+
+            if (!selfChangeMode) {
+                selfChangeMode = true;
+                if (index === 0) btnLegacy.active = true;
+                else btnCupertino.active = true;
+                dropdown.selected = index;
+                selfChangeMode = false;
+            }
+
+            if (isCup) {
+                modeRow.subtitle = _('A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users).');
+            } else {
+                modeRow.subtitle = _('macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow.');
+            }
+
             alwaysShowUserRow.sensitive = isCup;
             unlockFadeRow.sensitive = isCup;
             animationGroup.sensitive = !isCup;
-        }));
+        };
+
+        const updateModeSetting = (index) => {
+            const val = index === 1 ? 'cupertino' : 'wack';
+            if (settings.get_string('lockscreen-mode') !== val) {
+                settings.set_string('lockscreen-mode', val);
+            }
+        };
+
+        btnLegacy.connect('toggled', () => { if (btnLegacy.active) updateModeSetting(0); });
+        btnCupertino.connect('toggled', () => { if (btnCupertino.active) updateModeSetting(1); });
+
+        dropdown.connect('notify::selected', () => {
+            updateModeSetting(dropdown.selected);
+        });
+
+        dropdown.visible = false;
+        linkedBox.visible = true;
+
+        const cond = Adw.BreakpointCondition.parse('max-width: 450px');
+        const breakpoint = new Adw.Breakpoint({ condition: cond });
+        breakpoint.add_setter(linkedBox, 'visible', false);
+        breakpoint.add_setter(dropdown, 'visible', true);
+        window.add_breakpoint(breakpoint);
+
+        settingsSignalIds.push(settings.connect('changed::lockscreen-mode', syncModeFromSettings));
+        syncModeFromSettings();
 
         animationGroup.add(this._buildComboRow(
             settings,
@@ -313,7 +365,6 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         // -- Screen Timeout options -----------------------------------------
         const timeoutGroup = new Adw.PreferencesGroup({
             title: _('Screen Timeout'),
-            description: _('Control when the screen turns off or blanks on the lock screen.'),
         });
 
         const enableUnblankRow = new Adw.ActionRow({

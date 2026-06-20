@@ -56,8 +56,17 @@ msgstr "ใช้กับวันที่และเวลาขณะเป
 msgid "Blank Timeout"
 msgstr "ระยะเวลาก่อนปิดหน้าจอ"
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
-msgstr "เลือก \"คลาสสิก\" สำหรับเค้าโครง GNOME แบบดั้งเดิม เลือก \"คูเปอร์ติโน\" สำหรับรูปลักษณ์ที่ได้รับแรงบันดาลใจจาก macOS Sonoma (คลิกไอคอนผู้ใช้เพื่อสลับผู้ใช้ในโหมดคูเปอร์ติโน)"
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr "เค้าโครงหน้าจอล็อกที่ได้รับแรงบันดาลใจจาก macOS Sonoma อย่างสมบูรณ์ (คลิกไอคอนผู้ใช้เพื่อสลับผู้ใช้)"
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr "นาฬิกาสไตล์ macOS Sonoma บนเค้าโครงและโฟลว์การทำงานของ GNOME แบบดั้งเดิม"
+
+msgid "Cupertino Unlock Fade"
+msgstr "การจางหายขณะปลดล็อกคูเปอร์ติโน"
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
+msgstr "จางหน้าจอล็อกออกพร้อมกับแผงที่เลื่อนเข้ามาเมื่อปลดล็อก"
 
 msgid "Choose between Legacy and Cupertino styles"
 msgstr "เลือกระหว่างสไตล์คลาสสิกและสไตล์คูเปอร์ติโน"

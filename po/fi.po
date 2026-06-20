@@ -56,8 +56,17 @@ msgstr "Käytetään päivämäärässä ja ajassa, kun salasanakenttää avataa
 msgid "Blank Timeout"
 msgstr "Näytön sammutuksen aikakatkaisu"
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
-msgstr "Valitse \"Klassinen\" perinteistä, GNOME-yhteensopivaa asettelua varten. Valitse \"Cupertino\" macOS Sonoman kaltaista tyyliä varten (napsauta käyttäjäkuvaketta vaihtaa käyttäjää Cupertino-tilassa)."
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr "Täydellinen macOS Sonoma -tyylinen lukitusnäytön asettelu (vaihda käyttäjää napsauttamalla käyttäjäkuvaketta)."
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr "macOS Sonoma -tyylinen kello perinteisen, GNOME-yhteensopivan asettelun ja kulun päällä."
+
+msgid "Cupertino Unlock Fade"
+msgstr "Cupertinon lukituksen avauksen häivytys"
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
+msgstr "Häivyttää lukitusnäytön paneelin liukuessa sisään lukitusta avattaessa."
 
 msgid "Choose between Legacy and Cupertino styles"
 msgstr "Valitse klassisen ja Cupertino-tyylin välillä"

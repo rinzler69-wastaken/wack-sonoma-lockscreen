@@ -56,8 +56,17 @@ msgstr "Diterapkan pada tanggal dan waktu saat membuka perintah kata sandi"
 msgid "Blank Timeout"
 msgstr "Batas Waktu Mematikan Layar"
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
-msgstr "Pilih «Klasik» untuk tata letak klasik yang sesuai dengan GNOME. Pilih «Cupertino» untuk tampilan yang terinspirasi macOS Sonoma (Klik ikon pengguna untuk berpindah pengguna dalam Mode Cupertino)."
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr "Tata letak layar kunci lengkap yang terinspirasi macOS Sonoma (Klik ikon pengguna untuk beralih pengguna)."
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr "Jam bergaya macOS Sonoma di atas tata letak dan alur klasik yang sesuai dengan GNOME."
+
+msgid "Cupertino Unlock Fade"
+msgstr "Pudar Buka Kunci Cupertino"
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
+msgstr "Pudarkan layar kunci dengan panel yang meluncur masuk saat membuka kunci."
 
 msgid "Choose between Legacy and Cupertino styles"
 msgstr "Pilih antara gaya Klasik dan Cupertino"

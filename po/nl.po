@@ -56,8 +56,17 @@ msgstr "Toegepast op de datum en tijd tijdens het openen van de wachtwoordprompt
 msgid "Blank Timeout"
 msgstr "Uitschakelvertraging"
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
-msgstr "Kies «Klassiek» voor de klassieke, met GNOME compatibele lay-out. Kies «Cupertino» voor een op macOS Sonoma geïnspireerd uiterlijk (klik op het gebruikerspictogram om van gebruiker te wisselen in de Cupertino-modus)."
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr "Een complete, op macOS Sonoma geïnspireerde lay-out (klik op het gebruikerspictogram om van gebruiker te wisselen)."
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr "Klok in macOS Sonoma-stijl over de klassieke, met GNOME compatibele lay-out en stroom."
+
+msgid "Cupertino Unlock Fade"
+msgstr "Cupertino ontgrendelfade"
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
+msgstr "Laat het vergrendelscherm vervagen met een inschuivend paneel bij het ontgrendelen."
 
 msgid "Choose between Legacy and Cupertino styles"
 msgstr "Kies tussen de klassieke stijl of Cupertino"

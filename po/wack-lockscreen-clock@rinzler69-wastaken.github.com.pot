@@ -56,7 +56,16 @@ msgstr ""
 msgid "Blank Timeout"
 msgstr ""
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr ""
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr ""
+
+msgid "Cupertino Unlock Fade"
+msgstr ""
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
 msgstr ""
 
 msgid "Choose between Legacy and Cupertino styles"

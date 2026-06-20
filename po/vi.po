@@ -56,8 +56,17 @@ msgstr "Áp dụng cho ngày và giờ trong khi mở hộp nhập mật khẩu"
 msgid "Blank Timeout"
 msgstr "Thời gian chờ tắt màn hình"
 
-msgid "Choose Legacy for the classic, GNOME-compliant layout. Choose Cupertino for a macOS Sonoma-inspired look (Click user-icon to switch users in Cupertino Mode)."
-msgstr "Chọn \"Cổ điển\" cho bố cục GNOME tiêu chuẩn. Chọn \"Cupertino\" cho giao diện lấy cảm hứng từ macOS Sonoma (Nhấp vào biểu tượng người dùng để chuyển đổi người dùng trong Chế độ Cupertino)."
+msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
+msgstr "Bố cục màn hình khóa lấy cảm hứng từ macOS Sonoma hoàn chỉnh (Nhấp vào biểu tượng người dùng để chuyển đổi người dùng)."
+
+msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
+msgstr "Đồng hồ kiểu macOS Sonoma trên bố cục và luồng hoạt động chuẩn GNOME cổ điển."
+
+msgid "Cupertino Unlock Fade"
+msgstr "Làm mờ khi mở khóa Cupertino"
+
+msgid "Fade out the lock screen with a panel slide-in when unlocking."
+msgstr "Làm mờ màn hình khóa với hiệu ứng bảng trượt vào khi mở khóa."
 
 msgid "Choose between Legacy and Cupertino styles"
 msgstr "Chọn giữa phong cách Cổ điển và Cupertino"
