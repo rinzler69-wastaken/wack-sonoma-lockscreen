@@ -123,6 +123,16 @@ export default class WackLockscreenClockExtension extends Extension {
         dialog.finish = (onComplete) => {
             const isCupertino = this._lockscreenMode === 'cupertino';
             if (isCupertino && this._cupertinoUnlockFade) {
+                // Snapshot the cache reference *now*, before _tempSessionModeOverride()
+                // flips Main.sessionMode.hasWindows and emits 'updated' below. wack-shell's
+                // _syncSessionModeUI() listens for that same signal and clears
+                // global.wack_window_snapshots as soon as hasWindows goes true, which would
+                // otherwise race ahead of the fade-in code further down in this callback.
+                const capturedSnapshots = global.wack_window_snapshots
+                    ? global.wack_window_snapshots.slice()
+                    : [];
+                log(`[WACK Lockscreen] finish(): captured ${capturedSnapshots.length} snapshot(s) before session-mode override`);
+
                 const panel = Main.panel;
                 if (panel) {
                     panel.ease({ opacity: 0, duration: CUPERTINO_UNLOCK_PANEL_FADE, mode: Clutter.AnimationMode.EASE_OUT_QUAD });
@@ -151,6 +161,38 @@ export default class WackLockscreenClockExtension extends Extension {
                         panel.ease({ translation_y: 0, duration, mode });
                     }
 
+                    // Check if we have cached window snapshots and fade them in
+                    log(`[WACK Lockscreen] fade-in callback: ${capturedSnapshots.length} snapshot(s) available to crossfade`);
+                    if (capturedSnapshots.length > 0) {
+                        this._windowFadeContainer = new Clutter.Actor();
+                        lockDialogGroup.add_child(this._windowFadeContainer);
+                        // Place directly above `dialog` (which owns the opaque wallpaper/
+                        // _backgroundGroup) so the window textures are actually visible,
+                        // instead of set_child_below_sibling(..., null) which sank this
+                        // below the wallpaper entirely. The clock/hint/panel — which fade
+                        // to opacity 0 below — stay above this container, so as they fade
+                        // out the window textures are revealed underneath.
+                        lockDialogGroup.set_child_above_sibling(this._windowFadeContainer, this._dialog);
+
+                        capturedSnapshots.forEach(snapshot => {
+                            const actor = new Clutter.Actor({
+                                content: snapshot.content,
+                                x: snapshot.rect.x,
+                                y: snapshot.rect.y,
+                                width: snapshot.rect.width,
+                                height: snapshot.rect.height
+                            });
+                            this._windowFadeContainer.add_child(actor);
+                        });
+
+                        this._windowFadeContainer.opacity = 0;
+                        this._windowFadeContainer.ease({
+                            opacity: 255,
+                            duration,
+                            mode,
+                        });
+                    }
+
                     const actorsToFade = [this._clockWrapper, this._hintContainer, this._mainBox].filter(a => a != null);
                     actorsToFade.forEach(actor => {
                         actor.ease({ opacity: 0, duration, mode });
@@ -168,6 +210,11 @@ export default class WackLockscreenClockExtension extends Extension {
                             if (called) return;
                             called = true;
                             this._restoreSessionMode();
+                            if (this._windowFadeContainer) {
+                                this._windowFadeContainer.destroy();
+                                this._windowFadeContainer = null;
+                            }
+                            global.wack_window_snapshots = [];
                             onComplete();
                         };
 
@@ -1287,6 +1334,11 @@ export default class WackLockscreenClockExtension extends Extension {
         if (this._finishTimeoutId) {
             GLib.source_remove(this._finishTimeoutId);
             this._finishTimeoutId = null;
+        }
+
+        if (this._windowFadeContainer) {
+            this._windowFadeContainer.destroy();
+            this._windowFadeContainer = null;
         }
 
         if (this._origSessionModeProps) {
