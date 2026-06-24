@@ -220,9 +220,22 @@ export default class WackLockscreenClockExtension extends Extension {
                                 width: snapshot.rect.width,
                                 height: snapshot.rect.height
                             });
+                            actor.set_pivot_point(0.5, 0.5);
+                            actor.scale_x = 0.94;
+                            actor.scale_y = 0.94;
+                            // add_child first so actor is realized on stage,
+                            // then ease — Clutter requires the actor to be staged
+                            // before a transition can actually run.
                             this._windowFadeContainer.add_child(actor);
+                            actor.ease({
+                                scale_x: 1.0,
+                                scale_y: 1.0,
+                                duration,
+                                mode,
+                            });
                         });
 
+                        // Container handles the unified opacity fade only
                         this._windowFadeContainer.opacity = 0;
                         this._windowFadeContainer.ease({
                             opacity: 255,

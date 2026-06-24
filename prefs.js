@@ -251,8 +251,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         modeGroup.add(alwaysShowUserRow);
 
         const unlockFadeRow = new Adw.ActionRow({
-            title: _('Cupertino Unlock Fade'),
-            subtitle: _('Fade out the lock screen with a panel slide-in when unlocking.'),
+            title: _('Unlock Crossfade'),
+            subtitle: _('Crossfade the lockscreen with desktop when unlocking. Requires WACK Shell to be installed and enabled.'),
         });
         const unlockFadeSwitch = new Gtk.Switch({
             valign: Gtk.Align.CENTER,
