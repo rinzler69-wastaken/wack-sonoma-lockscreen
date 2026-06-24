@@ -88,6 +88,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._showingInhibitHint = false;
         this._inhibitHintTimeoutId = null;
         this._finishTimeoutId = null;
+        this._finishFallbackId = null;
         this._originalWackText = null;
         this._originalCupertinoText = null;
         this._originalCupertinoCount = 0;
@@ -228,6 +229,10 @@ export default class WackLockscreenClockExtension extends Extension {
                         const safeOnComplete = () => {
                             if (called) return;
                             called = true;
+                            if (this._finishFallbackId) {
+                                GLib.source_remove(this._finishFallbackId);
+                                this._finishFallbackId = null;
+                            }
                             this._restoreSessionMode();
                             if (this._windowFadeContainer) {
                                 this._windowFadeContainer.destroy();
@@ -239,8 +244,11 @@ export default class WackLockscreenClockExtension extends Extension {
 
                         this._origFinish(safeOnComplete);
 
-                        // Fallback in case GDM's finish hangs or never calls onComplete
-                        this._idleAdd(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                        // Fallback in case GDM's finish hangs or never calls onComplete.
+                        // Give the shell a short grace period instead of forcing completion
+                        // on the very next idle, which can race a legitimate async finish.
+                        this._finishFallbackId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
+                            this._finishFallbackId = null;
                             safeOnComplete();
                             return GLib.SOURCE_REMOVE;
                         });
@@ -1366,16 +1374,18 @@ export default class WackLockscreenClockExtension extends Extension {
             this._finishTimeoutId = null;
         }
 
+        if (this._finishFallbackId) {
+            GLib.source_remove(this._finishFallbackId);
+            this._finishFallbackId = null;
+        }
+
         if (this._windowFadeContainer) {
             this._windowFadeContainer.destroy();
             this._windowFadeContainer = null;
         }
 
         if (this._origSessionModeProps) {
-            Main.sessionMode.panel = this._origSessionModeProps.panel;
-            Main.sessionMode.panelStyle = this._origSessionModeProps.panelStyle;
-            this._origSessionModeProps = null;
-            Main.sessionMode.emit('updated');
+            this._restoreSessionMode();
         }
 
         if (Main.panel) {

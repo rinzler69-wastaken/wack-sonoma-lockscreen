@@ -10,7 +10,8 @@
     "50"
   ],
   "session-modes": [
-    "unlock-dialog"
+    "unlock-dialog",
+    "gdm"
   ],
   "gettext-domain": "wack-lockscreen-clock@rinzler69-wastaken.github.com",
   "settings-schema": "org.gnome.shell.extensions.wack-lockscreen-clock",

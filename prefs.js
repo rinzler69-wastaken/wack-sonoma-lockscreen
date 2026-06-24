@@ -8,9 +8,11 @@ import { CLOCK_ANIMATION_OPTIONS, PROMPT_ANIMATION_OPTIONS } from './anims.js';
 function _isWackShellInstalled() {
     try {
         const userPath = GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'extensions', 'wack-shell@rinzler69-wastaken.github.com']);
-        const sysPath = '/usr/share/gnome-shell/extensions/wack-shell@rinzler69-wastaken.github.com';
+        const sysPath1 = '/usr/share/gnome-shell/extensions/wack-shell@rinzler69-wastaken.github.com';
+        const sysPath2 = '/usr/local/share/gnome-shell/extensions/wack-shell@rinzler69-wastaken.github.com';
         return Gio.File.new_for_path(userPath).query_exists(null) ||
-               Gio.File.new_for_path(sysPath).query_exists(null);
+               Gio.File.new_for_path(sysPath1).query_exists(null) ||
+               Gio.File.new_for_path(sysPath2).query_exists(null);
     } catch (e) {
         return false;
     }
@@ -30,10 +32,12 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
     fillPreferencesWindow(window) {
         const _ = this.gettext.bind(this);
         const settings = this.getSettings();
+        const shellSettings = new Gio.Settings({ schema_id: 'org.gnome.shell' });
         // Collect settings signal IDs so they can all be disconnected when the
         // prefs window is destroyed, preventing stale closures from keeping
         // widget objects alive beyond the window lifetime (M5).
         const settingsSignalIds = [];
+        const cleanupCallbacks = [];
 
         // Increase default window size (width, height)
         window.set_default_size(700, 800);
@@ -272,18 +276,9 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         modeGroup.add(alwaysShowUserRow);
 
-        const wackShellInstalled = _isWackShellInstalled();
-        const wackShellEnabled = _isWackShellEnabled();
-
-        let subtitleText = _('Crossfade the lockscreen with desktop when unlocking.');
-        if (!wackShellInstalled)
-            subtitleText += ' ' + _('Requires WACK Shell to be installed and enabled.');
-        else if (!wackShellEnabled)
-            subtitleText += ' ' + _('Requires WACK Shell to be enabled.');
-
         const unlockFadeRow = new Adw.ActionRow({
             title: _('Unlock Crossfade'),
-            subtitle: subtitleText,
+            subtitle: _('Crossfade the lockscreen with desktop when unlocking.'),
         });
         const unlockFadeSwitch = new Gtk.Switch({
             valign: Gtk.Align.CENTER,
@@ -297,7 +292,6 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         }));
         unlockFadeRow.add_suffix(unlockFadeSwitch);
         unlockFadeRow.activatable_widget = unlockFadeSwitch;
-        unlockFadeRow.sensitive = settings.get_string('lockscreen-mode') === 'cupertino' && wackShellInstalled && wackShellEnabled;
         modeGroup.add(unlockFadeRow);
 
         animPage.add(modeGroup);
@@ -309,6 +303,20 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         animationGroup.sensitive = settings.get_string('lockscreen-mode') !== 'cupertino';
 
         let selfChangeMode = false;
+        const refreshUnlockFadeAvailability = () => {
+            const isCup = settings.get_string('lockscreen-mode') === 'cupertino';
+            const wackShellInstalled = _isWackShellInstalled();
+            const wackShellEnabled = _isWackShellEnabled();
+
+            let subtitleText = _('Crossfade the lockscreen with desktop when unlocking.');
+            if (!wackShellInstalled)
+                subtitleText += ' ' + _('Requires WACK Shell to be installed and enabled.');
+            else if (!wackShellEnabled)
+                subtitleText += ' ' + _('Requires WACK Shell to be enabled.');
+
+            unlockFadeRow.subtitle = subtitleText;
+            unlockFadeRow.sensitive = isCup && wackShellInstalled && wackShellEnabled;
+        };
         const syncModeFromSettings = () => {
             const val = settings.get_string('lockscreen-mode');
             const isCup = val === 'cupertino';
@@ -329,8 +337,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             }
 
             alwaysShowUserRow.sensitive = isCup;
-            // Gate Unlock Crossfade on Cupertino mode AND WACK Shell installed AND WACK Shell enabled
-            unlockFadeRow.sensitive = isCup && wackShellInstalled && wackShellEnabled;
+            refreshUnlockFadeAvailability();
             animationGroup.sensitive = !isCup;
         };
 
@@ -358,6 +365,28 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         window.add_breakpoint(breakpoint);
 
         settingsSignalIds.push(settings.connect('changed::lockscreen-mode', syncModeFromSettings));
+        const shellSettingsSignalId = shellSettings.connect('changed::enabled-extensions', refreshUnlockFadeAvailability);
+        cleanupCallbacks.push(() => shellSettings.disconnect(shellSettingsSignalId));
+
+        const extensionDirs = [
+            GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'extensions']),
+            '/usr/share/gnome-shell/extensions',
+            '/usr/local/share/gnome-shell/extensions',
+        ];
+
+        for (const path of extensionDirs) {
+            try {
+                const monitor = Gio.File.new_for_path(path).monitor_directory(Gio.FileMonitorFlags.NONE, null);
+                const changedId = monitor.connect('changed', refreshUnlockFadeAvailability);
+                cleanupCallbacks.push(() => {
+                    monitor.disconnect(changedId);
+                    monitor.cancel();
+                });
+            } catch (e) {
+                // Ignore unavailable extension roots.
+            }
+        }
+
         syncModeFromSettings();
 
         animationGroup.add(this._buildComboRow(
@@ -469,6 +498,10 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             for (const id of settingsSignalIds)
                 settings.disconnect(id);
             settingsSignalIds.length = 0;
+
+            for (const callback of cleanupCallbacks)
+                callback();
+            cleanupCallbacks.length = 0;
         });
     }
 
