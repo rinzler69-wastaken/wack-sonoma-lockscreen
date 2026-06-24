@@ -27,8 +27,6 @@ import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
 import { getWallpaperAlpha, clearCache, initCache } from './alphaManager.js';
 import { WackLayout } from './layoutManager.js';
 import { NotificationManager } from './notificationManager.js';
-import { GdmManager } from './gdm.js';
-import { CrossSessionManager } from './crossSessionManager.js';
 import {
     PROMPT_BLUR_RADIUS,
     PROMPT_BLUR_BRIGHTNESS,
@@ -61,36 +59,6 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     enable() {
-        this._gdmManager = new GdmManager(this);
-        this._gdmManager.enable();
-
-        if (Main.sessionMode.currentMode !== 'gdm') {
-            const syncCrossSession = () => {
-                const wackShell = Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
-                const wackShellEnabled = wackShell && wackShell.state === 1;
-
-                if (wackShellEnabled) {
-                    if (this._crossSessionManager) {
-                        this._crossSessionManager.disable();
-                        this._crossSessionManager = null;
-                    }
-                } else {
-                    if (!this._crossSessionManager) {
-                        this._crossSessionManager = new CrossSessionManager();
-                        this._crossSessionManager.enable();
-                    }
-                }
-            };
-
-            syncCrossSession();
-
-            this._wackShellStateChangedId = Main.extensionManager.connect('extension-state-changed', (_obj, ext) => {
-                if (ext.uuid === 'wack-shell@rinzler69-wastaken.github.com') {
-                    syncCrossSession();
-                }
-            });
-        }
-
         const dialog = Main.screenShield._dialog;
         _log(`[WACK] enable() called, dialog=${!!dialog}`);
         if (!dialog) return;
@@ -1350,19 +1318,9 @@ export default class WackLockscreenClockExtension extends Extension {
     // custom UI elements, ensuring no resource leaks or state contamination in the
     // GNOME Shell session.
     disable() {
-        if (this._gdmManager) {
-            this._gdmManager.disable();
-            this._gdmManager = null;
-        }
-
         if (this._wackShellStateChangedId) {
             Main.extensionManager.disconnect(this._wackShellStateChangedId);
             this._wackShellStateChangedId = null;
-        }
-
-        if (this._crossSessionManager) {
-            this._crossSessionManager.disable();
-            this._crossSessionManager = null;
         }
 
         if (this._bgSettings) {
