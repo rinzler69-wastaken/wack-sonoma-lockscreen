@@ -5,15 +5,19 @@ import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import { CLOCK_ANIMATION_OPTIONS, PROMPT_ANIMATION_OPTIONS } from './anims.js';
 
-/**
- * Returns true if WACK Shell is both installed (schema registered) and
- * currently enabled (present in org.gnome.shell enabled-extensions).
- */
-function _isWackShellAvailable() {
+function _isWackShellInstalled() {
     try {
-        // Schema check — will throw if extension is not installed
-        new Gio.Settings({ schema_id: 'org.gnome.shell.extensions.wack-shell' });
-        // Enabled-extensions check
+        const userPath = GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'extensions', 'wack-shell@rinzler69-wastaken.github.com']);
+        const sysPath = '/usr/share/gnome-shell/extensions/wack-shell@rinzler69-wastaken.github.com';
+        return Gio.File.new_for_path(userPath).query_exists(null) ||
+               Gio.File.new_for_path(sysPath).query_exists(null);
+    } catch (e) {
+        return false;
+    }
+}
+
+function _isWackShellEnabled() {
+    try {
         const shellSettings = new Gio.Settings({ schema_id: 'org.gnome.shell' });
         const enabled = shellSettings.get_strv('enabled-extensions');
         return enabled.includes('wack-shell@rinzler69-wastaken.github.com');
@@ -268,13 +272,18 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         modeGroup.add(alwaysShowUserRow);
 
-        const wackShellAvailable = _isWackShellAvailable();
+        const wackShellInstalled = _isWackShellInstalled();
+        const wackShellEnabled = _isWackShellEnabled();
+
+        let subtitleText = _('Crossfade the lockscreen with desktop when unlocking.');
+        if (!wackShellInstalled)
+            subtitleText += ' ' + _('Requires WACK Shell to be installed and enabled.');
+        else if (!wackShellEnabled)
+            subtitleText += ' ' + _('Requires WACK Shell to be enabled.');
 
         const unlockFadeRow = new Adw.ActionRow({
             title: _('Unlock Crossfade'),
-            subtitle: wackShellAvailable
-                ? _('Crossfade the lockscreen with desktop when unlocking.')
-                : _('Crossfade the lockscreen with desktop when unlocking. Requires WACK Shell to be installed and enabled.'),
+            subtitle: subtitleText,
         });
         const unlockFadeSwitch = new Gtk.Switch({
             valign: Gtk.Align.CENTER,
@@ -288,7 +297,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         }));
         unlockFadeRow.add_suffix(unlockFadeSwitch);
         unlockFadeRow.activatable_widget = unlockFadeSwitch;
-        unlockFadeRow.sensitive = settings.get_string('lockscreen-mode') === 'cupertino' && wackShellAvailable;
+        unlockFadeRow.sensitive = settings.get_string('lockscreen-mode') === 'cupertino' && wackShellInstalled && wackShellEnabled;
         modeGroup.add(unlockFadeRow);
 
         animPage.add(modeGroup);
@@ -320,8 +329,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             }
 
             alwaysShowUserRow.sensitive = isCup;
-            // Gate Unlock Crossfade on both Cupertino mode AND WACK Shell being available
-            unlockFadeRow.sensitive = isCup && wackShellAvailable;
+            // Gate Unlock Crossfade on Cupertino mode AND WACK Shell installed AND WACK Shell enabled
+            unlockFadeRow.sensitive = isCup && wackShellInstalled && wackShellEnabled;
             animationGroup.sensitive = !isCup;
         };
 
