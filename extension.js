@@ -131,8 +131,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 const capturedSnapshots = global.wack_window_snapshots
                     ? global.wack_window_snapshots.slice()
                     : [];
-                const capturedPanelState = global.wack_panel_snapshot || null;
-                log(`[WACK Lockscreen] finish(): captured ${capturedSnapshots.length} snapshot(s) and panel state before session-mode override`);
+                log(`[WACK Lockscreen] finish(): captured ${capturedSnapshots.length} snapshot(s) before session-mode override`);
 
                 const panel = Main.panel;
                 if (panel) {
@@ -160,14 +159,6 @@ export default class WackLockscreenClockExtension extends Extension {
                         panel.translation_y = -panelHeight;
                         panel.opacity = 255;
                         panel.ease({ translation_y: 0, duration, mode });
-                    }
-
-                    this._fakePanel = this._createFakePanel(capturedPanelState);
-                    if (this._fakePanel) {
-                        lockDialogGroup.add_child(this._fakePanel);
-                        const panelHeight = Main.panel.height || 60;
-                        this._fakePanel.translation_y = -panelHeight;
-                        this._fakePanel.ease({ translation_y: 0, duration, mode });
                     }
 
                     // Check if we have cached window snapshots and fade them in
@@ -223,12 +214,7 @@ export default class WackLockscreenClockExtension extends Extension {
                                 this._windowFadeContainer.destroy();
                                 this._windowFadeContainer = null;
                             }
-                            if (this._fakePanel) {
-                                this._fakePanel.destroy();
-                                this._fakePanel = null;
-                            }
                             global.wack_window_snapshots = [];
-                            global.wack_panel_snapshot = null;
                             onComplete();
                         };
 
@@ -1241,23 +1227,6 @@ export default class WackLockscreenClockExtension extends Extension {
         this._hint.set_width(natWidth);
     }
 
-    _createFakePanel(panelState) {
-        if (!panelState?.content) return null;
-
-        // Render the captured panel texture as a full-size ghost actor positioned
-        // at the exact screen coordinates of the real panel at lock time.
-        const actor = new Clutter.Actor({
-            content: panelState.content,
-            x: panelState.x,
-            y: panelState.y,
-            width: panelState.width,
-            height: panelState.height,
-        });
-
-        return actor;
-    }
-
-
     _tempSessionModeOverride() {
         if (this._origSessionModeProps) return;
         this._origSessionModeProps = {
@@ -1370,11 +1339,6 @@ export default class WackLockscreenClockExtension extends Extension {
         if (this._windowFadeContainer) {
             this._windowFadeContainer.destroy();
             this._windowFadeContainer = null;
-        }
-
-        if (this._fakePanel) {
-            this._fakePanel.destroy();
-            this._fakePanel = null;
         }
 
         if (this._origSessionModeProps) {
