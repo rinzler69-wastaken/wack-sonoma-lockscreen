@@ -11,8 +11,10 @@ function _isWackShellInstalled() {
         const sysPath1 = '/usr/share/gnome-shell/extensions/wack-shell@rinzler69-wastaken.github.com';
         const sysPath2 = '/usr/local/share/gnome-shell/extensions/wack-shell@rinzler69-wastaken.github.com';
         return Gio.File.new_for_path(userPath).query_exists(null) ||
-               Gio.File.new_for_path(sysPath1).query_exists(null) ||
-               Gio.File.new_for_path(sysPath2).query_exists(null);
+            Gio.File.new_for_path(sysPath1).query_exists(null) ||
+            Gio.File.new_for_path(sysPath2).query_exists(null);
+        Gio.File.new_for_path(sysPath1).query_exists(null) ||
+            Gio.File.new_for_path(sysPath2).query_exists(null);
     } catch (e) {
         return false;
     }
@@ -276,22 +278,87 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         modeGroup.add(alwaysShowUserRow);
 
-        const unlockFadeRow = new Adw.ActionRow({
+        const unlockFadeRow = new Adw.ExpanderRow({
             title: _('Unlock Crossfade'),
             subtitle: _('Crossfade the lockscreen with desktop when unlocking.'),
+            show_enable_switch: true,
+            enable_expansion: settings.get_boolean('cupertino-unlock-fade'),
         });
-        const unlockFadeSwitch = new Gtk.Switch({
-            valign: Gtk.Align.CENTER,
-            active: settings.get_boolean('cupertino-unlock-fade'),
-        });
-        unlockFadeSwitch.connect('notify::active', () => {
-            settings.set_boolean('cupertino-unlock-fade', unlockFadeSwitch.active);
+        unlockFadeRow.connect('notify::enable-expansion', () => {
+            settings.set_boolean('cupertino-unlock-fade', unlockFadeRow.enable_expansion);
         });
         settingsSignalIds.push(settings.connect('changed::cupertino-unlock-fade', () => {
-            unlockFadeSwitch.active = settings.get_boolean('cupertino-unlock-fade');
+            unlockFadeRow.enable_expansion = settings.get_boolean('cupertino-unlock-fade');
         }));
-        unlockFadeRow.add_suffix(unlockFadeSwitch);
-        unlockFadeRow.activatable_widget = unlockFadeSwitch;
+
+        // -- Crossfade Speed child row --------------------------------------
+        const speedRow = new Adw.ActionRow({
+            title: _('Crossfade Speed'),
+        });
+
+        const speedBox = new Gtk.Box({ valign: Gtk.Align.CENTER });
+
+        // Linked buttons (wide layout) — Slower is active by default
+        const speedLinkedBox = new Gtk.Box({ css_classes: ['linked'] });
+        const btnSlow = new Gtk.ToggleButton({ label: _('Slower'), active: true });
+        const btnFast = new Gtk.ToggleButton({ label: _('Faster'), group: btnSlow });
+        speedLinkedBox.append(btnSlow);
+        speedLinkedBox.append(btnFast);
+
+        // Dropdown fallback (narrow layout)
+        const speedDropdown = new Gtk.DropDown({
+            valign: Gtk.Align.CENTER,
+            model: Gtk.StringList.new([_('Slower'), _('Faster')]),
+        });
+
+        speedBox.append(speedLinkedBox);
+        speedBox.append(speedDropdown);
+        speedRow.add_suffix(speedBox);
+
+        let selfChangeSpeed = false;
+
+        const syncSpeedButtons = () => {
+            const v = settings.get_string('cupertino-crossfade-speed') || 'slow';
+            selfChangeSpeed = true;
+            btnSlow.active = (v !== 'fast');   // default to Slower for any non-'fast' value
+            btnFast.active = (v === 'fast');
+            speedDropdown.selected = (v === 'fast') ? 1 : 0;
+            selfChangeSpeed = false;
+        };
+        syncSpeedButtons();
+
+        btnSlow.connect('toggled', () => {
+            if (selfChangeSpeed || !btnSlow.active) return;
+            selfChangeSpeed = true;
+            settings.set_string('cupertino-crossfade-speed', 'slow');
+            speedDropdown.selected = 0;
+            selfChangeSpeed = false;
+        });
+        btnFast.connect('toggled', () => {
+            if (selfChangeSpeed || !btnFast.active) return;
+            selfChangeSpeed = true;
+            settings.set_string('cupertino-crossfade-speed', 'fast');
+            speedDropdown.selected = 1;
+            selfChangeSpeed = false;
+        });
+        speedDropdown.connect('notify::selected', () => {
+            if (selfChangeSpeed) return;
+            selfChangeSpeed = true;
+            const val = speedDropdown.selected === 1 ? 'fast' : 'slow';
+            settings.set_string('cupertino-crossfade-speed', val);
+            btnSlow.active = (val !== 'fast');
+            btnFast.active = (val === 'fast');
+            selfChangeSpeed = false;
+        });
+        settingsSignalIds.push(settings.connect('changed::cupertino-crossfade-speed', () => {
+            if (!selfChangeSpeed) syncSpeedButtons();
+        }));
+
+        // Responsive: hide linked buttons, show dropdown on narrow windows
+        speedDropdown.visible = false;
+        speedLinkedBox.visible = true;
+
+        unlockFadeRow.add_row(speedRow);
         modeGroup.add(unlockFadeRow);
 
         animPage.add(modeGroup);
@@ -362,6 +429,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         const breakpoint = new Adw.Breakpoint({ condition: cond });
         breakpoint.add_setter(linkedBox, 'visible', false);
         breakpoint.add_setter(dropdown, 'visible', true);
+        breakpoint.add_setter(speedLinkedBox, 'visible', false);
+        breakpoint.add_setter(speedDropdown, 'visible', true);
         window.add_breakpoint(breakpoint);
 
         settingsSignalIds.push(settings.connect('changed::lockscreen-mode', syncModeFromSettings));

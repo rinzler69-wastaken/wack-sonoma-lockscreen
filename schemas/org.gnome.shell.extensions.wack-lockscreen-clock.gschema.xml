@@ -20,6 +20,13 @@
       <summary>Cupertino unlock fade animation</summary>
       <description>If true, unlocking in Cupertino mode plays a fade-out animation with a panel slide-in. Disable for an instant unlock.</description>
     </key>
+
+    <key name="cupertino-crossfade-speed" type="s">
+      <default>'slow'</default>
+      <summary>Cupertino unlock crossfade speed</summary>
+      <description>Speed preset for the unlock crossfade animation. Values: 'slow', 'normal', 'fast'.</description>
+    </key>
+
     <key name="clock-animation" type="s">
       <choices>
         <choice value="scale-down"/>

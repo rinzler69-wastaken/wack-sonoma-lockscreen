@@ -44,6 +44,8 @@ import {
     CUPERTINO_UNLOCK_PANEL_FADE,
     CUPERTINO_UNLOCK_TSO_DELAY,
     CUPERTINO_UNLOCK_FADE_DURATION,
+    CROSSFADE_SPEED_SLOW,
+    CROSSFADE_SPEED_FAST,
 } from './constants.js';
 
 function _log(msg) {
@@ -101,6 +103,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._showingInhibitHint = false;
         this._inhibitHintTimeoutId = null;
         this._finishTimeoutId = null;
+        this._finishFallbackId = null;
         this._finishFallbackId = null;
         this._originalWackText = null;
         this._originalCupertinoText = null;
@@ -170,7 +173,7 @@ export default class WackLockscreenClockExtension extends Extension {
                     this._finishTimeoutId = null;
                     this._tempSessionModeOverride();
 
-                    const duration = CUPERTINO_UNLOCK_FADE_DURATION;
+                    const duration = this._cupertinoUnlockFadeDuration;
                     const mode = Clutter.AnimationMode.EASE_OUT_QUAD;
 
                     if (panel) {
@@ -708,7 +711,29 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         syncEscToSleep();
 
-        this._syncCupertinoUnlockFade();
+        const syncCupertinoUnlockFade = () => {
+            const wackShell = Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
+            const wackShellEnabled = wackShell && wackShell.state === 1;
+            this._cupertinoUnlockFade = wackShellEnabled && this._settings.get_boolean('cupertino-unlock-fade');
+        };
+        syncCupertinoUnlockFade();
+
+        const syncCrossfadeSpeed = () => {
+            const speed = this._settings.get_string('cupertino-crossfade-speed') || 'slow';
+            if (speed === 'slow')
+                this._cupertinoUnlockFadeDuration = CROSSFADE_SPEED_SLOW;
+            else if (speed === 'fast')
+                this._cupertinoUnlockFadeDuration = CROSSFADE_SPEED_FAST;
+            else
+                this._cupertinoUnlockFadeDuration = CUPERTINO_UNLOCK_FADE_DURATION;
+        };
+        syncCrossfadeSpeed();
+
+        this._wackShellStateChangedId = Main.extensionManager.connect('extension-state-changed', (_obj, ext) => {
+            if (ext.uuid === 'wack-shell@rinzler69-wastaken.github.com') {
+                syncCupertinoUnlockFade();
+            }
+        });
 
         this._settings.connectObject(
             'changed::clock-animation', syncClockAnimation,
@@ -716,7 +741,8 @@ export default class WackLockscreenClockExtension extends Extension {
             'changed::lockscreen-mode', syncLockscreenMode,
             'changed::cupertino-always-show-user', syncCupertinoAlwaysShowUser,
             'changed::esc-to-sleep', syncEscToSleep,
-            'changed::cupertino-unlock-fade', () => this._syncCupertinoUnlockFade(),
+            'changed::cupertino-unlock-fade', syncCupertinoUnlockFade,
+            'changed::cupertino-crossfade-speed', syncCrossfadeSpeed,
             this
         );
     }
