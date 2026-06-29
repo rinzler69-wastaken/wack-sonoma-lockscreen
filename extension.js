@@ -615,6 +615,9 @@ export default class WackLockscreenClockExtension extends Extension {
             }).then(alpha => {
                 if (dialog._clock && typeof dialog._clock.setWallpaperAlpha === 'function')
                     dialog._clock.setWallpaperAlpha(alpha);
+
+                if (this._crossSessionManager && typeof this._crossSessionManager.setClockAlpha === 'function')
+                    this._crossSessionManager.setClockAlpha(alpha);
             }).catch(e => {
                 console.error(`[WACK/Extension] Failed to get wallpaper alpha: ${e}`);
             });

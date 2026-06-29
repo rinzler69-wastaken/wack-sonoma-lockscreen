@@ -10,6 +10,14 @@ export class CrossSessionManager {
     constructor() {
         this._bgSettings = null;
         this._interfaceSettings = null;
+        this._clockAlpha = null;
+    }
+
+    setClockAlpha(alpha) {
+        if (this._clockAlpha === alpha)
+            return;
+        this._clockAlpha = alpha;
+        this._saveWallpaper();
     }
 
     enable() {
@@ -272,6 +280,7 @@ export class CrossSessionManager {
                 shading_type: this._bgSettings.get_enum('color-shading-type'),
                 is_color: isColor,
                 clockFormat: this._interfaceSettings.get_string('clock-format'),
+                clockAlpha: this._clockAlpha ?? 0.6,
             };
 
             metaFile.replace_contents(

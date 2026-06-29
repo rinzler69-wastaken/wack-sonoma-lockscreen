@@ -61,49 +61,87 @@ export class GdmManager {
 
         this._active = true;
 
-        // Try to find the LoginDialog
-        let attempts = 0;
-        const findDialog = () => {
-            if (!this._active)
-                return GLib.SOURCE_REMOVE;
+        // 1. Ensure stylesheet is loaded and listen for GDM theme updates
+        const themeContext = St.ThemeContext.get_for_stage(global.stage);
+        themeContext.connectObject('notify::theme', () => this._ensureStylesheetLoaded(), this);
+        this._ensureStylesheetLoaded();
 
-            const dialog = this._findLoginDialog();
-
-            if (dialog) {
-                this._dialog = dialog;
+        // 2. Discover the LoginDialog (event-driven monkeypatch)
+        this._origEnsureUnlockDialog = Main.screenShield._ensureUnlockDialog;
+        Main.screenShield._ensureUnlockDialog = (allowCancel) => {
+            const res = this._origEnsureUnlockDialog.call(Main.screenShield, allowCancel);
+            
+            // Re-setup if the dialog changed or was newly created
+            if (Main.screenShield._dialog && this._dialog !== Main.screenShield._dialog) {
+                if (this._dialog) {
+                    this._teardown();
+                }
+                this._dialog = Main.screenShield._dialog;
                 this._setup();
                 this._applyWallpaper();
-                this._findDialogTimeoutId = null;
-                return GLib.SOURCE_REMOVE;
             }
-
-            attempts++;
-            if (attempts > 50) {
-                _log('[WACK/GdmManager] Could not find LoginDialog after 50 attempts');
-                this._findDialogTimeoutId = null;
-                return GLib.SOURCE_REMOVE;
-            }
-
-            return GLib.SOURCE_CONTINUE;
+            return res;
         };
 
-        this._findDialogTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, findDialog);
+        // Fallback: If it's already instantiated at enable time, setup immediately
+        const dialog = this._findLoginDialog();
+        if (dialog) {
+            this._dialog = dialog;
+            this._setup();
+            this._applyWallpaper();
+        }
     }
 
     disable() {
         if (!this._active) return;
         this._active = false;
-        if (this._findDialogTimeoutId) {
-            GLib.source_remove(this._findDialogTimeoutId);
-            this._findDialogTimeoutId = null;
+
+        // Restore original ensureUnlockDialog method
+        if (this._origEnsureUnlockDialog) {
+            Main.screenShield._ensureUnlockDialog = this._origEnsureUnlockDialog;
+            this._origEnsureUnlockDialog = null;
         }
+
+        // Cleanly disconnect all signal handlers on ThemeContext
+        const themeContext = St.ThemeContext.get_for_stage(global.stage);
+        themeContext.disconnectObject(this);
+
         this._teardown();
+        this._unloadStylesheet();
     }
 
     // ── Discovery ────────────────────────────────────────────────────────────
 
     _findLoginDialog() {
         return Main.screenShield?._dialog || null;
+    }
+
+    _ensureStylesheetLoaded() {
+        const themeContext = St.ThemeContext.get_for_stage(global.stage);
+        const theme = themeContext.get_theme();
+        if (theme) {
+            const stylesheetFile = this._extension.dir.get_child('stylesheet.css');
+            try {
+                theme.load_stylesheet(stylesheetFile);
+                _log('[WACK/GdmManager] Stylesheet loaded successfully');
+            } catch (e) {
+                // Ignore if already loaded
+            }
+        }
+    }
+
+    _unloadStylesheet() {
+        const themeContext = St.ThemeContext.get_for_stage(global.stage);
+        const theme = themeContext.get_theme();
+        if (theme) {
+            const stylesheetFile = this._extension.dir.get_child('stylesheet.css');
+            try {
+                theme.unload_stylesheet(stylesheetFile);
+                _log('[WACK/GdmManager] Stylesheet unloaded');
+            } catch (e) {
+                // Ignore if already unloaded
+            }
+        }
     }
 
     // ── Setup ─────────────────────────────────────────────────────────────────
@@ -205,6 +243,7 @@ export class GdmManager {
     // ── Teardown ──────────────────────────────────────────────────────────────
 
     _teardown() {
+        if (!this._dialog) return;
         const dialog = this._dialog;
 
         if (this._monitorsChangedId) {
@@ -587,14 +626,18 @@ export class GdmManager {
             // Calculate and apply dynamic clock alpha based on the GDM background
             let alphaPromise;
             if (metadata) {
-                alphaPromise = getWallpaperAlpha({
-                    uri: metadata.uri,
-                    isColor: metadata.is_color,
-                    primaryColor: metadata.primary_color,
-                    secondaryColor: metadata.secondary_color,
-                    shadingType: metadata.shading_type,
-                    textLuminance: 1.0,
-                });
+                if (typeof metadata.clockAlpha === 'number') {
+                    alphaPromise = Promise.resolve(metadata.clockAlpha);
+                } else {
+                    alphaPromise = getWallpaperAlpha({
+                        uri: metadata.uri,
+                        isColor: metadata.is_color,
+                        primaryColor: metadata.primary_color,
+                        secondaryColor: metadata.secondary_color,
+                        shadingType: metadata.shading_type,
+                        textLuminance: 1.0,
+                    });
+                }
             } else {
                 try {
                     const bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
