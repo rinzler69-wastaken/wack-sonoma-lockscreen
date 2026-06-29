@@ -276,6 +276,21 @@
     border-radius: 9999px !important;
 }
 
+/* Sync GDM Cupertino cancel button styling with the prompt entry */
+.login-dialog .wack-cupertino-prompt .login-dialog-button.cancel-button {
+    background-color: rgba(236, 236, 236, 0.12) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.login-dialog .wack-cupertino-prompt .login-dialog-button.cancel-button:hover,
+.login-dialog .wack-cupertino-prompt .login-dialog-button.cancel-button:focus {
+    background-color: rgba(236, 236, 236, 0.18) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    box-shadow: none !important;
+}
+
+
 /* Tighten vertical spacing inside the rest-prompt widget */
 .wack-cupertino-rest .login-dialog-prompt-layout {
     spacing: 0 !important;
