@@ -1,4 +1,5 @@
 import GLib from 'gi://GLib';
+import Clutter from 'gi://Clutter';
 
 export const HINT_TIMEOUT = 4; // Seconds before the "swipe to unlock" hint appears
 export const CROSSFADE_TIME = 500; // Animation duration for transitions
@@ -60,4 +61,128 @@ export function getPrettyDate() {
             day: 'numeric',
         });
     }
+}
+
+/**
+ * Parses a GNOME background XML slideshow and returns the active slide file path for the current time.
+ * @param {string} xmlText The raw XML content of the slideshow
+ * @param {number} [colorScheme] Optional color scheme enum (1=dark) for fallback
+ * @returns {string|null} The resolved wallpaper file path or null
+ */
+export function resolveSlideshowXmlContent(xmlText, colorScheme = 0) {
+    if (!xmlText)
+        return null;
+
+    // Parse starttime
+    const yearMatch = xmlText.match(/<year>\s*(\d+)\s*<\/year>/);
+    const monthMatch = xmlText.match(/<month>\s*(\d+)\s*<\/month>/);
+    const dayMatch = xmlText.match(/<day>\s*(\d+)\s*<\/day>/);
+    const hourMatch = xmlText.match(/<hour>\s*(\d+)\s*<\/hour>/);
+    const minuteMatch = xmlText.match(/<minute>\s*(\d+)\s*<\/minute>/);
+    const secondMatch = xmlText.match(/<second>\s*(\d+)\s*<\/second>/);
+
+    const hasStartTime = yearMatch && monthMatch && dayMatch;
+    if (!hasStartTime)
+        return null;
+
+    const year = parseInt(yearMatch[1], 10);
+    const month = parseInt(monthMatch[1], 10) - 1;
+    const day = parseInt(dayMatch[1], 10);
+    const hour = hourMatch ? parseInt(hourMatch[1], 10) : 0;
+    const minute = minuteMatch ? parseInt(minuteMatch[1], 10) : 0;
+    const second = secondMatch ? parseInt(secondMatch[1], 10) : 0;
+
+    const startDate = new Date(year, month, day, hour, minute, second);
+    const startMs = startDate.getTime();
+    const nowMs = Date.now();
+    const elapsedSeconds = Math.max(0, Math.floor((nowMs - startMs) / 1000));
+
+    // Parse elements
+    const items = [];
+    const blockRegex = /<(static|transition)[^>]*>([\s\S]*?)<\/\1>/g;
+    let match;
+    while ((match = blockRegex.exec(xmlText)) !== null) {
+        const type = match[1];
+        const inner = match[2];
+        const durationMatch = inner.match(/<duration>\s*([\d.]+)\s*<\/duration>/);
+        const duration = durationMatch ? parseFloat(durationMatch[1]) : 0;
+
+        if (type === 'static') {
+            const fileMatch = inner.match(/<file>\s*([^<]+)\s*<\/file>/);
+            if (fileMatch) {
+                items.push({
+                    type: 'static',
+                    duration: duration,
+                    file: fileMatch[1].trim()
+                });
+            }
+        } else if (type === 'transition') {
+            const fromMatch = inner.match(/<from>\s*([^<]+)\s*<\/from>/);
+            const toMatch = inner.match(/<to>\s*([^<]+)\s*<\/to>/);
+            if (fromMatch && toMatch) {
+                items.push({
+                    type: 'transition',
+                    duration: duration,
+                    from: fromMatch[1].trim(),
+                    to: toMatch[1].trim()
+                });
+            }
+        }
+    }
+
+    if (items.length === 0)
+        return null;
+
+    let totalCycleDuration = 0;
+    for (const item of items)
+        totalCycleDuration += item.duration;
+
+    if (totalCycleDuration > 0) {
+        const position = elapsedSeconds % totalCycleDuration;
+        let accumulated = 0;
+        for (const item of items) {
+            if (position >= accumulated && position < accumulated + item.duration) {
+                if (item.type === 'static') {
+                    return item.file;
+                } else {
+                    const progress = (position - accumulated) / item.duration;
+                    return progress < 0.5 ? item.from : item.to;
+                }
+            }
+            accumulated += item.duration;
+        }
+    }
+
+    // Fallback if parsing or math fails: pick based on color scheme
+    const files = [];
+    for (const item of items) {
+        if (item.file) files.push(item.file);
+        else if (item.from) files.push(item.from);
+    }
+    if (files.length > 0) {
+        const isDark = (colorScheme === 1);
+        return isDark ? files[files.length - 1] : files[0];
+    }
+
+    return null;
+}
+
+/**
+ * Centrally manages the horizontal centering constraint for clock labels.
+ * @param {Clutter.Actor} label Clock label actor
+ * @param {Clutter.Actor} wrapper Parent/source wrapper actor
+ */
+export function centerClockLabel(label, wrapper) {
+    if (!label || !wrapper) return;
+    const constraintName = 'wack-clock-center-x';
+    const oldConstraint = label.get_constraint(constraintName);
+    if (oldConstraint) {
+        label.remove_constraint(constraintName);
+    }
+    label.add_constraint(new Clutter.AlignConstraint({
+        name: constraintName,
+        source: wrapper,
+        align_axis: Clutter.AlignAxis.X_AXIS,
+        factor: 0.5,
+    }));
 }

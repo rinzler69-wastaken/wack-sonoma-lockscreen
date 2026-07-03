@@ -1,6 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GdkPixbuf from 'gi://GdkPixbuf';
+import { resolveSlideshowXmlContent } from './constants.js';
 
 function _log(msg) {
     console.log(msg);
@@ -78,96 +79,7 @@ export class CrossSessionManager {
                         const [loadSuccess, contents] = srcFile.load_contents(null);
                         if (loadSuccess) {
                             const xmlText = new TextDecoder().decode(contents);
-
-                            // Parse starttime
-                            const yearMatch = xmlText.match(/<year>\s*(\d+)\s*<\/year>/);
-                            const monthMatch = xmlText.match(/<month>\s*(\d+)\s*<\/month>/);
-                            const dayMatch = xmlText.match(/<day>\s*(\d+)\s*<\/day>/);
-                            const hourMatch = xmlText.match(/<hour>\s*(\d+)\s*<\/hour>/);
-                            const minuteMatch = xmlText.match(/<minute>\s*(\d+)\s*<\/minute>/);
-                            const secondMatch = xmlText.match(/<second>\s*(\d+)\s*<\/second>/);
-
-                            const hasStartTime = yearMatch && monthMatch && dayMatch;
-
-                            // Parse elements
-                            const items = [];
-                            const blockRegex = /<(static|transition)[^>]*>([\s\S]*?)<\/\1>/g;
-                            let match;
-                            while ((match = blockRegex.exec(xmlText)) !== null) {
-                                const type = match[1];
-                                const inner = match[2];
-                                const durationMatch = inner.match(/<duration>\s*([\d.]+)\s*<\/duration>/);
-                                const duration = durationMatch ? parseFloat(durationMatch[1]) : 0;
-
-                                if (type === 'static') {
-                                    const fileMatch = inner.match(/<file>\s*([^<]+)\s*<\/file>/);
-                                    if (fileMatch) {
-                                        items.push({
-                                            type: 'static',
-                                            duration: duration,
-                                            file: fileMatch[1].trim()
-                                        });
-                                    }
-                                } else if (type === 'transition') {
-                                    const fromMatch = inner.match(/<from>\s*([^<]+)\s*<\/from>/);
-                                    const toMatch = inner.match(/<to>\s*([^<]+)\s*<\/to>/);
-                                    if (fromMatch && toMatch) {
-                                        items.push({
-                                            type: 'transition',
-                                            duration: duration,
-                                            from: fromMatch[1].trim(),
-                                            to: toMatch[1].trim()
-                                        });
-                                    }
-                                }
-                            }
-
-                            if (hasStartTime && items.length > 0) {
-                                const year = parseInt(yearMatch[1], 10);
-                                const month = parseInt(monthMatch[1], 10) - 1;
-                                const day = parseInt(dayMatch[1], 10);
-                                const hour = hourMatch ? parseInt(hourMatch[1], 10) : 0;
-                                const minute = minuteMatch ? parseInt(minuteMatch[1], 10) : 0;
-                                const second = secondMatch ? parseInt(secondMatch[1], 10) : 0;
-
-                                const startDate = new Date(year, month, day, hour, minute, second);
-                                const startMs = startDate.getTime();
-                                const nowMs = Date.now();
-                                const elapsedSeconds = Math.max(0, Math.floor((nowMs - startMs) / 1000));
-
-                                let totalCycleDuration = 0;
-                                for (const item of items)
-                                    totalCycleDuration += item.duration;
-
-                                if (totalCycleDuration > 0) {
-                                    const position = elapsedSeconds % totalCycleDuration;
-                                    let accumulated = 0;
-                                    for (const item of items) {
-                                        if (position >= accumulated && position < accumulated + item.duration) {
-                                            if (item.type === 'static') {
-                                                resolvedSlidePath = item.file;
-                                            } else {
-                                                const progress = (position - accumulated) / item.duration;
-                                                resolvedSlidePath = progress < 0.5 ? item.from : item.to;
-                                            }
-                                            break;
-                                        }
-                                        accumulated += item.duration;
-                                    }
-                                }
-                            }
-
-                            // Fallback to first/last file if parsing failed
-                            if (!resolvedSlidePath && items.length > 0) {
-                                const isDark = (colorScheme === 1);
-                                const files = [];
-                                for (const item of items) {
-                                    if (item.file) files.push(item.file);
-                                    else if (item.from) files.push(item.from);
-                                }
-                                if (files.length > 0)
-                                    resolvedSlidePath = isDark ? files[files.length - 1] : files[0];
-                            }
+                            resolvedSlidePath = resolveSlideshowXmlContent(xmlText, colorScheme);
                         }
                     }
                 } catch (xmlErr) {

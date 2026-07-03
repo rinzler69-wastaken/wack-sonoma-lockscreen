@@ -18,6 +18,7 @@ import {
     DATE_LABEL_HEIGHT,
     CUPERTINO_PROMPT_VERTICAL_FRACTION,
     GDM_CROSSFADE_DURATION,
+    centerClockLabel,
 } from './constants.js';
 
 function _log(msg) {
@@ -180,8 +181,10 @@ export class GdmManager {
         this._timeLabel = timeLabel;
         this._connectAllocation(dialog, () => this._positionClock());
         this._connectAllocation(this._gdmClockWrapper, () => this._positionClock());
-        this._connectAllocation(dateLabel, () => this._centerClockLabel(dateLabel));
-        this._connectAllocation(timeLabel, () => this._centerClockLabel(timeLabel));
+
+        // Setup clock centering constraints
+        centerClockLabel(dateLabel, this._gdmClockWrapper);
+        centerClockLabel(timeLabel, this._gdmClockWrapper);
 
         this._timeLabel.connectObject('notify::text', () => this._positionClock(), this);
 
@@ -362,15 +365,6 @@ export class GdmManager {
         return { w: alloc.x2 - alloc.x1, h: alloc.y2 - alloc.y1 };
     }
 
-    _centerClockLabel(label) {
-        if (!label || !this._gdmClockWrapper) return;
-        const wrapperW = this._gdmClockWrapper.width;
-        if (wrapperW === 0) return; // not allocated yet, wait for next pass
-        const [, natW] = label.get_preferred_width(-1);
-        if (natW === 0) return; // label not measured yet
-        label.set_x(Math.floor(wrapperW / 2 - natW / 2));
-    }
-
     _positionClock() {
         if (!this._gdmClock || !this._gdmClockWrapper || !this._dialog) return;
         const alloc = this._dialog.get_allocation_box();
@@ -383,9 +377,6 @@ export class GdmManager {
 
         this._gdmClock._dateOutput.set_y(0);
         this._gdmClock._time.set_y(DATE_LABEL_HEIGHT);
-
-        this._centerClockLabel(this._gdmClock._dateOutput);
-        this._centerClockLabel(this._gdmClock._time);
     }
 
     _positionUserList() {

@@ -1,6 +1,7 @@
 import Gio from 'gi://Gio';
 import GdkPixbuf from 'gi://GdkPixbuf';
 import GLib from 'gi://GLib';
+import { resolveSlideshowXmlContent } from './constants.js';
 
 const userName = GLib.get_user_name();
 const CACHE_FILE = `/var/tmp/wack-wallpaper-alpha-cache-${userName}.json`;
@@ -132,68 +133,9 @@ function resolveSlideshowXml(xmlPath) {
                 }
 
                 const xmlStr = new TextDecoder('utf-8').decode(content);
-
-                // 1. Parse starttime
-                const starttimeMatch = xmlStr.match(/<starttime>([\s\S]*?)<\/starttime>/);
-                let startYear = 2020, startMonth = 0, startDay = 1, startHour = 0, startMin = 0, startSec = 0;
-                if (starttimeMatch) {
-                    const inner = starttimeMatch[1];
-                    const yearM = inner.match(/<year>(\d+)<\/year>/);
-                    const monthM = inner.match(/<month>(\d+)<\/month>/);
-                    const dayM = inner.match(/<day>(\d+)<\/day>/);
-                    const hourM = inner.match(/<hour>(\d+)<\/hour>/);
-                    const minM = inner.match(/<minute>(\d+)<\/minute>/);
-                    const secM = inner.match(/<second>(\d+)<\/second>/);
-                    if (yearM) startYear = parseInt(yearM[1], 10);
-                    if (monthM) startMonth = parseInt(monthM[1], 10) - 1;
-                    if (dayM) startDay = parseInt(dayM[1], 10);
-                    if (hourM) startHour = parseInt(hourM[1], 10);
-                    if (minM) startMin = parseInt(minM[1], 10);
-                    if (secM) startSec = parseInt(secM[1], 10);
-                }
-                const startDate = new Date(startYear, startMonth, startDay, startHour, startMin, startSec);
-
-                // 2. Parse static and transition blocks in order
-                const blockRegex = /<(static|transition)[^>]*>([\s\S]*?)<\/\1>/g;
-                const blocks = [];
-                let totalDuration = 0;
-                let match;
-                while ((match = blockRegex.exec(xmlStr)) !== null) {
-                    const type = match[1];
-                    const inner = match[2];
-                    const durM = inner.match(/<duration>([\d.]+)<\/duration>/);
-                    const duration = durM ? parseFloat(durM[1]) : 0;
-
-                    let fileStr = '';
-                    if (type === 'static') {
-                        const fileM = inner.match(/<file>([\s\S]*?)<\/file>/);
-                        fileStr = fileM ? fileM[1].trim() : '';
-                    } else {
-                        const fromM = inner.match(/<from>([\s\S]*?)<\/from>/);
-                        fileStr = fromM ? fromM[1].trim() : '';
-                    }
-
-                    blocks.push({ type, duration, file: fileStr });
-                    totalDuration += duration;
-                }
-
-                if (totalDuration > 0 && blocks.length > 0) {
-                    const now = new Date();
-                    let diffSeconds = (now.getTime() - startDate.getTime()) / 1000.0;
-                    let offset = diffSeconds % totalDuration;
-                    if (offset < 0)
-                        offset += totalDuration;
-
-                    for (const block of blocks) {
-                        if (offset <= block.duration) {
-                            resolve(block.file);
-                            return;
-                        }
-                        offset -= block.duration;
-                    }
-                    resolve(blocks[0].file);
-                    return;
-                }
+                const resolved = resolveSlideshowXmlContent(xmlStr);
+                resolve(resolved);
+                return;
             } catch (e) {
                 console.error(`[WACK/AlphaManager] Failed to resolve XML slideshow: ${e}`);
             }

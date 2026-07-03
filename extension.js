@@ -46,6 +46,7 @@ import {
     CUPERTINO_UNLOCK_FADE_DURATION,
     CROSSFADE_SPEED_SLOW,
     CROSSFADE_SPEED_FAST,
+    centerClockLabel,
 } from './constants.js';
 
 function _log(msg) {
@@ -344,9 +345,9 @@ export default class WackLockscreenClockExtension extends Extension {
         this._timeLabel = timeLabel;
 
         timeLabel.connectObject('notify::text', () => this._positionClock(), this);
-        // Allocation changes are now handled cleanly by Clutter constraints
-        timeLabel.connectObject('notify::allocation', () => this._centerClockLabel(timeLabel), this);
-        dateLabel.connectObject('notify::allocation', () => this._centerClockLabel(dateLabel), this);
+        // Setup clock centering constraints
+        centerClockLabel(timeLabel, this._clockWrapper);
+        centerClockLabel(dateLabel, this._clockWrapper);
 
         this._positionClock();
 
@@ -1277,25 +1278,6 @@ export default class WackLockscreenClockExtension extends Extension {
         wrapper.set_position(monitorX, topY);
         wrapper.set_width(monitorWidth);
         wrapper.set_pivot_point(0.5, 0.5);
-
-        this._centerClockLabel(dateLabel);
-        this._centerClockLabel(timeLabel);
-    }
-
-    // ── Modernized: Constraint-based Centering ────────────────────────────
-    _centerClockLabel(label) {
-        if (!label || !this._clockWrapper) return;
-        const constraintName = 'wack-clock-center-x';
-        const oldConstraint = label.get_constraint(constraintName);
-        if (oldConstraint) {
-            label.remove_constraint(constraintName);
-        }
-        label.add_constraint(new Clutter.AlignConstraint({
-            name: constraintName,
-            source: this._clockWrapper,
-            align_axis: Clutter.AlignAxis.X_AXIS,
-            factor: 0.5,
-        }));
     }
 
     _positionHint() {
