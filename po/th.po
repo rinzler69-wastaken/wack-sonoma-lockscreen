@@ -62,6 +62,15 @@ msgstr "เค้าโครงหน้าจอล็อกที่ได้
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "นาฬิกาสไตล์ macOS Sonoma บนเค้าโครงและโฟลว์การทำงานของ GNOME แบบดั้งเดิม"
 
+msgid "Unlock Crossfade"
+msgstr "การจางหายขณะปลดล็อก"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "จางหน้าจอล็อกออกพร้อมกับเดสก์ท็อปเมื่อปลดล็อก (ปิดใช้งานโดยอัตโนมัติในโหมดประหยัดพลังงาน)"
+
+msgid "Crossfade Speed"
+msgstr "ความเร็วในการจางหาย"
+
 msgid "Cupertino Unlock Fade"
 msgstr "การจางหายขณะปลดล็อกคูเปอร์ติโน"
 

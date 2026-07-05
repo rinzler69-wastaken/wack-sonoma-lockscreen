@@ -62,6 +62,15 @@ msgstr "Ein vollständiges, von macOS Sonoma inspiriertes Sperrbildschirm-Layout
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Uhr im macOS-Sonoma-Stil über dem klassischen, GNOME-konformen Layout und Ablauf."
 
+msgid "Unlock Crossfade"
+msgstr "Entsperr-Ausblendung"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Blendet den Sperrbildschirm beim Entsperren mit dem Desktop aus (im Energiesparmodus automatisch deaktiviert)."
+
+msgid "Crossfade Speed"
+msgstr "Ausblendungsgeschwindigkeit"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Cupertino Entsperr-Ausblendung"
 

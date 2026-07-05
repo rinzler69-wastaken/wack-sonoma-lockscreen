@@ -62,6 +62,15 @@ msgstr "פריסת מסך נעילה מלאה בהשראת macOS Sonoma (לחץ 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "שעון בסגנון macOS Sonoma מעל פריסת וזרימת ה־GNOME הקלאסית המוכרת."
 
+msgid "Unlock Crossfade"
+msgstr "עמעום פתיחה"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "עמעום מסך הנעילה יחד עם שולחן העבודה בעת פתיחת הנעילה (מנוטרל אוטומטית במצב חיסכון בחשמל)."
+
+msgid "Crossfade Speed"
+msgstr "מהירות עמעום"
+
 msgid "Cupertino Unlock Fade"
 msgstr "עמעום פתיחה בסגנון קופרטינו"
 

@@ -62,6 +62,15 @@ msgstr "Täydellinen macOS Sonoma -tyylinen lukitusnäytön asettelu (vaihda kä
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "macOS Sonoma -tyylinen kello perinteisen, GNOME-yhteensopivan asettelun ja kulun päällä."
 
+msgid "Unlock Crossfade"
+msgstr "Lukituksen avauksen häivytys"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Häivyttää lukitusnäytön työpöydän kanssa lukitusta avattaessa (poistetaan automaattisesti käytöstä virransäästötilassa)."
+
+msgid "Crossfade Speed"
+msgstr "Häivytysnopeus"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Cupertinon lukituksen avauksen häivytys"
 

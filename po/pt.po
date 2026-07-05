@@ -62,6 +62,15 @@ msgstr "Layout de tela de bloqueio completo inspirado no macOS Sonoma (clique no
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Relógio estilo macOS Sonoma sobre o layout e fluxo clássico compatível com o GNOME."
 
+msgid "Unlock Crossfade"
+msgstr "Esmaecimento de desbloqueio"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Esmaece a tela de bloqueio com a área de trabalho ao desbloquear (desativado automaticamente no modo de economia de energia)."
+
+msgid "Crossfade Speed"
+msgstr "Velocidade do esmaecimento"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Esmaecimento de desbloqueio Cupertino"
 

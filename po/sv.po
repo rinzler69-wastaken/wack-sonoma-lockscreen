@@ -62,6 +62,15 @@ msgstr "En komplett macOS Sonoma-inspirerad låsskärmslayout (klicka på använ
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "macOS Sonoma-stilklocka över den traditionella GNOME-kompatibla layouten och flödet."
 
+msgid "Unlock Crossfade"
+msgstr "Avtoning vid upplåsning"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Tona ut låsskärmen med skrivbordet när du låser upp (inaktiveras automatiskt i energisparläge)."
+
+msgid "Crossfade Speed"
+msgstr "Avtoningshastighet"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Cupertino-avtoning vid upplåsning"
 

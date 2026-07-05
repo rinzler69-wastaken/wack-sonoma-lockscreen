@@ -62,6 +62,15 @@ msgstr "Diseño completo inspirado en macOS Sonoma (haga clic en el icono de usu
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Reloj estilo macOS Sonoma sobre el diseño y flujo clásico compatible con GNOME."
 
+msgid "Unlock Crossfade"
+msgstr "Desvanecimiento de desbloqueo"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Desvanece la pantalla de bloqueo con el escritorio al desbloquear (desactivado automáticamente en modo de ahorro de energía)."
+
+msgid "Crossfade Speed"
+msgstr "Velocidad de desvanecimiento"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Desvanecimiento de desbloqueo Cupertino"
 

@@ -62,6 +62,15 @@ msgstr "Een complete, op macOS Sonoma geïnspireerde lay-out (klik op het gebrui
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Klok in macOS Sonoma-stijl over de klassieke, met GNOME compatibele lay-out en stroom."
 
+msgid "Unlock Crossfade"
+msgstr "Ontgrendelfade"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Laat het vergrendelscherm vervagen met het bureaublad bij het ontgrendelen (automatisch uitgeschakeld in de energiebesparingsmodus)."
+
+msgid "Crossfade Speed"
+msgstr "Fadesnelheid"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Cupertino ontgrendelfade"
 

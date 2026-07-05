@@ -18,7 +18,7 @@
     <key name="cupertino-unlock-fade" type="b">
       <default>true</default>
       <summary>Cupertino unlock fade animation</summary>
-      <description>If true, unlocking in Cupertino mode plays a fade-out animation with a panel slide-in. Disable for an instant unlock.</description>
+      <description>If true, unlocking in Cupertino mode plays a fade-out animation with a panel slide-in (automatically disabled when Power Saver mode is active). Disable for an instant unlock.</description>
     </key>
 
     <key name="cupertino-crossfade-speed" type="s">

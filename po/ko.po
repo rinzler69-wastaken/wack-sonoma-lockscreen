@@ -62,6 +62,15 @@ msgstr "macOS Sonoma 스타일의 완전한 잠금 화면 레이아웃(사용자
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "기존 GNOME 레이아웃 및 흐름 위에 macOS Sonoma 스타일 시계 적용."
 
+msgid "Unlock Crossfade"
+msgstr "잠금 해제 크로스페이드"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "잠금 해제 시 잠금 화면을 데스크톱과 크로스페이드합니다(절전 모드에서는 자동으로 비활성화됨)."
+
+msgid "Crossfade Speed"
+msgstr "크로스페이드 속도"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Cupertino 잠금 해제 페이드"
 

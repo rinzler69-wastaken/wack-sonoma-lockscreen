@@ -62,6 +62,15 @@ msgstr "مظهر كامل لـ قفل الشاشة مستوحى من macOS Sonom
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "ساعة بنمط macOS Sonoma فوق واجهة مستخدم وسير عمل GNOME الافتراضي."
 
+msgid "Unlock Crossfade"
+msgstr "تلاشي فتح القفل"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "تلاشي شاشة القفل مع سطح المكتب عند فتح القفل (يتم إيقاف تشغيله تلقائيًا في وضع توفير الطاقة)."
+
+msgid "Crossfade Speed"
+msgstr "سرعة التلاشي"
+
 msgid "Cupertino Unlock Fade"
 msgstr "تلاشي فتح قفل كوبرتينו"
 
