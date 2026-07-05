@@ -62,6 +62,15 @@ msgstr ""
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr ""
 
+msgid "Unlock Crossfade"
+msgstr ""
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr ""
+
+msgid "Crossfade Speed"
+msgstr ""
+
 msgid "Cupertino Unlock Fade"
 msgstr ""
 

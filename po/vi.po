@@ -62,6 +62,15 @@ msgstr "Bố cục màn hình khóa lấy cảm hứng từ macOS Sonoma hoàn c
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Đồng hồ kiểu macOS Sonoma trên bố cục và luồng hoạt động chuẩn GNOME cổ điển."
 
+msgid "Unlock Crossfade"
+msgstr "Làm mờ khi mở khóa"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Làm mờ màn hình khóa với màn hình chính khi mở khóa (tự động tắt trong chế độ Tiết kiệm pin)."
+
+msgid "Crossfade Speed"
+msgstr "Tốc độ làm mờ"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Làm mờ khi mở khóa Cupertino"
 

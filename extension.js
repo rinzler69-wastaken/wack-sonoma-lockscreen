@@ -57,6 +57,14 @@ function _logError(msg) {
     console.error(msg);
 }
 
+const PowerProfilesIface = `<node>
+<interface name="net.hadess.PowerProfiles">
+    <property name="ActiveProfile" type="s" access="readwrite"/>
+</interface>
+</node>`;
+
+const PowerProfilesProxy = Gio.DBusProxy.makeProxyWrapper(PowerProfilesIface);
+
 export default class WackLockscreenClockExtension extends Extension {
     // ── Single Source of Truth for Prompt State ───────────────────────────
     get _promptActive() {
@@ -64,6 +72,27 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     enable() {
+        this._powerProfilesProxy = null;
+        try {
+            this._powerProfilesProxy = new PowerProfilesProxy(
+                Gio.DBus.system,
+                'net.hadess.PowerProfiles',
+                '/net/hadess/PowerProfiles',
+                (proxy, error) => {
+                    if (error) {
+                        _logError(`WACK Lockscreen: PowerProfiles proxy error: ${error.message}`);
+                        return;
+                    }
+                    this._powerProfilesProxy.connectObject('g-properties-changed', () => {
+                        this._syncCupertinoUnlockFade();
+                    }, this);
+                    this._syncCupertinoUnlockFade();
+                }
+            );
+        } catch (e) {
+            _logError(`WACK Lockscreen: Failed to initialize PowerProfiles DBus proxy: ${e.message}`);
+        }
+
         this._gdmManager = new GdmManager(this);
         this._gdmManager.enable();
         this._syncCrossSessionManager();
@@ -655,7 +684,10 @@ export default class WackLockscreenClockExtension extends Extension {
 
         const wackShell = Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
         const wackShellEnabled = wackShell && wackShell.state === 1;
-        this._cupertinoUnlockFade = wackShellEnabled && this._settings.get_boolean('cupertino-unlock-fade');
+        const isPowerSaver = this._powerProfilesProxy?.ActiveProfile === 'power-saver';
+        this._cupertinoUnlockFade = wackShellEnabled &&
+                                    this._settings.get_boolean('cupertino-unlock-fade') &&
+                                    !isPowerSaver;
     }
 
     _loadSettings() {
@@ -716,9 +748,7 @@ export default class WackLockscreenClockExtension extends Extension {
         syncEscToSleep();
 
         const syncCupertinoUnlockFade = () => {
-            const wackShell = Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
-            const wackShellEnabled = wackShell && wackShell.state === 1;
-            this._cupertinoUnlockFade = wackShellEnabled && this._settings.get_boolean('cupertino-unlock-fade');
+            this._syncCupertinoUnlockFade();
         };
         syncCupertinoUnlockFade();
 
@@ -1506,6 +1536,11 @@ export default class WackLockscreenClockExtension extends Extension {
         if (this._settings) {
             this._settings.disconnectObject(this);
             this._settings = null;
+        }
+
+        if (this._powerProfilesProxy) {
+            this._powerProfilesProxy.disconnectObject(this);
+            this._powerProfilesProxy = null;
         }
 
         if (this._notifSettings) {

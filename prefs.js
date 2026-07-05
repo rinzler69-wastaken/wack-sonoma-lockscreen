@@ -280,7 +280,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         const unlockFadeRow = new Adw.ExpanderRow({
             title: _('Unlock Crossfade'),
-            subtitle: _('Crossfade the lockscreen with desktop when unlocking.'),
+            subtitle: _('Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode).'),
             show_enable_switch: true,
             enable_expansion: settings.get_boolean('cupertino-unlock-fade'),
         });
@@ -375,7 +375,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             const wackShellInstalled = _isWackShellInstalled();
             const wackShellEnabled = _isWackShellEnabled();
 
-            let subtitleText = _('Crossfade the lockscreen with desktop when unlocking.');
+            let subtitleText = _('Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode).');
             if (!wackShellInstalled)
                 subtitleText += ' ' + _('Requires WACK Shell to be installed and enabled.');
             else if (!wackShellEnabled)

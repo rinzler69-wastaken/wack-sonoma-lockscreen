@@ -62,6 +62,15 @@ msgstr "Kompletny układ ekranu blokady inspirowany systemem macOS Sonoma (klikn
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Zegar w stylu macOS Sonoma nałożony na klasyczny, zgodny z GNOME układ i przepływ."
 
+msgid "Unlock Crossfade"
+msgstr "Przenikanie odblokowania"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Przenika ekran blokady z pulpitem podczas odblokowywania (automatycznie wyłączane w trybie oszczędzania energii)."
+
+msgid "Crossfade Speed"
+msgstr "Prędkość przenikania"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Zanikanie odblokowania Cupertino"
 

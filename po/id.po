@@ -62,6 +62,15 @@ msgstr "Tata letak layar kunci lengkap yang terinspirasi macOS Sonoma (Klik ikon
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Jam bergaya macOS Sonoma di atas tata letak dan alur klasik yang sesuai dengan GNOME."
 
+msgid "Unlock Crossfade"
+msgstr "Pudar Buka Kunci"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Pudarkan layar kunci dengan desktop saat membuka kunci (dinonaktifkan secara otomatis dalam mode Penghemat Daya)."
+
+msgid "Crossfade Speed"
+msgstr "Kecepatan Pudar"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Pudar Buka Kunci Cupertino"
 

@@ -62,6 +62,15 @@ msgstr "Полный макет экрана блокировки в стиле 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Часы в стиле macOS Sonoma поверх стандартного интерфейса и логики работы GNOME."
 
+msgid "Unlock Crossfade"
+msgstr "Затухание при разблокировке"
+
+msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
+msgstr "Плавное затухание экрана блокировки при переходе к рабочему столу при разблокировке (автоматически отключается в режиме энергосбережения)."
+
+msgid "Crossfade Speed"
+msgstr "Скорость затухания"
+
 msgid "Cupertino Unlock Fade"
 msgstr "Затухание разблокировки Купертино"
 
