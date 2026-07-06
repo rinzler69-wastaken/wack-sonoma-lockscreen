@@ -4,7 +4,12 @@ import GLib from 'gi://GLib';
 import St from 'gi://St';
 import Gdm from 'gi://Gdm';
 import Gettext from 'gettext';
+import GObject from 'gi://GObject';
+import Shell from 'gi://Shell';
 import { Extension, InjectionManager } from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import Graphene from 'gi://Graphene';
+import * as Util from 'resource:///org/gnome/shell/misc/util.js';
 
 import { UnblankManager } from './unblank.js';
 import {
@@ -65,10 +70,253 @@ const PowerProfilesIface = `<node>
 
 const PowerProfilesProxy = Gio.DBusProxy.makeProxyWrapper(PowerProfilesIface);
 
+const InertPanelButton = GObject.registerClass(
+class InertPanelButton extends PanelMenu.Button {
+    _init(styleClass, child) {
+        super._init(0.5, styleClass || 'InertPanelButton', true);
+        this.reactive = false;
+        this.can_focus = false;
+        if (styleClass)
+            this.add_style_class_name(styleClass);
+        if (child)
+            this.add_child(child);
+    }
+});
+
+const INACTIVE_WORKSPACE_DOT_SCALE = 0.75;
+const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+
+const WorkspaceDot = GObject.registerClass({
+    Properties: {
+        'expansion': GObject.ParamSpec.double('expansion', '', '',
+            GObject.ParamFlags.READWRITE,
+            0.0, 1.0, 0.0),
+        'width-multiplier': GObject.ParamSpec.double(
+            'width-multiplier', '', '',
+            GObject.ParamFlags.READWRITE,
+            1.0, 10.0, 1.0),
+    },
+}, class WorkspaceDot extends Clutter.Actor {
+    _init(params = {}) {
+        super._init({
+            pivot_point: new Graphene.Point({ x: 0.5, y: 0.5 }),
+            ...params,
+        });
+
+        this._dot = new St.Widget({
+            style_class: 'workspace-dot',
+            y_align: Clutter.ActorAlign.CENTER,
+            pivot_point: new Graphene.Point({ x: 0.5, y: 0.5 }),
+            request_mode: Clutter.RequestMode.WIDTH_FOR_HEIGHT,
+        });
+        this.add_child(this._dot);
+
+        this.connect('notify::width-multiplier', () => this.queue_relayout());
+        this.connect('notify::expansion', () => {
+            this._updateVisuals();
+            this.queue_relayout();
+        });
+        this._updateVisuals();
+
+        this._destroying = false;
+    }
+
+    _updateVisuals() {
+        const { expansion } = this;
+        this._dot.set({
+            opacity: Util.lerp(0.50, 1.0, expansion) * 255,
+            scaleX: Util.lerp(INACTIVE_WORKSPACE_DOT_SCALE, 1.0, expansion),
+            scaleY: Util.lerp(INACTIVE_WORKSPACE_DOT_SCALE, 1.0, expansion),
+        });
+    }
+
+    vfunc_get_preferred_width(forHeight) {
+        const factor = Util.lerp(1.0, this.widthMultiplier, this.expansion);
+        return this._dot.get_preferred_width(forHeight).map(v => Math.round(v * factor));
+    }
+
+    vfunc_get_preferred_height(forWidth) {
+        return this._dot.get_preferred_height(forWidth);
+    }
+
+    vfunc_allocate(box) {
+        this.set_allocation(box);
+        box.set_origin(0, 0);
+        this._dot.allocate(box);
+    }
+
+    scaleIn() {
+        this.set({
+            scaleX: 0.0,
+            scaleY: 0.0,
+        });
+        this.ease({
+            duration: 250,
+            mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
+            scale_x: 1.0,
+            scale_y: 1.0,
+        });
+    }
+
+    scaleOutAndDestroy() {
+        this._destroying = true;
+        this.ease({
+            duration: 500,
+            mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
+            scale_x: 0.0,
+            scale_y: 0.0,
+            onComplete: () => this.destroy(),
+        });
+    }
+
+    get destroying() {
+        return this._destroying;
+    }
+});
+
+const WorkspaceIndicators = GObject.registerClass(
+class WorkspaceIndicators extends St.BoxLayout {
+    _init() {
+        super._init({ style_class: 'activities-layout' });
+
+        this._workspacesAdjustment = Main.createWorkspacesAdjustment(this);
+        this._workspacesAdjustment.connectObject(
+            'notify::value', () => this._updateExpansion(),
+            'notify::upper', () => this._recalculateDots(),
+            this
+        );
+
+        for (let i = 0; i < this._workspacesAdjustment.upper; i++)
+            this.insert_child_at_index(new WorkspaceDot(), i);
+        this._updateExpansion();
+    }
+
+    _getActiveIndicators() {
+        return [...this].filter(i => !i.destroying);
+    }
+
+    _recalculateDots() {
+        const activeIndicators = this._getActiveIndicators();
+        const nIndicators = activeIndicators.length;
+        const targetIndicators = this._workspacesAdjustment.upper;
+
+        let remaining = Math.abs(nIndicators - targetIndicators);
+        while (remaining--) {
+            if (nIndicators < targetIndicators) {
+                const indicator = new WorkspaceDot();
+                this.add_child(indicator);
+                indicator.scaleIn();
+            } else {
+                const indicator = activeIndicators[nIndicators - remaining - 1];
+                indicator.scaleOutAndDestroy();
+            }
+        }
+
+        this._updateExpansion();
+    }
+
+    _updateExpansion() {
+        const nIndicators = this._getActiveIndicators().length;
+        const activeWorkspace = this._workspacesAdjustment.value;
+
+        let widthMultiplier;
+        if (nIndicators <= 3)
+            widthMultiplier = 3.75;
+        else if (nIndicators <= 5)
+            widthMultiplier = 3.25;
+        else
+            widthMultiplier = 2.75;
+
+        this.get_children().forEach((indicator, index) => {
+            const distance = Math.abs(index - activeWorkspace);
+            indicator.expansion = clamp(1 - distance, 0, 1);
+            indicator.widthMultiplier = widthMultiplier;
+        });
+    }
+
+    destroy() {
+        this._workspacesAdjustment?.disconnectObject(this);
+        this._workspacesAdjustment = null;
+        super.destroy();
+    }
+});
+
+const WorkspaceReplica = GObject.registerClass(
+class WorkspaceReplica extends InertPanelButton {
+    _init() {
+        super._init('wack-workspace-button');
+        this.set({
+            name: 'panelActivities',
+        });
+
+        this._container = new St.BoxLayout({ style_class: 'activities-layout' });
+        this.add_child(this._container);
+
+        this._workspaceBox = new St.Bin({
+            y_align: Clutter.ActorAlign.CENTER,
+        });
+        this._container.add_child(this._workspaceBox);
+
+        this._indicators = new WorkspaceIndicators();
+        this._workspaceBox.set_child(this._indicators);
+    }
+
+    destroy() {
+        this._indicators.destroy();
+        super.destroy();
+    }
+});
+
+const AppMenuReplica = GObject.registerClass(
+class AppMenuReplica extends InertPanelButton {
+    _init(appName, appIconTexture) {
+        super._init('wack-app-menu-button');
+        this.set({
+            name: 'appMenu',
+        });
+
+        const bin = new St.Bin({ name: 'appMenu' });
+        this.add_child(bin);
+
+        const container = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
+        bin.set_child(container);
+
+        this._iconBox = new St.Bin({
+            style_class: 'app-menu-icon',
+            y_align: Clutter.ActorAlign.CENTER,
+            style: 'margin-right: 4px; -st-icon-style: symbolic',
+        });
+        container.add_child(this._iconBox);
+
+        if (appIconTexture) {
+            this._iconBox.set_child(appIconTexture);
+        }
+
+        const label = new St.Label({
+            text: appName,
+            y_expand: true,
+            y_align: Clutter.ActorAlign.CENTER,
+        });
+        container.add_child(label);
+    }
+});
+
 export default class WackLockscreenClockExtension extends Extension {
     // ── Single Source of Truth for Prompt State ───────────────────────────
     get _promptActive() {
         return (this._dialog?._adjustment?.value ?? 0) > 0;
+    }
+
+    _updateActiveApp() {
+        let workspaceManager = global.workspace_manager;
+        let workspace = workspaceManager.get_active_workspace();
+        let tracker = Shell.WindowTracker.get_default();
+        let focusedApp = tracker.focus_app;
+        if (focusedApp && focusedApp.is_on_workspace(workspace)) {
+            this._lastActiveApp = focusedApp;
+        } else {
+            this._lastActiveApp = null;
+        }
     }
 
     enable() {
@@ -97,12 +345,15 @@ export default class WackLockscreenClockExtension extends Extension {
         this._gdmManager.enable();
         this._syncCrossSessionManager();
 
-        if (!this._wackShellStateChangedId) {
-            this._wackShellStateChangedId = Main.extensionManager.connect(
-                'extension-state-changed',
-                this._onWackShellExtensionStateChanged.bind(this)
-            );
-        }
+        this._shellSettings = new Gio.Settings({ schema_id: 'org.gnome.shell' });
+        this._shellSettings.connectObject('changed::enabled-extensions', () => {
+            this._syncCupertinoUnlockFade();
+        }, this);
+
+        this._lastActiveApp = null;
+        Shell.WindowTracker.get_default().connectObject('notify::focus-app', () => this._updateActiveApp(), this);
+        global.window_manager.connectObject('switch-workspace', () => this._updateActiveApp(), this);
+        this._updateActiveApp();
 
         const dialog = Main.screenShield._dialog;
         _log(`[WACK] enable() called, dialog=${!!dialog}`);
@@ -656,12 +907,7 @@ export default class WackLockscreenClockExtension extends Extension {
         }
     }
 
-    _onWackShellExtensionStateChanged(_obj, ext) {
-        if (ext.uuid !== 'wack-shell@rinzler69-wastaken.github.com')
-            return;
 
-        this._syncCupertinoUnlockFade();
-    }
 
     _syncCrossSessionManager() {
         if (Main.sessionMode.currentMode === 'gdm') {
@@ -679,11 +925,13 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     _syncCupertinoUnlockFade() {
-        if (!this._settings)
+        if (!this._settings || !this._shellSettings)
             return;
 
+        const enabledExtensions = this._shellSettings.get_strv('enabled-extensions');
         const wackShell = Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
-        const wackShellEnabled = wackShell && wackShell.state === 1;
+        const wackShellEnabled = enabledExtensions.includes('wack-shell@rinzler69-wastaken.github.com') ||
+                                 (wackShell && wackShell.state === 1);
         const isPowerSaver = this._powerProfilesProxy?.ActiveProfile === 'power-saver';
         this._cupertinoUnlockFade = this._settings.get_string('lockscreen-mode') === 'cupertino' &&
                                     wackShellEnabled &&
@@ -763,12 +1011,6 @@ export default class WackLockscreenClockExtension extends Extension {
                 this._cupertinoUnlockFadeDuration = CUPERTINO_UNLOCK_FADE_DURATION;
         };
         syncCrossfadeSpeed();
-
-        this._wackShellStateChangedId = Main.extensionManager.connect('extension-state-changed', (_obj, ext) => {
-            if (ext.uuid === 'wack-shell@rinzler69-wastaken.github.com') {
-                syncCupertinoUnlockFade();
-            }
-        });
 
         this._settings.connectObject(
             'changed::clock-animation', syncClockAnimation,
@@ -1347,8 +1589,201 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         Main.sessionMode.hasWindows = true;
         Main.sessionMode.hasWorkspaces = true;
+
+        this._tempPanelPlaceholders = [];
+
+        const wackShell = Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
+        const wackShellEnabled = wackShell && (
+            wackShell.state === 1 || // ExtensionState.ACTIVE
+            (this._shellSettings && this._shellSettings.get_strv('enabled-extensions').includes('wack-shell@rinzler69-wastaken.github.com'))
+        );
+        let leftPanel = ['activities'];
+
+        if (wackShellEnabled && wackShell) {
+            try {
+                let wackSettings = null;
+                if (wackShell.stateObj && wackShell.stateObj._settings) {
+                    wackSettings = wackShell.stateObj._settings;
+                } else {
+                    try {
+                        wackSettings = new Gio.Settings({ schema_id: 'org.gnome.shell.extensions.wack-shell' });
+                    } catch (err) {
+                        try {
+                            const schemasDir = wackShell.dir.get_child('schemas');
+                            if (schemasDir.query_exists(null)) {
+                                const schemaSource = Gio.SettingsSchemaSource.new_from_directory(
+                                    schemasDir.get_path(),
+                                    Gio.SettingsSchemaSource.get_default(),
+                                    false
+                                );
+                                const schemaObj = schemaSource.lookup('org.gnome.shell.extensions.wack-shell', true);
+                                if (schemaObj) {
+                                    wackSettings = new Gio.Settings({ settings_schema: schemaObj });
+                                }
+                            }
+                        } catch (errInner) {
+                            console.error('[WACK Lockscreen] Failed to load schema from directory', errInner);
+                        }
+                    }
+                }
+
+                if (wackSettings) {
+                    if (global.wack_panel_cached_classes) {
+                        Main.panel.remove_style_class_name('light-contrast');
+
+                        const classes = global.wack_panel_cached_classes.split(' ');
+                        for (const cls of classes) {
+                            if (cls && cls !== 'light-contrast') {
+                                Main.panel.add_style_class_name(cls);
+                            }
+                        }
+
+                        if (classes.includes('panel-proximity') && global.wack_panel_cached_proximity_bg && global.wack_panel_cached_proximity_fg) {
+                            Main.panel.set_style(`background-color: ${global.wack_panel_cached_proximity_bg} !important; color: ${global.wack_panel_cached_proximity_fg} !important;`);
+                        } else if (global.wack_panel_cached_style) {
+                            Main.panel.set_style(global.wack_panel_cached_style);
+                        } else {
+                            Main.panel.set_style(null);
+                        }
+
+                        if (classes.includes('panel-proximity') && wackShell.stateObj) {
+                            this._origWackClearPanelStyle = wackShell.stateObj._clearPanelStyle;
+                            wackShell.stateObj._clearPanelStyle = () => {};
+                        }
+                    }
+                    const showLogo = wackSettings.get_boolean('show-logo-menu');
+                    const showWorkspace = wackSettings.get_boolean('show-workspace-widget');
+                    const showAppMenu = wackSettings.get_boolean('show-app-menu');
+
+                    if (showLogo || showWorkspace || showAppMenu) {
+                        leftPanel = [];
+                    }
+
+                    // 1. Logo Menu Placeholder
+                    if (showLogo) {
+                        const logoIndex = wackSettings.get_int('logo-icon-image');
+                        const logoSize = wackSettings.get_int('logo-icon-size') || 18;
+                        const useCustomLogo = wackSettings.get_boolean('use-custom-logo');
+                        const customLogoPath = wackSettings.get_string('custom-logo-path');
+                        const showLogoLabel = wackSettings.get_boolean('show-logo-label');
+                        const logoLabelText = wackSettings.get_string('logo-label-text') || 'Finder';
+
+                        let logoPath = 'start-here-symbolic';
+                        if (useCustomLogo && customLogoPath !== '') {
+                            logoPath = customLogoPath;
+                        } else {
+                            const distroIcons = [
+                                'start-here-symbolic',
+                                '/Resources/apple-icon-symbolic.svg',
+                                '/Resources/fedora-logo-symbolic.svg',
+                                '/Resources/debian-logo-symbolic.svg',
+                                '/Resources/manjaro-logo-symbolic.svg',
+                                '/Resources/pop-os-logo-symbolic.svg',
+                                '/Resources/ubuntu-logo-symbolic.svg',
+                                '/Resources/arch-logo-symbolic.svg',
+                                '/Resources/opensuse-logo-symbolic.svg',
+                            ];
+                            const relPath = distroIcons[logoIndex] || 'start-here-symbolic';
+                            if (relPath.startsWith('/')) {
+                                logoPath = wackShell.dir.get_path() + relPath;
+                            } else {
+                                logoPath = relPath;
+                            }
+                        }
+
+                        const logoIcon = new St.Icon({
+                            gicon: Gio.icon_new_for_string(logoPath),
+                            icon_size: logoSize,
+                            style_class: 'menu-button'
+                        });
+
+                        const iconBin = new St.Bin({
+                            y_align: Clutter.ActorAlign.CENTER,
+                        });
+                        iconBin.add_child(logoIcon);
+
+                        const logoContainer = new St.BoxLayout({
+                            style_class: 'activities-layout',
+                            y_align: Clutter.ActorAlign.CENTER
+                        });
+                        logoContainer.add_child(iconBin);
+
+                        if (showLogoLabel) {
+                            const logoLabel = new St.Label({
+                                text: logoLabelText,
+                                y_align: Clutter.ActorAlign.CENTER,
+                            });
+                            logoContainer.add_child(logoLabel);
+                        }
+
+                        const logoBtn = new InertPanelButton('wack-logo-button', logoContainer);
+                        logoBtn.set({
+                            name: 'panelActivities',
+                        });
+
+                        Main.panel.addToStatusArea('wack-lockscreen-logo-menu', logoBtn, 0, 'left');
+                        leftPanel.push('wack-lockscreen-logo-menu');
+                        this._tempPanelPlaceholders.push(logoBtn);
+                    }
+
+                    // 2. Workspace Widget Placeholder
+                    if (showWorkspace) {
+                        const widgetType = wackSettings.get_int('workspace-widget-type');
+                        let workspaceBtn = null;
+
+                        if (widgetType === 0) { // Dots/Indicators
+                            workspaceBtn = new WorkspaceReplica();
+                            workspaceBtn.y_align = Clutter.ActorAlign.CENTER;
+                        } else if (widgetType === 1) { // Activities label
+                            const showNum = wackSettings.get_boolean('show-workspace-number');
+                            let labelText = Gettext.gettext('Activities');
+                            if (showNum) {
+                                const activeWorkspace = global.workspace_manager.get_active_workspace();
+                                const index = activeWorkspace.index() + 1; // 1-indexed
+                                labelText = `${labelText} • ${index}`;
+                            }
+                            const label = new St.Label({
+                                text: labelText,
+                                y_align: Clutter.ActorAlign.CENTER
+                            });
+
+                            const workspaceContainer = new St.BoxLayout({
+                                style_class: 'activities-layout',
+                                y_align: Clutter.ActorAlign.CENTER
+                            });
+                            workspaceContainer.add_child(label);
+
+                            workspaceBtn = new InertPanelButton('wack-workspace-button', workspaceContainer);
+                            workspaceBtn.set({
+                                name: 'panelActivities',
+                            });
+                        }
+
+                        if (workspaceBtn) {
+                            Main.panel.addToStatusArea('wack-lockscreen-workspace-button', workspaceBtn, 1, 'left');
+                            leftPanel.push('wack-lockscreen-workspace-button');
+                            this._tempPanelPlaceholders.push(workspaceBtn);
+                        }
+                    }
+
+                    // 3. App Menu Placeholder
+                    if (showAppMenu && this._lastActiveApp) {
+                        const appName = this._lastActiveApp.get_name();
+                        const appIconTexture = this._lastActiveApp.create_icon_texture(16);
+
+                        const appMenuBtn = new AppMenuReplica(appName, appIconTexture);
+                        Main.panel.addToStatusArea('wack-lockscreen-app-menu', appMenuBtn, 2, 'left');
+                        leftPanel.push('wack-lockscreen-app-menu');
+                        this._tempPanelPlaceholders.push(appMenuBtn);
+                    }
+                }
+            } catch (e) {
+                console.error('[WACK Lockscreen] Failed to create panel placeholders', e);
+            }
+        }
+
         Main.sessionMode.panel = {
-            left: ['activities'],
+            left: leftPanel,
             center: ['dateMenu'],
             right: ['screenRecording', 'screenSharing', 'dwellClick', 'a11y', 'keyboard', 'quickSettings'],
         };
@@ -1357,6 +1792,31 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     _restoreSessionMode() {
+        if (this._tempPanelPlaceholders) {
+            for (const actor of this._tempPanelPlaceholders) {
+                actor.destroy();
+            }
+            this._tempPanelPlaceholders = null;
+        }
+
+        if (this._origWackClearPanelStyle) {
+            const wackShell = Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
+            if (wackShell && wackShell.stateObj) {
+                wackShell.stateObj._clearPanelStyle = this._origWackClearPanelStyle;
+            }
+            this._origWackClearPanelStyle = null;
+        }
+
+        Main.panel.set_style(null);
+        if (global.wack_panel_cached_classes) {
+            const classes = global.wack_panel_cached_classes.split(' ');
+            for (const cls of classes) {
+                if (cls) {
+                    Main.panel.remove_style_class_name(cls);
+                }
+            }
+        }
+
         if (!this._origSessionModeProps) return;
         Main.sessionMode.hasWindows = this._origSessionModeProps.hasWindows;
         Main.sessionMode.hasWorkspaces = this._origSessionModeProps.hasWorkspaces;
@@ -1414,9 +1874,38 @@ export default class WackLockscreenClockExtension extends Extension {
             this._gdmManager = null;
         }
 
-        if (this._wackShellStateChangedId) {
-            Main.extensionManager.disconnect(this._wackShellStateChangedId);
-            this._wackShellStateChangedId = null;
+        if (this._shellSettings) {
+            this._shellSettings.disconnectObject(this);
+            this._shellSettings = null;
+        }
+
+        Shell.WindowTracker.get_default().disconnectObject(this);
+        global.window_manager.disconnectObject(this);
+        this._lastActiveApp = null;
+
+        if (this._origWackClearPanelStyle) {
+            const wackShell = Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
+            if (wackShell && wackShell.stateObj) {
+                wackShell.stateObj._clearPanelStyle = this._origWackClearPanelStyle;
+            }
+            this._origWackClearPanelStyle = null;
+        }
+
+        Main.panel.set_style(null);
+        if (global.wack_panel_cached_classes) {
+            const classes = global.wack_panel_cached_classes.split(' ');
+            for (const cls of classes) {
+                if (cls) {
+                    Main.panel.remove_style_class_name(cls);
+                }
+            }
+        }
+
+        if (this._tempPanelPlaceholders) {
+            for (const actor of this._tempPanelPlaceholders) {
+                actor.destroy();
+            }
+            this._tempPanelPlaceholders = null;
         }
 
         if (this._crossSessionManager) {

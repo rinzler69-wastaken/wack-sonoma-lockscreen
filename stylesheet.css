@@ -431,3 +431,42 @@
 .login-dialog-user-list-item .user-widget-label {
     x-align: left;
 }
+
+/* WACK panel replicas styles */
+.menu-button {
+  margin: 1px !important;
+  padding: 0px !important;
+}
+
+.activities-layout {
+  spacing: 6px;
+}
+
+.wack-logo-button {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+.wack-logo-button StLabel,
+.wack-workspace-button StLabel,
+.wack-app-menu-button StLabel {
+  color: inherit !important;
+}
+
+.workspace-dot {
+  border-radius: 999px;
+  background-color: #ffffff !important;
+}
+
+#panel.light-contrast .workspace-dot {
+  border-radius: 999px;
+  background-color: #222226 !important;
+}
+
+#panel.light-contrast .app-menu-icon {
+  color: rgb(20, 20, 20) !important;
+}
+
+.panel-proximity .workspace-dot {
+  background-color: currentColor !important;
+}
