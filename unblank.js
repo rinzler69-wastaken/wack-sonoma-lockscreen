@@ -30,9 +30,13 @@ export class UnblankManager {
                     logError(error, 'UnblankManager: UPower proxy error');
                     return;
                 }
-                this._lastOnBattery = this._upowerProxy.OnBattery;
-                this._upowerProxy.connect('g-properties-changed', () => {
-                    const onBattery = this._upowerProxy.OnBattery;
+                if (!this._upowerProxy)
+                    return;
+                this._lastOnBattery = proxy.OnBattery;
+                proxy.connect('g-properties-changed', () => {
+                    if (!this._upowerProxy)
+                        return;
+                    const onBattery = proxy.OnBattery;
                     if (onBattery === this._lastOnBattery)
                         return;
                     this._lastOnBattery = onBattery;

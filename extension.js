@@ -6,6 +6,7 @@ import Gdm from 'gi://Gdm';
 import Gettext from 'gettext';
 import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
+import Meta from 'gi://Meta';
 import { Extension, InjectionManager } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import Graphene from 'gi://Graphene';
@@ -55,11 +56,11 @@ import {
 } from './constants.js';
 
 function _log(msg) {
-    console.log(msg);
+    log(msg);
 }
 
 function _logError(msg) {
-    console.error(msg);
+    logError(msg);
 }
 
 const PowerProfilesIface = `<node>
@@ -69,6 +70,56 @@ const PowerProfilesIface = `<node>
 </node>`;
 
 const PowerProfilesProxy = Gio.DBusProxy.makeProxyWrapper(PowerProfilesIface);
+
+let _PanelBlurEffect, _PanelBlurMode;
+try {
+    const Blur = (await import('gi://Blur')).default;
+    _PanelBlurEffect = Blur.BlurEffect;
+    _PanelBlurMode = Blur.BlurMode;
+} catch {
+    _PanelBlurEffect = Shell.BlurEffect;
+    _PanelBlurMode = Shell.BlurMode;
+}
+
+const WackUnlockPanelBlurEffect = GObject.registerClass(
+    { GTypeName: 'WackUnlockPanelBlurEffect' },
+    class WackUnlockPanelBlurEffect extends _PanelBlurEffect {
+        constructor({ unscaledRadius, brightness }) {
+            super({ mode: _PanelBlurMode.BACKGROUND });
+            this.brightness = brightness;
+            this._themeContext = St.ThemeContext.get_for_stage(global.stage);
+            this._themeContext.connectObject(
+                'notify::scale-factor', () => {
+                    this.radius = this._unscaledRadius * this._themeContext.scale_factor;
+                },
+                this
+            );
+            this.unscaledRadius = unscaledRadius;
+        }
+
+        get unscaledRadius() {
+            return this._unscaledRadius;
+        }
+
+        set unscaledRadius(value) {
+            this._unscaledRadius = value;
+            this.radius = value * this._themeContext.scale_factor;
+        }
+    }
+);
+
+const WackUnlockPanelPaintSignal = GObject.registerClass({
+    GTypeName: 'WackUnlockPanelPaintSignal',
+    Signals: { 'update-blur': { param_types: [] } },
+}, class WackUnlockPanelPaintSignal extends Clutter.Effect {
+    vfunc_paint(node, paintContext, paintFlags) {
+        this.emit('update-blur');
+        super.vfunc_paint(node, paintContext, paintFlags);
+    }
+});
+
+const UNLOCK_PANEL_BLUR_RADIUS = 120;
+const UNLOCK_PANEL_BLUR_BRIGHTNESS = 0.95;
 
 const InertPanelButton = GObject.registerClass(
 class InertPanelButton extends PanelMenu.Button {
@@ -331,7 +382,9 @@ export default class WackLockscreenClockExtension extends Extension {
                         _logError(`WACK Lockscreen: PowerProfiles proxy error: ${error.message}`);
                         return;
                     }
-                    this._powerProfilesProxy.connectObject('g-properties-changed', () => {
+                    if (!this._powerProfilesProxy)
+                        return;
+                    proxy.connectObject('g-properties-changed', () => {
                         this._syncCupertinoUnlockFade();
                     }, this);
                     this._syncCupertinoUnlockFade();
@@ -461,6 +514,8 @@ export default class WackLockscreenClockExtension extends Extension {
                         panel.remove_all_transitions();
                         const panelHeight = panel.height || 60;
                         panel.translation_y = -panelHeight;
+                        this._applyCachedWackPanelState();
+                        this._ensureUnlockPanelBlur();
                         panel.opacity = 255;
                         panel.ease({ translation_y: 0, duration, mode });
                     }
@@ -978,6 +1033,7 @@ export default class WackLockscreenClockExtension extends Extension {
             if (this._hintContainer) {
                 this._hintContainer.opacity = isCupertino ? Math.round(255 * (1 - progress)) : (progress > 0 ? 0 : 255);
             }
+            this._syncCupertinoUnlockFade();
         };
 
         syncClockAnimation();
@@ -1628,29 +1684,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 }
 
                 if (wackSettings) {
-                    if (global.wack_panel_cached_classes) {
-                        Main.panel.remove_style_class_name('light-contrast');
-
-                        const classes = global.wack_panel_cached_classes.split(' ');
-                        for (const cls of classes) {
-                            if (cls && cls !== 'light-contrast') {
-                                Main.panel.add_style_class_name(cls);
-                            }
-                        }
-
-                        if (classes.includes('panel-proximity') && global.wack_panel_cached_proximity_bg && global.wack_panel_cached_proximity_fg) {
-                            Main.panel.set_style(`background-color: ${global.wack_panel_cached_proximity_bg} !important; color: ${global.wack_panel_cached_proximity_fg} !important;`);
-                        } else if (global.wack_panel_cached_style) {
-                            Main.panel.set_style(global.wack_panel_cached_style);
-                        } else {
-                            Main.panel.set_style(null);
-                        }
-
-                        if (classes.includes('panel-proximity') && wackShell.stateObj) {
-                            this._origWackClearPanelStyle = wackShell.stateObj._clearPanelStyle;
-                            wackShell.stateObj._clearPanelStyle = () => {};
-                        }
-                    }
+                    this._applyCachedWackPanelState(wackShell);
                     const showLogo = wackSettings.get_boolean('show-logo-menu');
                     const showWorkspace = wackSettings.get_boolean('show-workspace-widget');
                     const showAppMenu = wackSettings.get_boolean('show-app-menu');
@@ -1789,12 +1823,238 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         Main.sessionMode.panelStyle = null;
         Main.sessionMode.emit('updated');
+        this._applyCachedWackPanelState();
+    }
+
+    _applyCachedWackPanelState(wackShell = null) {
+        _log(`[WACK Lockscreen] _applyCachedWackPanelState called. cached_classes=${global.wack_panel_cached_classes}, cached_style=${global.wack_panel_cached_style}, cached_foreground=${global.wack_panel_cached_foreground}, cached_brightness=${global.wack_panel_cached_brightness}, cached_blur_mode=${global.wack_panel_cached_blur_mode}`);
+        if (!global.wack_panel_cached_classes)
+            return;
+
+        const classes = global.wack_panel_cached_classes.split(' ').filter(Boolean);
+        for (const cls of classes)
+            Main.panel.add_style_class_name(cls);
+
+        if (classes.includes('panel-proximity') && global.wack_panel_cached_proximity_bg && global.wack_panel_cached_proximity_fg) {
+            const bg = global.wack_panel_cached_proximity_bg;
+            const fg = global.wack_panel_cached_proximity_fg;
+            Main.panel.set_style(`background-color: ${bg} !important; color: ${fg} !important;`);
+            this._loadProximityStylesheet(bg, fg);
+        } else {
+            let style = global.wack_panel_cached_style || '';
+            const foreground = global.wack_panel_cached_foreground;
+            if (foreground) {
+                const separator = style && !style.trim().endsWith(';') ? '; ' : '';
+                style = `${style}${separator}color: ${foreground} !important;`;
+            }
+            if (style)
+                Main.panel.set_style(style);
+            else
+                Main.panel.set_style(null);
+        }
+
+        if (classes.includes('panel-proximity')) {
+            wackShell ??= Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
+            if (wackShell?.stateObj && !this._origWackClearPanelStyle) {
+                this._origWackClearPanelStyle = wackShell.stateObj._clearPanelStyle;
+                wackShell.stateObj._clearPanelStyle = () => {};
+            }
+        }
+    }
+
+    _loadProximityStylesheet(bg, fg) {
+        this._unloadProximityStylesheet();
+
+        const cssString = `
+#panel.panel-proximity,
+#panel.unlock-screen.panel-proximity,
+#panel.login-screen.panel-proximity {
+    background-color: ${bg} !important;
+    transition-duration: 250ms;
+}
+
+#panel.panel-proximity,
+#panel.panel-proximity *,
+#panel.panel-proximity .panel-button,
+#panel.panel-proximity .panel-button *,
+#panel.unlock-screen.panel-proximity,
+#panel.unlock-screen.panel-proximity *,
+#panel.unlock-screen.panel-proximity .panel-button,
+#panel.unlock-screen.panel-proximity .panel-button *,
+#panel.login-screen.panel-proximity,
+#panel.login-screen.panel-proximity *,
+#panel.login-screen.panel-proximity .panel-button,
+#panel.login-screen.panel-proximity .panel-button * {
+    color: ${fg} !important;
+}
+
+#panel.panel-proximity .system-status-icon,
+#panel.panel-proximity .app-menu-icon,
+#panel.panel-proximity .popup-menu-arrow,
+#panel.unlock-screen.panel-proximity .system-status-icon,
+#panel.unlock-screen.panel-proximity .app-menu-icon,
+#panel.unlock-screen.panel-proximity .popup-menu-arrow,
+#panel.login-screen.panel-proximity .system-status-icon,
+#panel.login-screen.panel-proximity .app-menu-icon,
+#panel.login-screen.panel-proximity .popup-menu-arrow {
+    color: ${fg} !important;
+}
+
+#panel.panel-proximity .workspace-dot,
+#panel.unlock-screen.panel-proximity .workspace-dot,
+#panel.login-screen.panel-proximity .workspace-dot {
+    border-radius: 999px;
+    background-color: ${fg} !important;
+}
+`;
+        const cacheDir = GLib.get_user_cache_dir();
+        const proximityCssPath = GLib.build_filenamev([cacheDir, 'wack-lockscreen-proximity.css']);
+        const proximityCssFile = Gio.File.new_for_path(proximityCssPath);
+
+        try {
+            proximityCssFile.replace_contents(
+                new TextEncoder().encode(cssString),
+                null,
+                false,
+                Gio.FileCreateFlags.NONE,
+                null
+            );
+
+            const themeContext = St.ThemeContext.get_for_stage(global.stage);
+            themeContext.get_theme().load_stylesheet(proximityCssFile);
+            this._proximityCssFile = proximityCssFile;
+        } catch (err) {
+            _logError(`[WACK Lockscreen] Failed to load proximity stylesheet: ${err.message}`);
+        }
+    }
+
+    _unloadProximityStylesheet() {
+        if (this._proximityCssFile) {
+            try {
+                const themeContext = St.ThemeContext.get_for_stage(global.stage);
+                themeContext.get_theme().unload_stylesheet(this._proximityCssFile);
+                try {
+                    this._proximityCssFile.delete(null);
+                } catch {
+                }
+            } catch (err) {
+                _logError(`[WACK Lockscreen] Failed to unload proximity stylesheet: ${err.message}`);
+            }
+            this._proximityCssFile = null;
+        }
+    }
+
+    _ensureUnlockPanelBlur() {
+        if (this._unlockPanelBlurGroup)
+            return;
+
+        const panel = Main.panel;
+        const panelBox = panel.get_parent();
+        if (!panelBox)
+            return;
+
+        this._unlockPanelBlurGroup = new Meta.BackgroundGroup({
+            name: 'wack-unlock-panel-backgroundgroup',
+            width: 0,
+            height: 0,
+        });
+        this._unlockPanelBlurActor = new St.Widget({ name: 'wack-unlock-panel-blurred-widget' });
+        const cachedBlurMode = global.wack_panel_cached_blur_mode;
+        const unscaledRadius = cachedBlurMode === 2 ? 300 : UNLOCK_PANEL_BLUR_RADIUS;
+        const cachedBrightness = global.wack_panel_cached_brightness;
+        const brightness = (cachedBrightness !== null && cachedBrightness !== undefined) ? cachedBrightness : UNLOCK_PANEL_BLUR_BRIGHTNESS;
+        this._unlockPanelBlurEffect = new WackUnlockPanelBlurEffect({
+            unscaledRadius,
+            brightness,
+        });
+        this._unlockPanelBlurActor.add_effect(this._unlockPanelBlurEffect);
+
+        this._unlockPanelPaintEffect = new WackUnlockPanelPaintSignal();
+        this._unlockPanelBlurActor.add_effect(this._unlockPanelPaintEffect);
+        let repaintCounter = 0;
+        this._unlockPanelPaintSignalId = this._unlockPanelPaintEffect.connect('update-blur', () => {
+            if (repaintCounter === 0) {
+                repaintCounter = 2;
+                this._unlockPanelBlurEffect?.queue_repaint();
+            } else {
+                repaintCounter--;
+            }
+        });
+
+        this._unlockPanelBlurGroup.insert_child_at_index(this._unlockPanelBlurActor, 0);
+        panelBox.insert_child_at_index(this._unlockPanelBlurGroup, 0);
+        this._updateUnlockPanelBlurSize();
+
+        this._unlockPanelBlurBindings = [
+            panel.bind_property('translation-y', this._unlockPanelBlurGroup, 'translation-y', GObject.BindingFlags.SYNC_CREATE),
+            panel.bind_property('translation-x', this._unlockPanelBlurGroup, 'translation-x', GObject.BindingFlags.SYNC_CREATE),
+        ];
+        this._unlockPanelBlurSignals = [
+            [panel, panel.connect('notify::position', () => this._updateUnlockPanelBlurSize())],
+            [panel, panel.connect('notify::size', () => this._updateUnlockPanelBlurSize())],
+            [panelBox, panelBox.connect('notify::position', () => this._updateUnlockPanelBlurSize())],
+            [panelBox, panelBox.connect('notify::size', () => this._updateUnlockPanelBlurSize())],
+        ];
+
+        this._unlockPanelBlurGroup.opacity = 255;
+        this._unlockPanelBlurGroup.show();
+    }
+
+    _updateUnlockPanelBlurSize() {
+        if (!this._unlockPanelBlurActor)
+            return;
+
+        const panel = Main.panel;
+        this._unlockPanelBlurActor.x = panel.x;
+        this._unlockPanelBlurActor.y = panel.y;
+        this._unlockPanelBlurActor.width = panel.width;
+        this._unlockPanelBlurActor.height = panel.height;
+    }
+
+    _destroyUnlockPanelBlur() {
+        if (this._unlockPanelBlurSignals) {
+            for (const [obj, id] of this._unlockPanelBlurSignals) {
+                if (obj && id)
+                    obj.disconnect(id);
+            }
+            this._unlockPanelBlurSignals = null;
+        }
+
+        if (this._unlockPanelBlurBindings) {
+            for (const binding of this._unlockPanelBlurBindings) {
+                binding.unbind();
+            }
+            this._unlockPanelBlurBindings = null;
+        }
+
+        if (this._unlockPanelPaintEffect && this._unlockPanelPaintSignalId) {
+            this._unlockPanelPaintEffect.disconnect(this._unlockPanelPaintSignalId);
+            this._unlockPanelPaintSignalId = 0;
+        }
+
+        if (this._unlockPanelBlurGroup) {
+            const parent = this._unlockPanelBlurGroup.get_parent();
+            if (parent)
+                parent.remove_child(this._unlockPanelBlurGroup);
+            this._unlockPanelBlurGroup.destroy();
+        }
+
+        this._unlockPanelBlurGroup = null;
+        this._unlockPanelBlurActor = null;
+        this._unlockPanelBlurEffect = null;
+        this._unlockPanelPaintEffect = null;
     }
 
     _restoreSessionMode() {
+        this._destroyUnlockPanelBlur();
+        this._unloadProximityStylesheet();
+
         if (this._tempPanelPlaceholders) {
             for (const actor of this._tempPanelPlaceholders) {
-                actor.destroy();
+                try {
+                    actor.destroy();
+                } catch {
+                }
             }
             this._tempPanelPlaceholders = null;
         }
@@ -1869,6 +2129,8 @@ export default class WackLockscreenClockExtension extends Extension {
     // custom UI elements, ensuring no resource leaks or state contamination in the
     // GNOME Shell session.
     disable() {
+        this._unloadProximityStylesheet();
+
         if (this._gdmManager) {
             this._gdmManager.disable();
             this._gdmManager = null;
@@ -1891,6 +2153,7 @@ export default class WackLockscreenClockExtension extends Extension {
             this._origWackClearPanelStyle = null;
         }
 
+        this._destroyUnlockPanelBlur();
         Main.panel.set_style(null);
         if (global.wack_panel_cached_classes) {
             const classes = global.wack_panel_cached_classes.split(' ');
@@ -1903,7 +2166,10 @@ export default class WackLockscreenClockExtension extends Extension {
 
         if (this._tempPanelPlaceholders) {
             for (const actor of this._tempPanelPlaceholders) {
-                actor.destroy();
+                try {
+                    actor.destroy();
+                } catch {
+                }
             }
             this._tempPanelPlaceholders = null;
         }

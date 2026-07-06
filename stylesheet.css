@@ -458,13 +458,39 @@
   background-color: #ffffff !important;
 }
 
-#panel.light-contrast .workspace-dot {
-  border-radius: 999px;
-  background-color: #222226 !important;
+/* Styling for light backgrounds (dark text/icons) */
+#panel.light-contrast,
+#panel.light-contrast *,
+#panel.light-contrast .panel-button,
+#panel.light-contrast .panel-button *,
+#panel.unlock-screen.light-contrast,
+#panel.unlock-screen.light-contrast *,
+#panel.unlock-screen.light-contrast .panel-button,
+#panel.unlock-screen.light-contrast .panel-button *,
+#panel.login-screen.light-contrast,
+#panel.login-screen.light-contrast *,
+#panel.login-screen.light-contrast .panel-button,
+#panel.login-screen.light-contrast .panel-button * {
+  color: #222226 !important;
 }
 
-#panel.light-contrast .app-menu-icon {
-  color: rgb(20, 20, 20) !important;
+#panel.light-contrast .system-status-icon,
+#panel.light-contrast .app-menu-icon,
+#panel.light-contrast .popup-menu-arrow,
+#panel.unlock-screen.light-contrast .system-status-icon,
+#panel.unlock-screen.light-contrast .app-menu-icon,
+#panel.unlock-screen.light-contrast .popup-menu-arrow,
+#panel.login-screen.light-contrast .system-status-icon,
+#panel.login-screen.light-contrast .app-menu-icon,
+#panel.login-screen.light-contrast .popup-menu-arrow {
+  color: #222226 !important;
+}
+
+#panel.light-contrast .workspace-dot,
+#panel.unlock-screen.light-contrast .workspace-dot,
+#panel.login-screen.light-contrast .workspace-dot {
+  border-radius: 999px;
+  background-color: #222226 !important;
 }
 
 .panel-proximity .workspace-dot {
