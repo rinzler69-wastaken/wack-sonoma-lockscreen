@@ -85,8 +85,10 @@ export default class WackLockscreenClockExtension extends Extension {
                     }
                     this._powerProfilesProxy.connectObject('g-properties-changed', () => {
                         this._syncCupertinoUnlockFade();
+                        this._syncCupertinoLockFade();
                     }, this);
                     this._syncCupertinoUnlockFade();
+                    this._syncCupertinoLockFade();
                 }
             );
         } catch (e) {
@@ -139,6 +141,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._originalCupertinoText = null;
         this._originalCupertinoCount = 0;
         this._animationState = createAnimationState();
+        this._cupertinoLockFade = false;
 
         // Track state transitions to prevent redundant side-effects
         this._wasPromptActive = false;
@@ -171,34 +174,22 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         dialog._updateUserSwitchVisibility();
 
-        // ── Justified Duct Tape: Finish Intercept for Cupertino Fade-out ──
         this._origFinish = dialog.finish.bind(dialog);
         dialog.finish = (onComplete) => {
             const isCupertino = this._lockscreenMode === 'cupertino';
             if (isCupertino && this._cupertinoUnlockFade) {
-                // Snapshot the cache reference *now*, before _tempSessionModeOverride()
-                // flips Main.sessionMode.hasWindows and emits 'updated' below. wack-shell's
-                // _syncSessionModeUI() listens for that same signal and clears
-                // global.wack_window_snapshots as soon as hasWindows goes true, which would
-                // otherwise race ahead of the fade-in code further down in this callback.
                 const capturedSnapshots = global.wack_window_snapshots
                     ? global.wack_window_snapshots.slice()
                     : [];
                 log(`[WACK Lockscreen] finish(): captured ${capturedSnapshots.length} snapshot(s) before session-mode override`);
 
                 const panel = Main.panel;
-                if (panel) {
-                    panel.ease({ opacity: 0, duration: CUPERTINO_UNLOCK_PANEL_FADE, mode: Clutter.AnimationMode.EASE_OUT_QUAD });
-                }
 
                 if (this._finishTimeoutId) {
                     GLib.source_remove(this._finishTimeoutId);
                     this._finishTimeoutId = null;
                 }
 
-                // Wait for the panel fade-out (CUPERTINO_UNLOCK_PANEL_FADE ms) to complete, then apply the
-                // session mode override so the panel gets its user-session appearance
-                // (dateMenu, theming, extensions) before it slides in.
                 this._finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, CUPERTINO_UNLOCK_TSO_DELAY, () => {
                     this._finishTimeoutId = null;
                     this._tempSessionModeOverride();
@@ -208,23 +199,21 @@ export default class WackLockscreenClockExtension extends Extension {
 
                     if (panel) {
                         panel.remove_all_transitions();
-                        const panelHeight = panel.height || 60;
+                        const panelHeight = panel.height || 40;
                         panel.translation_y = -panelHeight;
-                        panel.opacity = 255;
                         panel.ease({ translation_y: 0, duration, mode });
+
+                        if (panel._rightBox) {
+                            panel._rightBox.remove_all_transitions();
+                            panel._rightBox.translation_y = panelHeight;
+                            panel._rightBox.ease({ translation_y: 0, duration, mode });
+                        }
                     }
 
-                    // Check if we have cached window snapshots and fade them in
                     log(`[WACK Lockscreen] fade-in callback: ${capturedSnapshots.length} snapshot(s) available to crossfade`);
                     if (capturedSnapshots.length > 0) {
                         this._windowFadeContainer = new Clutter.Actor();
                         lockDialogGroup.add_child(this._windowFadeContainer);
-                        // Place directly above `dialog` (which owns the opaque wallpaper/
-                        // _backgroundGroup) so the window textures are actually visible,
-                        // instead of set_child_below_sibling(..., null) which sank this
-                        // below the wallpaper entirely. The clock/hint/panel — which fade
-                        // to opacity 0 below — stay above this container, so as they fade
-                        // out the window textures are revealed underneath.
                         lockDialogGroup.set_child_above_sibling(this._windowFadeContainer, this._dialog);
 
                         capturedSnapshots.forEach(snapshot => {
@@ -238,9 +227,6 @@ export default class WackLockscreenClockExtension extends Extension {
                             actor.set_pivot_point(0.5, 0.5);
                             actor.scale_x = 0.94;
                             actor.scale_y = 0.94;
-                            // add_child first so actor is realized on stage,
-                            // then ease — Clutter requires the actor to be staged
-                            // before a transition can actually run.
                             this._windowFadeContainer.add_child(actor);
                             actor.ease({
                                 scale_x: 1.0,
@@ -250,7 +236,6 @@ export default class WackLockscreenClockExtension extends Extension {
                             });
                         });
 
-                        // Container handles the unified opacity fade only
                         this._windowFadeContainer.opacity = 0;
                         this._windowFadeContainer.ease({
                             opacity: 255,
@@ -290,9 +275,6 @@ export default class WackLockscreenClockExtension extends Extension {
 
                         this._origFinish(safeOnComplete);
 
-                        // Fallback in case GDM's finish hangs or never calls onComplete.
-                        // Give the shell a short grace period instead of forcing completion
-                        // on the very next idle, which can race a legitimate async finish.
                         this._finishFallbackId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
                             this._finishFallbackId = null;
                             safeOnComplete();
@@ -301,6 +283,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
                         return GLib.SOURCE_REMOVE;
                     });
+
                     return GLib.SOURCE_REMOVE;
                 });
             } else {
@@ -609,6 +592,113 @@ export default class WackLockscreenClockExtension extends Extension {
             mainBox.queue_relayout();
             this._mainBox = mainBox;
         }
+
+        // ── Lock Crossfade Animation ──────────────────────────────────────
+        const capturedSnapshots = global.wack_window_snapshots
+            ? global.wack_window_snapshots.slice()
+            : [];
+
+        if (this._cupertinoLockFade) {
+            this._lockFadeContainer = new Clutter.Actor();
+            lockDialogGroup.add_child(this._lockFadeContainer);
+            lockDialogGroup.set_child_above_sibling(this._lockFadeContainer, this._dialog);
+
+            const duration = this._cupertinoUnlockFadeDuration || CUPERTINO_UNLOCK_FADE_DURATION;
+            const mode = Clutter.AnimationMode.EASE_OUT_QUAD;
+
+            const panel = Main.panel;
+            if (panel && panel._origSessionModeProps) {
+                Main.sessionMode.hasWindows = panel._origSessionModeProps.hasWindows;
+                Main.sessionMode.hasWorkspaces = panel._origSessionModeProps.hasWorkspaces;
+                Main.sessionMode.panel = panel._origSessionModeProps.panel;
+                Main.sessionMode.panelStyle = panel._origSessionModeProps.panelStyle;
+                delete panel._origSessionModeProps;
+                Main.sessionMode.emit('updated');
+            }
+
+            if (panel) {
+                panel.remove_all_transitions();
+                panel.translation_y = 0;
+                if (panel._rightBox) {
+                    panel._rightBox.remove_all_transitions();
+                    panel._rightBox.translation_y = 0;
+                }
+                if (panel._leftBox) {
+                    panel._leftBox.remove_all_transitions();
+                    panel._leftBox.translation_y = 0;
+                }
+                if (panel._centerBox) {
+                    panel._centerBox.remove_all_transitions();
+                    panel._centerBox.translation_y = 0;
+                }
+            }
+
+            capturedSnapshots.forEach(snapshot => {
+                const actor = new Clutter.Actor({
+                    content: snapshot.content,
+                    x: snapshot.rect.x,
+                    y: snapshot.rect.y,
+                    width: snapshot.rect.width,
+                    height: snapshot.rect.height
+                });
+                actor.set_pivot_point(0.5, 0.5);
+                this._lockFadeContainer.add_child(actor);
+
+                actor.ease({
+                    scale_x: 0.94,
+                    scale_y: 0.94,
+                    duration,
+                    mode
+                });
+            });
+
+            this._lockFadeContainer.opacity = 255;
+            this._dialog.opacity = 255;
+            this._clockWrapper.opacity = 255;
+            if (this._hintContainer)
+                this._hintContainer.opacity = 0;
+            if (this._mainBox)
+                this._mainBox.opacity = 0;
+            if (this._cupertinoRestPromptContainer)
+                this._cupertinoRestPromptContainer.opacity = 0;
+
+            this._lockFadeContainer.ease({
+                opacity: 0,
+                duration,
+                mode,
+                onComplete: () => {
+                    this._lockFadeContainer.destroy();
+                    this._lockFadeContainer = null;
+
+                    global.wack_panel_transitioning = false;
+                    Main.sessionMode.emit('updated');
+                }
+            });
+
+            if (this._hintContainer) {
+                this._hintContainer.ease({
+                    opacity: 255,
+                    duration,
+                    mode
+                });
+            }
+
+            if (this._mainBox) {
+                this._mainBox.ease({
+                    opacity: 255,
+                    duration,
+                    mode
+                });
+            }
+
+            if (this._cupertinoRestPromptContainer) {
+                this._cupertinoRestPromptContainer.ease({
+                    opacity: 255,
+                    duration,
+                    mode
+                });
+            }
+        }
     }
 
     _updateClockAlpha() {
@@ -691,6 +781,19 @@ export default class WackLockscreenClockExtension extends Extension {
                                     !isPowerSaver;
     }
 
+    _syncCupertinoLockFade() {
+        if (!this._settings)
+            return;
+
+        const wackShell = Main.extensionManager.lookup('wack-shell@rinzler69-wastaken.github.com');
+        const wackShellEnabled = wackShell && wackShell.state === 1;
+        const isPowerSaver = this._powerProfilesProxy?.ActiveProfile === 'power-saver';
+        this._cupertinoLockFade = this._settings.get_string('lockscreen-mode') === 'cupertino' &&
+                                  wackShellEnabled &&
+                                  this._settings.get_boolean('cupertino-lock-fade') &&
+                                  !isPowerSaver;
+    }
+
     _loadSettings() {
         this._notifShowInLockScreen = true;
         this._notifSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.notifications' });
@@ -753,6 +856,11 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         syncCupertinoUnlockFade();
 
+        const syncCupertinoLockFade = () => {
+            this._syncCupertinoLockFade();
+        };
+        syncCupertinoLockFade();
+
         const syncCrossfadeSpeed = () => {
             const speed = this._settings.get_string('cupertino-crossfade-speed') || 'slow';
             if (speed === 'slow')
@@ -767,6 +875,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._wackShellStateChangedId = Main.extensionManager.connect('extension-state-changed', (_obj, ext) => {
             if (ext.uuid === 'wack-shell@rinzler69-wastaken.github.com') {
                 syncCupertinoUnlockFade();
+                syncCupertinoLockFade();
             }
         });
 
@@ -777,6 +886,7 @@ export default class WackLockscreenClockExtension extends Extension {
             'changed::cupertino-always-show-user', syncCupertinoAlwaysShowUser,
             'changed::esc-to-sleep', syncEscToSleep,
             'changed::cupertino-unlock-fade', syncCupertinoUnlockFade,
+            'changed::cupertino-lock-fade', syncCupertinoLockFade,
             'changed::cupertino-crossfade-speed', syncCrossfadeSpeed,
             this
         );
@@ -1338,6 +1448,7 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     _tempSessionModeOverride() {
+        global.wack_panel_transitioning = true;
         if (this._origSessionModeProps) return;
         this._origSessionModeProps = {
             hasWindows: Main.sessionMode.hasWindows,
@@ -1348,7 +1459,7 @@ export default class WackLockscreenClockExtension extends Extension {
         Main.sessionMode.hasWindows = true;
         Main.sessionMode.hasWorkspaces = true;
         Main.sessionMode.panel = {
-            left: ['activities'],
+            left: ['wack-logo-menu', 'wack-workspace-button', 'wack-app-menu', 'activities'],
             center: ['dateMenu'],
             right: ['screenRecording', 'screenSharing', 'dwellClick', 'a11y', 'keyboard', 'quickSettings'],
         };
@@ -1357,6 +1468,7 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     _restoreSessionMode() {
+        global.wack_panel_transitioning = false;
         if (!this._origSessionModeProps) return;
         Main.sessionMode.hasWindows = this._origSessionModeProps.hasWindows;
         Main.sessionMode.hasWorkspaces = this._origSessionModeProps.hasWorkspaces;
@@ -1469,6 +1581,12 @@ export default class WackLockscreenClockExtension extends Extension {
             this._windowFadeContainer = null;
         }
 
+        if (this._lockFadeContainer) {
+            this._lockFadeContainer.destroy();
+            this._lockFadeContainer = null;
+        }
+
+        global.wack_panel_transitioning = false;
         if (this._origSessionModeProps) {
             this._restoreSessionMode();
         }
@@ -1477,6 +1595,18 @@ export default class WackLockscreenClockExtension extends Extension {
             Main.panel.remove_all_transitions();
             Main.panel.translation_y = 0;
             Main.panel.opacity = 255;
+            if (Main.panel._leftBox) {
+                Main.panel._leftBox.remove_all_transitions();
+                Main.panel._leftBox.translation_y = 0;
+            }
+            if (Main.panel._centerBox) {
+                Main.panel._centerBox.remove_all_transitions();
+                Main.panel._centerBox.translation_y = 0;
+            }
+            if (Main.panel._rightBox) {
+                Main.panel._rightBox.remove_all_transitions();
+                Main.panel._rightBox.translation_y = 0;
+            }
         }
 
         if (this._unblankManager) {

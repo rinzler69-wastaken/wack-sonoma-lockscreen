@@ -104,7 +104,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
         }
 
         _updateHintLabel() {
-            if (!this._hintLabel) return;
+            if (!this._hintLabel || !this._hintLabel.clutter_text) return;
 
             // Escape the text to prevent markup injection errors
             const safeText = GLib.markup_escape_text(this._currentText, -1);
