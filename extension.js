@@ -24,7 +24,7 @@ const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { WackClock } from './wackClock.js';
 import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
-import { getWallpaperAlpha, clearCache, initCache } from './alphaManager.js';
+import { getWallpaperAlpha, getWallpaperPromptColor, clearCache, initCache } from './alphaManager.js';
 import { WackLayout } from './layoutManager.js';
 import { NotificationManager } from './notificationManager.js';
 import { GdmManager } from './gdm.js';
@@ -612,49 +612,112 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     _updateClockAlpha() {
+        this._updateClockAlphaAndPromptColor();
+    }
+
+    async _updateClockAlphaAndPromptColor() {
         const dialog = this._dialog;
-        if (!dialog || !dialog._clock || typeof dialog._clock.setWallpaperAlpha !== 'function')
-            return;
 
-        try {
-            if (!this._bgSettings)
-                this._bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
-            if (!this._interfaceSettings)
-                this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
+        if (!this._bgSettings)
+            this._bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
+        if (!this._interfaceSettings)
+            this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
 
-            const colorScheme = this._interfaceSettings.get_enum('color-scheme');
-            const style = this._bgSettings.get_enum('picture-options');
-            const uri = this._bgSettings.get_string(
-                colorScheme === 1
-                    ? 'picture-uri-dark'
-                    : 'picture-uri'
-            );
-            const isColor = (style === 0);
-            const primaryColor = this._bgSettings.get_string('primary-color');
-            const secondaryColor = this._bgSettings.get_string('secondary-color');
-            const shadingType = this._bgSettings.get_enum('color-shading-type');
+        const colorScheme = this._interfaceSettings.get_enum('color-scheme');
+        const style = this._bgSettings.get_enum('picture-options');
+        const uri = this._bgSettings.get_string(
+            colorScheme === 1 ? 'picture-uri-dark' : 'picture-uri'
+        );
+        const isColor = (style === 0);
+        const primaryColor = this._bgSettings.get_string('primary-color');
+        const secondaryColor = this._bgSettings.get_string('secondary-color');
+        const shadingType = this._bgSettings.get_enum('color-shading-type');
 
-            const textLuminance = dialog._clock.getTextLuminance();
-            getWallpaperAlpha({
-                uri,
-                isColor,
-                primaryColor,
-                secondaryColor,
-                shadingType,
-                textLuminance,
-            }).then(alpha => {
-                if (dialog._clock && typeof dialog._clock.setWallpaperAlpha === 'function')
-                    dialog._clock.setWallpaperAlpha(alpha);
+        const promptVibrancy = this._settings?.get_boolean('prompt-vibrancy') ?? true;
 
-                if (this._crossSessionManager && typeof this._crossSessionManager.setClockAlpha === 'function')
-                    this._crossSessionManager.setClockAlpha(alpha);
-            }).catch(e => {
-                console.error(`[WACK/Extension] Failed to get wallpaper alpha: ${e}`);
-            });
-        } catch (e) {
-            console.error(`[WACK/Extension] Failed to update clock alpha: ${e}`);
+        const wallpaperParams = { uri, isColor, primaryColor, secondaryColor, shadingType };
+        const textLuminance = dialog?._clock?.getTextLuminance?.() ?? 1.0;
+
+        // Fetch alpha and prompt color in parallel — one round trip through the cache.
+        const [alpha, promptColor] = await Promise.all([
+            getWallpaperAlpha({ ...wallpaperParams, textLuminance }),
+            promptVibrancy
+                ? getWallpaperPromptColor(wallpaperParams)
+                : Promise.resolve(null),
+        ]);
+
+        console.log(`[WACK/Extension] _updateClockAlphaAndPromptColor - uri: ${uri}, promptColor: ${JSON.stringify(promptColor)}, alpha: ${alpha}`);
+
+        // Apply clock alpha to the live dialog clock widget.
+        if (dialog?._clock && typeof dialog._clock.setWallpaperAlpha === 'function')
+            dialog._clock.setWallpaperAlpha(alpha);
+
+        // Commit both values atomically to the cross-session metadata file.
+        if (this._crossSessionManager)
+            this._crossSessionManager.setClockAlphaAndPromptColor(alpha, promptColor);
+
+        // Apply live prompt entry tinting in the user session (Cupertino mode only).
+        // Note: the class is added to _promptActor, not to dialog._authPrompt.
+        const isCupertinoPromptActive = this._promptActor?.has_style_class_name('wack-cupertino-prompt');
+        if (isCupertinoPromptActive) {
+            const authPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
+            if (promptVibrancy && promptColor)
+                this._applyPromptEntryBackground(this._findPromptEntry(authPrompt), promptColor);
+            else
+                this._clearCupertinoPromptBackground();
+        } else if (!promptVibrancy) {
+            this._clearCupertinoPromptBackground();
         }
     }
+
+
+
+    _findPromptEntry(actor) {
+        if (!actor)
+            return null;
+
+        if (typeof actor.has_style_class_name === 'function' &&
+            actor.has_style_class_name('login-dialog-prompt-entry')) {
+            return actor;
+        }
+
+        if (typeof actor.get_children !== 'function')
+            return null;
+
+        for (const child of actor.get_children()) {
+            const match = this._findPromptEntry(child);
+            if (match)
+                return match;
+        }
+
+        return null;
+    }
+
+    _applyPromptEntryBackground(entry, color) {
+        if (!entry || !color)
+            return;
+
+        if (entry._wackOriginalStyle === undefined)
+            entry._wackOriginalStyle = entry.get_style() ?? '';
+
+        entry.set_style(`${entry._wackOriginalStyle} background-color: rgb(${color.r}, ${color.g}, ${color.b});`);
+    }
+
+    _clearCupertinoPromptBackground() {
+        const authPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
+        const entry = this._findPromptEntry(authPrompt);
+        if (!entry)
+            return;
+
+        if (entry._wackOriginalStyle !== undefined) {
+            entry.set_style(entry._wackOriginalStyle);
+            delete entry._wackOriginalStyle;
+        } else {
+            entry.set_style(null);
+        }
+    }
+
+
 
     _onWackShellExtensionStateChanged(_obj, ext) {
         if (ext.uuid !== 'wack-shell@rinzler69-wastaken.github.com')
@@ -764,6 +827,11 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         syncCrossfadeSpeed();
 
+        const syncPromptVibrancy = () => {
+            this._updateClockAlphaAndPromptColor();
+        };
+        syncPromptVibrancy();
+
         this._wackShellStateChangedId = Main.extensionManager.connect('extension-state-changed', (_obj, ext) => {
             if (ext.uuid === 'wack-shell@rinzler69-wastaken.github.com') {
                 syncCupertinoUnlockFade();
@@ -778,6 +846,7 @@ export default class WackLockscreenClockExtension extends Extension {
             'changed::esc-to-sleep', syncEscToSleep,
             'changed::cupertino-unlock-fade', syncCupertinoUnlockFade,
             'changed::cupertino-crossfade-speed', syncCrossfadeSpeed,
+            'changed::prompt-vibrancy', syncPromptVibrancy,
             this
         );
     }
@@ -822,6 +891,9 @@ export default class WackLockscreenClockExtension extends Extension {
             this._promptActor?.add_style_class_name('wack-cupertino-prompt');
             this._cupertinoToPrompt = true;
             this._setupCupertinoAvatarOverride();
+            // Re-run the unified pipeline so prompt entry tinting is applied
+            // after the entry widget is fully realized in the tree.
+            this._updateClockAlphaAndPromptColor();
         }
     }
 
@@ -830,6 +902,7 @@ export default class WackLockscreenClockExtension extends Extension {
             this._notifManager.enforceCardLimit(this._notifManager._notifBox);
         }
         this._updateCupertinoRestState();
+        this._clearCupertinoPromptBackground();
 
         if (this._lockscreenMode === 'cupertino') {
             const hasNotifs = this._notifManager.hasVisibleNotifs();
@@ -1019,10 +1092,13 @@ export default class WackLockscreenClockExtension extends Extension {
                 this._origPromptActorYAlign = this._promptActor.y_align;
             }
             this._promptActor.y_align = Clutter.ActorAlign.START;
+            if (this._promptActive)
+                this._updateClockAlphaAndPromptColor();
         } else {
             this._destroyCupertinoRestPrompt();
             this._promptActor.remove_style_class_name('wack-cupertino-prompt');
             this._promptActor.remove_style_class_name('wack-cupertino-rest');
+            this._clearCupertinoPromptBackground();
             if (this._origPromptActorYAlign !== undefined) {
                 this._promptActor.y_align = this._origPromptActorYAlign;
                 this._origPromptActorYAlign = undefined;

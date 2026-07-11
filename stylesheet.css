@@ -73,6 +73,7 @@
     background-color: rgba(236, 236, 236, 0.12);
     color: rgba(255, 255, 255, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.02);
+    box-shadow: 0 2px 24px 16px rgba(0, 0, 0, 0.0925) !important;
 }
 
 .login-dialog .login-dialog-prompt-entry:hover,
@@ -84,7 +85,6 @@
 
 .login-dialog .login-dialog-prompt-entry:focus,
 .unlock-dialog .login-dialog-prompt-entry:focus {
-    box-shadow: none !important;
     background-color: rgba(236, 236, 236, 0.18);
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.04);

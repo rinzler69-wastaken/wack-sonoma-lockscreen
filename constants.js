@@ -29,6 +29,7 @@ export const NOTIF_CARD_RADIUS = 12;
 
 // Cupertino mode prompt positioning
 export const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9575; // Prompt center Y as fraction of screen height
+export const CUPERTINO_PROMPT_WHITE_BLEND_ALPHA = 0.08;
 
 // GDM mode positioning and transitions
 export const GDM_USER_STACK_VERTICAL_FRACTION = 0.815; // User selection list center Y in GDM mode

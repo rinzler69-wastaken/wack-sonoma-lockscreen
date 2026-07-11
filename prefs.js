@@ -233,8 +233,9 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             title: _('Lockscreen Mode'),
         });
 
-        const modeRow = new Adw.ActionRow({
+        const modeRow = new Adw.ExpanderRow({
             title: _('Mode'),
+            show_enable_switch: false,
         });
         modeGroup.add(modeRow);
 
@@ -274,22 +275,46 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         }));
         alwaysShowUserRow.add_suffix(alwaysShowUserSwitch);
         alwaysShowUserRow.activatable_widget = alwaysShowUserSwitch;
-        alwaysShowUserRow.sensitive = settings.get_string('lockscreen-mode') === 'cupertino';
+        modeRow.add_row(alwaysShowUserRow);
 
-        modeGroup.add(alwaysShowUserRow);
+        const promptVibrancyRow = new Adw.ActionRow({
+            title: _('Prompt Vibrancy'),
+            subtitle: _('Applies dynamic color to the password field based on wallpaper colors.'),
+        });
+        const promptVibrancySwitch = new Gtk.Switch({
+            valign: Gtk.Align.CENTER,
+            active: settings.get_boolean('prompt-vibrancy'),
+        });
+        promptVibrancySwitch.connect('notify::active', () => {
+            settings.set_boolean('prompt-vibrancy', promptVibrancySwitch.active);
+        });
+        settingsSignalIds.push(settings.connect('changed::prompt-vibrancy', () => {
+            promptVibrancySwitch.active = settings.get_boolean('prompt-vibrancy');
+        }));
+        promptVibrancyRow.add_suffix(promptVibrancySwitch);
+        promptVibrancyRow.activatable_widget = promptVibrancySwitch;
+        promptVibrancyRow.sensitive = settings.get_string('lockscreen-mode') === 'cupertino';
 
-        const unlockFadeRow = new Adw.ExpanderRow({
+        modeRow.add_row(promptVibrancyRow);
+
+        const unlockFadeRow = new Adw.ActionRow({
             title: _('Unlock Crossfade'),
             subtitle: _('Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode).'),
-            show_enable_switch: true,
-            enable_expansion: settings.get_boolean('cupertino-unlock-fade'),
         });
-        unlockFadeRow.connect('notify::enable-expansion', () => {
-            settings.set_boolean('cupertino-unlock-fade', unlockFadeRow.enable_expansion);
+        const unlockFadeSwitch = new Gtk.Switch({
+            valign: Gtk.Align.CENTER,
+            active: settings.get_boolean('cupertino-unlock-fade'),
+        });
+        unlockFadeSwitch.connect('notify::active', () => {
+            settings.set_boolean('cupertino-unlock-fade', unlockFadeSwitch.active);
+            refreshUnlockFadeAvailability();
         });
         settingsSignalIds.push(settings.connect('changed::cupertino-unlock-fade', () => {
-            unlockFadeRow.enable_expansion = settings.get_boolean('cupertino-unlock-fade');
+            unlockFadeSwitch.active = settings.get_boolean('cupertino-unlock-fade');
+            refreshUnlockFadeAvailability();
         }));
+        unlockFadeRow.add_suffix(unlockFadeSwitch);
+        unlockFadeRow.activatable_widget = unlockFadeSwitch;
 
         // -- Crossfade Speed child row --------------------------------------
         const speedRow = new Adw.ActionRow({
@@ -358,19 +383,51 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         speedDropdown.visible = false;
         speedLinkedBox.visible = true;
 
-        unlockFadeRow.add_row(speedRow);
-        modeGroup.add(unlockFadeRow);
+        modeRow.add_row(unlockFadeRow);
+        modeRow.add_row(speedRow);
+
+        // -- Animation options (Legacy mode sub-settings) --------------------
+        const clockAnimRow = this._buildComboRow(
+            settings,
+            'clock-animation',
+            _('Clock Animation'),
+            _('Applied to the date and time while opening the password prompt'),
+            CLOCK_ANIMATION_OPTIONS
+        );
+
+        const promptAnimRow = this._buildComboRow(
+            settings,
+            'prompt-animation',
+            _('Prompt Animation'),
+            _('Applied to the authentication prompt while it appears'),
+            PROMPT_ANIMATION_OPTIONS
+        );
+
+        const resetRow = new Adw.ActionRow({
+            title: _('Reset Animations'),
+            subtitle: _('Restore defaults'),
+        });
+        const resetButton = new Gtk.Button({
+            icon_name: 'view-refresh-symbolic',
+            tooltip_text: _('Reset animations'),
+            css_classes: ['flat'],
+            valign: Gtk.Align.CENTER,
+        });
+        resetButton.connect('clicked', () => {
+            settings.reset('clock-animation');
+            settings.reset('prompt-animation');
+        });
+        resetRow.add_suffix(resetButton);
+        resetRow.activatable_widget = resetButton;
+
+        modeRow.add_row(clockAnimRow);
+        modeRow.add_row(promptAnimRow);
+        modeRow.add_row(resetRow);
 
         animPage.add(modeGroup);
 
-        // -- Animation options (greyed out in Cupertino mode) ---------------
-        const animationGroup = new Adw.PreferencesGroup({
-            title: _('Lockscreen Animations'),
-        });
-        animationGroup.sensitive = settings.get_string('lockscreen-mode') !== 'cupertino';
-
         let selfChangeMode = false;
-        const refreshUnlockFadeAvailability = () => {
+        function refreshUnlockFadeAvailability() {
             const isCup = settings.get_string('lockscreen-mode') === 'cupertino';
             const wackShellInstalled = _isWackShellInstalled();
             const wackShellEnabled = _isWackShellEnabled();
@@ -382,8 +439,10 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
                 subtitleText += ' ' + _('Requires WACK Shell to be enabled.');
 
             unlockFadeRow.subtitle = subtitleText;
-            unlockFadeRow.sensitive = isCup && wackShellInstalled && wackShellEnabled;
-        };
+            const available = isCup && wackShellInstalled && wackShellEnabled;
+            unlockFadeRow.sensitive = available;
+            speedRow.sensitive = available && settings.get_boolean('cupertino-unlock-fade');
+        }
         const syncModeFromSettings = () => {
             const val = settings.get_string('lockscreen-mode');
             const isCup = val === 'cupertino';
@@ -403,9 +462,25 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
                 modeRow.subtitle = _('macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow.');
             }
 
+            // Always keep it expandable since both modes now have sub-settings, but do not auto-expand
+            modeRow.enable_expansion = true;
+
+            // Cupertino visibility/sensitivity
+            alwaysShowUserRow.visible = isCup;
             alwaysShowUserRow.sensitive = isCup;
+            promptVibrancyRow.visible = isCup;
+            promptVibrancyRow.sensitive = isCup;
+            unlockFadeRow.visible = isCup;
+            speedRow.visible = isCup;
             refreshUnlockFadeAvailability();
-            animationGroup.sensitive = !isCup;
+
+            // Legacy visibility/sensitivity
+            clockAnimRow.visible = !isCup;
+            clockAnimRow.sensitive = !isCup;
+            promptAnimRow.visible = !isCup;
+            promptAnimRow.sensitive = !isCup;
+            resetRow.visible = !isCup;
+            resetRow.sensitive = !isCup;
         };
 
         const updateModeSetting = (index) => {
@@ -457,40 +532,6 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         }
 
         syncModeFromSettings();
-
-        animationGroup.add(this._buildComboRow(
-            settings,
-            'clock-animation',
-            _('Clock Animation'),
-            _('Applied to the date and time while opening the password prompt'),
-            CLOCK_ANIMATION_OPTIONS));
-
-        animationGroup.add(this._buildComboRow(
-            settings,
-            'prompt-animation',
-            _('Prompt Animation'),
-            _('Applied to the authentication prompt while it appears'),
-            PROMPT_ANIMATION_OPTIONS));
-
-        const resetRow = new Adw.ActionRow({
-            title: _('Reset Animations'),
-            subtitle: _('Restore defaults'),
-        });
-        const resetButton = new Gtk.Button({
-            icon_name: 'view-refresh-symbolic',
-            tooltip_text: _('Reset animations'),
-            css_classes: ['flat'],
-            valign: Gtk.Align.CENTER,
-        });
-        resetButton.connect('clicked', () => {
-            settings.reset('clock-animation');
-            settings.reset('prompt-animation');
-        });
-        resetRow.add_suffix(resetButton);
-        resetRow.activatable_widget = resetButton;
-        animationGroup.add(resetRow);
-
-        animPage.add(animationGroup);
 
         // -- Screen Timeout options -----------------------------------------
         const timeoutGroup = new Adw.PreferencesGroup({

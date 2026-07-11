@@ -11,7 +11,7 @@ import Meta from 'gi://Meta';
 import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 import { WackClock } from './wackClock.js';
 import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
-import { getWallpaperAlpha } from './alphaManager.js';
+import { getWallpaperAlpha, getWallpaperPromptColor } from './alphaManager.js';
 import {
     GDM_USER_STACK_VERTICAL_FRACTION,
     GDM_DATETIME_TOP_FRACTION,
@@ -49,11 +49,16 @@ export class GdmManager {
         this._bgManagers = [];
         this._monitorsChangedId = null;
         this._appliedWallpaperUser = undefined;
+        this._appliedWallpaperSignature = null;
         this._gdmAvatarSetup = false;
         this._gdmOrigUpdateUser = null;
         this._gdmOrigMethodName = null;
         this._gdmOrigUserWellYAlign = null;
         this._userListItemAddedId = null;
+        this._promptColorRequestId = 0;
+        this._currentWallpaperMetadata = null;
+        this._sharedWallpaperMonitor = null;
+        this._sharedWallpaperRefreshId = null;
     }
 
     enable() {
@@ -162,6 +167,7 @@ export class GdmManager {
         });
 
         this._updateBackgrounds();
+        this._setupSharedWallpaperMonitor();
 
         // 1. Clock wrapper setup to decouple date/time and enforce DATE_LABEL_HEIGHT spacing
         this._gdmClock = new WackClock();
@@ -254,6 +260,17 @@ export class GdmManager {
             this._monitorsChangedId = null;
         }
 
+        if (this._sharedWallpaperRefreshId) {
+            GLib.source_remove(this._sharedWallpaperRefreshId);
+            this._sharedWallpaperRefreshId = null;
+        }
+
+        if (this._sharedWallpaperMonitor) {
+            this._sharedWallpaperMonitor.disconnectObject(this);
+            this._sharedWallpaperMonitor.cancel();
+            this._sharedWallpaperMonitor = null;
+        }
+
         if (this._bgManagers) {
             for (let i = 0; i < this._bgManagers.length; i++) {
                 this._bgManagers[i].destroy();
@@ -322,6 +339,7 @@ export class GdmManager {
             dialog._authPrompt.translation_x = 0;
             dialog._authPrompt.translation_y = 0;
             dialog._authPrompt.remove_style_class_name('wack-cupertino-prompt');
+            this._clearCupertinoPromptBackground();
             if (dialog._authPrompt._message) {
                 dialog._authPrompt._message.remove_style_class_name('wack-cupertino-message');
             }
@@ -541,7 +559,70 @@ export class GdmManager {
 
         this._updateBackgroundEffects();
         this._appliedWallpaperUser = undefined;
+        this._appliedWallpaperSignature = null;
         this._applyWallpaper();
+    }
+
+    _setupSharedWallpaperMonitor() {
+        if (this._sharedWallpaperMonitor)
+            return;
+
+        try {
+            const dir = Gio.File.new_for_path('/var/tmp');
+            this._sharedWallpaperMonitor = dir.monitor_directory(
+                Gio.FileMonitorFlags.NONE,
+                null
+            );
+
+            this._sharedWallpaperMonitor.connectObject('changed', (_monitor, file, _otherFile, eventType) => {
+                const path = file?.get_path?.() ?? '';
+                const name = file?.get_basename?.() ?? '';
+                const isRelevant = name.startsWith('wack-shared-wallpaper-') && name.endsWith('.json');
+                if (!isRelevant)
+                    return;
+
+                if (eventType !== Gio.FileMonitorEvent.CHANGED &&
+                    eventType !== Gio.FileMonitorEvent.CREATED &&
+                    eventType !== Gio.FileMonitorEvent.CHANGES_DONE_HINT &&
+                    eventType !== Gio.FileMonitorEvent.MOVED_IN) {
+                    return;
+                }
+
+                _log(`[WACK/GdmManager] Shared wallpaper metadata changed: ${path}`);
+                this._queueSharedWallpaperRefresh();
+            }, this);
+        } catch (e) {
+            _log('[WACK/GdmManager] Failed to monitor shared wallpaper metadata: ' + e);
+        }
+    }
+
+    _queueSharedWallpaperRefresh() {
+        if (this._sharedWallpaperRefreshId)
+            GLib.source_remove(this._sharedWallpaperRefreshId);
+
+        this._sharedWallpaperRefreshId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 150, () => {
+            this._sharedWallpaperRefreshId = null;
+
+            const activeUserName = this._dialog?._user?.get_user_name?.() ?? null;
+            this._applyWallpaper(activeUserName);
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    _buildWallpaperSignature(resolvedUserName, metadata) {
+        return JSON.stringify({
+            username: resolvedUserName ?? null,
+            source_uri: metadata?.source_uri ?? null,
+            resolved_slide_path: metadata?.resolved_slide_path ?? null,
+            uri: metadata?.uri ?? null,
+            style: metadata?.style ?? null,
+            primary_color: metadata?.primary_color ?? null,
+            secondary_color: metadata?.secondary_color ?? null,
+            shading_type: metadata?.shading_type ?? null,
+            is_color: metadata?.is_color ?? null,
+            clockAlpha: metadata?.clockAlpha ?? null,
+            promptColor: metadata?.promptColor ?? null,
+        });
     }
 
     // ── Wallpaper application ────────────────────────────────────────────────
@@ -605,6 +686,8 @@ export class GdmManager {
                     resolvedUserName = metadata.username;
                 }
             }
+            this._currentWallpaperMetadata = metadata;
+            const wallpaperSignature = this._buildWallpaperSignature(resolvedUserName, metadata);
 
             _log(`[WACK/GdmManager] _applyWallpaper resolved user: ${resolvedUserName}`);
 
@@ -660,7 +743,12 @@ export class GdmManager {
                 _log('[WACK/GdmManager] Failed to compute dynamic alpha: ' + e);
             });
 
-            if (this._appliedWallpaperUser === resolvedUserName) {
+            this._updateCupertinoPromptBackground(metadata).catch(e => {
+                _log('[WACK/GdmManager] Failed to compute prompt background: ' + e);
+            });
+
+            if (this._appliedWallpaperUser === resolvedUserName &&
+                this._appliedWallpaperSignature === wallpaperSignature) {
                 return;
             }
 
@@ -771,6 +859,7 @@ export class GdmManager {
                 }
             }
             this._appliedWallpaperUser = resolvedUserName;
+            this._appliedWallpaperSignature = wallpaperSignature;
         } catch (e) {
             _log('[WACK/GdmManager] Failed to apply wallpaper: ' + e);
         }
@@ -824,6 +913,10 @@ export class GdmManager {
             this._applyWallpaper(this._dialog._user.get_user_name());
         }
 
+        this._updateCupertinoPromptBackground().catch(e => {
+            _log('[WACK/GdmManager] Failed to apply Cupertino prompt color: ' + e);
+        });
+
         // Reposition prompt to lower third on allocation
         this._connectAllocation(authPrompt, () => this._positionAuthPrompt());
         this._positionAuthPrompt();
@@ -843,6 +936,7 @@ export class GdmManager {
         authPrompt.translation_x = 0;
         authPrompt.translation_y = 0;
         authPrompt.remove_style_class_name('wack-cupertino-prompt');
+        this._clearCupertinoPromptBackground();
 
         if (authPrompt._message) {
             authPrompt._message.remove_style_class_name('wack-cupertino-message');
@@ -862,6 +956,132 @@ export class GdmManager {
 
         // Restore background to the last active user
         this._applyWallpaper(null);
+    }
+
+    _findPromptEntry(actor) {
+        if (!actor)
+            return null;
+
+        if (typeof actor.has_style_class_name === 'function' &&
+            actor.has_style_class_name('login-dialog-prompt-entry')) {
+            return actor;
+        }
+
+        if (typeof actor.get_children !== 'function')
+            return null;
+
+        for (const child of actor.get_children()) {
+            const match = this._findPromptEntry(child);
+            if (match)
+                return match;
+        }
+
+        return null;
+    }
+
+    _applyPromptEntryBackground(entry, color) {
+        if (!entry || !color)
+            return;
+
+        if (entry._wackOriginalStyle === undefined)
+            entry._wackOriginalStyle = entry.get_style() ?? '';
+
+        entry.set_style(`${entry._wackOriginalStyle} background-color: rgb(${color.r}, ${color.g}, ${color.b});`);
+    }
+
+    _clearCupertinoPromptBackground() {
+        const authPrompt = this._dialog?._authPrompt;
+        const entry = this._findPromptEntry(authPrompt);
+        if (!entry)
+            return;
+
+        if (entry._wackOriginalStyle !== undefined) {
+            entry.set_style(entry._wackOriginalStyle);
+            delete entry._wackOriginalStyle;
+        } else {
+            entry.set_style(null);
+        }
+    }
+
+    async _updateCupertinoPromptBackground(metadata = null) {
+        const authPrompt = this._dialog?._authPrompt;
+        if (!authPrompt || !authPrompt.has_style_class_name('wack-cupertino-prompt')) {
+            this._clearCupertinoPromptBackground();
+            return;
+        }
+
+        const entry = this._findPromptEntry(authPrompt);
+        if (!entry)
+            return;
+
+        const effectiveMetadata = metadata ?? this._currentWallpaperMetadata;
+
+        let promptVibrancy = true;
+        if (effectiveMetadata && typeof effectiveMetadata.promptVibrancy === 'boolean') {
+            promptVibrancy = effectiveMetadata.promptVibrancy;
+        } else {
+            try {
+                const settings = this._extension.getSettings();
+                promptVibrancy = settings.get_boolean('prompt-vibrancy');
+            } catch (e) {
+                _log('[WACK/GdmManager] Failed to read prompt-vibrancy from settings: ' + e);
+            }
+        }
+
+        if (!promptVibrancy) {
+            this._clearCupertinoPromptBackground();
+            return;
+        }
+
+        let wallpaperParams = null;
+        if (effectiveMetadata) {
+            if (effectiveMetadata.promptColor &&
+                typeof effectiveMetadata.promptColor.r === 'number' &&
+                typeof effectiveMetadata.promptColor.g === 'number' &&
+                typeof effectiveMetadata.promptColor.b === 'number') {
+                this._applyPromptEntryBackground(entry, effectiveMetadata.promptColor);
+                return;
+            }
+
+            wallpaperParams = {
+                uri: effectiveMetadata.uri,
+                isColor: effectiveMetadata.is_color,
+                primaryColor: effectiveMetadata.primary_color,
+                secondaryColor: effectiveMetadata.secondary_color,
+                shadingType: effectiveMetadata.shading_type,
+            };
+        } else {
+            try {
+                const bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
+                const uri = bgSettings.get_string('picture-uri');
+                const style = bgSettings.get_enum('picture-options');
+                wallpaperParams = {
+                    uri,
+                    isColor: style === 0,
+                    primaryColor: bgSettings.get_string('primary-color'),
+                    secondaryColor: bgSettings.get_string('secondary-color'),
+                    shadingType: bgSettings.get_enum('color-shading-type'),
+                };
+            } catch (e) {
+                _log('[WACK/GdmManager] Failed to get background settings for prompt color: ' + e);
+            }
+        }
+
+        if (!wallpaperParams)
+            return;
+
+        const requestId = ++this._promptColorRequestId;
+        const color = await getWallpaperPromptColor(wallpaperParams);
+
+        if (requestId !== this._promptColorRequestId)
+            return;
+
+        const currentPrompt = this._dialog?._authPrompt;
+        const currentEntry = this._findPromptEntry(currentPrompt);
+        if (!currentPrompt || !currentEntry || !currentPrompt.has_style_class_name('wack-cupertino-prompt'))
+            return;
+
+        this._applyPromptEntryBackground(currentEntry, color);
     }
 
     _setupGdmAvatarOverride() {
