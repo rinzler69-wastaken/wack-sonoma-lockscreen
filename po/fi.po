@@ -122,6 +122,21 @@ msgstr "Klassinen"
 msgid "Lockscreen Mode"
 msgstr "Lukitusnäytön tila"
 
+msgid "Show message when locked"
+msgstr "Näytä viesti lukittuna"
+
+msgid "Set..."
+msgstr "Aseta..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Aseta lukitusnäytössä näytettävä viesti"
+
+msgid "Cancel"
+msgstr "Peruuta"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "tila"
 
@@ -166,6 +181,9 @@ msgstr "Palauta oletusasetukset"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Näyttää mukautetun viestin käyttäjän kirjautumiskentän yläpuolella."
 
 msgid "Screen Timeout"
 msgstr "Näytön aikakatkaisu"

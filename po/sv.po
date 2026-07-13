@@ -122,6 +122,21 @@ msgstr "Klassisk"
 msgid "Lockscreen Mode"
 msgstr "Låsskärmsläge"
 
+msgid "Show message when locked"
+msgstr "Visa meddelande vid låsning"
+
+msgid "Set..."
+msgstr "Ställ in..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Ange ett meddelande som ska visas på låsskärmen"
+
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "Läge"
 
@@ -166,6 +181,9 @@ msgstr "Återställ standardinställningar"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Visa ett anpassat meddelande ovanför användarrutan."
 
 msgid "Screen Timeout"
 msgstr "Timeout för skärm"

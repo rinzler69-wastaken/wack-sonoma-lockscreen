@@ -4,6 +4,7 @@ import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import GDesktopEnums from 'gi://GDesktopEnums';
 import GLib from 'gi://GLib';
+import Pango from 'gi://Pango';
 import St from 'gi://St';
 import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -19,10 +20,11 @@ import {
     CUPERTINO_PROMPT_VERTICAL_FRACTION,
     GDM_CROSSFADE_DURATION,
     centerClockLabel,
+    MESSAGELABEL_HEIGHT,
 } from './constants.js';
 
 function _log(msg) {
-    console.log(msg);
+    console.debug(msg);
 }
 
 function _logError(msg) {
@@ -184,6 +186,19 @@ export class GdmManager {
         this._dialogParent.add_child(this._gdmClockWrapper);
         this._dialogParent.set_child_above_sibling(this._gdmClockWrapper, null);
 
+        // Lockscreen message label — child of _dialogParent so the dialog's layout
+        // manager cannot override our set_position calls.
+        this._lockscreenMessageLabel = new St.Label({
+            style_class: 'wack-cupertino-lockscreen-message',
+            x_align: Clutter.ActorAlign.CENTER,
+            y_align: Clutter.ActorAlign.CENTER,
+            visible: false,
+        });
+        this._lockscreenMessageLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+        this._lockscreenMessageLabel.clutter_text.line_wrap = true;
+        this._dialogParent.add_child(this._lockscreenMessageLabel);
+        this._dialogParent.set_child_above_sibling(this._lockscreenMessageLabel, null);
+
         this._timeLabel = timeLabel;
         this._connectAllocation(dialog, () => this._positionClock());
         this._connectAllocation(this._gdmClockWrapper, () => this._positionClock());
@@ -227,8 +242,14 @@ export class GdmManager {
                     // No need to rebuild anything.
                 }
                 this._gdmClockWrapper.opacity = 255;
+                if (this._lockscreenMessageLabel && this._lockscreenMessageLabel.visible) {
+                    this._lockscreenMessageLabel.opacity = 255;
+                }
             } else if (hasBeenFullyVisible) {
                 this._gdmClockWrapper.opacity = op;
+                if (this._lockscreenMessageLabel && this._lockscreenMessageLabel.visible) {
+                    this._lockscreenMessageLabel.opacity = op;
+                }
             }
         });
 
@@ -245,6 +266,9 @@ export class GdmManager {
             this._origOnReset(...args);
             this._onReset();
         };
+        this._authPromptResetId = dialog._authPrompt.connect('reset', () => {
+            this._onReset();
+        });
 
         this._setupGdmAvatarOverride();
     }
@@ -252,6 +276,7 @@ export class GdmManager {
     // ── Teardown ──────────────────────────────────────────────────────────────
 
     _teardown() {
+        this._stopCursorBlink();
         if (!this._dialog) return;
         const dialog = this._dialog;
 
@@ -283,6 +308,11 @@ export class GdmManager {
             this._backgroundGroup = null;
         }
 
+        if (this._lockscreenMessageLabel) {
+            this._lockscreenMessageLabel.destroy();
+            this._lockscreenMessageLabel = null;
+        }
+
         if (this._cupertinoRestPromptContainer) {
             this._cupertinoRestPromptContainer.destroy();
             this._cupertinoRestPromptContainer = null;
@@ -295,6 +325,11 @@ export class GdmManager {
         }
 
         this._teardownUserListWidths();
+
+        if (this._authPromptResetId && dialog?._authPrompt) {
+            dialog._authPrompt.disconnect(this._authPromptResetId);
+            this._authPromptResetId = 0;
+        }
 
         for (const { actor, id } of this._allocationHandlers)
             actor.disconnect(id);
@@ -499,6 +534,16 @@ export class GdmManager {
         authPrompt.translation_y = targetY - currentY;
 
         authPrompt.translation_x = Math.floor(w / 2 - promptW / 2) - (authPrompt.x || 0);
+
+        if (this._lockscreenMessageLabel && this._lockscreenMessageLabel.visible) {
+            const alloc = this._dialog.get_allocation_box();
+            const [, , msgW, msgH] = this._lockscreenMessageLabel.get_preferred_size();
+            // Position in _dialogParent coordinates: mirror _positionClock pattern
+            const msgX = alloc.x1 + Math.floor((w - msgW) / 2.0);
+            const msgY = alloc.y1 + targetY - MESSAGELABEL_HEIGHT - msgH;
+            this._lockscreenMessageLabel.set_position(msgX, msgY);
+        }
+
         _log('[WACK/GdmManager] positionAuthPrompt currentY: ' + currentY + ' targetY: ' + targetY + ' translation_y: ' + authPrompt.translation_y + ' translation_x: ' + authPrompt.translation_x + ' wellH: ' + wellH + ' anchorH: ' + anchorH);
     }
 
@@ -622,7 +667,49 @@ export class GdmManager {
             is_color: metadata?.is_color ?? null,
             clockAlpha: metadata?.clockAlpha ?? null,
             promptColor: metadata?.promptColor ?? null,
+            lockscreenMessageEnable: metadata?.lockscreenMessageEnable ?? null,
+            lockscreenMessageText: metadata?.lockscreenMessageText ?? null,
         });
+    }
+
+    _updateLockscreenMessage(metadata = null) {
+        if (!this._lockscreenMessageLabel) return;
+
+        const effectiveMetadata = metadata ?? this._currentWallpaperMetadata;
+        
+        const userSelected = !!(this._dialog?._user);
+        const userListVisible = !!(this._dialog?._userSelectionBox?.visible);
+        const authPromptActive = !!(this._dialog?._authPrompt?.visible);
+        
+        const showMessage = authPromptActive && userSelected && !userListVisible;
+
+        // Only show the message when the password prompt is actively shown for a selected user.
+        // Keep it hidden during user selection or transitions.
+        if (showMessage && effectiveMetadata) {
+            const enabled = effectiveMetadata.lockscreenMessageEnable ?? false;
+            const text = effectiveMetadata.lockscreenMessageText ?? '';
+            const cleanText = (text || '').trim();
+            if (enabled && cleanText) {
+                this._lockscreenMessageLabel.text = cleanText;
+                if (!this._lockscreenMessageLabel.visible) {
+                    this._lockscreenMessageLabel.opacity = 0;
+                    this._lockscreenMessageLabel.visible = true;
+                    this._lockscreenMessageLabel.ease({
+                        opacity: 255,
+                        duration: 250,
+                        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    });
+                }
+            } else {
+                this._lockscreenMessageLabel.visible = false;
+            }
+        } else {
+            this._lockscreenMessageLabel.visible = false;
+        }
+
+        if (showMessage) {
+            this._positionAuthPrompt();
+        }
     }
 
     // ── Wallpaper application ────────────────────────────────────────────────
@@ -687,6 +774,7 @@ export class GdmManager {
                 }
             }
             this._currentWallpaperMetadata = metadata;
+            this._updateLockscreenMessage(metadata);
             const wallpaperSignature = this._buildWallpaperSignature(resolvedUserName, metadata);
 
             _log(`[WACK/GdmManager] _applyWallpaper resolved user: ${resolvedUserName}`);
@@ -917,12 +1005,19 @@ export class GdmManager {
             _log('[WACK/GdmManager] Failed to apply Cupertino prompt color: ' + e);
         });
 
+        this._updateLockscreenMessage();
+
         // Reposition prompt to lower third on allocation
         this._connectAllocation(authPrompt, () => this._positionAuthPrompt());
+        if (this._lockscreenMessageLabel) {
+            this._connectAllocation(this._lockscreenMessageLabel, () => this._positionAuthPrompt());
+        }
         this._positionAuthPrompt();
+        this._startCursorBlink();
     }
 
     _onReset() {
+        this._stopCursorBlink();
         _log('[WACK/GdmManager] _onReset called');
         const authPrompt = this._dialog?._authPrompt;
         if (!authPrompt) return;
@@ -935,6 +1030,10 @@ export class GdmManager {
 
         authPrompt.translation_x = 0;
         authPrompt.translation_y = 0;
+
+        if (this._lockscreenMessageLabel)
+            this._lockscreenMessageLabel.visible = false;
+
         authPrompt.remove_style_class_name('wack-cupertino-prompt');
         this._clearCupertinoPromptBackground();
 
@@ -956,6 +1055,43 @@ export class GdmManager {
 
         // Restore background to the last active user
         this._applyWallpaper(null);
+    }
+
+    _startCursorBlink() {
+        this._stopCursorBlink();
+
+        const authPrompt = this._dialog?._authPrompt;
+        if (!authPrompt) return;
+
+        let visible = true;
+        this._cursorBlinkTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+            const currentAuthPrompt = this._dialog?._authPrompt;
+            if (!this._dialog || !currentAuthPrompt || !currentAuthPrompt.visible) {
+                this._cursorBlinkTimeoutId = 0;
+                return GLib.SOURCE_REMOVE;
+            }
+
+            const entry = this._findPromptEntry(currentAuthPrompt);
+            if (!entry || !entry.clutter_text) {
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            if (!entry.clutter_text.has_key_focus()) {
+                entry.clutter_text.cursor_visible = false;
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            visible = !visible;
+            entry.clutter_text.cursor_visible = visible;
+            return GLib.SOURCE_CONTINUE;
+        });
+    }
+
+    _stopCursorBlink() {
+        if (this._cursorBlinkTimeoutId) {
+            GLib.source_remove(this._cursorBlinkTimeoutId);
+            this._cursorBlinkTimeoutId = 0;
+        }
     }
 
     _findPromptEntry(actor) {
@@ -986,20 +1122,97 @@ export class GdmManager {
         if (entry._wackOriginalStyle === undefined)
             entry._wackOriginalStyle = entry.get_style() ?? '';
 
-        entry.set_style(`${entry._wackOriginalStyle} background-color: rgb(${color.r}, ${color.g}, ${color.b});`);
+        let shadowStyle = '';
+        if (color.shadowAlpha !== undefined) {
+            shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+        }
+
+        entry.set_style(`${entry._wackOriginalStyle} background-color: rgb(${color.r}, ${color.g}, ${color.b}) !important;${shadowStyle}`);
+    }
+
+    _applyCancelButtonBackground(button, color) {
+        if (!button || !color)
+            return;
+
+        button._wackColor = color;
+
+        if (button._wackOriginalStyle === undefined) {
+            button._wackOriginalStyle = button.get_style() ?? '';
+
+            button.connectObject(
+                'notify::hover', () => this._updateCancelButtonStyle(button),
+                'button-press-event', () => {
+                    button._wackPressed = true;
+                    this._updateCancelButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                'button-release-event', () => {
+                    button._wackPressed = false;
+                    this._updateCancelButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                this
+            );
+        }
+
+        this._updateCancelButtonStyle(button);
+    }
+
+    _updateCancelButtonStyle(button) {
+        const color = button._wackColor;
+        if (!color)
+            return;
+
+        if (!button.hover)
+            button._wackPressed = false;
+
+        let r = color.r;
+        let g = color.g;
+        let b = color.b;
+
+        if (button._wackPressed) {
+            // Subtle active lightening (blend 25% white)
+            r = Math.round(r * 0.75 + 255 * 0.25);
+            g = Math.round(g * 0.75 + 255 * 0.25);
+            b = Math.round(b * 0.75 + 255 * 0.25);
+        } else if (button.hover) {
+            // Subtle hover lightening (blend 12.5% white)
+            r = Math.round(r * 0.875 + 255 * 0.125);
+            g = Math.round(g * 0.875 + 255 * 0.125);
+            b = Math.round(b * 0.875 + 255 * 0.125);
+        }
+
+        let shadowStyle = '';
+        if (color.shadowAlpha !== undefined) {
+            shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+        }
+
+        button.set_style(`${button._wackOriginalStyle} background-color: rgb(${r}, ${g}, ${b}) !important;${shadowStyle}`);
     }
 
     _clearCupertinoPromptBackground() {
         const authPrompt = this._dialog?._authPrompt;
         const entry = this._findPromptEntry(authPrompt);
-        if (!entry)
-            return;
+        if (entry) {
+            if (entry._wackOriginalStyle !== undefined) {
+                entry.set_style(entry._wackOriginalStyle);
+                delete entry._wackOriginalStyle;
+            } else {
+                entry.set_style(null);
+            }
+        }
 
-        if (entry._wackOriginalStyle !== undefined) {
-            entry.set_style(entry._wackOriginalStyle);
-            delete entry._wackOriginalStyle;
-        } else {
-            entry.set_style(null);
+        const cancelButton = authPrompt?.cancelButton;
+        if (cancelButton) {
+            cancelButton.disconnectObject(this);
+            if (cancelButton._wackOriginalStyle !== undefined) {
+                cancelButton.set_style(cancelButton._wackOriginalStyle);
+                delete cancelButton._wackOriginalStyle;
+            } else {
+                cancelButton.set_style(null);
+            }
+            delete cancelButton._wackColor;
+            delete cancelButton._wackPressed;
         }
     }
 
@@ -1040,6 +1253,8 @@ export class GdmManager {
                 typeof effectiveMetadata.promptColor.g === 'number' &&
                 typeof effectiveMetadata.promptColor.b === 'number') {
                 this._applyPromptEntryBackground(entry, effectiveMetadata.promptColor);
+                if (authPrompt.cancelButton)
+                    this._applyCancelButtonBackground(authPrompt.cancelButton, effectiveMetadata.promptColor);
                 return;
             }
 
@@ -1082,6 +1297,8 @@ export class GdmManager {
             return;
 
         this._applyPromptEntryBackground(currentEntry, color);
+        if (currentPrompt.cancelButton)
+            this._applyCancelButtonBackground(currentPrompt.cancelButton, color);
     }
 
     _setupGdmAvatarOverride() {

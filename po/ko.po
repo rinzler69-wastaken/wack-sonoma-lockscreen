@@ -122,6 +122,21 @@ msgstr "클래식"
 msgid "Lockscreen Mode"
 msgstr "잠금화면 모드"
 
+msgid "Show message when locked"
+msgstr "잠금 시 메시지 표시"
+
+msgid "Set..."
+msgstr "설정..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "잠금 화면에 표시할 메시지 설정"
+
+msgid "Cancel"
+msgstr "취소"
+
+msgid "OK"
+msgstr "확인"
+
 msgid "Mode"
 msgstr "방법"
 
@@ -166,6 +181,9 @@ msgstr "기본값 복원"
 
 msgid "Saweria"
 msgstr "사웨리아"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "사용자 입력란 위에 사용자 정의 메시지를 표시합니다."
 
 msgid "Screen Timeout"
 msgstr "화면 시간 초과"

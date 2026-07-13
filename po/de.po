@@ -122,6 +122,21 @@ msgstr "Klassisch"
 msgid "Lockscreen Mode"
 msgstr "Sperrbildschirmmodus"
 
+msgid "Show message when locked"
+msgstr "Nachricht bei Sperrung anzeigen"
+
+msgid "Set..."
+msgstr "Festlegen..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Legen Sie eine Nachricht fest, die auf dem Sperrbildschirm angezeigt wird"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "Modus"
 
@@ -166,6 +181,9 @@ msgstr "Standardeinstellungen wiederherstellen"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Zeigt eine benutzerdefinierte Nachricht über dem Eingabebereich für den Benutzer an."
 
 msgid "Screen Timeout"
 msgstr "Bildschirm-Timeout"

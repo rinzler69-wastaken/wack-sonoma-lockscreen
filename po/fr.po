@@ -122,6 +122,21 @@ msgstr "Classique"
 msgid "Lockscreen Mode"
 msgstr "Mode écran de verrouillage"
 
+msgid "Show message when locked"
+msgstr "Afficher le message lorsque verrouillé"
+
+msgid "Set..."
+msgstr "Définir..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Définir un message à afficher sur l'écran de verrouillage"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "Mode"
 
@@ -166,6 +181,9 @@ msgstr "Restaurer les valeurs par défaut"
 
 msgid "Saweria"
 msgstr "Sawéria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Affiche un message personnalisé au-dessus de la zone de saisie de l'utilisateur."
 
 msgid "Screen Timeout"
 msgstr "Délai d'expiration de l'écran"

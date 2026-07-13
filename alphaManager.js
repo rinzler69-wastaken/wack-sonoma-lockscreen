@@ -266,7 +266,7 @@ export function initCache() {
                 const [success, contents] = file.load_contents_finish(res);
                 if (success) {
                     const data = JSON.parse(new TextDecoder().decode(contents));
-                    if (data && data.__version__ === 'v1') {
+                    if (data && data.__version__ === 'v6') {
                         for (const [k, v] of Object.entries(data)) {
                             if (k !== '__version__')
                                 _cache.set(k, v);
@@ -287,7 +287,7 @@ export function initCache() {
 
 function saveCache() {
     try {
-        const obj = { __version__: 'v1' };
+        const obj = { __version__ : 'v6' };
         for (const [k, v] of _cache.entries())
             obj[k] = v;
         const data = JSON.stringify(obj);
@@ -728,7 +728,13 @@ export async function getWallpaperAlpha(params) {
 //   At FLOOR (0.12): chip is 12% white on very dark wallpapers — keeps the chip dark.
 //   At ROOF  (0.70): chip is 70% white on bright wallpapers — keeps the chip frosted-white.
 const PROMPT_ALPHA_FLOOR = 0.16;
-const PROMPT_ALPHA_ROOF = 0.24;
+const PROMPT_ALPHA_ROOF = 0.224;
+
+// Tuning range for the dynamic password prompt box-shadow alpha.
+//   At FLOOR (0.04): subtle shadow on very dark wallpapers.
+//   At ROOF  (0.175): maximum shadow depth on bright wallpapers (like pink clouds).
+const PROMPT_SHADOW_FLOOR = 0.05;
+const PROMPT_SHADOW_ROOF = 0.1175;
 
 /**
  * Computes the adaptive white-blend alpha for the Cupertino prompt chip based on
@@ -799,7 +805,7 @@ export async function getWallpaperPromptColor(params) {
 
     const cacheKey = `prompt_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}`;
     if (_cache.has(cacheKey)) {
-        console.log(`[WACK/AlphaManager] cache HIT for key: ${cacheKey}`);
+        console.debug(`[WACK/AlphaManager] cache HIT for key: ${cacheKey}`);
         return _cache.get(cacheKey);
     }
 
@@ -843,7 +849,7 @@ export async function getWallpaperPromptColor(params) {
             const Rw = nativeWidth / nativeHeight;
 
             const mappedBounds = mapScreenToSourceCoords(
-                0.4, 0.6, 0.88, 1.0,
+                0.4, 0.6, 0.915, 0.955,
                 Rw, Rs,
                 pictureOptions,
                 nativeWidth, nativeHeight,
@@ -851,7 +857,7 @@ export async function getWallpaperPromptColor(params) {
             );
 
             const centerMapped = mapScreenToSourceCoords(
-                0.5, 0.5, CUPERTINO_PROMPT_VERTICAL_FRACTION, CUPERTINO_PROMPT_VERTICAL_FRACTION,
+                0.5, 0.5, 0.935, 0.935,
                 Rw, Rs,
                 pictureOptions,
                 nativeWidth, nativeHeight,
@@ -866,16 +872,49 @@ export async function getWallpaperPromptColor(params) {
         }
     }
 
+    const luminance = Math.max(0, Math.min(1, getRelativeLuminance(sampled)));
+    const perceptualL = getPerceptualLightness(luminance);
+
+    let overlay = { r: 255, g: 255, b: 255 };
     const alpha = getPromptBlendAlpha(sampled);
+
+    // If the sampled background color is near-white (perceptual lightness > 0.7 AND desaturated),
+    // smoothly transition the overlay color from white to black. The blend ratio
+    // is kept strictly governed by getPromptBlendAlpha.
+    const maxVal = Math.max(sampled.r, sampled.g, sampled.b);
+    const minVal = Math.min(sampled.r, sampled.g, sampled.b);
+    const chroma = (maxVal - minVal) / 255.0;
+
+    if (perceptualL > 0.7 && chroma < 0.08) {
+        const t = (perceptualL - 0.7) / 0.3; // 0.0 to 1.0
+        overlay = {
+            r: Math.round(255 * (1 - t)),
+            g: Math.round(255 * (1 - t)),
+            b: Math.round(255 * (1 - t)),
+        };
+    }
+
     const blended = blendOverOpaque(
         sampled,
-        { r: 255, g: 255, b: 255 },
+        overlay,
         alpha
     );
-    console.log(`[WACK/AlphaManager] cache MISS for key: ${cacheKey}, computed: ${JSON.stringify(blended)}`);
-    _cache.set(cacheKey, blended);
+
+    // Calculate a dynamic box-shadow alpha to help the entry chip stand out
+    // against light details/clouds in the wallpaper.
+    const shadowAlpha = PROMPT_SHADOW_FLOOR + (PROMPT_SHADOW_ROOF - PROMPT_SHADOW_FLOOR) * perceptualL;
+
+    const result = {
+        r: blended.r,
+        g: blended.g,
+        b: blended.b,
+        shadowAlpha: shadowAlpha
+    };
+
+    console.debug(`[WACK/AlphaManager] cache MISS for key: ${cacheKey}, computed: ${JSON.stringify(result)}`);
+    _cache.set(cacheKey, result);
     saveCache();
-    return blended;
+    return result;
 }
 
 export function clearCache() {

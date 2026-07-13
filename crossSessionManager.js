@@ -4,7 +4,7 @@ import GdkPixbuf from 'gi://GdkPixbuf';
 import { resolveSlideshowXmlContent } from './constants.js';
 
 function _log(msg) {
-    console.log(msg);
+    console.debug(msg);
 }
 
 export class CrossSessionManager {
@@ -42,6 +42,8 @@ export class CrossSessionManager {
 
         this._settings.connectObject(
             'changed::prompt-vibrancy', save,
+            'changed::cupertino-lockscreen-message-enable', save,
+            'changed::cupertino-lockscreen-message-text', save,
             this
         );
         this._bgSettings.connectObject(
@@ -292,6 +294,8 @@ export class CrossSessionManager {
                 clockAlpha: this._clockAlpha ?? 0.6,
                 promptColor: this._promptColor,
                 promptVibrancy: this._settings ? this._settings.get_boolean('prompt-vibrancy') : true,
+                lockscreenMessageText: this._settings ? this._settings.get_string('cupertino-lockscreen-message-text') : '',
+                lockscreenMessageEnable: this._settings ? this._settings.get_boolean('cupertino-lockscreen-message-enable') : false,
             };
 
             metaFile.replace_contents(

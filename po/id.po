@@ -122,6 +122,21 @@ msgstr "Klasik"
 msgid "Lockscreen Mode"
 msgstr "Mode Layar Kunci"
 
+msgid "Show message when locked"
+msgstr "Tampilkan pesan saat terkunci"
+
+msgid "Set..."
+msgstr "Atur..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Atur pesan untuk ditampilkan di layar kunci"
+
+msgid "Cancel"
+msgstr "Batal"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "Mode"
 
@@ -166,6 +181,9 @@ msgstr "Kembalikan default"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Tampilkan pesan khusus di atas kolom input pengguna."
 
 msgid "Screen Timeout"
 msgstr "Batas Waktu Layar"

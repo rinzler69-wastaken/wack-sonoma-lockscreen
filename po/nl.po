@@ -122,6 +122,21 @@ msgstr "Klassiek"
 msgid "Lockscreen Mode"
 msgstr "Vergrendelschermmodus"
 
+msgid "Show message when locked"
+msgstr "Bericht tonen bij vergrendeling"
+
+msgid "Set..."
+msgstr "Instellen..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Stel een bericht in dat op het vergrendelscherm verschijnt"
+
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "Modus"
 
@@ -166,6 +181,9 @@ msgstr "Standaardwaarden herstellen"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Toont een aangepast bericht boven het gebruikersveld."
 
 msgid "Screen Timeout"
 msgstr "Schermtime-out"

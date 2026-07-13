@@ -122,6 +122,21 @@ msgstr ""
 msgid "Lockscreen Mode"
 msgstr ""
 
+msgid "Show message when locked"
+msgstr ""
+
+msgid "Set..."
+msgstr ""
+
+msgid "Set a message to appear on the lockscreen"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
 msgid "Mode"
 msgstr ""
 
@@ -165,6 +180,9 @@ msgid "Restore defaults"
 msgstr ""
 
 msgid "Saweria"
+msgstr ""
+
+msgid "Show a custom message above the user prompt stack."
 msgstr ""
 
 msgid "Screen Timeout"

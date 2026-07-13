@@ -1,16 +1,14 @@
-# GNOME Shell extension quick installer
-
-SHELL := /bin/sh
-UUID  := wack-lockscreen-clock@rinzler69-wastaken.github.com
-DEST  := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
-EXCLUDES := --exclude '.git' --exclude '.gitignore' --exclude '.codex' --exclude '.sixth' --exclude 'Makefile'
-
-.PHONY: install enable pack compile-po
+.PHONY: install enable pack compile-po deploy-schema
 
 compile-po: ## Compile all .po files to .mo binaries in locale/
 	@python3 po/generate.py
 
-install: compile-po ## Copy the extension into the correct UUID directory
+deploy-schema: ## Symlink the schema XML to the system path and recompile
+	@pkexec sh -c "ln -sf $$(pwd)/schemas/org.gnome.shell.extensions.wack-lockscreen-clock.gschema.xml /usr/share/glib-2.0/schemas/ && glib-compile-schemas /usr/share/glib-2.0/schemas/" && \
+		printf 'System schema symlinked and compiled.\n' || \
+		printf 'WARNING: Could not deploy system schema (pkexec failed). Run manually:\n  sudo ln -sf $$(pwd)/schemas/org.gnome.shell.extensions.wack-lockscreen-clock.gschema.xml /usr/share/glib-2.0/schemas/\n  sudo glib-compile-schemas /usr/share/glib-2.0/schemas/\n'
+
+install: compile-po deploy-schema ## Copy the extension into the correct UUID directory
 	@mkdir -p "$(DEST)"
 	@rsync -a --delete $(EXCLUDES) ./ "$(DEST)/"
 	@sed -i -e "s|font-family: 'SF Pro Display';|/* font-family: 'SF Pro Display'; */|g" -e "s|font-family: '\.SF Soft Numeric';|/* font-family: '.SF Soft Numeric'; */|g" "$(DEST)/stylesheet.css"

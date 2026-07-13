@@ -122,6 +122,21 @@ msgstr "Clásico"
 msgid "Lockscreen Mode"
 msgstr "Modo de pantalla de bloqueo"
 
+msgid "Show message when locked"
+msgstr "Mostrar mensaje al estar bloqueado"
+
+msgid "Set..."
+msgstr "Establecer..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Establecer un mensaje para mostrar en la pantalla de bloqueo"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "OK"
+msgstr "Aceptar"
+
 msgid "Mode"
 msgstr "Modo"
 
@@ -166,6 +181,9 @@ msgstr "Restaurar valores predeterminados"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Muestra un mensaje personalizado sobre el indicador de usuario."
 
 msgid "Screen Timeout"
 msgstr "Tiempo de espera de pantalla"

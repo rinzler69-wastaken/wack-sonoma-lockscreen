@@ -122,6 +122,21 @@ msgstr "经典"
 msgid "Lockscreen Mode"
 msgstr "锁屏模式"
 
+msgid "Show message when locked"
+msgstr "锁屏时显示消息"
+
+msgid "Set..."
+msgstr "设置..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "设置要在锁屏上显示的消息"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "OK"
+msgstr "确定"
+
 msgid "Mode"
 msgstr "模式"
 
@@ -166,6 +181,9 @@ msgstr "恢复默认设置"
 
 msgid "Saweria"
 msgstr "萨维利亚"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "在用户登录框上方显示自定义消息。"
 
 msgid "Screen Timeout"
 msgstr "屏幕超时"

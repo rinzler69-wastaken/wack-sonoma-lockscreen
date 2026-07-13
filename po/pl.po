@@ -122,6 +122,21 @@ msgstr "Klasyczny"
 msgid "Lockscreen Mode"
 msgstr "Tryb ekranu blokady"
 
+msgid "Show message when locked"
+msgstr "Pokaż wiadomość po zablokowaniu"
+
+msgid "Set..."
+msgstr "Ustaw..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Ustaw wiadomość, która ma pojawiać się na ekranie blokady"
+
+msgid "Cancel"
+msgstr "Anuluj"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "Tryb"
 
@@ -166,6 +181,9 @@ msgstr "Przywróć ustawienia domyślne"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Wyświetla własny komunikat nad polem logowania użytkownika."
 
 msgid "Screen Timeout"
 msgstr "Limit czasu ekranu"

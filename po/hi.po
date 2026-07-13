@@ -122,6 +122,21 @@ msgstr "क्लासिक"
 msgid "Lockscreen Mode"
 msgstr "लॉकस्क्रीन मोड"
 
+msgid "Show message when locked"
+msgstr "लॉक होने पर संदेश दिखाएं"
+
+msgid "Set..."
+msgstr "सेट करें..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "लॉकस्क्रीन पर दिखने के लिए एक संदेश सेट करें"
+
+msgid "Cancel"
+msgstr "रद्द करें"
+
+msgid "OK"
+msgstr "ठीक है"
+
 msgid "Mode"
 msgstr "तरीका"
 
@@ -166,6 +181,9 @@ msgstr "डिफॉल्ट्स का पुनःस्थापन"
 
 msgid "Saweria"
 msgstr "सवेरिया"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "उपयोगकर्ता संकेत के ऊपर एक कस्टम संदेश दिखाएं।"
 
 msgid "Screen Timeout"
 msgstr "स्क्रीन काल समापन"

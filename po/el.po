@@ -122,6 +122,21 @@ msgstr "Κλασικό"
 msgid "Lockscreen Mode"
 msgstr "Λειτουργία οθόνης κλειδώματος"
 
+msgid "Show message when locked"
+msgstr "Εμφάνιση μηνύματος κατά το κλείδωμα"
+
+msgid "Set..."
+msgstr "Ορισμός..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Ορίστε ένα μήνυμα για εμφάνιση στην οθόνη κλειدودματος"
+
+msgid "Cancel"
+msgstr "Ακύρωση"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "Τρόπος"
 
@@ -166,6 +181,9 @@ msgstr "Επαναφορά προεπιλογών"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Εμφάνιση προσαρμοσμένου μηνύματος πάνω από το πλαίσιο εισόδου του χρήστη."
 
 msgid "Screen Timeout"
 msgstr "Λήξη χρονικού ορίου οθόνης"

@@ -122,6 +122,21 @@ msgstr "Klasik"
 msgid "Lockscreen Mode"
 msgstr "Kilit Ekranı Modu"
 
+msgid "Show message when locked"
+msgstr "Kilitliyken mesajı göster"
+
+msgid "Set..."
+msgstr "Ayarla..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Kilit ekranında görünecek bir mesaj ayarla"
+
+msgid "Cancel"
+msgstr "İptal"
+
+msgid "OK"
+msgstr "Tamam"
+
 msgid "Mode"
 msgstr "Mod"
 
@@ -166,6 +181,9 @@ msgstr "Varsayılanları geri yükle"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Kullanıcı giriş alanının üstünde özel bir mesaj göster."
 
 msgid "Screen Timeout"
 msgstr "Ekran Zaman Aşımı"

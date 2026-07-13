@@ -22,7 +22,7 @@ export const PROMPT_BLUR_DURATION = 300;
 export const SETTINGS_SCHEMA = 'org.gnome.shell.extensions.wack-lockscreen-clock';
 
 // Individual notification card blur settings
-export const NOTIF_BLUR_RADIUS = 30;
+export const NOTIF_BLUR_RADIUS = 75;
 export const NOTIF_BLUR_BRIGHTNESS = 1.0;
 export const NOTIF_BLUR_NAME = 'wack-notif-blur';
 export const NOTIF_CARD_RADIUS = 12;
@@ -30,6 +30,7 @@ export const NOTIF_CARD_RADIUS = 12;
 // Cupertino mode prompt positioning
 export const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9575; // Prompt center Y as fraction of screen height
 export const CUPERTINO_PROMPT_WHITE_BLEND_ALPHA = 0.08;
+export const MESSAGELABEL_HEIGHT = 48;
 
 // GDM mode positioning and transitions
 export const GDM_USER_STACK_VERTICAL_FRACTION = 0.815; // User selection list center Y in GDM mode

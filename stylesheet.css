@@ -35,7 +35,7 @@
 
 .unlock-dialog-notification-source,
 .media-message {
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: rgba(255, 255, 255, 0.1125) !important;
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04);
     padding: 14px;
@@ -46,7 +46,7 @@
 }
 
 .media-message:hover {
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: rgba(255, 255, 255, 0.1125) !important;
 }
 
 
@@ -72,8 +72,8 @@
     border-radius: 999px !important;
     background-color: rgba(236, 236, 236, 0.12);
     color: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.02);
-    box-shadow: 0 2px 24px 16px rgba(0, 0, 0, 0.0925) !important;
+    /* border: 1px solid rgba(255, 255, 255, 0.02); */
+    box-shadow: 0 2px 24px 16px rgba(0, 0, 0, 0.05) !important;
 }
 
 .login-dialog .login-dialog-prompt-entry:hover,
@@ -99,7 +99,8 @@
 
 .login-dialog .login-dialog-prompt-entry StLabel.hint-text,
 .unlock-dialog .login-dialog-prompt-entry StLabel.hint-text {
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.55);
+    font-weight: bold;
 }
 
 
@@ -261,36 +262,44 @@
 }
 
 .wack-cupertino-prompt .login-dialog-button-box {
-    padding: 0 1.5em !important;
+    padding: 0.0875em 0.85em !important;
+    height: 34px !important;
 }
 
 .wack-cupertino-rest .login-dialog-prompt-entry {
     opacity: 255 !important;
 }
 
-.wack-cupertino-prompt .login-dialog-prompt-entry {
+.wack-cupertino-prompt .login-dialog-prompt-entry,
+.login-dialog .wack-cupertino-prompt .login-dialog-prompt-entry {
     font-size: 14px !important;
-    padding: 2px 6px !important;
-    margin-top: 3px !important;
-    margin-bottom: 3px !important;
+    padding: 0px 9px !important;
     border-radius: 9999px !important;
 }
 
 /* Sync GDM Cupertino cancel button styling with the prompt entry */
 .login-dialog .wack-cupertino-prompt .login-dialog-button.cancel-button {
+    opacity: 1 !important;
     background-color: rgba(236, 236, 236, 0.175) !important;
     color: rgba(255, 255, 255, 0.85) !important;
+    padding: 0.5px !important;
+    height: 34px !important;
+    width: 34px !important;
+    /* margin-left: 2.5px !important;
+    margin-right: 2.5px !important; */
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .login-dialog .wack-cupertino-prompt .login-dialog-button.cancel-button:hover,
 .login-dialog .wack-cupertino-prompt .login-dialog-button.cancel-button:focus {
+    opacity: 1 !important;
     background-color: rgba(236, 236, 236, 0.1775) !important;
     box-shadow: inset 0 0 8px 3px rgba(255, 255, 255, 0.188) !important;
     color: #ffffff !important;
 }
 
 .login-dialog .wack-cupertino-prompt .login-dialog-button.cancel-button:active {
+    opacity: 1 !important;
     background-color: rgba(236, 236, 236, 0.25) !important;
     box-shadow: inset 0 0 8px 3px rgba(255, 255, 255, 0.088) !important;
 }
@@ -314,6 +323,16 @@
     padding-top: 0;
     text-align: center !important;
     text-wrap: wrap !important;
+}
+
+.wack-cupertino-lockscreen-message {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+    text-align: center !important;
+    text-wrap: wrap !important;
+    margin: 0px !important;
 }
 
 /* ── Cupertino: restyle native CapsLockWarning and PAM message ──────────────

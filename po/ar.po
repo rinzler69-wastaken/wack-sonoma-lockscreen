@@ -122,6 +122,21 @@ msgstr "كلاسيكي"
 msgid "Lockscreen Mode"
 msgstr "وضع قفل الشاشة"
 
+msgid "Show message when locked"
+msgstr "إظهار رسالة عند القفل"
+
+msgid "Set..."
+msgstr "تعيين..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "تعيين رسالة لتظهر على شاشة القفل"
+
+msgid "Cancel"
+msgstr "إلغاء"
+
+msgid "OK"
+msgstr "موافق"
+
 msgid "Mode"
 msgstr "وضع"
 
@@ -166,6 +181,9 @@ msgstr "استعادة الإعدادات الافتراضية"
 
 msgid "Saweria"
 msgstr "ساويرية"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "عرض رسالة مخصصة فوق حقل إدخال المستخدم."
 
 msgid "Screen Timeout"
 msgstr "مهلة الشاشة"

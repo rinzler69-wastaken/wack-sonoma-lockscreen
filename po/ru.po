@@ -122,6 +122,21 @@ msgstr "Классический"
 msgid "Lockscreen Mode"
 msgstr "Режим блокировки экрана"
 
+msgid "Show message when locked"
+msgstr "Показывать сообщение при блокировке"
+
+msgid "Set..."
+msgstr "Задать..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Задать сообщение для отображения на экране блокировки"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "OK"
+msgstr "ОК"
+
 msgid "Mode"
 msgstr "Режим"
 
@@ -166,6 +181,9 @@ msgstr "Восстановить настройки по умолчанию"
 
 msgid "Saweria"
 msgstr "Саверия"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Показывать собственное сообщение над окном ввода пользователя."
 
 msgid "Screen Timeout"
 msgstr "Тайм-аут экрана"

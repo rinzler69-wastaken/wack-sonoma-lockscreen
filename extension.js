@@ -1,6 +1,7 @@
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import Pango from 'gi://Pango';
 import St from 'gi://St';
 import Gdm from 'gi://Gdm';
 import Gettext from 'gettext';
@@ -50,7 +51,7 @@ import {
 } from './constants.js';
 
 function _log(msg) {
-    console.log(msg);
+    console.debug(msg);
 }
 
 function _logError(msg) {
@@ -63,7 +64,6 @@ const PowerProfilesIface = `<node>
 </interface>
 </node>`;
 
-const PowerProfilesProxy = Gio.DBusProxy.makeProxyWrapper(PowerProfilesIface);
 
 export default class WackLockscreenClockExtension extends Extension {
     // ── Single Source of Truth for Prompt State ───────────────────────────
@@ -72,6 +72,7 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     enable() {
+        const PowerProfilesProxy = Gio.DBusProxy.makeProxyWrapper(PowerProfilesIface);
         this._powerProfilesProxy = null;
         try {
             this._powerProfilesProxy = new PowerProfilesProxy(
@@ -96,13 +97,6 @@ export default class WackLockscreenClockExtension extends Extension {
         this._gdmManager = new GdmManager(this);
         this._gdmManager.enable();
         this._syncCrossSessionManager();
-
-        if (!this._wackShellStateChangedId) {
-            this._wackShellStateChangedId = Main.extensionManager.connect(
-                'extension-state-changed',
-                this._onWackShellExtensionStateChanged.bind(this)
-            );
-        }
 
         const dialog = Main.screenShield._dialog;
         _log(`[WACK] enable() called, dialog=${!!dialog}`);
@@ -184,7 +178,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 const capturedSnapshots = global.wack_window_snapshots
                     ? global.wack_window_snapshots.slice()
                     : [];
-                log(`[WACK Lockscreen] finish(): captured ${capturedSnapshots.length} snapshot(s) before session-mode override`);
+                console.debug(`[WACK Lockscreen] finish(): captured ${capturedSnapshots.length} snapshot(s) before session-mode override`);
 
                 const panel = Main.panel;
                 if (panel) {
@@ -215,9 +209,13 @@ export default class WackLockscreenClockExtension extends Extension {
                     }
 
                     // Check if we have cached window snapshots and fade them in
-                    log(`[WACK Lockscreen] fade-in callback: ${capturedSnapshots.length} snapshot(s) available to crossfade`);
+                    console.debug(`[WACK Lockscreen] fade-in callback: ${capturedSnapshots.length} snapshot(s) available to crossfade`);
                     if (capturedSnapshots.length > 0) {
-                        this._windowFadeContainer = new Clutter.Actor();
+                        this._windowFadeContainer = new Clutter.Actor({
+                            width: global.screen_width,
+                            height: global.screen_height
+                        });
+
                         lockDialogGroup.add_child(this._windowFadeContainer);
                         // Place directly above `dialog` (which owns the opaque wallpaper/
                         // _backgroundGroup) so the window textures are actually visible,
@@ -227,35 +225,42 @@ export default class WackLockscreenClockExtension extends Extension {
                         // out the window textures are revealed underneath.
                         lockDialogGroup.set_child_above_sibling(this._windowFadeContainer, this._dialog);
 
-                        capturedSnapshots.forEach(snapshot => {
+                        const STAGGER_MS = 16; // 16ms stagger between windows
+                        capturedSnapshots.forEach((snapshot, index) => {
                             const actor = new Clutter.Actor({
                                 content: snapshot.content,
                                 x: snapshot.rect.x,
                                 y: snapshot.rect.y,
                                 width: snapshot.rect.width,
-                                height: snapshot.rect.height
+                                height: snapshot.rect.height,
+                                opacity: 0
                             });
-                            actor.set_pivot_point(0.5, 0.5);
-                            actor.scale_x = 0.94;
-                            actor.scale_y = 0.94;
-                            // add_child first so actor is realized on stage,
-                            // then ease — Clutter requires the actor to be staged
-                            // before a transition can actually run.
+
+                            // Calculate pivot point normalized to this window actor,
+                            // anchoring the zoom to the screen's center point.
+                            const w = Math.max(1, snapshot.rect.width);
+                            const h = Math.max(1, snapshot.rect.height);
+                            const pivotX = (global.screen_width / 2 - snapshot.rect.x) / w;
+                            const pivotY = (global.screen_height / 2 - snapshot.rect.y) / h;
+                            actor.set_pivot_point(pivotX, pivotY);
+
+                            actor.scale_x = 0.92;
+                            actor.scale_y = 0.92;
+
                             this._windowFadeContainer.add_child(actor);
+
+                            // Active window (last in the array) fades first (delay = 0)
+                            const revIndex = capturedSnapshots.length - 1 - index;
+                            const delay = revIndex * STAGGER_MS;
+
                             actor.ease({
                                 scale_x: 1.0,
                                 scale_y: 1.0,
-                                duration,
+                                opacity: 255,
+                                duration: duration - delay,
+                                delay,
                                 mode,
                             });
-                        });
-
-                        // Container handles the unified opacity fade only
-                        this._windowFadeContainer.opacity = 0;
-                        this._windowFadeContainer.ease({
-                            opacity: 255,
-                            duration,
-                            mode,
                         });
                     }
 
@@ -584,6 +589,17 @@ export default class WackLockscreenClockExtension extends Extension {
 
                 if (mainBox) mainBox.opacity = Math.round(255 * progress);
 
+                if (this._lockscreenMessageLabel) {
+                    if (hasNotifs && progress === 0) {
+                        this._lockscreenMessageLabel.opacity = 0;
+                        this._lockscreenMessageLabel.visible = false;
+                    } else {
+                        const targetOpacity = hasNotifs ? Math.round(255 * progress) : 255;
+                        this._lockscreenMessageLabel.opacity = targetOpacity;
+                        this._lockscreenMessageLabel.visible = targetOpacity > 0 && this._lockscreenMessageLabel.text !== '';
+                    }
+                }
+
                 if (this._notifManager._notifBox) {
                     this._notifManager._notifBox.opacity = notifOpacity;
                     this._notifManager._notifBox.visible = notifOpacity > 0;
@@ -605,9 +621,21 @@ export default class WackLockscreenClockExtension extends Extension {
         const mainBox = dialog.get_child_at_index(dialog.get_n_children() - 1);
         if (mainBox) {
             this._origLayout = mainBox.layout_manager;
-            mainBox.layout_manager = new WackLayout(this, dialog._stack, dialog._notificationsBox, dialog._otherUserButton);
+
+            this._lockscreenMessageLabel = new St.Label({
+                style_class: 'wack-cupertino-lockscreen-message',
+                x_align: Clutter.ActorAlign.CENTER,
+                y_align: Clutter.ActorAlign.CENTER,
+                visible: false,
+            });
+            this._lockscreenMessageLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+            this._lockscreenMessageLabel.clutter_text.line_wrap = true;
+            mainBox.add_child(this._lockscreenMessageLabel);
+
+            mainBox.layout_manager = new WackLayout(this, dialog._stack, dialog._notificationsBox, dialog._otherUserButton, this._lockscreenMessageLabel);
             mainBox.queue_relayout();
             this._mainBox = mainBox;
+            this._updateLockscreenMessage();
         }
     }
 
@@ -646,7 +674,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 : Promise.resolve(null),
         ]);
 
-        console.log(`[WACK/Extension] _updateClockAlphaAndPromptColor - uri: ${uri}, promptColor: ${JSON.stringify(promptColor)}, alpha: ${alpha}`);
+        console.debug(`[WACK/Extension] _updateClockAlphaAndPromptColor - uri: ${uri}, promptColor: ${JSON.stringify(promptColor)}, alpha: ${alpha}`);
 
         // Apply clock alpha to the live dialog clock widget.
         if (dialog?._clock && typeof dialog._clock.setWallpaperAlpha === 'function')
@@ -693,6 +721,48 @@ export default class WackLockscreenClockExtension extends Extension {
         return null;
     }
 
+    _startCursorBlink() {
+        this._stopCursorBlink();
+
+        const dialog = this._dialog;
+        if (!dialog) return;
+
+        let visible = true;
+        this._cursorBlinkTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+            const currentDialog = this._dialog;
+            if (!currentDialog || !this._promptActive) {
+                this._cursorBlinkTimeoutId = 0;
+                return GLib.SOURCE_REMOVE;
+            }
+
+            const authPrompt = currentDialog._authPrompt;
+            if (!authPrompt) {
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            const entry = this._findPromptEntry(authPrompt);
+            if (!entry || !entry.clutter_text) {
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            if (!entry.clutter_text.has_key_focus()) {
+                entry.clutter_text.cursor_visible = false;
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            visible = !visible;
+            entry.clutter_text.cursor_visible = visible;
+            return GLib.SOURCE_CONTINUE;
+        });
+    }
+
+    _stopCursorBlink() {
+        if (this._cursorBlinkTimeoutId) {
+            GLib.source_remove(this._cursorBlinkTimeoutId);
+            this._cursorBlinkTimeoutId = 0;
+        }
+    }
+
     _applyPromptEntryBackground(entry, color) {
         if (!entry || !color)
             return;
@@ -700,7 +770,12 @@ export default class WackLockscreenClockExtension extends Extension {
         if (entry._wackOriginalStyle === undefined)
             entry._wackOriginalStyle = entry.get_style() ?? '';
 
-        entry.set_style(`${entry._wackOriginalStyle} background-color: rgb(${color.r}, ${color.g}, ${color.b});`);
+        let shadowStyle = '';
+        if (color.shadowAlpha !== undefined) {
+            shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+        }
+
+        entry.set_style(`${entry._wackOriginalStyle} background-color: rgb(${color.r}, ${color.g}, ${color.b}) !important;${shadowStyle}`);
     }
 
     _clearCupertinoPromptBackground() {
@@ -719,12 +794,6 @@ export default class WackLockscreenClockExtension extends Extension {
 
 
 
-    _onWackShellExtensionStateChanged(_obj, ext) {
-        if (ext.uuid !== 'wack-shell@rinzler69-wastaken.github.com')
-            return;
-
-        this._syncCupertinoUnlockFade();
-    }
 
     _syncCrossSessionManager() {
         if (Main.sessionMode.currentMode === 'gdm') {
@@ -749,9 +818,9 @@ export default class WackLockscreenClockExtension extends Extension {
         const wackShellEnabled = wackShell && wackShell.state === 1;
         const isPowerSaver = this._powerProfilesProxy?.ActiveProfile === 'power-saver';
         this._cupertinoUnlockFade = this._settings.get_string('lockscreen-mode') === 'cupertino' &&
-                                    wackShellEnabled &&
-                                    this._settings.get_boolean('cupertino-unlock-fade') &&
-                                    !isPowerSaver;
+            wackShellEnabled &&
+            this._settings.get_boolean('cupertino-unlock-fade') &&
+            !isPowerSaver;
     }
 
     _loadSettings() {
@@ -847,6 +916,8 @@ export default class WackLockscreenClockExtension extends Extension {
             'changed::cupertino-unlock-fade', syncCupertinoUnlockFade,
             'changed::cupertino-crossfade-speed', syncCrossfadeSpeed,
             'changed::prompt-vibrancy', syncPromptVibrancy,
+            'changed::cupertino-lockscreen-message-enable', () => this._updateLockscreenMessage(),
+            'changed::cupertino-lockscreen-message-text', () => this._updateLockscreenMessage(),
             this
         );
     }
@@ -895,9 +966,11 @@ export default class WackLockscreenClockExtension extends Extension {
             // after the entry widget is fully realized in the tree.
             this._updateClockAlphaAndPromptColor();
         }
+        this._startCursorBlink();
     }
 
     _onPromptHide() {
+        this._stopCursorBlink();
         if (this._notifManager._notifBox) {
             this._notifManager.enforceCardLimit(this._notifManager._notifBox);
         }
@@ -1031,6 +1104,28 @@ export default class WackLockscreenClockExtension extends Extension {
             }
         }
 
+        if (this._lockscreenMessageLabel && this._lockscreenMessageLabel.text !== '') {
+            const targetMessageOpacity = hasNotifs ? 0 : 255;
+            if (animate) {
+                const messageLabel = this._lockscreenMessageLabel;
+                messageLabel.visible = true;
+                messageLabel.ease({
+                    opacity: targetMessageOpacity,
+                    duration: CROSSFADE_TIME,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        if (this._lockscreenMessageLabel === messageLabel) {
+                            messageLabel.visible = targetMessageOpacity > 0;
+                        }
+                    },
+                });
+            } else {
+                this._lockscreenMessageLabel.remove_all_transitions();
+                this._lockscreenMessageLabel.opacity = targetMessageOpacity;
+                this._lockscreenMessageLabel.visible = targetMessageOpacity > 0;
+            }
+        }
+
         this._updateCupertinoHintCycle();
     }
 
@@ -1141,6 +1236,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._cupertinoRestPrompt = new WackCupertinoRestPrompt(this._dialog._user, this);
         this._cupertinoRestPromptContainer.add_child(this._cupertinoRestPrompt);
         this._dialog._stack.add_child(this._cupertinoRestPromptContainer);
+        this._updateLockscreenMessage();
 
         if (!this._cupertinoSeat) {
             const backend = this.get_context?.().get_backend() ?? Clutter.get_default_backend();
@@ -1256,6 +1352,32 @@ export default class WackLockscreenClockExtension extends Extension {
             }
             return GLib.SOURCE_REMOVE;
         });
+    }
+
+    _updateLockscreenMessage() {
+        if (!this._lockscreenMessageLabel) return;
+        const enabled = this._settings.get_boolean('cupertino-lockscreen-message-enable');
+        const text = this._settings.get_string('cupertino-lockscreen-message-text');
+        const cleanText = (text || '').trim();
+        if (enabled && cleanText) {
+            this._lockscreenMessageLabel.text = cleanText;
+            if (this._lockscreenMode === 'cupertino') {
+                const hasNotifs = this._notifManager ? this._notifManager.hasVisibleNotifs() : false;
+                const shouldBeVisible = this._promptActive || !hasNotifs;
+                this._lockscreenMessageLabel.visible = shouldBeVisible;
+                this._lockscreenMessageLabel.opacity = shouldBeVisible ? 255 : 0;
+            } else {
+                this._lockscreenMessageLabel.visible = this._promptActive;
+                this._lockscreenMessageLabel.opacity = this._promptActive ? 255 : 0;
+            }
+        } else {
+            this._lockscreenMessageLabel.text = '';
+            this._lockscreenMessageLabel.visible = false;
+            this._lockscreenMessageLabel.opacity = 0;
+        }
+        if (this._mainBox) {
+            this._mainBox.queue_relayout();
+        }
     }
 
     _isSleepInhibited() {
@@ -1485,14 +1607,10 @@ export default class WackLockscreenClockExtension extends Extension {
     // custom UI elements, ensuring no resource leaks or state contamination in the
     // GNOME Shell session.
     disable() {
+        this._stopCursorBlink();
         if (this._gdmManager) {
             this._gdmManager.disable();
             this._gdmManager = null;
-        }
-
-        if (this._wackShellStateChangedId) {
-            Main.extensionManager.disconnect(this._wackShellStateChangedId);
-            this._wackShellStateChangedId = null;
         }
 
         if (this._crossSessionManager) {
@@ -1681,6 +1799,11 @@ export default class WackLockscreenClockExtension extends Extension {
 
         if (this._mainBox && this._origLayout) {
             const oldLayout = this._mainBox.layout_manager;
+            if (this._lockscreenMessageLabel) {
+                this._mainBox.remove_child(this._lockscreenMessageLabel);
+                this._lockscreenMessageLabel.destroy();
+                this._lockscreenMessageLabel = null;
+            }
             this._mainBox.layout_manager = this._origLayout;
             if (oldLayout && oldLayout !== this._origLayout) oldLayout._extension = null;
             this._mainBox.opacity = 255;

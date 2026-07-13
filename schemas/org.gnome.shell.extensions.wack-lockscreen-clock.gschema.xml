@@ -72,5 +72,16 @@
       <summary>Prompt Vibrancy</summary>
       <description>Applies dynamic color to the password field based on wallpaper colors.</description>
     </key>
+
+    <key name="cupertino-lockscreen-message-enable" type="b">
+      <default>false</default>
+      <summary>Enable Lockscreen Message</summary>
+      <description>Show a custom message on the lock screen in Cupertino mode.</description>
+    </key>
+    <key name="cupertino-lockscreen-message-text" type="s">
+      <default>''</default>
+      <summary>Lockscreen Message Text</summary>
+      <description>The text to display on the lock screen in Cupertino mode.</description>
+    </key>
   </schema>
 </schemalist>

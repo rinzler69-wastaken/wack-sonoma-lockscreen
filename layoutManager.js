@@ -1,6 +1,6 @@
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
-import { CUPERTINO_PROMPT_VERTICAL_FRACTION } from './constants.js';
+import { CUPERTINO_PROMPT_VERTICAL_FRACTION, MESSAGELABEL_HEIGHT } from './constants.js';
 
 // Extracted magic numbers for clarity and easy tweaking
 const NOTIF_MIN_TOP_MARGIN_FRACTION = 0.1; // Was: height / 10.0
@@ -8,12 +8,13 @@ const SWITCH_USER_MARGIN = 24; // Logical pixels for switch user button spacing
 
 export const WackLayout = GObject.registerClass(
 class WackLayout extends Clutter.LayoutManager {
-    _init(extension, stack, notifications, switchUserButton) {
+    _init(extension, stack, notifications, switchUserButton, messageLabel = null) {
         super._init();
         this._extension = extension;
         this._stack = stack;
         this._notifications = notifications;
         this._switchUserButton = switchUserButton;
+        this._messageLabel = messageLabel;
     }
 
     vfunc_get_preferred_width(_container, forHeight) {
@@ -72,6 +73,18 @@ class WackLayout extends Clutter.LayoutManager {
         stackBox.x2 = stackBox.x1 + stackWidth;
         stackBox.y2 = stackY + stackHeight;
         this._stack.allocate(stackBox);
+
+        if (this._messageLabel && this._messageLabel.visible) {
+            const [, , msgW, msgH] = this._messageLabel.get_preferred_size();
+            const msgBox = new Clutter.ActorBox();
+            
+            msgBox.x1 = Math.floor((width - msgW) / 2.0);
+            msgBox.y1 = stackY - MESSAGELABEL_HEIGHT - msgH;
+            msgBox.x2 = msgBox.x1 + msgW;
+            msgBox.y2 = msgBox.y1 + msgH;
+            
+            this._messageLabel.allocate(msgBox);
+        }
 
         // 4. Allocate Switch User Button (if visible and exists)
         if (this._switchUserButton?.visible) {

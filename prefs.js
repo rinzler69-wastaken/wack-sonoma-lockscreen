@@ -260,8 +260,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         // -- Cupertino options ----------------------------------------------
         const alwaysShowUserRow = new Adw.ActionRow({
-            title: _('Always Show User Widget (Cupertino)'),
-            subtitle: _('Always shows user widget, hides notifications by default. Press Shift+N to show notifications.'),
+            title: _('Always Show User Widget'),
+            subtitle: _('Hides notifications by default. Press Shift+N to show notifications.'),
         });
         const alwaysShowUserSwitch = new Gtk.Switch({
             valign: Gtk.Align.CENTER,
@@ -296,6 +296,72 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         promptVibrancyRow.sensitive = settings.get_string('lockscreen-mode') === 'cupertino';
 
         modeRow.add_row(promptVibrancyRow);
+
+        const messageEnableRow = new Adw.ActionRow({
+            title: _('Show message when locked'),
+        });
+        const messageEnableSwitch = new Gtk.Switch({
+            valign: Gtk.Align.CENTER,
+            active: settings.get_boolean('cupertino-lockscreen-message-enable'),
+        });
+        messageEnableSwitch.connect('notify::active', () => {
+            settings.set_boolean('cupertino-lockscreen-message-enable', messageEnableSwitch.active);
+        });
+        settingsSignalIds.push(settings.connect('changed::cupertino-lockscreen-message-enable', () => {
+            messageEnableSwitch.active = settings.get_boolean('cupertino-lockscreen-message-enable');
+        }));
+        messageEnableRow.add_suffix(messageEnableSwitch);
+        messageEnableRow.activatable_widget = messageEnableSwitch;
+
+        const messageSetButton = new Gtk.Button({
+            label: _('Set...'),
+            valign: Gtk.Align.CENTER,
+            sensitive: settings.get_boolean('cupertino-lockscreen-message-enable'),
+        });
+
+        messageEnableSwitch.connect('notify::active', () => {
+            messageSetButton.sensitive = messageEnableSwitch.active;
+        });
+        settingsSignalIds.push(settings.connect('changed::cupertino-lockscreen-message-enable', () => {
+            messageSetButton.sensitive = settings.get_boolean('cupertino-lockscreen-message-enable');
+        }));
+
+        messageSetButton.connect('clicked', () => {
+            const dialog = new Adw.MessageDialog({
+                transient_for: window,
+                heading: _('Set a message to appear on the lockscreen'),
+                close_response: 'cancel',
+                modal: true,
+            });
+
+            const entry = new Gtk.Entry({
+                text: settings.get_string('cupertino-lockscreen-message-text'),
+                valign: Gtk.Align.CENTER,
+                hexpand: true,
+                max_length: 250,
+            });
+
+            dialog.set_extra_child(entry);
+
+            dialog.add_response('cancel', _('Cancel'));
+            dialog.add_response('ok', _('OK'));
+            dialog.set_response_appearance('ok', Adw.ResponseAppearance.SUGGESTED);
+
+            entry.connect('activate', () => {
+                dialog.response('ok');
+            });
+
+            dialog.connect('response', (self, response) => {
+                if (response === 'ok') {
+                    settings.set_string('cupertino-lockscreen-message-text', entry.text);
+                }
+                dialog.destroy();
+            });
+
+            dialog.present();
+        });
+
+        messageEnableRow.add_suffix(messageSetButton);
 
         const unlockFadeRow = new Adw.ActionRow({
             title: _('Unlock Crossfade'),
@@ -385,6 +451,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         modeRow.add_row(unlockFadeRow);
         modeRow.add_row(speedRow);
+        modeRow.add_row(messageEnableRow);
 
         // -- Animation options (Legacy mode sub-settings) --------------------
         const clockAnimRow = this._buildComboRow(
@@ -470,6 +537,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             alwaysShowUserRow.sensitive = isCup;
             promptVibrancyRow.visible = isCup;
             promptVibrancyRow.sensitive = isCup;
+            messageEnableRow.visible = isCup;
+            messageEnableRow.sensitive = isCup;
             unlockFadeRow.visible = isCup;
             speedRow.visible = isCup;
             refreshUnlockFadeAvailability();

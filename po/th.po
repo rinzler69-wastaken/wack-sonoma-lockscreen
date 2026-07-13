@@ -122,6 +122,21 @@ msgstr "คลาสสิก"
 msgid "Lockscreen Mode"
 msgstr "โหมดล็อคหน้าจอ"
 
+msgid "Show message when locked"
+msgstr "แสดงข้อความเมื่อล็อกหน้าจอ"
+
+msgid "Set..."
+msgstr "ตั้งค่า..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "ตั้งค่าข้อความให้แสดงบนหน้าจอล็อก"
+
+msgid "Cancel"
+msgstr "ยกเลิก"
+
+msgid "OK"
+msgstr "ตกลง"
+
 msgid "Mode"
 msgstr "โหมด"
 
@@ -166,6 +181,9 @@ msgstr "คืนค่าเริ่มต้น"
 
 msgid "Saweria"
 msgstr "ซาเวเรีย"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "แสดงข้อความแบบกำหนดเองเหนือกล่องป้อนข้อมูลผู้ใช้"
 
 msgid "Screen Timeout"
 msgstr "หมดเวลาหน้าจอ"

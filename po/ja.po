@@ -122,6 +122,21 @@ msgstr "クラシック"
 msgid "Lockscreen Mode"
 msgstr "ロック画面モード"
 
+msgid "Show message when locked"
+msgstr "ロック時にメッセージを表示"
+
+msgid "Set..."
+msgstr "設定..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "ロック画面に表示するメッセージを設定"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "モード"
 
@@ -166,6 +181,9 @@ msgstr "デフォルトに戻す"
 
 msgid "Saweria"
 msgstr "サウェリア"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "ユーザー入力欄の上部にカスタムメッセージを表示します。"
 
 msgid "Screen Timeout"
 msgstr "画面のタイムアウト"

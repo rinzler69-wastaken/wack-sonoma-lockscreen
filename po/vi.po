@@ -122,6 +122,21 @@ msgstr "Cổ điển"
 msgid "Lockscreen Mode"
 msgstr "Chế độ khóa màn hình"
 
+msgid "Show message when locked"
+msgstr "Hiển thị thông điệp khi khóa"
+
+msgid "Set..."
+msgstr "Thiết lập..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Thiết lập thông điệp hiển thị trên màn hình khóa"
+
+msgid "Cancel"
+msgstr "Hủy"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "Cách thức"
 
@@ -166,6 +181,9 @@ msgstr "Khôi phục mặc định"
 
 msgid "Saweria"
 msgstr "Saweria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Hiển thị thông điệp tùy chỉnh phía trên khung đăng nhập của người dùng."
 
 msgid "Screen Timeout"
 msgstr "Hết thời gian chờ màn hình"

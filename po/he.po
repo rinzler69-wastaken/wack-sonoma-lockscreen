@@ -122,6 +122,21 @@ msgstr "קלאסי"
 msgid "Lockscreen Mode"
 msgstr "מצב מסך נעילה"
 
+msgid "Show message when locked"
+msgstr "הצגת הודעה בעת נעילה"
+
+msgid "Set..."
+msgstr "הגדרה..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "הגדרה של הודעה שתוצг על מסך הנעילה"
+
+msgid "Cancel"
+msgstr "ביטول"
+
+msgid "OK"
+msgstr "אישור"
+
 msgid "Mode"
 msgstr "מצב"
 
@@ -166,6 +181,9 @@ msgstr "שחזר ברירת מחדל"
 
 msgid "Saweria"
 msgstr "סוריה"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "הצג הודעה מותאמת אישית מעל אזור המשתמש."
 
 msgid "Screen Timeout"
 msgstr "פסק זמן מסך"

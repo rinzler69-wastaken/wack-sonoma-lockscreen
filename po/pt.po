@@ -122,6 +122,21 @@ msgstr "Clássico"
 msgid "Lockscreen Mode"
 msgstr "Modo de tela de bloqueio"
 
+msgid "Show message when locked"
+msgstr "Mostrar mensagem quando bloqueado"
+
+msgid "Set..."
+msgstr "Definir..."
+
+msgid "Set a message to appear on the lockscreen"
+msgstr "Definir uma mensagem para aparecer na tela de bloqueio"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "OK"
+msgstr "OK"
+
 msgid "Mode"
 msgstr "Modo"
 
@@ -166,6 +181,9 @@ msgstr "Restaurar padrões"
 
 msgid "Saweria"
 msgstr "Serraria"
+
+msgid "Show a custom message above the user prompt stack."
+msgstr "Mostra uma mensagem personalizada acima dos campos do usuário."
 
 msgid "Screen Timeout"
 msgstr "Tempo limite da tela"
