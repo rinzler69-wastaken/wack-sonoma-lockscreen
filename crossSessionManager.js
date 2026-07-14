@@ -14,6 +14,9 @@ export class CrossSessionManager {
         this._settings = null;
         this._clockAlpha = null;
         this._promptColor = null;
+        this._wallpaperFileMonitor = null;
+        this._wallpaperFileMonitorId = 0;
+        this._lastMonitoredUri = null;
     }
 
     setClockAlphaAndPromptColor(alpha, promptColor) {
@@ -75,6 +78,10 @@ export class CrossSessionManager {
             this._interfaceSettings = null;
         }
         if (this._wallpaperFileMonitor) {
+            if (this._wallpaperFileMonitorId) {
+                this._wallpaperFileMonitor.disconnect(this._wallpaperFileMonitorId);
+                this._wallpaperFileMonitorId = 0;
+            }
             this._wallpaperFileMonitor.cancel();
             this._wallpaperFileMonitor = null;
         }
@@ -313,6 +320,10 @@ export class CrossSessionManager {
 
     _updateWallpaperFileMonitor(uri) {
         if (this._wallpaperFileMonitor) {
+            if (this._wallpaperFileMonitorId) {
+                this._wallpaperFileMonitor.disconnect(this._wallpaperFileMonitorId);
+                this._wallpaperFileMonitorId = 0;
+            }
             this._wallpaperFileMonitor.cancel();
             this._wallpaperFileMonitor = null;
         }
@@ -330,7 +341,7 @@ export class CrossSessionManager {
 
             if (file && file.query_exists(null)) {
                 this._wallpaperFileMonitor = file.monitor_file(Gio.FileMonitorFlags.NONE, null);
-                this._wallpaperFileMonitor.connect('changed', (_monitor, _file, _other, eventType) => {
+                this._wallpaperFileMonitorId = this._wallpaperFileMonitor.connect('changed', (_monitor, _file, _other, eventType) => {
                     if (eventType === Gio.FileMonitorEvent.CHANGED ||
                         eventType === Gio.FileMonitorEvent.CHANGES_DONE_HINT) {
                         _log('[WACK/CrossSession] Wallpaper file modified on disk, triggering save');

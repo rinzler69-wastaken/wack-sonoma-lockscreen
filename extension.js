@@ -128,7 +128,6 @@ export default class WackLockscreenClockExtension extends Extension {
         this._inhibitHintTimeoutId = null;
         this._finishTimeoutId = null;
         this._finishFallbackId = null;
-        this._finishFallbackId = null;
         this._originalWackText = null;
         this._originalCupertinoText = null;
         this._originalCupertinoCount = 0;
@@ -136,6 +135,10 @@ export default class WackLockscreenClockExtension extends Extension {
 
         // Track state transitions to prevent redundant side-effects
         this._wasPromptActive = false;
+
+        // Cancellation counter for async _updateClockAlphaAndPromptColor calls.
+        // Incremented in disable() so in-flight promises discard their results.
+        this._wallpaperUpdateSeq = 0;
 
         initCache();
 
@@ -645,6 +648,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
     async _updateClockAlphaAndPromptColor() {
         const dialog = this._dialog;
+        const seq = ++this._wallpaperUpdateSeq;
 
         if (!this._bgSettings)
             this._bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
@@ -673,6 +677,10 @@ export default class WackLockscreenClockExtension extends Extension {
                 ? getWallpaperPromptColor(wallpaperParams)
                 : Promise.resolve(null),
         ]);
+
+        // Bail out if disable() was called while we were awaiting.
+        if (seq !== this._wallpaperUpdateSeq)
+            return;
 
         console.debug(`[WACK/Extension] _updateClockAlphaAndPromptColor - uri: ${uri}, promptColor: ${JSON.stringify(promptColor)}, alpha: ${alpha}`);
 
@@ -1607,6 +1615,8 @@ export default class WackLockscreenClockExtension extends Extension {
     // custom UI elements, ensuring no resource leaks or state contamination in the
     // GNOME Shell session.
     disable() {
+        // Invalidate any in-flight async _updateClockAlphaAndPromptColor calls.
+        this._wallpaperUpdateSeq = (this._wallpaperUpdateSeq ?? 0) + 1;
         this._stopCursorBlink();
         if (this._gdmManager) {
             this._gdmManager.disable();
@@ -1727,6 +1737,11 @@ export default class WackLockscreenClockExtension extends Extension {
         const mainBox = authPrompt?._mainBox;
         if (mainBox) mainBox.opacity = 255;
         if (this._dialog) this._dialog.opacity = 255;
+
+        if (this._wackShellStateChangedId) {
+            Main.extensionManager.disconnect(this._wackShellStateChangedId);
+            this._wackShellStateChangedId = 0;
+        }
 
         if (this._settings) {
             this._settings.disconnectObject(this);

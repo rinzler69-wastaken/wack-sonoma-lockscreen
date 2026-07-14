@@ -16,6 +16,7 @@ export class UnblankManager {
         this._settings = extension._settings;
         this._timerId = 0;
         this._lastOnBattery = null;
+        this._upowerProxyChangedId = 0;
 
         this._originalActivateFade =
             Main.screenShield._activateFade.bind(Main.screenShield);
@@ -27,11 +28,11 @@ export class UnblankManager {
             '/org/freedesktop/UPower',
             (proxy, error) => {
                 if (error) {
-                    logError(error, 'UnblankManager: UPower proxy error');
+                    console.error('UnblankManager: UPower proxy error:', error.message);
                     return;
                 }
                 this._lastOnBattery = this._upowerProxy.OnBattery;
-                this._upowerProxy.connect('g-properties-changed', () => {
+                this._upowerProxyChangedId = this._upowerProxy.connect('g-properties-changed', () => {
                     const onBattery = this._upowerProxy.OnBattery;
                     if (onBattery === this._lastOnBattery)
                         return;
@@ -138,6 +139,11 @@ export class UnblankManager {
         this._settings.disconnectObject(this);
         this._cancelTimer();
         this._restore();
+
+        if (this._upowerProxy && this._upowerProxyChangedId) {
+            this._upowerProxy.disconnect(this._upowerProxyChangedId);
+            this._upowerProxyChangedId = 0;
+        }
 
         if (Main.screenShield._becameActiveId !== 0) {
             Main.screenShield.idleMonitor.remove_watch(Main.screenShield._becameActiveId);

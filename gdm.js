@@ -78,7 +78,7 @@ export class GdmManager {
         this._origEnsureUnlockDialog = Main.screenShield._ensureUnlockDialog;
         Main.screenShield._ensureUnlockDialog = (allowCancel) => {
             const res = this._origEnsureUnlockDialog.call(Main.screenShield, allowCancel);
-            
+
             // Re-setup if the dialog changed or was newly created
             if (Main.screenShield._dialog && this._dialog !== Main.screenShield._dialog) {
                 if (this._dialog) {
@@ -87,16 +87,22 @@ export class GdmManager {
                 this._dialog = Main.screenShield._dialog;
                 this._setup();
                 this._applyWallpaper();
+                // Restart the dialog's fade-in so the first rendered frame is
+                // always our chrome, never stock GDM's layout.
+                this._restartDialogFadeIn();
             }
             return res;
         };
 
-        // Fallback: If it's already instantiated at enable time, setup immediately
+        // Fallback: If it's already instantiated at enable time, setup immediately.
+        // The dialog may already be mid-fade-in, so we restart its animation after
+        // setup to guarantee our chrome is never briefly visible in stock GDM form.
         const dialog = this._findLoginDialog();
         if (dialog) {
             this._dialog = dialog;
             this._setup();
             this._applyWallpaper();
+            this._restartDialogFadeIn();
         }
     }
 
@@ -271,6 +277,25 @@ export class GdmManager {
         });
 
         this._setupGdmAvatarOverride();
+    }
+
+    // ── Fade-in restart ──────────────────────────────────────────────────────────
+
+    _restartDialogFadeIn() {
+        const dialog = this._dialog;
+        if (!dialog) return;
+        // If the dialog is already fully visible (edge case: very late enable),
+        // don't reset it — just leave our chrome applied on top.
+        if (dialog.opacity === 255) return;
+        // Cancel GDM's in-progress ease and restart from transparent, ensuring
+        // the very first painted frame shows our configured layout, never stock GDM.
+        dialog.remove_all_transitions();
+        dialog.opacity = 0;
+        dialog.ease({
+            opacity: 255,
+            duration: 1000,
+            mode: Clutter.AnimationMode.EASE_IN_QUAD,
+        });
     }
 
     // ── Teardown ──────────────────────────────────────────────────────────────
@@ -1044,9 +1069,9 @@ export class GdmManager {
             authPrompt._capsLockWarningLabel.remove_style_class_name('wack-cupertino-caps-lock-warning');
         }
 
-        // Disconnect the auth prompt allocation handler
+        // Disconnect the auth prompt and lockscreen message label allocation handlers
         this._allocationHandlers = this._allocationHandlers.filter(({ actor, id }) => {
-            if (actor === authPrompt) {
+            if (actor === authPrompt || actor === this._lockscreenMessageLabel) {
                 actor.disconnect(id);
                 return false;
             }
@@ -1364,7 +1389,7 @@ export class GdmManager {
             const avatar = uw._avatar;
             _log('[WACK/GdmManager] _wrapGdmAvatar: wrapping avatar in St.Button');
             uw.remove_child(avatar);
-            
+
             uw._avatarButton = new St.Button({
                 style_class: 'wack-avatar-well',
                 x_expand: false,
@@ -1378,6 +1403,9 @@ export class GdmManager {
 
             const label = uw?._label;
             if (label && label.vfunc_allocate) {
+                // Save the original before overriding so _unwrapGdmAvatar can restore it.
+                if (label._wackOrigVfuncAllocate === undefined)
+                    label._wackOrigVfuncAllocate = label.vfunc_allocate;
                 label.vfunc_allocate = function (box) {
                     this.set_allocation(box);
                     const availWidth = box.x2 - box.x1;
@@ -1399,6 +1427,14 @@ export class GdmManager {
         if (!authPrompt) return;
 
         const uw = authPrompt._userWell?.get_child();
+
+        // Restore the label's vfunc_allocate before removing the button.
+        const label = uw?._label;
+        if (label && label._wackOrigVfuncAllocate !== undefined) {
+            label.vfunc_allocate = label._wackOrigVfuncAllocate;
+            delete label._wackOrigVfuncAllocate;
+        }
+
         if (uw && uw._avatarButton) {
             const button = uw._avatarButton;
             const avatar = button.get_child();
