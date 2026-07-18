@@ -145,6 +145,52 @@ function rgbToHsl(r, g, b) {
     };
 }
 
+function hslToRgb(h, s, l) {
+    const hue = ((h % 360) + 360) % 360 / 360;
+
+    if (s === 0) {
+        const value = Math.round(l * 255);
+        return { r: value, g: value, b: value };
+    }
+
+    const hueToRgb = (p, q, t) => {
+        let channel = t;
+        if (channel < 0)
+            channel += 1;
+        if (channel > 1)
+            channel -= 1;
+        if (channel < 1 / 6)
+            return p + (q - p) * 6 * channel;
+        if (channel < 1 / 2)
+            return q;
+        if (channel < 2 / 3)
+            return p + (q - p) * (2 / 3 - channel) * 6;
+        return p;
+    };
+
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+
+    return {
+        r: Math.round(hueToRgb(p, q, hue + 1 / 3) * 255),
+        g: Math.round(hueToRgb(p, q, hue) * 255),
+        b: Math.round(hueToRgb(p, q, hue - 1 / 3) * 255),
+    };
+}
+
+function isPixelColorful(r, g, b) {
+    const maxVal = Math.max(r, g, b);
+    const minVal = Math.min(r, g, b);
+    const chroma = maxVal - minVal;
+    const lightness = (maxVal + minVal) / 510;
+
+    if (chroma < 25)
+        return false;
+    if (chroma < 45 && lightness > 0.75)
+        return false;
+    return true;
+}
+
 function sampleChromaWeightedColor(pixbuf, bounds, centerCoords) {
     const pixels = pixbuf.get_pixels();
     const channels = pixbuf.get_n_channels();
@@ -186,6 +232,28 @@ function sampleChromaWeightedColor(pixbuf, bounds, centerCoords) {
         }
     }
 
+    // Count colorful pixels in the region
+    let colorfulCount = 0;
+    for (let i = 0; i < pixelCache.length; i++) {
+        const p = pixelCache[i];
+        p.isColorful = isPixelColorful(p.r, p.g, p.b);
+        if (p.isColorful) {
+            colorfulCount++;
+        }
+    }
+
+    // If actual colorful content exists, nerf whites/greys/neutrals in the region
+    const colorfulThreshold = Math.max(5, Math.round(pixelCache.length * 0.01));
+    const hasChroma = colorfulCount >= colorfulThreshold;
+    if (hasChroma) {
+        for (let i = 0; i < pixelCache.length; i++) {
+            const p = pixelCache[i];
+            if (!p.isColorful) {
+                p.w *= 0.01;
+            }
+        }
+    }
+
     let isSingleHueDominant = true;
     if (totalHueMass > 0) {
         let maxWindowMass = 0;
@@ -207,7 +275,7 @@ function sampleChromaWeightedColor(pixbuf, bounds, centerCoords) {
     if (isSingleHueDominant) {
         for (let i = 0; i < pixelCache.length; i++) {
             const p = pixelCache[i];
-            const weight = Math.max(0.0001, p.w);
+            const weight = Math.max(0.00000001, p.w);
             rSum += p.r * weight;
             gSum += p.g * weight;
             bSum += p.b * weight;
@@ -229,7 +297,7 @@ function sampleChromaWeightedColor(pixbuf, bounds, centerCoords) {
             for (let x = startX_local; x < endX_local; x++) {
                 const idx = (y - startY) * width + (x - startX);
                 const p = pixelCache[idx];
-                const weight = Math.max(0.0001, p.w);
+                const weight = Math.max(0.00000001, p.w);
                 rSum += p.r * weight;
                 gSum += p.g * weight;
                 bSum += p.b * weight;
@@ -287,7 +355,7 @@ export function initCache() {
 
 function saveCache() {
     try {
-        const obj = { __version__ : 'v6' };
+        const obj = { __version__: 'v6' };
         for (const [k, v] of _cache.entries())
             obj[k] = v;
         const data = JSON.stringify(obj);
@@ -469,7 +537,7 @@ async function getFileMtimeAndSize(filePath) {
     });
 }
 
-async function loadScaledWallpaperPixbuf(targetFilePath, width, height) {
+async function loadScaledWallpaperPixbuf(targetFilePath, width, height, preserveAspectRatio = false) {
     const file = Gio.File.new_for_path(targetFilePath);
     return await new Promise((resolve, reject) => {
         file.read_async(GLib.PRIORITY_DEFAULT, null, (fileObj, readRes) => {
@@ -479,7 +547,7 @@ async function loadScaledWallpaperPixbuf(targetFilePath, width, height) {
                     stream,
                     width,
                     height,
-                    false,
+                    preserveAspectRatio,
                     null,
                     (streamObj, pixRes) => {
                         try {
@@ -626,22 +694,47 @@ export async function getWallpaperAlpha(params) {
         }
     } else if (targetFilePath) {
         try {
-            const pixbuf = await loadScaledWallpaperPixbuf(targetFilePath, 160, 100);
+            const pixbuf = await loadScaledWallpaperPixbuf(targetFilePath, 256, 256, true);
 
+            const pbWidth = pixbuf.get_width();
+            const pbHeight = pixbuf.get_height();
             const pixels = pixbuf.get_pixels();
             const channels = pixbuf.get_n_channels();
             const rowstride = pixbuf.get_rowstride();
+
+            const bgSettings = getBgSettings();
+            const pictureOptions = bgSettings ? bgSettings.get_string('picture-options') : 'zoom';
+
+            const monitor = Main.layoutManager?.primaryMonitor || { width: 1920, height: 1080 };
+            const monitorWidth = monitor.width;
+            const monitorHeight = monitor.height;
+            const monitorAspect = monitorWidth / monitorHeight;
+            const pbAspect = pbWidth / pbHeight;
+
+            let visibleX = 0, visibleY = 0, visibleW = pbWidth, visibleH = pbHeight;
+
+            if (pictureOptions === 'zoom' || pictureOptions === 'spanned') {
+                if (pbAspect > monitorAspect) {
+                    visibleW = pbHeight * monitorAspect;
+                    visibleX = (pbWidth - visibleW) / 2;
+                } else if (pbAspect < monitorAspect) {
+                    visibleH = pbWidth / monitorAspect;
+                    visibleY = (pbHeight - visibleH) / 2;
+                }
+            }
+
+            const xStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * 0.25)));
+            const xEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * 0.75)));
+            const yStart = Math.max(0, Math.min(pbHeight - 1, Math.round(visibleY + visibleH * 0.05)));
+            const yEnd = Math.max(1, Math.min(pbHeight, Math.round(visibleY + visibleH * 0.35)));
 
             let rSum = 0, gSum = 0, bSum = 0;
             let diffSum = 0;
             let count = 0;
             let diffCount = 0;
 
-            // Clock bounding box on a 160x100 grid:
-            // X: 40 to 120 (middle 50%)
-            // Y: 5 to 35 (upper portion)
-            for (let y = 5; y < 35; y++) {
-                for (let x = 40; x < 120; x++) {
+            for (let y = yStart; y < yEnd; y++) {
+                for (let x = xStart; x < xEnd; x++) {
                     const offset = y * rowstride + x * channels;
                     const r = pixels[offset];
                     const g = pixels[offset + 1];
@@ -654,7 +747,7 @@ export async function getWallpaperAlpha(params) {
 
                     // Calculate high-frequency texture noise (differences between adjacent pixels)
                     // within the bounding box to avoid scaling on smooth vector/gradient edges.
-                    if (x < 119 && y < 34) {
+                    if (x < xEnd - 1 && y < yEnd - 1) {
                         const offsetRight = y * rowstride + (x + 1) * channels;
                         const offsetDown = (y + 1) * rowstride + x * channels;
 
@@ -730,10 +823,18 @@ export async function getWallpaperAlpha(params) {
 const PROMPT_ALPHA_FLOOR = 0.16;
 const PROMPT_ALPHA_ROOF = 0.224;
 
+// Bright colorful samples should become a darker version of themselves, rather
+// than getting muddied by blending toward black. This tunes the target lightness
+// for that hue-preserving darken step.
+const PROMPT_BRIGHT_HUE_LIGHTNESS_FACTOR = 0.925;
+const PROMPT_BRIGHT_HUE_MIN_CHROMA = 0.08;
+const PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD = 0.8075;
+const PROMPT_INVERSE_ALPHA_CEILING = 0.125;
+
 // Tuning range for the dynamic password prompt box-shadow alpha.
 //   At FLOOR (0.04): subtle shadow on very dark wallpapers.
 //   At ROOF  (0.175): maximum shadow depth on bright wallpapers (like pink clouds).
-const PROMPT_SHADOW_FLOOR = 0.05;
+const PROMPT_SHADOW_FLOOR = 0.0175;
 const PROMPT_SHADOW_ROOF = 0.1175;
 
 /**
@@ -769,10 +870,32 @@ function getPromptBlendAlpha(sampled) {
     return Math.max(PROMPT_ALPHA_FLOOR, Math.min(PROMPT_ALPHA_ROOF, alpha));
 }
 
+function getPromptDarkenedHueColor(sampled) {
+    const hsl = rgbToHsl(sampled.r, sampled.g, sampled.b);
+    return hslToRgb(
+        hsl.h,
+        hsl.s,
+        Math.max(0, Math.min(1, hsl.l * PROMPT_BRIGHT_HUE_LIGHTNESS_FACTOR))
+    );
+}
+
+function getPromptInvertedNeutralColor(sampled, perceptualL) {
+    const baseAlpha = getPromptBlendAlpha(sampled);
+    const t = Math.max(0, Math.min(
+        1,
+        (perceptualL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) /
+            (1 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD)
+    ));
+    const alpha = baseAlpha + (PROMPT_INVERSE_ALPHA_CEILING - baseAlpha) * t;
+
+    return blendOverOpaque(sampled, { r: 0, g: 0, b: 0 }, alpha);
+}
+
 /**
- * Samples the wallpaper behind the Cupertino password prompt and blends it with
- * white at an adaptive alpha to mimic frosted glass while staying fully opaque
- * and reliably light/legible regardless of the backdrop.
+ * Samples the wallpaper behind the Cupertino password prompt and resolves an
+ * opaque chip color. Most backdrops get a frosted white blend; bright colorful
+ * backdrops become a darker version of their sampled hue, while bright neutral
+ * or all-white backdrops fall back to the older inverted alpha-blend logic.
  *
  * @param {Object} params
  * @param {string} params.uri - Wallpaper picture URI
@@ -789,6 +912,8 @@ export async function getWallpaperPromptColor(params) {
         primaryColor,
         secondaryColor,
         shadingType,
+        wellH = 0,
+        yCenterFraction = null,
     } = params;
 
     await initCache();
@@ -803,13 +928,17 @@ export async function getWallpaperPromptColor(params) {
 
     const { mtime, size } = await getFileMtimeAndSize(targetFilePath);
 
-    const cacheKey = `prompt_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}`;
+    const cacheKey = `prompt_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${wellH}_${yCenterFraction ? yCenterFraction.toFixed(4) : 'null'}`;
     if (_cache.has(cacheKey)) {
         console.debug(`[WACK/AlphaManager] cache HIT for key: ${cacheKey}`);
         return _cache.get(cacheKey);
     }
 
     let sampled = { r: 40, g: 40, b: 40 };
+
+    const yCenter = (yCenterFraction !== undefined && yCenterFraction !== null)
+        ? yCenterFraction
+        : (CUPERTINO_PROMPT_VERTICAL_FRACTION - 0.3 * (wellH / monitorHeight));
 
     if (isColor) {
         const c1 = parseHexColor(primaryColor);
@@ -820,7 +949,7 @@ export async function getWallpaperPromptColor(params) {
         } else if (shadingType === 1) {
             // The Cupertino password field sits in the lower third, so bias the
             // vertical gradient sample toward that lower-centered band.
-            const t = 0.76;
+            const t = Math.max(0.0, Math.min(1.0, yCenter));
             sampled = {
                 r: Math.round(c1.r + (c2.r - c1.r) * t),
                 g: Math.round(c1.g + (c2.g - c1.g) * t),
@@ -835,35 +964,45 @@ export async function getWallpaperPromptColor(params) {
         }
     } else if (targetFilePath) {
         try {
-            const pixbuf = await loadScaledWallpaperPixbuf(targetFilePath, 160, 100);
+            const pixbuf = await loadScaledWallpaperPixbuf(targetFilePath, 256, 256, true);
 
-            const Rs = monitorWidth / monitorHeight;
+            const pbWidth = pixbuf.get_width();
+            const pbHeight = pixbuf.get_height();
 
-            let nativeWidth = 160;
-            let nativeHeight = 100;
-            const info = await getWallpaperFileInfo(targetFilePath);
-            if (info) {
-                nativeWidth = info.width;
-                nativeHeight = info.height;
+            const monitorAspect = monitorWidth / monitorHeight;
+            const pbAspect = pbWidth / pbHeight;
+
+            let visibleX = 0, visibleY = 0, visibleW = pbWidth, visibleH = pbHeight;
+
+            if (pictureOptions === 'zoom' || pictureOptions === 'spanned') {
+                if (pbAspect > monitorAspect) {
+                    visibleW = pbHeight * monitorAspect;
+                    visibleX = (pbWidth - visibleW) / 2;
+                } else if (pbAspect < monitorAspect) {
+                    visibleH = pbWidth / monitorAspect;
+                    visibleY = (pbHeight - visibleH) / 2;
+                }
             }
-            const Rw = nativeWidth / nativeHeight;
 
-            const mappedBounds = mapScreenToSourceCoords(
-                0.4, 0.6, 0.915, 0.955,
-                Rw, Rs,
-                pictureOptions,
-                nativeWidth, nativeHeight,
-                monitorWidth, monitorHeight
-            );
+            const y1 = yCenter - 20 / monitorHeight;
+            const y2 = yCenter + 20 / monitorHeight;
 
-            const centerMapped = mapScreenToSourceCoords(
-                0.5, 0.5, 0.935, 0.935,
-                Rw, Rs,
-                pictureOptions,
-                nativeWidth, nativeHeight,
-                monitorWidth, monitorHeight
-            );
-            const centerCoords = { x: centerMapped.x1, y: centerMapped.y1 };
+            const xStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * 0.40)));
+            const xEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * 0.60)));
+            const yStart = Math.max(0, Math.min(pbHeight - 1, Math.round(visibleY + visibleH * y1)));
+            const yEnd = Math.max(1, Math.min(pbHeight, Math.round(visibleY + visibleH * y2)));
+
+            const mappedBounds = {
+                x1: xStart / pbWidth,
+                x2: xEnd / pbWidth,
+                y1: yStart / pbHeight,
+                y2: yEnd / pbHeight
+            };
+
+            const centerCoords = {
+                x: ((xStart + xEnd) / 2) / pbWidth,
+                y: ((yStart + yEnd) / 2) / pbHeight
+            };
 
             // Sample using chroma-weighted, cluster-aware sampler
             sampled = sampleChromaWeightedColor(pixbuf, mappedBounds, centerCoords);
@@ -875,34 +1014,30 @@ export async function getWallpaperPromptColor(params) {
     const luminance = Math.max(0, Math.min(1, getRelativeLuminance(sampled)));
     const perceptualL = getPerceptualLightness(luminance);
 
-    let overlay = { r: 255, g: 255, b: 255 };
-    const alpha = getPromptBlendAlpha(sampled);
-
-    // If the sampled background color is near-white (perceptual lightness > 0.7 AND desaturated),
-    // smoothly transition the overlay color from white to black. The blend ratio
-    // is kept strictly governed by getPromptBlendAlpha.
     const maxVal = Math.max(sampled.r, sampled.g, sampled.b);
     const minVal = Math.min(sampled.r, sampled.g, sampled.b);
     const chroma = (maxVal - minVal) / 255.0;
+    const isBrightSample = perceptualL > PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD;
+    const isBrightHue = isBrightSample && chroma >= PROMPT_BRIGHT_HUE_MIN_CHROMA;
 
-    if (perceptualL > 0.7 && chroma < 0.08) {
-        const t = (perceptualL - 0.7) / 0.3; // 0.0 to 1.0
-        overlay = {
-            r: Math.round(255 * (1 - t)),
-            g: Math.round(255 * (1 - t)),
-            b: Math.round(255 * (1 - t)),
-        };
-    }
-
-    const blended = blendOverOpaque(
-        sampled,
-        overlay,
-        alpha
-    );
+    const blended = isBrightHue
+        ? getPromptDarkenedHueColor(sampled)
+        : isBrightSample
+            ? getPromptInvertedNeutralColor(sampled, perceptualL)
+            : blendOverOpaque(
+            sampled,
+            { r: 255, g: 255, b: 255 },
+            getPromptBlendAlpha(sampled)
+        );
 
     // Calculate a dynamic box-shadow alpha to help the entry chip stand out
     // against light details/clouds in the wallpaper.
-    const shadowAlpha = PROMPT_SHADOW_FLOOR + (PROMPT_SHADOW_ROOF - PROMPT_SHADOW_FLOOR) * perceptualL;
+    let shadowAlpha = PROMPT_SHADOW_FLOOR + (PROMPT_SHADOW_ROOF - PROMPT_SHADOW_FLOOR) * perceptualL;
+
+    // Dark chips already separate well; avoid piling a dirty shadow on top.
+    if (isBrightSample) {
+        shadowAlpha = PROMPT_SHADOW_FLOOR;
+    }
 
     const result = {
         r: blended.r,

@@ -25,6 +25,6 @@ pack: compile-po ## Create a ZIP package for Extensions.gnome.org
 	@glib-compile-schemas schemas
 	@cp stylesheet.css stylesheet.css.bak
 	@sed -i -e "s|font-family: 'SF Pro Display';|/* font-family: 'SF Pro Display'; */|g" -e "s|font-family: '\.SF Soft Numeric';|/* font-family: '.SF Soft Numeric'; */|g" stylesheet.css
-	@zip -qr $(UUID).zip *.js metadata.json stylesheet.css LICENSE schemas locale -x "schemas/gschemas.compiled" -x "po/generate.py"
+	@zip -qr $(UUID).zip *.js metadata.json stylesheet.css LICENSE schemas locale -x "schemas/gschemas.compiled" -x "po/generate.py" -x "scripts/*"
 	@mv stylesheet.css.bak stylesheet.css
 	@printf 'Created package: %s\n' "$(UUID).zip"

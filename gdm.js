@@ -20,8 +20,9 @@ import {
     CUPERTINO_PROMPT_VERTICAL_FRACTION,
     GDM_CROSSFADE_DURATION,
     centerClockLabel,
-    MESSAGELABEL_HEIGHT,
 } from './constants.js';
+
+const MESSAGE_PROMPT_GAP = 48;
 
 function _log(msg) {
     console.debug(msg);
@@ -29,6 +30,14 @@ function _log(msg) {
 
 function _logError(msg) {
     console.error(msg);
+}
+
+function _setActorVisible(actor, visible, opacity) {
+    if (!actor)
+        return;
+
+    actor.visible = visible;
+    actor.opacity = opacity;
 }
 
 export class GdmManager {
@@ -42,6 +51,7 @@ export class GdmManager {
         this._findDialogTimeoutId = null;
         this._origShowPrompt = null;
         this._origOnReset = null;
+        this._origVfuncAllocate = null;
         this._allocationHandlers = [];
         this._opacityId = null;
         this._timeLabel = null;
@@ -61,6 +71,13 @@ export class GdmManager {
         this._currentWallpaperMetadata = null;
         this._sharedWallpaperMonitor = null;
         this._sharedWallpaperRefreshId = null;
+        this._lastWellH = undefined;
+        this._lastYCenterFraction = undefined;
+        this._lockscreenMessageContent = null;
+        this._lockscreenMessageScrollView = null;
+        this._lockscreenMessageWidth = 0;
+        this._lockscreenMessageHeight = 0;
+        this._lockscreenMessageHasOverflow = false;
     }
 
     enable() {
@@ -164,6 +181,15 @@ export class GdmManager {
         const dialog = this._dialog;
         this._dialogParent = dialog.get_parent();
 
+        if (dialog.vfunc_allocate) {
+            this._origVfuncAllocate = dialog.vfunc_allocate;
+            dialog.vfunc_allocate = (dialogBox) => {
+                this._origVfuncAllocate.call(dialog, dialogBox);
+                this._positionUserList(dialogBox);
+                this._positionAuthPrompt(dialogBox);
+            };
+        }
+
         // Setup background group and managers (similar to UnlockDialog)
         this._backgroundGroup = new Clutter.Actor();
         this._dialogParent.add_child(this._backgroundGroup);
@@ -172,6 +198,8 @@ export class GdmManager {
         this._bgManagers = [];
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => {
             this._updateBackgrounds();
+            this._syncLockscreenMessageLayout();
+            this._positionAuthPrompt();
         });
 
         this._updateBackgrounds();
@@ -198,12 +226,49 @@ export class GdmManager {
             style_class: 'wack-cupertino-lockscreen-message',
             x_align: Clutter.ActorAlign.CENTER,
             y_align: Clutter.ActorAlign.CENTER,
-            visible: false,
         });
         this._lockscreenMessageLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
         this._lockscreenMessageLabel.clutter_text.line_wrap = true;
-        this._dialogParent.add_child(this._lockscreenMessageLabel);
-        this._dialogParent.set_child_above_sibling(this._lockscreenMessageLabel, null);
+        this._lockscreenMessageLabel.clutter_text.line_alignment = Pango.Alignment.CENTER;
+        this._lockscreenMessageLabel.x_expand = true;
+
+        this._lockscreenMessageContent = new St.BoxLayout({
+            vertical: true,
+            x_align: Clutter.ActorAlign.CENTER,
+            y_align: Clutter.ActorAlign.START,
+            x_expand: true,
+        });
+        this._lockscreenMessageContent.add_child(this._lockscreenMessageLabel);
+
+this._lockscreenMessageScrollView = new St.ScrollView({
+    style_class: 'wack-cupertino-lockscreen-message-scroll',
+    x_align: Clutter.ActorAlign.CENTER,
+    y_align: Clutter.ActorAlign.CENTER,
+    overlay_scrollbars: true,
+    hscrollbar_policy: St.PolicyType.NEVER,
+    vscrollbar_policy: St.PolicyType.NEVER,
+});
+
+this._lockscreenMessageScrollView.set_child(this._lockscreenMessageContent);
+this._lockscreenMessageScrollView.connectObject(
+    'scroll-event',
+    () => {
+        return this._lockscreenMessageHasOverflow
+            ? Clutter.EVENT_PROPAGATE
+            : Clutter.EVENT_STOP;
+    },
+    this
+);
+
+        const messageScrollbar = this._lockscreenMessageScrollView.get_vscroll_bar?.();
+        if (messageScrollbar) {
+            messageScrollbar.opacity = 0;
+            messageScrollbar.visible = false;
+            messageScrollbar.reactive = false;
+        }
+
+        this._dialogParent.add_child(this._lockscreenMessageScrollView);
+        this._dialogParent.set_child_above_sibling(this._lockscreenMessageScrollView, null);
 
         this._timeLabel = timeLabel;
         this._connectAllocation(dialog, () => this._positionClock());
@@ -220,6 +285,12 @@ export class GdmManager {
         // 2. Shift user selection list down
         this._connectAllocation(dialog._userSelectionBox, () => this._positionUserList());
         this._positionUserList();
+
+        // 3. Shift auth prompt and message label
+        this._connectAllocation(dialog._authPrompt, () => this._positionAuthPrompt());
+        if (this._lockscreenMessageScrollView) {
+            this._connectAllocation(this._lockscreenMessageScrollView, () => this._positionAuthPrompt());
+        }
 
         // 3a. Tighten user list button widths to max natural content width
         this._setupUserListWidths();
@@ -248,13 +319,15 @@ export class GdmManager {
                     // No need to rebuild anything.
                 }
                 this._gdmClockWrapper.opacity = 255;
-                if (this._lockscreenMessageLabel && this._lockscreenMessageLabel.visible) {
-                    this._lockscreenMessageLabel.opacity = 255;
+                const messageActor = this._getLockscreenMessageActor();
+                if (messageActor && messageActor.visible) {
+                    messageActor.opacity = 255;
                 }
             } else if (hasBeenFullyVisible) {
                 this._gdmClockWrapper.opacity = op;
-                if (this._lockscreenMessageLabel && this._lockscreenMessageLabel.visible) {
-                    this._lockscreenMessageLabel.opacity = op;
+                const messageActor = this._getLockscreenMessageActor();
+                if (messageActor && messageActor.visible) {
+                    messageActor.opacity = op;
                 }
             }
         });
@@ -284,9 +357,6 @@ export class GdmManager {
     _restartDialogFadeIn() {
         const dialog = this._dialog;
         if (!dialog) return;
-        // If the dialog is already fully visible (edge case: very late enable),
-        // don't reset it — just leave our chrome applied on top.
-        if (dialog.opacity === 255) return;
         // Cancel GDM's in-progress ease and restart from transparent, ensuring
         // the very first painted frame shows our configured layout, never stock GDM.
         dialog.remove_all_transitions();
@@ -333,8 +403,12 @@ export class GdmManager {
             this._backgroundGroup = null;
         }
 
+        if (this._lockscreenMessageScrollView) {
+            this._lockscreenMessageScrollView.destroy();
+            this._lockscreenMessageScrollView = null;
+        }
+        this._lockscreenMessageContent = null;
         if (this._lockscreenMessageLabel) {
-            this._lockscreenMessageLabel.destroy();
             this._lockscreenMessageLabel = null;
         }
 
@@ -359,6 +433,11 @@ export class GdmManager {
         for (const { actor, id } of this._allocationHandlers)
             actor.disconnect(id);
         this._allocationHandlers = [];
+
+        if (this._origVfuncAllocate && dialog) {
+            dialog.vfunc_allocate = this._origVfuncAllocate;
+            this._origVfuncAllocate = null;
+        }
 
         if (this._origShowPrompt && dialog) {
             dialog._showPrompt = this._origShowPrompt;
@@ -438,14 +517,131 @@ export class GdmManager {
         this._allocationHandlers.push({ actor, id });
     }
 
+    _getLockscreenMessageActor() {
+        return this._lockscreenMessageScrollView ?? this._lockscreenMessageLabel ?? null;
+    }
+
+    _getLockscreenMessageWidth() {
+        const dialog = this._dialog;
+        if (dialog) {
+            const alloc = dialog.get_allocation_box();
+            const width = alloc.x2 - alloc.x1;
+            if (width > 0)
+                return Math.floor(width / 3);
+        }
+
+        const monitor = Main.layoutManager?.primaryMonitor;
+        return monitor ? Math.floor(monitor.width / 3) : 0;
+    }
+
+    _getLockscreenMessageLineHeight() {
+        const clutterText = this._lockscreenMessageLabel?.clutter_text;
+        const layout = clutterText?.get_layout?.();
+        const context = layout?.get_context?.();
+        const fontDescription = layout?.get_font_description?.();
+
+        if (context && fontDescription) {
+            const metrics = context.get_metrics(fontDescription, Pango.Language.get_default());
+            const metricsHeight = metrics.get_height();
+            if (metricsHeight > 0)
+                return Math.ceil(metricsHeight / Pango.SCALE);
+
+            const ascent = metrics.get_ascent();
+            const descent = metrics.get_descent();
+            if (ascent + descent > 0)
+                return Math.ceil((ascent + descent) / Pango.SCALE);
+        }
+
+        const [, naturalHeight] = this._lockscreenMessageLabel?.get_preferred_height?.(-1) ?? [0, 0];
+        return Math.ceil(naturalHeight);
+    }
+
+    _getLockscreenMessageLineCount() {
+        const layout = this._lockscreenMessageLabel?.clutter_text?.get_layout?.();
+        return layout?.get_line_count?.() ?? 0;
+    }
+
+    _syncLockscreenMessageFade() {
+        if (!this._lockscreenMessageScrollView)
+            return;
+
+        if (this._lockscreenMessageHasOverflow)
+            this._lockscreenMessageScrollView.add_style_class_name('vfade');
+        else
+            this._lockscreenMessageScrollView.remove_style_class_name('vfade');
+    }
+
+_syncLockscreenMessageLayout() {
+    if (!this._lockscreenMessageLabel ||
+        !this._lockscreenMessageScrollView ||
+        !this._lockscreenMessageContent)
+        return;
+
+    const messageWidth = this._getLockscreenMessageWidth();
+    if (messageWidth <= 0)
+        return;
+
+    this._lockscreenMessageWidth = messageWidth;
+
+    this._lockscreenMessageContent.width = messageWidth;
+    this._lockscreenMessageLabel.width = messageWidth;
+
+    const lineHeight = this._getLockscreenMessageLineHeight();
+    const maxVisibleHeight = Math.ceil(lineHeight * 4);
+
+    const [, naturalHeight] =
+        this._lockscreenMessageLabel.get_preferred_height(messageWidth);
+
+    const lineCount = this._getLockscreenMessageLineCount();
+
+    this._lockscreenMessageHasOverflow =
+        naturalHeight > maxVisibleHeight || lineCount > 4;
+
+    const visibleHeight = this._lockscreenMessageHasOverflow
+        ? maxVisibleHeight
+        : naturalHeight;
+
+    this._lockscreenMessageHeight = visibleHeight;
+
+    this._lockscreenMessageScrollView.set_size(
+        messageWidth,
+        visibleHeight
+    );
+
+    const vadj = this._lockscreenMessageScrollView.vadjustment;
+
+    vadj.connectObject(
+    'notify::value',
+    () => {
+        log(`[WACK] value=${vadj.value} upper=${vadj.upper} page=${vadj.page_size}`);
+    },
+    this
+);
+
+    if (vadj)
+        vadj.set_value(0);
+
+    // Completely disable scrolling unless there is actual overflow.
+    this._lockscreenMessageScrollView.enable_mouse_scrolling =
+        this._lockscreenMessageHasOverflow;
+
+    this._lockscreenMessageScrollView.reactive =
+        this._lockscreenMessageHasOverflow;
+
+    this._lockscreenMessageScrollView.can_focus =
+        this._lockscreenMessageHasOverflow;
+
+    this._syncLockscreenMessageFade();
+}
+
     _dialogSize() {
         const alloc = this._dialog.get_allocation_box();
         return { w: alloc.x2 - alloc.x1, h: alloc.y2 - alloc.y1 };
     }
 
-    _positionClock() {
+    _positionClock(dialogBox = null) {
         if (!this._gdmClock || !this._gdmClockWrapper || !this._dialog) return;
-        const alloc = this._dialog.get_allocation_box();
+        const alloc = dialogBox || this._dialog.get_allocation_box();
         const w = alloc.x2 - alloc.x1;
         const h = alloc.y2 - alloc.y1;
 
@@ -457,11 +653,13 @@ export class GdmManager {
         this._gdmClock._time.set_y(DATE_LABEL_HEIGHT);
     }
 
-    _positionUserList() {
+    _positionUserList(dialogBox = null) {
         if (!this._dialog?._userSelectionBox) return;
         const box = this._dialog._userSelectionBox;
         if (!box.visible) return;
-        const { w, h } = this._dialogSize();
+        const alloc = dialogBox || this._dialog.get_allocation_box();
+        const w = alloc.x2 - alloc.x1;
+        const h = alloc.y2 - alloc.y1;
         const [, , natW, natH] = box.get_preferred_size();
         box.translation_x = Math.floor(w / 2 - natW / 2) - (box.x || 0);
         box.translation_y = Math.floor(h * GDM_USER_STACK_VERTICAL_FRACTION - natH / 2) - (box.y || 0);
@@ -538,10 +736,12 @@ export class GdmManager {
         }
     }
 
-    _positionAuthPrompt() {
+    _positionAuthPrompt(dialogBox = null) {
         const authPrompt = this._dialog?._authPrompt;
         if (!authPrompt) return;
-        const { w, h } = this._dialogSize();
+        const alloc = dialogBox || this._dialog.get_allocation_box();
+        const w = alloc.x2 - alloc.x1;
+        const h = alloc.y2 - alloc.y1;
 
         const restPrompt = this._cupertinoRestPrompt;
         const userWell = restPrompt?._userWell;
@@ -560,16 +760,45 @@ export class GdmManager {
 
         authPrompt.translation_x = Math.floor(w / 2 - promptW / 2) - (authPrompt.x || 0);
 
-        if (this._lockscreenMessageLabel && this._lockscreenMessageLabel.visible) {
-            const alloc = this._dialog.get_allocation_box();
-            const [, , msgW, msgH] = this._lockscreenMessageLabel.get_preferred_size();
+        const messageActor = this._getLockscreenMessageActor();
+        if (!dialogBox && messageActor && messageActor.visible) {
+            this._syncLockscreenMessageLayout();
+            const msgW = this._lockscreenMessageWidth;
+            const msgH = this._lockscreenMessageHeight;
             // Position in _dialogParent coordinates: mirror _positionClock pattern
             const msgX = alloc.x1 + Math.floor((w - msgW) / 2.0);
-            const msgY = alloc.y1 + targetY - MESSAGELABEL_HEIGHT - msgH;
-            this._lockscreenMessageLabel.set_position(msgX, msgY);
+            const msgY = alloc.y1 + targetY - MESSAGE_PROMPT_GAP - msgH;
+            messageActor.set_position(msgX, msgY);
         }
 
         _log('[WACK/GdmManager] positionAuthPrompt currentY: ' + currentY + ' targetY: ' + targetY + ' translation_y: ' + authPrompt.translation_y + ' translation_x: ' + authPrompt.translation_x + ' wellH: ' + wellH + ' anchorH: ' + anchorH);
+
+        let yCenterFraction = null;
+        const entry = this._findPromptEntry(authPrompt);
+        if (entry) {
+            const pos = entry.get_transformed_position();
+            const yTrans = pos[1];
+            const hTrans = entry.get_height() || 0;
+            console.error(`[WACK/DEBUG] entry pos: ${JSON.stringify(pos)}, height: ${hTrans}`);
+            const monitor = Main.layoutManager?.primaryMonitor;
+            const monitorY = monitor ? monitor.y : 0;
+            const monitorHeight = monitor ? monitor.height : 1080;
+            if (yTrans > 0 && monitorHeight > 0) {
+                yCenterFraction = (yTrans + hTrans / 2 - monitorY) / monitorHeight;
+            }
+        }
+
+        const wellChanged = wellH !== this._lastWellH;
+        const yCenterChanged = yCenterFraction !== null &&
+            (this._lastYCenterFraction === undefined || Math.abs(yCenterFraction - this._lastYCenterFraction) > 0.001);
+
+        if (wellChanged || yCenterChanged) {
+            if (wellChanged) this._lastWellH = wellH;
+            if (yCenterChanged) this._lastYCenterFraction = yCenterFraction;
+            this._updateCupertinoPromptBackground().catch(e => {
+                _logError('[WACK/GdmManager] Failed to update prompt background in allocation: ' + e);
+            });
+        }
     }
 
     _createBackground(monitorIndex) {
@@ -699,6 +928,7 @@ export class GdmManager {
 
     _updateLockscreenMessage(metadata = null) {
         if (!this._lockscreenMessageLabel) return;
+        const messageActor = this._getLockscreenMessageActor();
 
         const effectiveMetadata = metadata ?? this._currentWallpaperMetadata;
         
@@ -716,20 +946,27 @@ export class GdmManager {
             const cleanText = (text || '').trim();
             if (enabled && cleanText) {
                 this._lockscreenMessageLabel.text = cleanText;
-                if (!this._lockscreenMessageLabel.visible) {
-                    this._lockscreenMessageLabel.opacity = 0;
-                    this._lockscreenMessageLabel.visible = true;
-                    this._lockscreenMessageLabel.ease({
+                this._syncLockscreenMessageLayout();
+                if (messageActor && !messageActor.visible) {
+                    messageActor.opacity = 0;
+                    messageActor.visible = true;
+                    messageActor.ease({
                         opacity: 255,
                         duration: 250,
                         mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                     });
                 }
             } else {
-                this._lockscreenMessageLabel.visible = false;
+                this._lockscreenMessageHasOverflow = false;
+                this._lockscreenMessageHeight = 0;
+                this._syncLockscreenMessageFade();
+                _setActorVisible(messageActor, false, 0);
             }
         } else {
-            this._lockscreenMessageLabel.visible = false;
+            this._lockscreenMessageHasOverflow = false;
+            this._lockscreenMessageHeight = 0;
+            this._syncLockscreenMessageFade();
+            _setActorVisible(messageActor, false, 0);
         }
 
         if (showMessage) {
@@ -1032,11 +1269,6 @@ export class GdmManager {
 
         this._updateLockscreenMessage();
 
-        // Reposition prompt to lower third on allocation
-        this._connectAllocation(authPrompt, () => this._positionAuthPrompt());
-        if (this._lockscreenMessageLabel) {
-            this._connectAllocation(this._lockscreenMessageLabel, () => this._positionAuthPrompt());
-        }
         this._positionAuthPrompt();
         this._startCursorBlink();
     }
@@ -1052,12 +1284,13 @@ export class GdmManager {
             this._cupertinoRestPromptContainer = null;
             this._cupertinoRestPrompt = null;
         }
+        this._lastWellH = undefined;
+        this._lastYCenterFraction = undefined;
 
         authPrompt.translation_x = 0;
         authPrompt.translation_y = 0;
 
-        if (this._lockscreenMessageLabel)
-            this._lockscreenMessageLabel.visible = false;
+        _setActorVisible(this._getLockscreenMessageActor(), false, 0);
 
         authPrompt.remove_style_class_name('wack-cupertino-prompt');
         this._clearCupertinoPromptBackground();
@@ -1071,7 +1304,7 @@ export class GdmManager {
 
         // Disconnect the auth prompt and lockscreen message label allocation handlers
         this._allocationHandlers = this._allocationHandlers.filter(({ actor, id }) => {
-            if (actor === authPrompt || actor === this._lockscreenMessageLabel) {
+            if (actor === authPrompt || actor === this._lockscreenMessageLabel || actor === this._lockscreenMessageScrollView) {
                 actor.disconnect(id);
                 return false;
             }
@@ -1271,6 +1504,24 @@ export class GdmManager {
             return;
         }
 
+        let wellH = 0;
+        if (this._cupertinoRestPrompt?._userWell) {
+            const [, , , hSize] = this._cupertinoRestPrompt._userWell.get_preferred_size();
+            wellH = hSize > 0 ? hSize : 0;
+        }
+
+        let yCenterFraction = null;
+        if (entry) {
+            const [, yTrans] = entry.get_transformed_position();
+            const hTrans = entry.get_height() || 0;
+            const monitor = Main.layoutManager?.primaryMonitor;
+            const monitorY = monitor ? monitor.y : 0;
+            const monitorHeight = monitor ? monitor.height : 1080;
+            if (yTrans > 0 && monitorHeight > 0) {
+                yCenterFraction = (yTrans + hTrans / 2 - monitorY) / monitorHeight;
+            }
+        }
+
         let wallpaperParams = null;
         if (effectiveMetadata) {
             if (effectiveMetadata.promptColor &&
@@ -1289,6 +1540,8 @@ export class GdmManager {
                 primaryColor: effectiveMetadata.primary_color,
                 secondaryColor: effectiveMetadata.secondary_color,
                 shadingType: effectiveMetadata.shading_type,
+                wellH: wellH,
+                yCenterFraction: yCenterFraction,
             };
         } else {
             try {
@@ -1301,6 +1554,8 @@ export class GdmManager {
                     primaryColor: bgSettings.get_string('primary-color'),
                     secondaryColor: bgSettings.get_string('secondary-color'),
                     shadingType: bgSettings.get_enum('color-shading-type'),
+                    wellH: wellH,
+                    yCenterFraction: yCenterFraction,
                 };
             } catch (e) {
                 _log('[WACK/GdmManager] Failed to get background settings for prompt color: ' + e);
