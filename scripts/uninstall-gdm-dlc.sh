@@ -25,7 +25,7 @@ echo "=== WACK Lockscreen GDM DLC Uninstaller ==="
 echo "Target Directory: $TARGET_DIR"
 
 # 1. Check if already uninstalled
-if [ ! -f "$TARGET_DIR/gdm.js" ] && [ ! -f "$TARGET_DIR/crossSessionManager.js" ] && [ ! -f "$DCONF_FILE" ]; then
+if [ ! -f "$TARGET_DIR/pro.js" ] && [ ! -f "$TARGET_DIR/crossSessionManager.js" ] && [ ! -f "$DCONF_FILE" ]; then
     echo ""
     echo "✨ GDM Expansion is already uninstalled from this system."
     exit 0
@@ -59,7 +59,7 @@ fi
 
 # 3. Remove GDM DLC modules
 echo "-> Removing GDM DLC modules..."
-rm -f "$TARGET_DIR/gdm.js"
+rm -f "$TARGET_DIR/pro.js"
 rm -f "$TARGET_DIR/crossSessionManager.js"
 
 # 4. Remove GDM dconf override

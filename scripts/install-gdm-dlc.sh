@@ -60,7 +60,7 @@ if [ "${1:-}" = "--force" ]; then
     FORCE=true
 fi
 
-if [ "$FORCE" = false ] && [ -f "$TARGET_DIR/gdm.js" ] && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
+if [ "$FORCE" = false ] && [ -f "$TARGET_DIR/pro.js" ] && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
     echo ""
     echo "✨ GDM Expansion is already fully installed on this system!"
     echo "To force a re-installation or re-configuration, run with --force."
@@ -77,7 +77,7 @@ if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
             --exclude="*.zip" \
             --exclude="*.bak" \
             --exclude="checkthisthingblyat" \
-            --exclude="gdm.js" \
+            --exclude="pro.js" \
             --exclude="crossSessionManager.js" \
             "$SRC_DIR/" "$TARGET_DIR/"
     else
@@ -88,10 +88,10 @@ else
     echo "   Source and Target are the same directory. Skipping extension files sync."
 fi
 
-# 2. Deploy DLC modules (gdm.js and crossSessionManager.js)
+# 2. Deploy DLC modules (pro.js and crossSessionManager.js)
 echo "-> Deploying DLC modules..."
 REPO_RAW_URL="https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main"
-for module in "gdm.js" "crossSessionManager.js"; do
+for module in "pro.js" "crossSessionManager.js"; do
     if [ -f "$SRC_DIR/$module" ]; then
         if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
             echo "   Copying local $module..."

@@ -120,7 +120,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._isActive = true;
         this._gdmManager = null;
         if (Main.sessionMode.currentMode === 'gdm') {
-            import('./gdm.js').then(module => {
+            import('./pro.js').then(module => {
                 if (!this._isActive) return;
                 this._gdmManager = new module.GdmManager(this);
                 this._gdmManager.enable();

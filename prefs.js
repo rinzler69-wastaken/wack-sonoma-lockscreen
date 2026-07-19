@@ -37,9 +37,9 @@ function _getGdmStatus(dir) {
         if (!dir)
             return { enabled: false, reason: 'missing-dir' };
 
-        const hasGdmJs = dir.get_child('gdm.js').query_exists(null);
+        const hasProJs = dir.get_child('pro.js').query_exists(null);
         const hasCrossSessionJs = dir.get_child('crossSessionManager.js').query_exists(null);
-        if (!hasGdmJs || !hasCrossSessionJs)
+        if (!hasProJs || !hasCrossSessionJs)
             return { enabled: false, reason: 'missing-modules' };
 
         return { enabled: true, reason: 'ok' };
