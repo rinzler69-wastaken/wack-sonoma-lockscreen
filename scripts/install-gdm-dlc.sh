@@ -72,9 +72,15 @@ fi
 echo "-> Deploying extension system-wide..."
 mkdir -p "$TARGET_DIR"
 if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
+    # Dynamically handle git repository metadata
+    EXCLUDE_GIT=""
+    if [ ! -d "$SRC_DIR/.git" ]; then
+        EXCLUDE_GIT="--exclude=.git*"
+    fi
+
     if command -v rsync &> /dev/null; then
         rsync -a --delete \
-            --exclude=".git*" \
+            $EXCLUDE_GIT \
             --exclude="*.zip" \
             --exclude="*.bak" \
             --exclude="checkthisthingblyat" \
@@ -83,7 +89,12 @@ if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
             "$SRC_DIR/" "$TARGET_DIR/"
     else
         echo "rsync not found, falling back to cp..."
-        cp -rT "$SRC_DIR" "$TARGET_DIR"
+        if [ -d "$SRC_DIR/.git" ]; then
+            cp -rT "$SRC_DIR" "$TARGET_DIR"
+        else
+            mkdir -p "$TARGET_DIR"
+            find "$SRC_DIR" -maxdepth 1 -not -name ".git" -not -name "." -not -name ".." -exec cp -r -t "$TARGET_DIR" {} +
+        fi
     fi
 else
     echo "   Source and Target are the same directory. Skipping extension files sync."
