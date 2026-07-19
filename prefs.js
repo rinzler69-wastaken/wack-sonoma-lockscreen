@@ -32,40 +32,6 @@ function _isWackShellEnabled() {
 }
 
 // <GDM_EXCLUDE>
-function _hasDconfOverride(uuid) {
-    try {
-        const dir = Gio.File.new_for_path('/etc/dconf/db/gdm.d');
-        if (!dir.query_exists(null))
-            return false;
-
-        const enumerator = dir.enumerate_children(
-            'standard::name,standard::type',
-            Gio.FileQueryInfoFlags.NONE,
-            null
-        );
-
-        let info;
-        const decoder = new TextDecoder('utf-8');
-        while ((info = enumerator.next_file(null)) !== null) {
-            if (info.get_file_type() !== Gio.FileType.REGULAR)
-                continue;
-
-            const child = dir.get_child(info.get_name());
-            try {
-                const [, contents] = child.load_contents(null);
-                const text = decoder.decode(contents);
-                if (text.includes(uuid))
-                    return true;
-            } catch (e) {
-                // ignore read errors for individual files
-            }
-        }
-    } catch (e) {
-        // ignore
-    }
-    return false;
-}
-
 function _getGdmStatus(dir) {
     try {
         if (!dir)
@@ -75,10 +41,6 @@ function _getGdmStatus(dir) {
         const hasCrossSessionJs = dir.get_child('crossSessionManager.js').query_exists(null);
         if (!hasGdmJs || !hasCrossSessionJs)
             return { enabled: false, reason: 'missing-modules' };
-
-        const uuid = 'wack-lockscreen-clock@rinzler69-wastaken.github.com';
-        if (!_hasDconfOverride(uuid))
-            return { enabled: false, reason: 'missing-dconf' };
 
         return { enabled: true, reason: 'ok' };
     } catch (e) {
