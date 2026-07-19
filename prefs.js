@@ -2,6 +2,7 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
+import Gdk from 'gi://Gdk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import { CLOCK_ANIMATION_OPTIONS, PROMPT_ANIMATION_OPTIONS } from './anims.js';
 
@@ -30,33 +31,52 @@ function _isWackShellEnabled() {
     }
 }
 
-function _getGdmStatus() {
+function _hasDconfOverride(uuid) {
     try {
-        const sysPath = '/usr/share/gnome-shell/extensions/wack-lockscreen-clock@rinzler69-wastaken.github.com';
-        const sysDir = Gio.File.new_for_path(sysPath);
+        const dir = Gio.File.new_for_path('/etc/dconf/db/gdm.d');
+        if (!dir.query_exists(null))
+            return false;
 
-        if (!sysDir.query_exists(null))
-            return { enabled: false, reason: 'missing-sys-install' };
+        const enumerator = dir.enumerate_children(
+            'standard::name,standard::type',
+            Gio.FileQueryInfoFlags.NONE,
+            null
+        );
 
-        const hasGdmJs = sysDir.get_child('gdm.js').query_exists(null);
-        if (!hasGdmJs)
-            return { enabled: false, reason: 'missing-module' };
+        let info;
+        const decoder = new TextDecoder('utf-8');
+        while ((info = enumerator.next_file(null)) !== null) {
+            if (info.get_file_type() !== Gio.FileType.REGULAR)
+                continue;
 
-        let hasGdmSessionMode = false;
-        try {
-            const file = sysDir.get_child('metadata.json');
-            const [, contents] = file.load_contents(null);
-            const decoder = new TextDecoder('utf-8');
-            const metadata = JSON.parse(decoder.decode(contents));
-            hasGdmSessionMode = metadata['session-modes']?.includes('gdm') ?? false;
-        } catch (e) {
-            // ignore
+            const child = dir.get_child(info.get_name());
+            try {
+                const [, contents] = child.load_contents(null);
+                const text = decoder.decode(contents);
+                if (text.includes(uuid))
+                    return true;
+            } catch (e) {
+                // ignore read errors for individual files
+            }
         }
-        if (!hasGdmSessionMode)
-            return { enabled: false, reason: 'missing-session-mode' };
+    } catch (e) {
+        // ignore
+    }
+    return false;
+}
 
-        const dconfFile = Gio.File.new_for_path('/etc/dconf/db/gdm.d/99-wack-lockscreen');
-        if (!dconfFile.query_exists(null))
+function _getGdmStatus(dir) {
+    try {
+        if (!dir)
+            return { enabled: false, reason: 'missing-dir' };
+
+        const hasGdmJs = dir.get_child('gdm.js').query_exists(null);
+        const hasCrossSessionJs = dir.get_child('crossSessionManager.js').query_exists(null);
+        if (!hasGdmJs || !hasCrossSessionJs)
+            return { enabled: false, reason: 'missing-modules' };
+
+        const uuid = 'wack-lockscreen-clock@rinzler69-wastaken.github.com';
+        if (!_hasDconfOverride(uuid))
             return { enabled: false, reason: 'missing-dconf' };
 
         return { enabled: true, reason: 'ok' };
@@ -361,81 +381,81 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             messageSetButton.sensitive = settings.get_boolean('cupertino-lockscreen-message-enable');
         }));
 
-messageSetButton.connect('clicked', () => {
-    const dialog = new Adw.MessageDialog({
-        transient_for: window,
-        heading: _('Set a message to appear on the lockscreen'),
-        close_response: 'cancel',
-        modal: true,
-    });
+        messageSetButton.connect('clicked', () => {
+            const dialog = new Adw.MessageDialog({
+                transient_for: window,
+                heading: _('Set a message to appear on the lockscreen'),
+                close_response: 'cancel',
+                modal: true,
+            });
 
-    const textView = new Gtk.TextView({
-    wrap_mode: Gtk.WrapMode.WORD_CHAR,
-    top_margin: 12,
-    bottom_margin: 12,
-    left_margin: 12,
-    right_margin: 12,
-    accepts_tab: false,
-});
+            const textView = new Gtk.TextView({
+                wrap_mode: Gtk.WrapMode.WORD_CHAR,
+                top_margin: 12,
+                bottom_margin: 12,
+                left_margin: 12,
+                right_margin: 12,
+                accepts_tab: false,
+            });
 
-    const buffer = textView.get_buffer();
-    buffer.set_text(
-        settings.get_string('cupertino-lockscreen-message-text'),
-        -1
-    );
-
-const scrolled = new Gtk.ScrolledWindow({
-    min_content_height: 180,
-    min_content_width: 420,
-    hscrollbar_policy: Gtk.PolicyType.NEVER,
-    vscrollbar_policy: Gtk.PolicyType.AUTOMATIC,
-    child: textView,
-});
-
-const frame = new Gtk.Frame({
-    margin_top: 12,
-    margin_bottom: 12,
-    margin_start: 6,
-    margin_end: 6,
-    child: scrolled,
-});
-
-dialog.set_extra_child(frame);
-
-    dialog.add_response('cancel', _('Cancel'));
-    dialog.add_response('ok', _('OK'));
-    dialog.set_response_appearance('ok', Adw.ResponseAppearance.SUGGESTED);
-
-    dialog.set_default_response('ok');
-
-    dialog.connect('response', (_self, response) => {
-        if (response === 'ok') {
-            const start = buffer.get_start_iter();
-            const end = buffer.get_end_iter();
-
-            let text = buffer.get_text(start, end, false);
-
-            // Hard cap at 250 characters
-            if (text.length > 250)
-                text = text.substring(0, 250);
-
-            settings.set_string(
-                'cupertino-lockscreen-message-text',
-                text
+            const buffer = textView.get_buffer();
+            buffer.set_text(
+                settings.get_string('cupertino-lockscreen-message-text'),
+                -1
             );
-        }
 
-        dialog.destroy();
-    });
+            const scrolled = new Gtk.ScrolledWindow({
+                min_content_height: 180,
+                min_content_width: 420,
+                hscrollbar_policy: Gtk.PolicyType.NEVER,
+                vscrollbar_policy: Gtk.PolicyType.AUTOMATIC,
+                child: textView,
+            });
 
-    dialog.present();
+            const frame = new Gtk.Frame({
+                margin_top: 12,
+                margin_bottom: 12,
+                margin_start: 6,
+                margin_end: 6,
+                child: scrolled,
+            });
 
-    // Focus the editor immediately
-    GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-        textView.grab_focus();
-        return GLib.SOURCE_REMOVE;
-    });
-});
+            dialog.set_extra_child(frame);
+
+            dialog.add_response('cancel', _('Cancel'));
+            dialog.add_response('ok', _('OK'));
+            dialog.set_response_appearance('ok', Adw.ResponseAppearance.SUGGESTED);
+
+            dialog.set_default_response('ok');
+
+            dialog.connect('response', (_self, response) => {
+                if (response === 'ok') {
+                    const start = buffer.get_start_iter();
+                    const end = buffer.get_end_iter();
+
+                    let text = buffer.get_text(start, end, false);
+
+                    // Hard cap at 250 characters
+                    if (text.length > 250)
+                        text = text.substring(0, 250);
+
+                    settings.set_string(
+                        'cupertino-lockscreen-message-text',
+                        text
+                    );
+                }
+
+                dialog.destroy();
+            });
+
+            dialog.present();
+
+            // Focus the editor immediately
+            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                textView.grab_focus();
+                return GLib.SOURCE_REMOVE;
+            });
+        });
 
         messageEnableRow.add_suffix(messageSetButton);
 
@@ -568,68 +588,6 @@ dialog.set_extra_child(frame);
         modeRow.add_row(resetRow);
 
         animPage.add(modeGroup);
-
-        // -- GDM Login Screen group -----------------------------------------
-        const gdmGroup = new Adw.PreferencesGroup({
-            title: _('GDM Login Screen'),
-        });
-
-        const gdmStatus = _getGdmStatus();
-        const gdmRow = new Adw.ExpanderRow({
-            title: _('GDM Layout Styling'),
-            show_enable_switch: false,
-        });
-
-        const gdmStatusLabel = new Gtk.Label({
-            valign: Gtk.Align.CENTER,
-        });
-
-        if (gdmStatus.enabled) {
-            gdmRow.subtitle = _('Status: Enabled. Custom layout will render on GDM.');
-            gdmStatusLabel.label = _('Enabled');
-            gdmStatusLabel.add_css_class('success');
-            gdmRow.enable_expansion = false;
-        } else {
-            gdmStatusLabel.label = _('Disabled');
-            gdmStatusLabel.add_css_class('error');
-            gdmRow.enable_expansion = true;
-            gdmRow.expanded = true;
-
-            let explanation = '';
-            if (gdmStatus.reason === 'missing-sys-install') {
-                explanation = _('Extension is not installed system-wide.');
-            } else if (gdmStatus.reason === 'missing-module') {
-                explanation = _('GDM layout module (gdm.js) is missing system-wide.');
-            } else if (gdmStatus.reason === 'missing-session-mode') {
-                explanation = _('GDM session mode is not enabled in system-wide metadata.');
-            } else if (gdmStatus.reason === 'missing-dconf') {
-                explanation = _('GDM dconf override configuration is missing.');
-            } else {
-                explanation = _('GDM integration is not configured.');
-            }
-
-            gdmRow.subtitle = `${_('Status: Disabled.')} ${explanation}`;
-
-            const cmdRow = new Adw.ActionRow({
-                title: _('To enable GDM support, run this in your terminal:'),
-            });
-
-            const curlLabel = new Gtk.Label({
-                label: '<tt>curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-gdm-dlc.sh | bash</tt>',
-                use_markup: true,
-                selectable: true,
-                wrap: true,
-                xalign: 0,
-                valign: Gtk.Align.CENTER,
-            });
-
-            cmdRow.add_suffix(curlLabel);
-            gdmRow.add_row(cmdRow);
-        }
-
-        gdmRow.add_suffix(gdmStatusLabel);
-        gdmGroup.add(gdmRow);
-        animPage.add(gdmGroup);
 
         let selfChangeMode = false;
         function refreshUnlockFadeAvailability() {
@@ -807,6 +765,92 @@ dialog.set_extra_child(frame);
         settingsSignalIds.push(settings.connect('changed::enable-unblank', syncSensitivity));
 
         animPage.add(timeoutGroup);
+
+        // -- Extras group ---------------------------------------------------
+        const extrasGroup = new Adw.PreferencesGroup({
+            title: _('Extras'),
+        });
+
+        const gdmStatus = _getGdmStatus(this.dir);
+
+        // Row 1: GDM Status Row
+        const statusRow = new Adw.ActionRow({
+            title: _('[PRO] GDM Expansion'),
+        });
+
+        const gdmStatusLabel = new Gtk.Label({
+            valign: Gtk.Align.CENTER,
+        });
+
+        if (gdmStatus.enabled) {
+            statusRow.subtitle = _('Enabled. Custom layout is active on GDM.');
+            gdmStatusLabel.label = _('Enabled');
+            gdmStatusLabel.add_css_class('success');
+        } else {
+            gdmStatusLabel.label = _('Disabled');
+            gdmStatusLabel.add_css_class('error');
+
+            let explanation = '';
+            if (gdmStatus.reason === 'missing-modules') {
+                explanation = _('GDM and Cross Session Module are missing.');
+            } else if (gdmStatus.reason === 'missing-dconf') {
+                explanation = _('GDM dconf override configuration is missing.');
+            } else {
+                explanation = _('GDM integration is not configured.');
+            }
+            statusRow.subtitle = `${_('Disabled.')} ${explanation}`;
+        }
+        statusRow.add_suffix(gdmStatusLabel);
+        extrasGroup.add(statusRow);
+
+        // Row 2: Upgrade to Pro Row (only shown when disabled) or Uninstall Row (when enabled)
+        if (!gdmStatus.enabled) {
+            const upgradeRow = new Adw.ActionRow({
+                title: _('Upgrade to Pro'),
+                subtitle: _('Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal.'),
+            });
+
+            const copyBtn = new Gtk.Button({
+                icon_name: 'edit-copy-symbolic',
+                tooltip_text: _('Copy upgrade command to clipboard'),
+                css_classes: ['flat'],
+                valign: Gtk.Align.CENTER,
+            });
+            copyBtn.connect('clicked', () => {
+                const clipboard = Gdk.Display.get_default().get_clipboard();
+                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2/scripts/install-gdm-dlc.sh | bash');
+                window.add_toast(new Adw.Toast({
+                    title: _('Copied upgrade command to clipboard!'),
+                }));
+            });
+
+            upgradeRow.add_suffix(copyBtn);
+            extrasGroup.add(upgradeRow);
+        } else {
+            const uninstallRow = new Adw.ActionRow({
+                title: _('Uninstall GDM Expansion'),
+                subtitle: _('Revert Sonoma-inspired GDM login screen layout and restore default settings. To uninstall, run copied command in a terminal.'),
+            });
+
+            const copyBtn = new Gtk.Button({
+                icon_name: 'edit-copy-symbolic',
+                tooltip_text: _('Copy uninstall command to clipboard'),
+                css_classes: ['flat'],
+                valign: Gtk.Align.CENTER,
+            });
+            copyBtn.connect('clicked', () => {
+                const clipboard = Gdk.Display.get_default().get_clipboard();
+                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2/scripts/uninstall-gdm-dlc.sh | bash');
+                window.add_toast(new Adw.Toast({
+                    title: _('Copied uninstall command to clipboard!'),
+                }));
+            });
+
+            uninstallRow.add_suffix(copyBtn);
+            extrasGroup.add(uninstallRow);
+        }
+
+        animPage.add(extrasGroup);
         window.add(animPage);
 
         // Disconnect all settings signals when the window is destroyed so stale
