@@ -930,6 +930,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             wackShellExpander.add_row(installShellRow);
         }
 
+        extrasGroup.add(wackShellExpander);
+
         animPage.add(extrasGroup);
         window.add(animPage);
 
