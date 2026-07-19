@@ -877,6 +877,20 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
                 subtitle: _('Get advanced desktop crossfade transitions, Cupertino-styled lockscreen fade, and performance optimizations.'),
             });
 
+            const copyBtn = new Gtk.Button({
+                icon_name: 'edit-copy-symbolic',
+                tooltip_text: _('Copy install command to clipboard'),
+                css_classes: ['flat'],
+                valign: Gtk.Align.CENTER,
+            });
+            copyBtn.connect('clicked', () => {
+                const clipboard = Gdk.Display.get_default().get_clipboard();
+                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-shell/main/scripts/install.sh | bash');
+                window.add_toast(new Adw.Toast({
+                    title: _('Copied WACK Shell install command to clipboard!'),
+                }));
+            });
+
             const linkBtn = new Gtk.Button({
                 icon_name: 'web-browser-symbolic',
                 tooltip_text: _('Open WACK Shell repository'),
@@ -891,6 +905,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
                 }
             });
 
+            installShellRow.add_suffix(copyBtn);
             installShellRow.add_suffix(linkBtn);
             extrasGroup.add(installShellRow);
         }
