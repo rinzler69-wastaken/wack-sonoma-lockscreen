@@ -12,7 +12,7 @@ fi
 UUID="wack-shell@rinzler69-wastaken.github.com"
 EXT_DIR="$HOME/.local/share/gnome-shell/extensions/$UUID"
 REPO_ZIP_URL="https://github.com/rinzler69-wastaken/wack-shell/archive/refs/heads/main.zip"
-TMP_DIR=$(mktemp -d /tmp/wack-shell-install.XXXXXX)
+TMP_DIR=$(mktemp -d /tmp/wackinstall.XXXXXX)
 
 # Clean up temporary directory on exit
 cleanup() {
@@ -31,7 +31,7 @@ curl -sSL "$REPO_ZIP_URL" -o "$TMP_DIR/repo.zip"
 # 2. Extract ZIP
 echo "-> Extracting files..."
 unzip -q "$TMP_DIR/repo.zip" -d "$TMP_DIR"
-SRC_DIR=$(find "$TMP_DIR" -maxdepth 1 -type d -name "wack-shell-*" | head -n 1)
+SRC_DIR=$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -type d -name "wack-shell-*" | head -n 1)
 
 if [ -z "$SRC_DIR" ]; then
     echo "Error: Failed to locate extracted source directory."
