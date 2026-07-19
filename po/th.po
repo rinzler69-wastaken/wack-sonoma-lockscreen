@@ -290,3 +290,12 @@ msgstr "ส่วนเสริม - สถานะ"
 msgid "Extras - Actions"
 msgstr "ส่วนเสริม - การดำเนินการ"
 
+msgid "GDM Expansion - Remove"
+msgstr "ส่วนขยาย GDM - ลบออก"
+
+msgid "WACK Shell - Check for Updates"
+msgstr "WACK Shell - ตรวจหาการอัปเดต"
+
+msgid "WACK Shell - Install"
+msgstr "WACK Shell - ติดตั้ง"
+

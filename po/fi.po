@@ -290,3 +290,12 @@ msgstr "Lisäominaisuudet - Tila"
 msgid "Extras - Actions"
 msgstr "Lisäominaisuudet - Toiminnot"
 
+msgid "GDM Expansion - Remove"
+msgstr "GDM-laajennus - Poista"
+
+msgid "WACK Shell - Check for Updates"
+msgstr "WACK Shell - Tarkista päivitykset"
+
+msgid "WACK Shell - Install"
+msgstr "WACK Shell - Asenna"
+

@@ -290,3 +290,12 @@ msgstr "Tiện ích bổ sung - Trạng thái"
 msgid "Extras - Actions"
 msgstr "Tiện ích bổ sung - Hành động"
 
+msgid "GDM Expansion - Remove"
+msgstr "Tiện ích mở rộng GDM - Gỡ bỏ"
+
+msgid "WACK Shell - Check for Updates"
+msgstr "WACK Shell - Kiểm tra cập nhật"
+
+msgid "WACK Shell - Install"
+msgstr "WACK Shell - Cài đặt"
+

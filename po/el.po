@@ -290,3 +290,12 @@ msgstr "Πρόσθετα - Κατάσταση"
 msgid "Extras - Actions"
 msgstr "Πρόσθετα - Ενέργειες"
 
+msgid "GDM Expansion - Remove"
+msgstr "Επέκταση GDM - Κατάργηση"
+
+msgid "WACK Shell - Check for Updates"
+msgstr "WACK Shell - Έλεγχος για ενημερώσεις"
+
+msgid "WACK Shell - Install"
+msgstr "WACK Shell - Εγκατάσταση"
+

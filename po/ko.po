@@ -290,3 +290,12 @@ msgstr "추가 기능 - 상태"
 msgid "Extras - Actions"
 msgstr "추가 기능 - 작업"
 
+msgid "GDM Expansion - Remove"
+msgstr "GDM 확장 - 제거"
+
+msgid "WACK Shell - Check for Updates"
+msgstr "WACK Shell - 업데이트 확인"
+
+msgid "WACK Shell - Install"
+msgstr "WACK Shell - 설치"
+

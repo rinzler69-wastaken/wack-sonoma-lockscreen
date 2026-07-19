@@ -290,3 +290,12 @@ msgstr "Ekstra - Status"
 msgid "Extras - Actions"
 msgstr "Ekstra - Handlinger"
 
+msgid "GDM Expansion - Remove"
+msgstr "GDM-udvidelse - Fjern"
+
+msgid "WACK Shell - Check for Updates"
+msgstr "WACK Shell - Søg efter opdateringer"
+
+msgid "WACK Shell - Install"
+msgstr "WACK Shell - Installer"
+

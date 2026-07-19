@@ -290,3 +290,12 @@ msgstr ""
 msgid "Extras - Actions"
 msgstr ""
 
+msgid "GDM Expansion - Remove"
+msgstr ""
+
+msgid "WACK Shell - Check for Updates"
+msgstr ""
+
+msgid "WACK Shell - Install"
+msgstr ""
+

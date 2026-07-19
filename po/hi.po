@@ -290,3 +290,12 @@ msgstr "अतिरिक्त - स्थिति"
 msgid "Extras - Actions"
 msgstr "अतिरिक्त - क्रियाएं"
 
+msgid "GDM Expansion - Remove"
+msgstr "GDM विस्तार - हटाएं"
+
+msgid "WACK Shell - Check for Updates"
+msgstr "WACK Shell - अपडेट के लिए जाँच करें"
+
+msgid "WACK Shell - Install"
+msgstr "WACK Shell - स्थापित करें"
+

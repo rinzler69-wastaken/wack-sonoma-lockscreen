@@ -290,3 +290,12 @@ msgstr "附加功能 - 状态"
 msgid "Extras - Actions"
 msgstr "附加功能 - 操作"
 
+msgid "GDM Expansion - Remove"
+msgstr "GDM 扩展 - 卸载"
+
+msgid "WACK Shell - Check for Updates"
+msgstr "WACK Shell - 检查更新"
+
+msgid "WACK Shell - Install"
+msgstr "WACK Shell - 安装"
+
