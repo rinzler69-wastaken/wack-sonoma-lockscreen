@@ -21,20 +21,29 @@ if [ "$EUID" -ne 0 ]; then
     fi
 fi
 
-# Detect source directory (handle script inside scripts/ subfolder or running via curl | bash)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-if [ -f "$SCRIPT_DIR/../metadata.json" ]; then
-    SRC_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-else
-    # Fallback to local user extension directory
-    # Detect the actual home directory of the sudoer if run under sudo
+# Try to find the source directory
+SRC_DIR=""
+# 1. Check if running from a local clone (scripts/ folder)
+if [ -n "${BASH_SOURCE[0]:-}" ]; then
+    SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+    if [ -d "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/../metadata.json" ]; then
+        SRC_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+    fi
+fi
+
+if [ -z "$SRC_DIR" ]; then
+    # Fallback to known extension directories
     REAL_HOME="${SUDO_USER_HOME:-${HOME}}"
     if [ -n "${SUDO_USER:-}" ]; then
         REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
     fi
     LOCAL_USER_DIR="$REAL_HOME/.local/share/gnome-shell/extensions/$UUID"
+    SYSTEM_DIR="/usr/share/gnome-shell/extensions/$UUID"
+    
     if [ -f "$LOCAL_USER_DIR/metadata.json" ]; then
         SRC_DIR="$LOCAL_USER_DIR"
+    elif [ -f "$SYSTEM_DIR/metadata.json" ]; then
+        SRC_DIR="$SYSTEM_DIR"
     else
         echo "Error: Could not locate Sonoma Lockscreen installation directory."
         echo "Please install the extension first (e.g. from Extensions.gnome.org)."
