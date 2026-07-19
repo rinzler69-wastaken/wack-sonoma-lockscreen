@@ -31,6 +31,7 @@ function _isWackShellEnabled() {
     }
 }
 
+// <GDM_EXCLUDE>
 function _hasDconfOverride(uuid) {
     try {
         const dir = Gio.File.new_for_path('/etc/dconf/db/gdm.d');
@@ -84,6 +85,7 @@ function _getGdmStatus(dir) {
         return { enabled: false, reason: 'error', error: e.message };
     }
 }
+// </GDM_EXCLUDE>
 
 export default class WackLockscreenClockPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
@@ -769,63 +771,25 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         // -- Extras group ---------------------------------------------------
         const extrasGroup = new Adw.PreferencesGroup({
             title: _('Extras'),
-        });
-
+        });        let showDocs = true;
+        // <GDM_EXCLUDE>
         const gdmStatus = _getGdmStatus(this.dir);
 
-        // 1. GDM Expansion Expander Row
-        const gdmExpander = new Adw.ExpanderRow({
-            title: _('[PRO] GDM Expansion'),
-        });
-
-        const gdmStatusLabel = new Gtk.Label({
-            valign: Gtk.Align.CENTER,
-        });
-
         if (gdmStatus.enabled) {
-            gdmExpander.subtitle = _('Enabled. Custom layout is active on GDM.');
-            gdmStatusLabel.label = _('Enabled');
-            gdmStatusLabel.add_css_class('success');
-        } else {
-            gdmStatusLabel.label = _('Disabled');
-            gdmStatusLabel.add_css_class('error');
-
-            let explanation = '';
-            if (gdmStatus.reason === 'missing-modules') {
-                explanation = _('GDM and Cross Session Module are missing.');
-            } else if (gdmStatus.reason === 'missing-dconf') {
-                explanation = _('GDM dconf override configuration is missing.');
-            } else {
-                explanation = _('GDM integration is not configured.');
-            }
-            gdmExpander.subtitle = `${_('Disabled.')} ${explanation}`;
-        }
-        gdmExpander.add_suffix(gdmStatusLabel);
-
-        // Add action to GDM Expander
-        if (!gdmStatus.enabled) {
-            const upgradeRow = new Adw.ActionRow({
-                title: _('Upgrade to Pro'),
-                subtitle: _('Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal.'),
+            showDocs = false;
+            // 1. GDM Expansion Expander Row
+            const gdmExpander = new Adw.ExpanderRow({
+                title: _('[PRO] GDM Expansion'),
+                subtitle: _('Enabled. Custom layout is active on GDM.'),
             });
 
-            const copyBtn = new Gtk.Button({
-                icon_name: 'edit-copy-symbolic',
-                tooltip_text: _('Copy upgrade command to clipboard'),
-                css_classes: ['flat'],
+            const gdmStatusLabel = new Gtk.Label({
                 valign: Gtk.Align.CENTER,
+                label: _('Enabled'),
             });
-            copyBtn.connect('clicked', () => {
-                const clipboard = Gdk.Display.get_default().get_clipboard();
-                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-gdm-dlc.sh | bash');
-                window.add_toast(new Adw.Toast({
-                    title: _('Copied upgrade command to clipboard!'),
-                }));
-            });
+            gdmStatusLabel.add_css_class('success');
+            gdmExpander.add_suffix(gdmStatusLabel);
 
-            upgradeRow.add_suffix(copyBtn);
-            gdmExpander.add_row(upgradeRow);
-        } else {
             const uninstallRow = new Adw.ActionRow({
                 title: _('GDM Expansion - Remove'),
                 subtitle: _('Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal.'),
@@ -847,8 +811,27 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
             uninstallRow.add_suffix(copyBtn);
             gdmExpander.add_row(uninstallRow);
+            extrasGroup.add(gdmExpander);
         }
-        extrasGroup.add(gdmExpander);
+        // </GDM_EXCLUDE>
+
+        if (showDocs) {
+            const docsRow = new Adw.ActionRow({
+                title: _('Advanced Features & GDM Settings'),
+                subtitle: _('Learn how to enable system-wide GDM login customisations, crossfade transitions, and other advanced integrations on GitHub.'),
+            });
+            const docsBtn = new Gtk.Button({
+                icon_name: 'adw-external-link-symbolic',
+                tooltip_text: _('Visit documentation on GitHub'),
+                css_classes: ['flat'],
+                valign: Gtk.Align.CENTER,
+            });
+            docsBtn.connect('clicked', () => {
+                Gtk.show_uri(window, this.metadata.url, GLib.CURRENT_TIME);
+            });
+            docsRow.add_suffix(docsBtn);
+            extrasGroup.add(docsRow);
+        }
 
         // 2. WACK Shell Integration Expander Row
         const wackShellExpander = new Adw.ExpanderRow({
@@ -931,6 +914,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         }
 
         extrasGroup.add(wackShellExpander);
+
+
 
         animPage.add(extrasGroup);
         window.add(animPage);
