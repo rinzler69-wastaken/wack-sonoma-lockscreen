@@ -248,7 +248,7 @@ msgstr ""
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr ""
 
-msgid "Upcoming and Advanced Features"
+msgid "Upgrade to [PRO]"
 msgstr ""
 
 msgid "Installed"
@@ -305,6 +305,6 @@ msgstr ""
 msgid "Upcoming Features"
 msgstr ""
 
-msgid "Check out this extension's GitHub repo for cool features in the works."
+msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
 msgstr ""
 

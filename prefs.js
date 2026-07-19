@@ -779,8 +779,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         if (showDocs) {
             const docsRow = new Adw.ActionRow({
-                title: _('Upcoming and Advanced Features'),
-                subtitle: _('Check out this extension\'s GitHub repo for cool features in the works.'),
+                title: _('Upgrade to [PRO]'),
+                subtitle: _('Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub.'),
             });
             const docsBtn = new Gtk.Button({
                 icon_name: 'adw-external-link-symbolic',

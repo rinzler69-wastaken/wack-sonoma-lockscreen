@@ -248,8 +248,8 @@ msgstr "[BETA] Ενσωμάτωση WACK Shell"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "Εγκαταστάθηκε. Επιτρέπει μεταβάσεις ξεθωριάσματος και προσαρμογές κελύφους εμπνευσμένες από το Cupertino."
 
-msgid "Upcoming and Advanced Features"
-msgstr "Επικείμενες και προηγμένες λειτουργίες"
+msgid "Upgrade to [PRO]"
+msgstr "Αναβάθμιση σε [PRO]"
 
 msgid "Installed"
 msgstr "Εγκαταστάθηκε"
@@ -305,6 +305,6 @@ msgstr "WACK Shell - Εγκατάσταση"
 msgid "Upcoming Features"
 msgstr "Επικείμενες λειτουργίες"
 
-msgid "Check out this extension's GitHub repo for cool features in the works."
-msgstr "Δείτε το αποθετήριο GitHub αυτής της επέκτασης για ενδιαφέρουσες λειτουργίες υπό ανάπτυξη."
+msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
+msgstr "Μάθετε πώς να ξεκλειδώσετε τις προσαρμογές σύνδεσης σε επίπεδο συστήματος, τις μεταβάσεις και άλλες προηγμένες λειτουργίες στο GitHub."
 

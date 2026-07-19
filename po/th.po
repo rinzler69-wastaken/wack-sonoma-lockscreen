@@ -248,8 +248,8 @@ msgstr "[BETA] การรวมระบบ WACK Shell"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "ติดตั้งแล้ว เปิดใช้งานการเปลี่ยนผ่านแบบจางและการปรับแต่งเชลล์ที่ได้รับแรงบันดาลใจจากคูเปอร์ติโน"
 
-msgid "Upcoming and Advanced Features"
-msgstr "คุณสมบัติที่กำลังจะมาถึงและขั้นสูง"
+msgid "Upgrade to [PRO]"
+msgstr "อัปเกรดเป็น [PRO]"
 
 msgid "Installed"
 msgstr "ติดตั้งแล้ว"
@@ -305,6 +305,6 @@ msgstr "WACK Shell - ติดตั้ง"
 msgid "Upcoming Features"
 msgstr "คุณสมบัติที่กำลังจะมาถึง"
 
-msgid "Check out this extension's GitHub repo for cool features in the works."
-msgstr "ตรวจสอบพื้นที่เก็บข้อมูล GitHub ของส่วนขยายนี้เพื่อดูคุณสมบัติเจ๋งๆ ที่กำลังพัฒนา"
+msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
+msgstr "เรียนรู้วิธีปลดล็อกการปรับแต่งการเข้าสู่ระบบทั้งระบบ การเปลี่ยนผ่าน และคุณสมบัติขั้นสูงอื่นๆ บน GitHub"
 

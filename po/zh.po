@@ -248,8 +248,8 @@ msgstr "[BETA] WACK Shell 集成"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "已安装。启用淡入淡出过渡和受库比蒂诺启发的系统外壳定制。"
 
-msgid "Upcoming and Advanced Features"
-msgstr "即将推出和高级功能"
+msgid "Upgrade to [PRO]"
+msgstr "升级到 [PRO]"
 
 msgid "Installed"
 msgstr "已安装"
@@ -305,6 +305,6 @@ msgstr "WACK Shell - 安装"
 msgid "Upcoming Features"
 msgstr "即将推出的功能"
 
-msgid "Check out this extension's GitHub repo for cool features in the works."
-msgstr "查看此扩展的 GitHub 仓库，了解正在开发中的酷炫功能。"
+msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
+msgstr "了解如何在 GitHub 上解锁系统级登录自定义、过渡效果和其他高级功能。"
 

@@ -248,8 +248,8 @@ msgstr "[BETA] WACK Shell एकीकरण"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "स्थापित। क्रॉसफ़ेड संक्रमण और क्यूपर्टिनो-प्रेरित शेल अनुकूलन सक्षम करता है।"
 
-msgid "Upcoming and Advanced Features"
-msgstr "आने वाली और उन्नत विशेषताएँ"
+msgid "Upgrade to [PRO]"
+msgstr "[PRO] में अपग्रेड करें"
 
 msgid "Installed"
 msgstr "स्थापित"
@@ -305,6 +305,6 @@ msgstr "WACK Shell - स्थापित करें"
 msgid "Upcoming Features"
 msgstr "आने वाली विशेषताएँ"
 
-msgid "Check out this extension's GitHub repo for cool features in the works."
-msgstr "विकास के तहत नई विशेषताओं को देखने के लिए इस एक्सटेंशन के GitHub रिपॉजिटरी पर जाएं।"
+msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
+msgstr "GitHub पर सिस्टम-व्यापी लॉगिन अनुकूलन, संक्रमण और अन्य उन्नत सुविधाओं को अनलॉक करने का तरीका जानें।"
 

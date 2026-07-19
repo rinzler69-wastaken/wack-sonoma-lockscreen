@@ -248,8 +248,8 @@ msgstr "[BETA] שילוב WACK Shell"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "מותקן. מאפשר מעברי עמעום והתאמות אישיות של מעטפת המערכת בסגנון קופרטינו."
 
-msgid "Upcoming and Advanced Features"
-msgstr "תכונות קרובות ומתקדמות"
+msgid "Upgrade to [PRO]"
+msgstr "שדרג ל-[PRO]"
 
 msgid "Installed"
 msgstr "מותקן"
@@ -305,6 +305,6 @@ msgstr "WACK Shell - התקנה"
 msgid "Upcoming Features"
 msgstr "תכונות קרובות"
 
-msgid "Check out this extension's GitHub repo for cool features in the works."
-msgstr "בדוק את מאגר ה-GitHub של הרחבה זו כדי לראות תכונות מגניבות בפיתוח."
+msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
+msgstr "למד כיצד לפתוח התאמות אישיות של כنيסה לכל המערכת, מעברים ותכונות מתקדמות אחרות ב-GitHub."
 

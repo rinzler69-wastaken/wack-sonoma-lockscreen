@@ -248,8 +248,8 @@ msgstr "[BETA] WACK Shell -integraatio"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "Asennettu. Ottaa käyttöön ristiinhäivytyssiirtymät ja Cupertinon inspiroimat shell-mukautukset."
 
-msgid "Upcoming and Advanced Features"
-msgstr "Tulevat ja edistyneet ominaisuudet"
+msgid "Upgrade to [PRO]"
+msgstr "Päivitä [PRO]-versioon"
 
 msgid "Installed"
 msgstr "Asennettu"
@@ -305,6 +305,6 @@ msgstr "WACK Shell - Asenna"
 msgid "Upcoming Features"
 msgstr "Tulevat ominaisuudet"
 
-msgid "Check out this extension's GitHub repo for cool features in the works."
-msgstr "Katso tämän laajennuksen GitHub-sivu nähdäksesi kehitteillä olevat hienot ominaisuudet."
+msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
+msgstr "Lue GitHubista, miten otat käyttöön järjestelmänlaajuiset kirjautumisen mukautukset, siirtymät ja muut edistyneet ominaisuudet."
 

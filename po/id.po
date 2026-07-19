@@ -248,8 +248,8 @@ msgstr "[BETA] Integrasi WACK Shell"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "Terpasang. Mengaktifkan transisi pudar silang dan kustomisasi shell yang terinspirasi Cupertino."
 
-msgid "Upcoming and Advanced Features"
-msgstr "Fitur Mendatang & Lanjutan"
+msgid "Upgrade to [PRO]"
+msgstr "Tingkatkan ke [PRO]"
 
 msgid "Installed"
 msgstr "Terpasang"
@@ -305,6 +305,6 @@ msgstr "WACK Shell - Instal"
 msgid "Upcoming Features"
 msgstr "Fitur Mendatang"
 
-msgid "Check out this extension's GitHub repo for cool features in the works."
-msgstr "Lihat repositori GitHub ekstensi ini untuk fitur-fitur keren yang sedang dikembangkan."
+msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
+msgstr "Pelajari cara membuka penyesuaian masuk seluruh sistem, transisi, dan fitur lanjutan lainnya di GitHub."
 

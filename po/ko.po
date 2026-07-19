@@ -248,8 +248,8 @@ msgstr "[BETA] WACK Shell 통합"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "설치됨. 크로스페이드 트랜지션 및 쿠퍼티노 스타일의 셸 사용자 정의를 활성화합니다."
 
-msgid "Upcoming and Advanced Features"
-msgstr "향후 및 고급 기능"
+msgid "Upgrade to [PRO]"
+msgstr "[PRO]로 업그레이드"
 
 msgid "Installed"
 msgstr "설치됨"
@@ -305,6 +305,6 @@ msgstr "WACK Shell - 설치"
 msgid "Upcoming Features"
 msgstr "출시 예정 기능"
 
-msgid "Check out this extension's GitHub repo for cool features in the works."
-msgstr "개발 중인 멋진 기능들을 확인하려면 이 확장의 GitHub 리포지토리를 방문하세요."
+msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
+msgstr "GitHub에서 시스템 전반의 로그인 사용자 지정, 전환 효과 및 기타 고급 기능을 잠금 해제하는 방법을 알아보세요."
 
