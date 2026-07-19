@@ -119,6 +119,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
         this._isActive = true;
         this._gdmManager = null;
+        // <GDM_EXCLUDE>
         if (Main.sessionMode.currentMode === 'gdm') {
             import('./pro.js').then(module => {
                 if (!this._isActive) return;
@@ -128,7 +129,9 @@ export default class WackLockscreenClockExtension extends Extension {
                 _logError(`[WACK/GDM] Failed to dynamically load GDM DLC: ${err.message}`);
             });
         }
+        // <GDM_EXCLUDE>
         this._syncCrossSessionManager();
+        // </GDM_EXCLUDE>
 
         const dialog = Main.screenShield._dialog;
         _log(`[WACK] enable() called, dialog=${!!dialog}`);
@@ -956,6 +959,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
 
 
+    // <GDM_EXCLUDE>
     _syncCrossSessionManager() {
         if (Main.sessionMode.currentMode === 'gdm') {
             if (this._crossSessionManager) {
@@ -976,6 +980,7 @@ export default class WackLockscreenClockExtension extends Extension {
             });
         }
     }
+    // </GDM_EXCLUDE>
 
     _syncCupertinoUnlockFade() {
         if (!this._settings)
