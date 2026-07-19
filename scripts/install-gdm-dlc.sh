@@ -16,7 +16,8 @@ if [ "$EUID" -ne 0 ]; then
     if [[ "$0" == *"install-gdm-dlc.sh" ]]; then
         exec sudo bash "$0" "$@"
     else
-        exec curl -sSL "https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2/scripts/install-gdm-dlc.sh" | sudo bash
+        sudo bash -c "$(curl -sSL 'https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2/scripts/install-gdm-dlc.sh')"
+        exit $?
     fi
 fi
 
