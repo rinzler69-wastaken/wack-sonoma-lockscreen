@@ -28,7 +28,6 @@ import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
 import { getWallpaperAlpha, getWallpaperPromptColor, clearCache, initCache } from './alphaManager.js';
 import { WackLayout } from './layoutManager.js';
 import { NotificationManager } from './notificationManager.js';
-import { CrossSessionManager } from './crossSessionManager.js';
 import {
     PROMPT_BLUR_RADIUS,
     PROMPT_BLUR_BRIGHTNESS,
@@ -956,8 +955,14 @@ export default class WackLockscreenClockExtension extends Extension {
         }
 
         if (!this._crossSessionManager) {
-            this._crossSessionManager = new CrossSessionManager();
-            this._crossSessionManager.enable();
+            import('./crossSessionManager.js').then(module => {
+                if (!this._isActive) return;
+                if (this._crossSessionManager) return;
+                this._crossSessionManager = new module.CrossSessionManager();
+                this._crossSessionManager.enable();
+            }).catch(err => {
+                _logError(`[WACK/GDM] Failed to dynamically load CrossSessionManager: ${err.message}`);
+            });
         }
     }
 

@@ -1,3 +1,7 @@
+UUID = wack-lockscreen-clock@rinzler69-wastaken.github.com
+DEST = $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
+EXCLUDES = --exclude=".git*" --exclude="*.zip" --exclude="*.bak" --exclude="checkthisthingblyat" --exclude="scripts" --exclude="crossSessionManager.js" --exclude="gdm.js"
+
 .PHONY: install enable pack compile-po deploy-schema
 
 compile-po: ## Compile all .po files to .mo binaries in locale/
@@ -25,6 +29,6 @@ pack: compile-po ## Create a ZIP package for Extensions.gnome.org
 	@glib-compile-schemas schemas
 	@cp stylesheet.css stylesheet.css.bak
 	@sed -i -e "s|font-family: 'SF Pro Display';|/* font-family: 'SF Pro Display'; */|g" -e "s|font-family: '\.SF Soft Numeric';|/* font-family: '.SF Soft Numeric'; */|g" stylesheet.css
-	@zip -qr $(UUID).zip *.js metadata.json stylesheet.css LICENSE schemas locale -x "schemas/gschemas.compiled" -x "po/generate.py" -x "scripts/*"
+	@zip -qr $(UUID).zip *.js metadata.json stylesheet.css LICENSE schemas locale -x "schemas/gschemas.compiled" -x "po/generate.py" -x "scripts/*" -x "crossSessionManager.js" -x "gdm.js"
 	@mv stylesheet.css.bak stylesheet.css
 	@printf 'Created package: %s\n' "$(UUID).zip"
