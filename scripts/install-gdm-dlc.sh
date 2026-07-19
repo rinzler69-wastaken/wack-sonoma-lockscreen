@@ -55,6 +55,13 @@ echo "=== WACK Lockscreen GDM DLC Installer ==="
 echo "Source Directory: $SRC_DIR"
 echo "Target Directory: $TARGET_DIR"
 
+if [ -f "$TARGET_DIR/gdm.js" ] && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
+    echo ""
+    echo "✨ GDM Expansion is already fully installed on this system!"
+    echo "You don't need to run this script again."
+    exit 0
+fi
+
 # 1. Sync extension system-wide
 echo "-> Deploying extension system-wide..."
 mkdir -p "$TARGET_DIR"
