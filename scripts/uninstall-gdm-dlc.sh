@@ -62,11 +62,19 @@ echo "-> Removing GDM DLC modules..."
 rm -f "$TARGET_DIR/pro.js"
 rm -f "$TARGET_DIR/crossSessionManager.js"
 
-# 4. Remove GDM dconf override
+# 4. Strip GDM hooks from extension.js and prefs.js
+echo "-> Stripping GDM hooks from extension.js and prefs.js..."
+for file in "extension.js" "prefs.js"; do
+    if [ -f "$TARGET_DIR/$file" ]; then
+        python3 -c "import re; c=open('$TARGET_DIR/$file').read(); c=re.sub(r'//\s*<GDM_EXCLUDE>.*?//\s*</GDM_EXCLUDE>', '', c, flags=re.DOTALL); open('$TARGET_DIR/$file','w').write(c)"
+    fi
+done
+
+# 5. Remove GDM dconf override
 echo "-> Removing GDM dconf overrides..."
 rm -f "$DCONF_FILE"
 
-# 5. Compile the GDM dconf binary database
+# 6. Compile the GDM dconf binary database
 echo "-> Recompiling dconf database..."
 dconf update
 
