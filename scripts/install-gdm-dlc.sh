@@ -22,7 +22,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Detect source directory (handle script inside scripts/ subfolder or running via curl | bash)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 if [ -f "$SCRIPT_DIR/../metadata.json" ]; then
     SRC_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 else
