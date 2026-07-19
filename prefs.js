@@ -885,7 +885,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             });
             copyBtn.connect('clicked', () => {
                 const clipboard = Gdk.Display.get_default().get_clipboard();
-                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-shell/main/scripts/install.sh | bash');
+                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-wack-shell.sh | bash');
                 window.add_toast(new Adw.Toast({
                     title: _('Copied WACK Shell install command to clipboard!'),
                 }));
