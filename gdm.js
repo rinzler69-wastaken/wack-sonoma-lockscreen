@@ -613,7 +613,7 @@ _syncLockscreenMessageLayout() {
     vadj.connectObject(
     'notify::value',
     () => {
-        log(`[WACK] value=${vadj.value} upper=${vadj.upper} page=${vadj.page_size}`);
+        console.debug(`[WACK] value=${vadj.value} upper=${vadj.upper} page=${vadj.page_size}`);
     },
     this
 );
