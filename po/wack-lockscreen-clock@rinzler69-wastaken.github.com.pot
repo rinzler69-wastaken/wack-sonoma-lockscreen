@@ -272,3 +272,15 @@ msgstr ""
 msgid "Open WACK Shell repository"
 msgstr ""
 
+msgid "Check for Updates"
+msgstr ""
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr ""
+
+msgid "Copy update-check command to clipboard"
+msgstr ""
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr ""
+

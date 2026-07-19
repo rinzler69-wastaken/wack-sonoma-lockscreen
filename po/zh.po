@@ -272,3 +272,15 @@ msgstr "已将 WACK Shell 安装命令复制到剪贴板！"
 msgid "Open WACK Shell repository"
 msgstr "打开 WACK Shell 仓库"
 
+msgid "Check for Updates"
+msgstr "检查更新"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "复制检查命令以验证是否有更新版本的 WACK Shell 可用。"
+
+msgid "Copy update-check command to clipboard"
+msgstr "复制更新检查命令到剪贴板"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "已复制 WACK Shell 更新检查命令到剪贴板！"
+

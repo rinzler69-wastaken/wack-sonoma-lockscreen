@@ -272,3 +272,15 @@ msgstr "WACK-shell installatie-opdracht naar klembord gekopieerd!"
 msgid "Open WACK Shell repository"
 msgstr "WACK-shell repository openen"
 
+msgid "Check for Updates"
+msgstr "Controleren op updates"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "Kopieer het controlecommando om te controleren of er een nieuwere versie van WACK Shell beschikbaar is."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Kopieer update-controlecommando naar klembord"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "WACK Shell update-controlecommando naar klembord gekopieerd!"
+

@@ -272,3 +272,15 @@ msgstr "WACK Shell -asennuskomento kopioitu leikepöydälle!"
 msgid "Open WACK Shell repository"
 msgstr "Avaa WACK Shell -arkisto"
 
+msgid "Check for Updates"
+msgstr "Tarkista päivitykset"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "Kopioi tarkistuskomento varmistaaksesi, onko uudempi WACK Shell -versio saatavilla."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Kopioi päivityksen tarkistuskomento leikepöydälle"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "WACK Shell -päivityksen tarkistuskomento kopioitu leikepöydälle!"
+

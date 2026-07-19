@@ -272,3 +272,15 @@ msgstr "Η εντολή εγκατάστασης WACK Shell αντιγράφηκ
 msgid "Open WACK Shell repository"
 msgstr "Άνοιγμα αποθετηρίου WACK Shell"
 
+msgid "Check for Updates"
+msgstr "Έλεγχος για ενημερώσεις"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "Αντιγράψτε την εντολή ελέγχου για να επαληθεύσετε εάν είναι διαθέσιμη μια νεότερη έκδοση του WACK Shell."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Αντιγραφή εντολής ελέγχου ενημέρωσης στο πρόχειρο"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "Η εντολή ελέγχου ενημέρωσης του WACK Shell αντιγράφηκε στο πρόχειρο!"
+

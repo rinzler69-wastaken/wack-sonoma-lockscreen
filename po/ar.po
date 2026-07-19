@@ -272,3 +272,15 @@ msgstr "تم نسخ أمر تثبيت WACK Shell إلى الحافظة!"
 msgid "Open WACK Shell repository"
 msgstr "افتح مستودع WACK Shell"
 
+msgid "Check for Updates"
+msgstr "التحقق من التحديثات"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "انسخ أمر التحقق للتأكد من توفر إصدار أحدث من WACK Shell."
+
+msgid "Copy update-check command to clipboard"
+msgstr "نسخ أمر التحقق من التحديث إلى الحافظة"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "تم نسخ أمر التحقق من تحديث WACK Shell إلى الحافظة!"
+

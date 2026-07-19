@@ -272,3 +272,15 @@ msgstr "WACK-Shell-Installationsbefehl in die Zwischenablage kopiert!"
 msgid "Open WACK Shell repository"
 msgstr "WACK-Shell-Repository öffnen"
 
+msgid "Check for Updates"
+msgstr "Nach Updates suchen"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "Kopieren Sie den Prüfbefehl, um zu überprüfen, ob eine neuere Version von WACK Shell verfügbar ist."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Update-Prüfbefehl in die Zwischenablage kopieren"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "WACK Shell Update-Prüfbefehl in die Zwischenablage kopiert!"
+

@@ -272,3 +272,15 @@ msgstr "WACK Shell-installationskommando kopiert til utklippstavlen!"
 msgid "Open WACK Shell repository"
 msgstr "Åpne WACK Shell repository"
 
+msgid "Check for Updates"
+msgstr "Se etter oppdateringer"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "Kopier kontrollkommandoen for å verifisere om en nyere versjon av WACK Shell er tilgjengelig."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Kopier oppdateringskontrollkommando til utklippstavle"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "Kopierte WACK Shell-oppdateringskontrollkommando til utklippstavle!"
+

@@ -272,3 +272,15 @@ msgstr "คัดลอกคำสั่งติดตั้ง WACK Shell ไ
 msgid "Open WACK Shell repository"
 msgstr "เปิดพื้นที่เก็บข้อมูล WACK Shell"
 
+msgid "Check for Updates"
+msgstr "ตรวจหาการอัปเดต"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "คัดลอกคำสั่งตรวจสอบเพื่อยืนยันว่ามีเวอร์ชันที่ใหม่กว่าของ WACK Shell หรือไม่"
+
+msgid "Copy update-check command to clipboard"
+msgstr "คัดลอกคำสั่งตรวจสอบการอัปเดตไปยังคลิปบอร์ด"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "คัดลอกคำสั่งตรวจสอบการอัปเดตของ WACK Shell ไปยังคลิปบอร์ดแล้ว!"
+

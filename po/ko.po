@@ -272,3 +272,15 @@ msgstr "WACK Shell 설치 명령어가 클립보드에 복사되었습니다!"
 msgid "Open WACK Shell repository"
 msgstr "WACK Shell 레포지토리 열기"
 
+msgid "Check for Updates"
+msgstr "업데이트 확인"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "더 새로운 버전의 WACK Shell을 사용할 수 있는지 확인하려면 검사 명령을 복사하세요."
+
+msgid "Copy update-check command to clipboard"
+msgstr "업데이트 확인 명령을 클립보드에 복사"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "WACK Shell 업데이트 확인 명령이 클립보드에 복사되었습니다!"
+

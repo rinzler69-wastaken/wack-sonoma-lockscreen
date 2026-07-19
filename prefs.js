@@ -865,6 +865,28 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             wackShellStatusLabel.add_css_class('success');
             wackShellRow.add_suffix(wackShellStatusLabel);
             extrasGroup.add(wackShellRow);
+
+            const checkUpdatesRow = new Adw.ActionRow({
+                title: _('Check for Updates'),
+                subtitle: _('Copy check command to verify if a newer version of WACK Shell is available.'),
+            });
+
+            const checkBtn = new Gtk.Button({
+                icon_name: 'edit-copy-symbolic',
+                tooltip_text: _('Copy update-check command to clipboard'),
+                css_classes: ['flat'],
+                valign: Gtk.Align.CENTER,
+            });
+            checkBtn.connect('clicked', () => {
+                const clipboard = Gdk.Display.get_default().get_clipboard();
+                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-wack-shell.sh | bash -s -- --check');
+                window.add_toast(new Adw.Toast({
+                    title: _('Copied WACK Shell update-check command to clipboard!'),
+                }));
+            });
+
+            checkUpdatesRow.add_suffix(checkBtn);
+            extrasGroup.add(checkUpdatesRow);
         } else {
             wackShellRow.subtitle = _('Not installed. Install WACK Shell to unlock transition effects.');
             wackShellStatusLabel.label = _('Not Installed');

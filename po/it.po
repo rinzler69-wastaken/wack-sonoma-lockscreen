@@ -272,3 +272,15 @@ msgstr "Comando di installazione di WACK Shell copiato negli appunti!"
 msgid "Open WACK Shell repository"
 msgstr "Apri deposito WACK Shell"
 
+msgid "Check for Updates"
+msgstr "Verifica aggiornamenti"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "Copia il comando di verifica per controllare se è disponibile una versione più recente di WACK Shell."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Copia il comando di verifica dell'aggiornamento negli appunti"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "Comando di verifica dell'aggiornamento di WACK Shell copiato negli appunti!"
+

@@ -272,3 +272,15 @@ msgstr "WACK Shell kurulum komutu panoya kopyalandı!"
 msgid "Open WACK Shell repository"
 msgstr "WACK Shell deposunu aç"
 
+msgid "Check for Updates"
+msgstr "Güncellemeleri Denetle"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "WACK Shell'in daha yeni bir sürümünün mevcut olup olmadığını doğrulamak için kontrol komutunu kopyalayın."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Güncelleme kontrol komutunu panoya kopyala"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "WACK Shell güncelleme kontrol komutu panoya kopyalandı!"
+

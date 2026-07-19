@@ -272,3 +272,15 @@ msgstr "Đã sao chép lệnh cài đặt WACK Shell vào bộ nhớ tạm!"
 msgid "Open WACK Shell repository"
 msgstr "Mở kho lưu trữ WACK Shell"
 
+msgid "Check for Updates"
+msgstr "Kiểm tra cập nhật"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "Sao chép lệnh kiểm tra để xác minh xem có phiên bản WACK Shell mới hơn hay không."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Sao chép lệnh kiểm tra cập nhật vào bộ nhớ tạm"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "Đã sao chép lệnh kiểm tra cập nhật WACK Shell vào bộ nhớ tạm!"
+

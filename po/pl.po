@@ -272,3 +272,15 @@ msgstr "Skopiowano polecenie instalacji WACK Shell do schowka!"
 msgid "Open WACK Shell repository"
 msgstr "Otwórz repozytorium WACK Shell"
 
+msgid "Check for Updates"
+msgstr "Sprawdź aktualizacje"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "Skopiuj polecenie sprawdzające, aby zweryfikować, czy dostępna jest nowsza wersja WACK Shell."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Skopiuj polecenie sprawdzania aktualizacji do schowka"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "Skopiowano polecenie sprawdzania aktualizacji WACK Shell do schowka!"
+

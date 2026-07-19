@@ -272,3 +272,15 @@ msgstr "Perintah instalasi WACK Shell disalin ke papan klip!"
 msgid "Open WACK Shell repository"
 msgstr "Buka repositori WACK Shell"
 
+msgid "Check for Updates"
+msgstr "Periksa Pembaruan"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "Salin perintah pemeriksaan untuk memverifikasi apakah versi WACK Shell yang lebih baru tersedia."
+
+msgid "Copy update-check command to clipboard"
+msgstr "Salin perintah pemeriksaan pembaruan ke papan klip"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "Perintah pemeriksaan pembaruan WACK Shell disalin ke papan klip!"
+

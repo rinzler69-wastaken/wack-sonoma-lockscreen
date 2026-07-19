@@ -272,3 +272,15 @@ msgstr "פקודת התקנת WACK Shell הועתקה ללוח הגזירים!"
 msgid "Open WACK Shell repository"
 msgstr "פתח את מאגר ה־WACK Shell"
 
+msgid "Check for Updates"
+msgstr "בדוק עדכונים"
+
+msgid "Copy check command to verify if a newer version of WACK Shell is available."
+msgstr "העתק את פקודת הבديקה כדי לאמת אם קיימת גרסה חדשה יותר של WACK Shell."
+
+msgid "Copy update-check command to clipboard"
+msgstr "העתק את פקודת בדיקת העדכונים ללוח"
+
+msgid "Copied WACK Shell update-check command to clipboard!"
+msgstr "פקודת בדיקת העדכונים של WACK Shell הועתקה ללוח!"
+
