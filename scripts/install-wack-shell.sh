@@ -37,25 +37,29 @@ check_updates() {
     # Temporarily disable git error checking for fetch
     git fetch -q origin main || { echo "Error: Failed to fetch remote repository updates."; exit 1; }
 
-    LOCAL=$(git rev-parse HEAD)
-    REMOTE=$(git rev-parse origin/main)
-    BASE=$(git merge-base HEAD origin/main)
+    LOCAL_SHA=$(git rev-parse HEAD)
+    REMOTE_SHA=$(git rev-parse origin/main)
+    BASE_SHA=$(git merge-base HEAD origin/main)
 
-    if [ "$LOCAL" = "$REMOTE" ]; then
+    LOCAL_VER=$(python3 -c "import json; print(json.load(open('metadata.json')).get('version-name', ''))" 2>/dev/null || echo "unknown")
+    REMOTE_VER=$(git show origin/main:metadata.json 2>/dev/null | python3 -c "import sys, json; print(json.load(sys.stdin).get('version-name', ''))" 2>/dev/null || echo "unknown")
+
+    if [ "$LOCAL_SHA" = "$REMOTE_SHA" ]; then
         echo "=========================================="
         echo "  WACK Shell is up to date!               "
-        echo "  Current commit: ${LOCAL:0:7}            "
+        echo "  Version:        $LOCAL_VER"
+        echo "  Commit:         ${LOCAL_SHA:0:7}"
         echo "=========================================="
-    elif [ "$LOCAL" = "$BASE" ]; then
+    elif [ "$LOCAL_SHA" = "$BASE_SHA" ]; then
         echo "=========================================="
         echo "  Update available for WACK Shell!        "
-        echo "  Current version: ${LOCAL:0:7}           "
-        echo "  Latest version:  ${REMOTE:0:7}          "
+        echo "  Current version: $LOCAL_VER (${LOCAL_SHA:0:7})"
+        echo "  Latest version:  $REMOTE_VER (${REMOTE_SHA:0:7})"
         echo "=========================================="
         echo "To update, copy and run this command:      "
         echo "  curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-wack-shell.sh | bash"
         echo "=========================================="
-    elif [ "$REMOTE" = "$BASE" ]; then
+    elif [ "$REMOTE_SHA" = "$BASE_SHA" ]; then
         echo "Local installation has unpushed commits."
     else
         echo "Local repository and remote main have diverged."
