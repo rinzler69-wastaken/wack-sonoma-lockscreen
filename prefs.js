@@ -874,7 +874,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
             const installShellRow = new Adw.ActionRow({
                 title: _('Install WACK Shell'),
-                subtitle: _('Get advanced desktop crossfade transitions, Cupertino-styled lockscreen fade, and performance optimizations.'),
+                subtitle: _('Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found.'),
             });
 
             const copyBtn = new Gtk.Button({
