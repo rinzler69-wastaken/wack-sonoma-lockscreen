@@ -13,7 +13,11 @@ DCONF_FILE="$DCONF_GDM_DIR/99-wack-lockscreen"
 # Ensure script is run with root privileges
 if [ "$EUID" -ne 0 ]; then
     echo "This script must be run as root. Elevating privileges..."
-    exec sudo bash "$0" "$@"
+    if [ -f "$0" ]; then
+        exec sudo bash "$0" "$@"
+    else
+        exec curl -sSL "https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2/scripts/install-gdm-dlc.sh" | sudo bash
+    fi
 fi
 
 # Detect source directory (handle script inside scripts/ subfolder or running via curl | bash)
