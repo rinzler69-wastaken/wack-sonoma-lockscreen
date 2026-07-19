@@ -817,7 +817,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         if (showDocs) {
             const docsRow = new Adw.ActionRow({
-                title: _('Advanced Features & GDM Settings'),
+                title: _('Advanced Features and GDM Settings'),
                 subtitle: _('Learn how to enable system-wide GDM login customisations, crossfade transitions, and other advanced integrations on GitHub.'),
             });
             const docsBtn = new Gtk.Button({
