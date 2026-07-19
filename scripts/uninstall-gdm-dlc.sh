@@ -21,22 +21,59 @@ if [ "$EUID" -ne 0 ]; then
     fi
 fi
 
+# Determine the user extension directory
+REAL_HOME="${SUDO_USER_HOME:-${HOME}}"
+if [ -n "${SUDO_USER:-}" ]; then
+    REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+fi
+USER_DIR="$REAL_HOME/.local/share/gnome-shell/extensions/$UUID"
+
 echo "=== WACK Lockscreen GDM DLC Uninstaller ==="
-echo "Target Directory: $TARGET_DIR"
+echo "System Directory: $TARGET_DIR"
+echo "User Directory: $USER_DIR"
 
 # 1. Check if already uninstalled
-if [ ! -f "$TARGET_DIR/pro.js" ] && [ ! -f "$TARGET_DIR/crossSessionManager.js" ] && [ ! -f "$DCONF_FILE" ]; then
+if [ ! -d "$TARGET_DIR" ] && [ ! -f "$DCONF_FILE" ]; then
     echo ""
-    echo "✨ GDM Expansion is already uninstalled from this system."
+    echo "✨ GDM Expansion is already uninstalled from GDM."
     exit 0
 fi
 
-# 2. Revert metadata.json session-modes
-echo "-> Removing 'gdm' session-mode from metadata.json..."
-if [ -f "$TARGET_DIR/metadata.json" ]; then
+# 2. Restore/Ensure user directory exists and clean it up
+if [ ! -d "$USER_DIR" ]; then
+    echo "-> Restoring extension back to user directory ($USER_DIR)..."
+    mkdir -p "$USER_DIR"
+    if command -v rsync &> /dev/null; then
+        rsync -a \
+            --exclude="pro.js" \
+            --exclude="crossSessionManager.js" \
+            "$TARGET_DIR/" "$USER_DIR/"
+    else
+        cp -r "$TARGET_DIR"/* "$USER_DIR/"
+        rm -f "$USER_DIR/pro.js" "$USER_DIR/crossSessionManager.js"
+    fi
+    
+    # Ensure correct ownership for user directory
+    if [ -n "${SUDO_USER:-}" ]; then
+        chown -R "$SUDO_USER:$(id -gn "$SUDO_USER")" "$USER_DIR"
+    fi
+fi
+
+# 3. Clean up GDM/PRO hooks and modules from user-level extension
+echo "-> Cleaning up GDM hooks from user-level extension..."
+rm -f "$USER_DIR/pro.js"
+rm -f "$USER_DIR/crossSessionManager.js"
+for file in "extension.js" "prefs.js"; do
+    if [ -f "$USER_DIR/$file" ]; then
+        python3 -c "import re; c=open('$USER_DIR/$file').read(); c=re.sub(r'//\s*<GDM_EXCLUDE>.*?//\s*</GDM_EXCLUDE>', '', c, flags=re.DOTALL); open('$USER_DIR/$file','w').write(c)"
+    fi
+done
+
+# Remove 'gdm' from user-level metadata.json session-modes
+if [ -f "$USER_DIR/metadata.json" ]; then
     python3 -c "
-import json, sys
-metadata_path = '$TARGET_DIR/metadata.json'
+import json
+metadata_path = '$USER_DIR/metadata.json'
 try:
     with open(metadata_path, 'r') as f:
         data = json.load(f)
@@ -46,37 +83,22 @@ try:
         data['session-modes'] = modes
         with open(metadata_path, 'w') as f:
             json.dump(data, f, indent=2)
-        print('Successfully removed GDM mode.')
-    else:
-        print('GDM mode was not present.')
-except Exception as e:
-    print(f'Error patching metadata.json: {e}', file=sys.stderr)
-    sys.exit(1)
+except Exception:
+    pass
 "
-else
-    echo "metadata.json not found, skipping..."
 fi
 
-# 3. Remove GDM DLC modules
-echo "-> Removing GDM DLC modules..."
-rm -f "$TARGET_DIR/pro.js"
-rm -f "$TARGET_DIR/crossSessionManager.js"
-
-# 4. Strip GDM hooks from extension.js and prefs.js
-echo "-> Stripping GDM hooks from extension.js and prefs.js..."
-for file in "extension.js" "prefs.js"; do
-    if [ -f "$TARGET_DIR/$file" ]; then
-        python3 -c "import re; c=open('$TARGET_DIR/$file').read(); c=re.sub(r'//\s*<GDM_EXCLUDE>.*?//\s*</GDM_EXCLUDE>', '', c, flags=re.DOTALL); open('$TARGET_DIR/$file','w').write(c)"
-    fi
-done
-
-# 5. Remove GDM dconf override
+# 4. Remove GDM dconf override
 echo "-> Removing GDM dconf overrides..."
 rm -f "$DCONF_FILE"
 
-# 6. Compile the GDM dconf binary database
+# 5. Compile the GDM dconf binary database
 echo "-> Recompiling dconf database..."
 dconf update
+
+# 6. Delete the system-wide extension directory
+echo "-> Removing system-wide extension files..."
+rm -rf "$TARGET_DIR"
 
 echo "========================================="
 echo "GDM DLC uninstallation complete!"
