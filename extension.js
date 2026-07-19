@@ -23,6 +23,7 @@ import {
 const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('gnome-shell'));
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as SystemActions from 'resource:///org/gnome/shell/misc/systemActions.js';
 import { WackClock } from './wackClock.js';
 import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
 import { getWallpaperAlpha, getWallpaperPromptColor, clearCache, initCache } from './alphaManager.js';
@@ -499,7 +500,17 @@ export default class WackLockscreenClockExtension extends Extension {
                         if (this._isSleepInhibited()) {
                             this._showInhibitHint(this.gettext('Sleep prevented by an active process'));
                         } else {
-                            Main.screenShield._loginManager.suspend();
+                            if (typeof Main.screenShield._loginManager.suspend === 'function') {
+                                Main.screenShield._loginManager.suspend();
+                            } else {
+                                try {
+                                    SystemActions.getDefault().activateSuspend();
+                                } catch (e) {
+                                    const session = SystemActions.getDefault()._session;
+                                    if (session && typeof session.SuspendAsync === 'function')
+                                        session.SuspendAsync().catch(err => console.error(err));
+                                }
+                            }
                         }
                         return Clutter.EVENT_STOP;
                     }
