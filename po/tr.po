@@ -305,6 +305,6 @@ msgstr "WACK Shell - Kur"
 msgid "Upcoming Features"
 msgstr "Gelecek Özellikler"
 
-msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
-msgstr "Sistem genelinde oturum açma özelleştirmelerini, geçişleri ve diğer gelişmiş özellikleri GitHub'da nasıl açacağınızı öğrenin."
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Bu uzantının GitHub deposundaki PRO özelliklerine göz atın."
 

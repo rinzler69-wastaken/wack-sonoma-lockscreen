@@ -305,6 +305,6 @@ msgstr "WACK Shell - स्थापित करें"
 msgid "Upcoming Features"
 msgstr "आने वाली विशेषताएँ"
 
-msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
-msgstr "GitHub पर सिस्टम-व्यापी लॉगिन अनुकूलन, संक्रमण और अन्य उन्नत सुविधाओं को अनलॉक करने का तरीका जानें।"
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "इस एक्सटेंशन के GitHub रिपॉजिटरी पर PRO फीचर्स देखें।"
 

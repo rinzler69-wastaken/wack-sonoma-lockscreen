@@ -305,6 +305,6 @@ msgstr "WACK Shell - Cài đặt"
 msgid "Upcoming Features"
 msgstr "Tính năng sắp tới"
 
-msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
-msgstr "Tìm hiểu cách mở khóa các tùy chỉnh đăng nhập toàn hệ thống, chuyển cảnh và các tính năng nâng cao khác trên GitHub."
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Kiểm tra các tính năng PRO của tiện ích mở rộng này trên kho lưu trữ GitHub của nó."
 

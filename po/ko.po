@@ -305,6 +305,6 @@ msgstr "WACK Shell - 설치"
 msgid "Upcoming Features"
 msgstr "출시 예정 기능"
 
-msgid "Learn how to unlock system-wide login customisations, transitions, and other advanced features on GitHub."
-msgstr "GitHub에서 시스템 전반의 로그인 사용자 지정, 전환 효과 및 기타 고급 기능을 잠금 해제하는 방법을 알아보세요."
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "이 확장의 GitHub 리포지토리에서 PRO 기능을 확인하세요."
 
