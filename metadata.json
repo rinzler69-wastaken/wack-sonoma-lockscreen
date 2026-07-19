@@ -15,7 +15,7 @@
   "gettext-domain": "wack-lockscreen-clock@rinzler69-wastaken.github.com",
   "settings-schema": "org.gnome.shell.extensions.wack-lockscreen-clock",
   "url": "https://github.com/rinzler69-wastaken/wack-sonoma-lockscreen",
-  "version-name": "1.5.0",
+  "version-name": "1.5.1",
   "donations": {
     "paypal": "ArtFazil",
     "kofi": "mikerinzler69",
