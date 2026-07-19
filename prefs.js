@@ -766,20 +766,15 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         animPage.add(timeoutGroup);
 
-        // -- Extras status group --------------------------------------------
-        const extrasStatusGroup = new Adw.PreferencesGroup({
-            title: _('Extras - Status'),
-        });
-
-        // -- Extras actions group -------------------------------------------
-        const extrasActionsGroup = new Adw.PreferencesGroup({
-            title: _('Extras - Actions'),
+        // -- Extras group ---------------------------------------------------
+        const extrasGroup = new Adw.PreferencesGroup({
+            title: _('Extras'),
         });
 
         const gdmStatus = _getGdmStatus(this.dir);
 
-        // Row 1: GDM Status Row
-        const statusRow = new Adw.ActionRow({
+        // 1. GDM Expansion Expander Row
+        const gdmExpander = new Adw.ExpanderRow({
             title: _('[PRO] GDM Expansion'),
         });
 
@@ -788,7 +783,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         });
 
         if (gdmStatus.enabled) {
-            statusRow.subtitle = _('Enabled. Custom layout is active on GDM.');
+            gdmExpander.subtitle = _('Enabled. Custom layout is active on GDM.');
             gdmStatusLabel.label = _('Enabled');
             gdmStatusLabel.add_css_class('success');
         } else {
@@ -803,12 +798,11 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             } else {
                 explanation = _('GDM integration is not configured.');
             }
-            statusRow.subtitle = `${_('Disabled.')} ${explanation}`;
+            gdmExpander.subtitle = `${_('Disabled.')} ${explanation}`;
         }
-        statusRow.add_suffix(gdmStatusLabel);
-        extrasStatusGroup.add(statusRow);
+        gdmExpander.add_suffix(gdmStatusLabel);
 
-        // Row 2: Upgrade to Pro Row (only shown when disabled) or Uninstall Row (when enabled)
+        // Add action to GDM Expander
         if (!gdmStatus.enabled) {
             const upgradeRow = new Adw.ActionRow({
                 title: _('Upgrade to Pro'),
@@ -830,7 +824,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             });
 
             upgradeRow.add_suffix(copyBtn);
-            extrasActionsGroup.add(upgradeRow);
+            gdmExpander.add_row(upgradeRow);
         } else {
             const uninstallRow = new Adw.ActionRow({
                 title: _('GDM Expansion - Remove'),
@@ -852,11 +846,12 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             });
 
             uninstallRow.add_suffix(copyBtn);
-            extrasActionsGroup.add(uninstallRow);
+            gdmExpander.add_row(uninstallRow);
         }
+        extrasGroup.add(gdmExpander);
 
-        // -- WACK Shell Integration Rows --
-        const wackShellRow = new Adw.ActionRow({
+        // 2. WACK Shell Integration Expander Row
+        const wackShellExpander = new Adw.ExpanderRow({
             title: _('[BETA] WACK Shell Integration'),
         });
         const wackShellStatusLabel = new Gtk.Label({
@@ -865,11 +860,10 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         const isWackShellInstalled = _isWackShellInstalled();
         if (isWackShellInstalled) {
-            wackShellRow.subtitle = _('Installed. Enables crossfade transitions and Cupertino-inspired shell customisations.');
+            wackShellExpander.subtitle = _('Installed. Enables crossfade transitions and Cupertino-inspired shell customisations.');
             wackShellStatusLabel.label = _('Installed');
             wackShellStatusLabel.add_css_class('success');
-            wackShellRow.add_suffix(wackShellStatusLabel);
-            extrasStatusGroup.add(wackShellRow);
+            wackShellExpander.add_suffix(wackShellStatusLabel);
 
             const checkUpdatesRow = new Adw.ActionRow({
                 title: _('WACK Shell - Check for Updates'),
@@ -891,13 +885,12 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             });
 
             checkUpdatesRow.add_suffix(checkBtn);
-            extrasActionsGroup.add(checkUpdatesRow);
+            wackShellExpander.add_row(checkUpdatesRow);
         } else {
-            wackShellRow.subtitle = _('Not installed. Install WACK Shell to unlock transition effects.');
+            wackShellExpander.subtitle = _('Not installed. Install WACK Shell to unlock transition effects.');
             wackShellStatusLabel.label = _('Not Installed');
             wackShellStatusLabel.add_css_class('error');
-            wackShellRow.add_suffix(wackShellStatusLabel);
-            extrasStatusGroup.add(wackShellRow);
+            wackShellExpander.add_suffix(wackShellStatusLabel);
 
             const installShellRow = new Adw.ActionRow({
                 title: _('WACK Shell - Install'),
@@ -934,11 +927,10 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
             installShellRow.add_suffix(copyBtn);
             installShellRow.add_suffix(linkBtn);
-            extrasActionsGroup.add(installShellRow);
+            wackShellExpander.add_row(installShellRow);
         }
 
-        animPage.add(extrasStatusGroup);
-        animPage.add(extrasActionsGroup);
+        animPage.add(extrasGroup);
         window.add(animPage);
 
         // Disconnect all settings signals when the window is destroyed so stale
