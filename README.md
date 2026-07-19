@@ -19,6 +19,9 @@ This is a part of the WACK project (WACK Ain't Cupertino, Kid), a collection of 
 This specific extension focuses on the lock screen (unlockDialog), replacing the standard clock with a clean, Sonoma-inspired layout.
 
 ## Features, and What it does
+- **NEW: [PRO] GDM Expansion** <br>
+Brings the macOS-style lock screen layouts, crossfade transitions, and custom auth prompt styling system-wide to the GDM login screen. <br><br>
+
 - **Custom Clock Layout** <br>
 Repositions the date and time to the upper third of the screen. <br><br>
 
