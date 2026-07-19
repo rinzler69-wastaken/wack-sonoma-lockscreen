@@ -49,7 +49,7 @@ import {
 } from './constants.js';
 
 function _log(msg) {
-    console.error(msg);
+    console.debug(msg);
     try {
         const file = Gio.File.new_for_path('/var/tmp/wack-debug.log');
         const stream = file.append_to(Gio.FileCreateFlags.NONE, null);
