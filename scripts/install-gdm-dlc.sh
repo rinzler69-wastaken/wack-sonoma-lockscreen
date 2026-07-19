@@ -10,6 +10,13 @@ TARGET_DIR="/usr/share/gnome-shell/extensions/$UUID"
 DCONF_GDM_DIR="/etc/dconf/db/gdm.d"
 DCONF_FILE="$DCONF_GDM_DIR/99-wack-lockscreen"
 
+# Determine user home and local extension directories globally
+REAL_HOME="${SUDO_USER_HOME:-${HOME}}"
+if [ -n "${SUDO_USER:-}" ]; then
+    REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+fi
+LOCAL_USER_DIR="$REAL_HOME/.local/share/gnome-shell/extensions/$UUID"
+
 # Ensure script is run with root privileges
 if [ "$EUID" -ne 0 ]; then
     echo "This script must be run as root. Elevating privileges..."
@@ -33,17 +40,10 @@ fi
 
 if [ -z "$SRC_DIR" ]; then
     # Fallback to known extension directories
-    REAL_HOME="${SUDO_USER_HOME:-${HOME}}"
-    if [ -n "${SUDO_USER:-}" ]; then
-        REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
-    fi
-    LOCAL_USER_DIR="$REAL_HOME/.local/share/gnome-shell/extensions/$UUID"
-    SYSTEM_DIR="/usr/share/gnome-shell/extensions/$UUID"
-    
     if [ -f "$LOCAL_USER_DIR/metadata.json" ]; then
         SRC_DIR="$LOCAL_USER_DIR"
-    elif [ -f "$SYSTEM_DIR/metadata.json" ]; then
-        SRC_DIR="$SYSTEM_DIR"
+    elif [ -f "$TARGET_DIR/metadata.json" ]; then
+        SRC_DIR="$TARGET_DIR"
     else
         echo "Error: Could not locate Sonoma Lockscreen installation directory."
         echo "Please install the extension first (e.g. from Extensions.gnome.org)."
@@ -54,6 +54,7 @@ fi
 echo "=== WACK Lockscreen GDM DLC Installer ==="
 echo "Source Directory: $SRC_DIR"
 echo "Target Directory: $TARGET_DIR"
+echo "User Directory:   $LOCAL_USER_DIR"
 
 FORCE=false
 if [ "${1:-}" = "--force" ]; then
@@ -159,6 +160,17 @@ chmod 644 "$DCONF_FILE"
 # 6. Compile the GDM dconf binary database
 echo "-> Compiling dconf database..."
 dconf update
+
+# 7. Remove user-level extension copy to prevent session conflicts
+if [ -d "$LOCAL_USER_DIR" ]; then
+    echo "-> Removing user-level extension copy to prevent conflicts..."
+    if [ -d "$LOCAL_USER_DIR/.git" ]; then
+        # Preserve git directory/files if this is a development clone
+        find "$LOCAL_USER_DIR" -maxdepth 1 -not -name ".git" -not -name "." -not -name ".." -not -name ".gitignore" -exec rm -rf {} +
+    else
+        rm -rf "$LOCAL_USER_DIR"
+    fi
+fi
 
 echo "========================================="
 echo "GDM DLC installation complete!"
