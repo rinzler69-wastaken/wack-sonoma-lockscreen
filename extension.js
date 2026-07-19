@@ -2073,14 +2073,18 @@ export default class WackLockscreenClockExtension extends Extension {
 
         if (this._mainBox && this._origLayout) {
             const oldLayout = this._mainBox.layout_manager;
+            if (this._lockscreenMessageLabel) {
+                this._lockscreenMessageLabel.destroy();
+                this._lockscreenMessageLabel = null;
+            }
+            if (this._lockscreenMessageContent) {
+                this._lockscreenMessageContent.destroy();
+                this._lockscreenMessageContent = null;
+            }
             if (this._lockscreenMessageScrollView) {
                 this._mainBox.remove_child(this._lockscreenMessageScrollView);
                 this._lockscreenMessageScrollView.destroy();
                 this._lockscreenMessageScrollView = null;
-            }
-            this._lockscreenMessageContent = null;
-            if (this._lockscreenMessageLabel) {
-                this._lockscreenMessageLabel = null;
             }
             this._mainBox.layout_manager = this._origLayout;
             if (oldLayout && oldLayout !== this._origLayout) oldLayout._extension = null;
