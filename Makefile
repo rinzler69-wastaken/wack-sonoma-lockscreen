@@ -29,6 +29,9 @@ pack: compile-po ## Create a ZIP package for Extensions.gnome.org
 	@glib-compile-schemas schemas
 	@cp stylesheet.css stylesheet.css.bak
 	@sed -i -e "s|font-family: 'SF Pro Display';|/* font-family: 'SF Pro Display'; */|g" -e "s|font-family: '\.SF Soft Numeric';|/* font-family: '.SF Soft Numeric'; */|g" stylesheet.css
+	@cp metadata.json metadata.json.bak
+	@python3 -c "import json; d=json.load(open('metadata.json')); d['session-modes'] = [m for m in d.get('session-modes', []) if m != 'gdm']; json.dump(d, open('metadata.json','w'), indent=2)"
 	@zip -qr $(UUID).zip *.js metadata.json stylesheet.css LICENSE schemas locale -x "schemas/gschemas.compiled" -x "po/generate.py" -x "scripts/*" -x "crossSessionManager.js" -x "gdm.js"
 	@mv stylesheet.css.bak stylesheet.css
+	@mv metadata.json.bak metadata.json
 	@printf 'Created package: %s\n' "$(UUID).zip"
