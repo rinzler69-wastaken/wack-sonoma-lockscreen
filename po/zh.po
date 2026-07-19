@@ -299,3 +299,9 @@ msgstr "WACK Shell - 检查更新"
 msgid "WACK Shell - Install"
 msgstr "WACK Shell - 安装"
 
+msgid "Upcoming Features"
+msgstr "即将推出的功能"
+
+msgid "Check out this extension's GitHub repo for cool features in the works."
+msgstr "查看此扩展的 GitHub 仓库，了解正在开发中的酷炫功能。"
+

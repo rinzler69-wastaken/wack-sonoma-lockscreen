@@ -299,3 +299,9 @@ msgstr "WACK-shell - Controleren op updates"
 msgid "WACK Shell - Install"
 msgstr "WACK-shell - Installeren"
 
+msgid "Upcoming Features"
+msgstr "Aankomende functies"
+
+msgid "Check out this extension's GitHub repo for cool features in the works."
+msgstr "Bekijk de GitHub-repository van deze extensie voor toffe functies in ontwikkeling."
+

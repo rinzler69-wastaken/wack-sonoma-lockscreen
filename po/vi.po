@@ -299,3 +299,9 @@ msgstr "WACK Shell - Kiểm tra cập nhật"
 msgid "WACK Shell - Install"
 msgstr "WACK Shell - Cài đặt"
 
+msgid "Upcoming Features"
+msgstr "Tính năng sắp tới"
+
+msgid "Check out this extension's GitHub repo for cool features in the works."
+msgstr "Xem kho lưu trữ GitHub của tiện ích mở rộng này để biết các tính năng thú vị đang được phát triển."
+

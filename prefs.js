@@ -771,7 +771,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         // -- Extras group ---------------------------------------------------
         const extrasGroup = new Adw.PreferencesGroup({
             title: _('Extras'),
-        });        let showDocs = true;
+        }); let showDocs = true;
         // <GDM_EXCLUDE>
         const gdmStatus = _getGdmStatus(this.dir);
 
@@ -817,8 +817,8 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         if (showDocs) {
             const docsRow = new Adw.ActionRow({
-                title: _('Advanced Features and GDM Settings'),
-                subtitle: _('Learn how to enable system-wide GDM login customisations, crossfade transitions, and other advanced integrations on GitHub.'),
+                title: _('Upcoming Features'),
+                subtitle: _('Check out this extension\'s GitHub repo for cool features in the works.'),
             });
             const docsBtn = new Gtk.Button({
                 icon_name: 'adw-external-link-symbolic',

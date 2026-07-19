@@ -299,3 +299,9 @@ msgstr "WACK Shell - Проверить обновления"
 msgid "WACK Shell - Install"
 msgstr "WACK Shell - Установить"
 
+msgid "Upcoming Features"
+msgstr "Ожидаемые функции"
+
+msgid "Check out this extension's GitHub repo for cool features in the works."
+msgstr "Посетите репозиторий этой расширения на GitHub, чтобы узнать о разрабатываемых функциях."
+
