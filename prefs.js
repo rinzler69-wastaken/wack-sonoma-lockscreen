@@ -818,7 +818,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             });
             copyBtn.connect('clicked', () => {
                 const clipboard = Gdk.Display.get_default().get_clipboard();
-                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2/scripts/install-gdm-dlc.sh | bash');
+                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-gdm-dlc.sh | bash');
                 window.add_toast(new Adw.Toast({
                     title: _('Copied upgrade command to clipboard!'),
                 }));
@@ -829,7 +829,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         } else {
             const uninstallRow = new Adw.ActionRow({
                 title: _('Uninstall GDM Expansion'),
-                subtitle: _('Revert Sonoma-inspired GDM login screen layout and restore default settings. To uninstall, run copied command in a terminal.'),
+                subtitle: _('Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal.'),
             });
 
             const copyBtn = new Gtk.Button({
@@ -840,7 +840,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             });
             copyBtn.connect('clicked', () => {
                 const clipboard = Gdk.Display.get_default().get_clipboard();
-                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2/scripts/uninstall-gdm-dlc.sh | bash');
+                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/uninstall-gdm-dlc.sh | bash');
                 window.add_toast(new Adw.Toast({
                     title: _('Copied uninstall command to clipboard!'),
                 }));
@@ -848,6 +848,51 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
             uninstallRow.add_suffix(copyBtn);
             extrasGroup.add(uninstallRow);
+        }
+
+        // -- WACK Shell Integration Rows --
+        const wackShellRow = new Adw.ActionRow({
+            title: _('[BETA] WACK Shell Integration'),
+        });
+        const wackShellStatusLabel = new Gtk.Label({
+            valign: Gtk.Align.CENTER,
+        });
+
+        const isWackShellInstalled = _isWackShellInstalled();
+        if (isWackShellInstalled) {
+            wackShellRow.subtitle = _('Installed. Enables crossfade transitions and Cupertino-inspired shell customisations.');
+            wackShellStatusLabel.label = _('Installed');
+            wackShellStatusLabel.add_css_class('success');
+            wackShellRow.add_suffix(wackShellStatusLabel);
+            extrasGroup.add(wackShellRow);
+        } else {
+            wackShellRow.subtitle = _('Not installed. Install WACK Shell to unlock transition effects.');
+            wackShellStatusLabel.label = _('Not Installed');
+            wackShellStatusLabel.add_css_class('error');
+            wackShellRow.add_suffix(wackShellStatusLabel);
+            extrasGroup.add(wackShellRow);
+
+            const installShellRow = new Adw.ActionRow({
+                title: _('Install WACK Shell'),
+                subtitle: _('Get advanced desktop crossfade transitions, Cupertino-styled lockscreen fade, and performance optimizations.'),
+            });
+
+            const linkBtn = new Gtk.Button({
+                icon_name: 'web-browser-symbolic',
+                tooltip_text: _('Open WACK Shell repository'),
+                css_classes: ['flat'],
+                valign: Gtk.Align.CENTER,
+            });
+            linkBtn.connect('clicked', () => {
+                try {
+                    Gio.AppInfo.launch_default_for_uri('https://github.com/rinzler69-wastaken/wack-shell', null);
+                } catch (e) {
+                    // Ignore or fallback
+                }
+            });
+
+            installShellRow.add_suffix(linkBtn);
+            extrasGroup.add(installShellRow);
         }
 
         animPage.add(extrasGroup);

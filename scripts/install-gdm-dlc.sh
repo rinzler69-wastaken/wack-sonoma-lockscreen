@@ -16,7 +16,7 @@ if [ "$EUID" -ne 0 ]; then
     if [[ "$0" == *"install-gdm-dlc.sh" ]]; then
         exec sudo bash "$0" "$@"
     else
-        sudo bash -c "$(curl -sSL 'https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2/scripts/install-gdm-dlc.sh')"
+        sudo bash -c "$(curl -sSL 'https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-gdm-dlc.sh')"
         exit $?
     fi
 fi
@@ -81,7 +81,7 @@ fi
 
 # 2. Deploy DLC modules (gdm.js and crossSessionManager.js)
 echo "-> Deploying DLC modules..."
-REPO_RAW_URL="https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2"
+REPO_RAW_URL="https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main"
 for module in "gdm.js" "crossSessionManager.js"; do
     if [ -f "$SRC_DIR/$module" ]; then
         echo "   Copying local $module..."
