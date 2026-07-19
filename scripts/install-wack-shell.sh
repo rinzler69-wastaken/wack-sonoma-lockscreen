@@ -3,10 +3,12 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-# Ensure script is NOT run as root
+# Warn if run as root/sudo
 if [ "$EUID" -eq 0 ]; then
-    echo "Error: This script installs the extension in user space and should NOT be run as root/sudo."
-    exit 1
+    echo "Warning: Script is run as superuser (root). Be aware that this may cause"
+    echo "permission issues if you try to modify WACK Shell files as a regular user,"
+    echo "or it will install in the root user's home directory instead."
+    echo ""
 fi
 
 # Ensure git is installed
