@@ -88,20 +88,31 @@ else
     echo "   Source and Target are the same directory. Skipping extension files sync."
 fi
 
-# 2. Deploy DLC modules (pro.js and crossSessionManager.js)
-echo "-> Deploying DLC modules..."
+# 2. Deploy DLC modules and restore unstripped hook files if needed
+echo "-> Deploying DLC modules and restoring hook files..."
 REPO_RAW_URL="https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main"
-for module in "pro.js" "crossSessionManager.js"; do
-    if [ -f "$SRC_DIR/$module" ]; then
-        if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
-            echo "   Copying local $module..."
-            cp "$SRC_DIR/$module" "$TARGET_DIR/"
+for file in "pro.js" "crossSessionManager.js" "extension.js" "prefs.js"; do
+    USE_LOCAL=false
+    if [ -f "$SRC_DIR/$file" ]; then
+        if [ "$file" = "pro.js" ] || [ "$file" = "crossSessionManager.js" ]; then
+            USE_LOCAL=true
         else
-            echo "   Local $module already in target directory."
+            if grep -q "GDM_EXCLUDE" "$SRC_DIR/$file"; then
+                USE_LOCAL=true
+            fi
+        fi
+    fi
+
+    if [ "$USE_LOCAL" = true ]; then
+        if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
+            echo "   Copying local $file..."
+            cp "$SRC_DIR/$file" "$TARGET_DIR/"
+        else
+            echo "   Local $file already in target directory."
         fi
     else
-        echo "   Downloading $module from repository..."
-        curl -sSL "$REPO_RAW_URL/$module" -o "$TARGET_DIR/$module"
+        echo "   Downloading unstripped $file from repository..."
+        curl -sSL "$REPO_RAW_URL/$file" -o "$TARGET_DIR/$file"
     fi
 done
 
