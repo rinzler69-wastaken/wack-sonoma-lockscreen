@@ -191,3 +191,84 @@ msgstr "屏幕超时"
 msgid "Time to wait before turning off the screen"
 msgstr "关闭屏幕前的等待时间"
 
+msgid "Extras"
+msgstr "附加功能"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] GDM 扩展"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "已启用。自定义布局已在 GDM 上激活。"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Disabled"
+msgstr "已禁用"
+
+msgid "Disabled."
+msgstr "已禁用。"
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "缺少 GDM 和 Cross Session 模块。"
+
+msgid "GDM dconf override configuration is missing."
+msgstr "缺少 GDM dconf 覆盖配置。"
+
+msgid "GDM integration is not configured."
+msgstr "GDM 集成未配置。"
+
+msgid "Upgrade to Pro"
+msgstr "升级到 Pro"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "获取受 Sonoma 启发的 GDM 登录屏幕布局，并自动从活动用户会话同步您的壁纸。要升级，请在终端中运行复制的命令。"
+
+msgid "Copy upgrade command to clipboard"
+msgstr "复制升级命令到剪贴板"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "已将升级命令复制到剪贴板！"
+
+msgid "Uninstall GDM Expansion"
+msgstr "卸载 GDM 扩展"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "将 GDM 登录屏幕布局恢复为 GNOME 默认设置。要卸载，请在终端中运行复制的命令。"
+
+msgid "Copy uninstall command to clipboard"
+msgstr "复制卸载命令到剪贴板"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "已将卸载命令复制到剪贴板！"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] WACK Shell 集成"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "已安装。启用淡入淡出过渡和受库比蒂诺启发的系统外壳定制。"
+
+msgid "Installed"
+msgstr "已安装"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "未安装。安装 WACK Shell 以解锁过渡效果。"
+
+msgid "Not Installed"
+msgstr "未安装"
+
+msgid "Install WACK Shell"
+msgstr "安装 WACK Shell"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "获取先进的桌面淡入淡出过渡和受库比蒂诺启发的系统外壳定制。可能包含错误，如发现请报告。"
+
+msgid "Copy install command to clipboard"
+msgstr "复制安装命令到剪贴板"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "已将 WACK Shell 安装命令复制到剪贴板！"
+
+msgid "Open WACK Shell repository"
+msgstr "打开 WACK Shell 仓库"
+

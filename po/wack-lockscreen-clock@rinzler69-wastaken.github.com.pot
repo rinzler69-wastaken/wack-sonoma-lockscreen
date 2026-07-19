@@ -191,3 +191,84 @@ msgstr ""
 msgid "Time to wait before turning off the screen"
 msgstr ""
 
+msgid "Extras"
+msgstr ""
+
+msgid "[PRO] GDM Expansion"
+msgstr ""
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Disabled."
+msgstr ""
+
+msgid "GDM and Cross Session Module are missing."
+msgstr ""
+
+msgid "GDM dconf override configuration is missing."
+msgstr ""
+
+msgid "GDM integration is not configured."
+msgstr ""
+
+msgid "Upgrade to Pro"
+msgstr ""
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr ""
+
+msgid "Copy upgrade command to clipboard"
+msgstr ""
+
+msgid "Copied upgrade command to clipboard!"
+msgstr ""
+
+msgid "Uninstall GDM Expansion"
+msgstr ""
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr ""
+
+msgid "Copy uninstall command to clipboard"
+msgstr ""
+
+msgid "Copied uninstall command to clipboard!"
+msgstr ""
+
+msgid "[BETA] WACK Shell Integration"
+msgstr ""
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr ""
+
+msgid "Installed"
+msgstr ""
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr ""
+
+msgid "Not Installed"
+msgstr ""
+
+msgid "Install WACK Shell"
+msgstr ""
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr ""
+
+msgid "Copy install command to clipboard"
+msgstr ""
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr ""
+
+msgid "Open WACK Shell repository"
+msgstr ""
+

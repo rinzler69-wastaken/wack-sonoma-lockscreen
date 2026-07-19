@@ -191,3 +191,84 @@ msgstr "Тайм-аут экрана"
 msgid "Time to wait before turning off the screen"
 msgstr "Время ожидания перед выключением экрана"
 
+msgid "Extras"
+msgstr "Дополнительно"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] Расширение GDM"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "Включено. Индивидуальный макет активен в GDM."
+
+msgid "Enabled"
+msgstr "Включено"
+
+msgid "Disabled"
+msgstr "Отключено"
+
+msgid "Disabled."
+msgstr "Отключено."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "Отсутствуют модули GDM и Cross Session."
+
+msgid "GDM dconf override configuration is missing."
+msgstr "Отсутствует конфигурация переопределения dconf для GDM."
+
+msgid "GDM integration is not configured."
+msgstr "Интеграция с GDM не настроена."
+
+msgid "Upgrade to Pro"
+msgstr "Обновиться до Pro"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "Получите вдохновленный Sonoma макет экрана входа GDM и автоматически синхронизируйте обои из активного сеанса пользователя. Для обновления запустите скопированную команду в терминале."
+
+msgid "Copy upgrade command to clipboard"
+msgstr "Скопировать команду обновления в буфер обмена"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "Команда обновления скопирована в буфер обмена!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "Удалить расширение GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "Сбросить макет экрана входа GDM к настройкам по умолчанию для GNOME. Для удаления запустите скопированную команду в терминале."
+
+msgid "Copy uninstall command to clipboard"
+msgstr "Скопировать команду удаления в буфер обмена"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "Команда удаления скопирована в буфер обмена!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] Интеграция с WACK Shell"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Установлено. Включает эффекты плавного перехода (кроссфейда) и вдохновленные Купертино настройки оболочки."
+
+msgid "Installed"
+msgstr "Установлено"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Не установлено. Установите WACK Shell для разблокировки эффектов перехода."
+
+msgid "Not Installed"
+msgstr "Не установлено"
+
+msgid "Install WACK Shell"
+msgstr "Установить WACK Shell"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "Получите улучшенные эффекты плавного перехода для рабочего стола и вдохновленные Купертино настройки оболочки. Может содержать ошибки, сообщайте при обнаружении."
+
+msgid "Copy install command to clipboard"
+msgstr "Скопировать команду установки в буфер обмена"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "Команда установки WACK Shell скопирована в буфер обмена!"
+
+msgid "Open WACK Shell repository"
+msgstr "Открыть репозиторий WACK Shell"
+

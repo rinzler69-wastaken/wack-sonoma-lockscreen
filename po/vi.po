@@ -191,3 +191,84 @@ msgstr "Hết thời gian chờ màn hình"
 msgid "Time to wait before turning off the screen"
 msgstr "Thời gian chờ trước khi tắt màn hình"
 
+msgid "Extras"
+msgstr "Tính năng bổ sung"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] Mở rộng GDM"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "Đã bật. Bố cục tùy chỉnh đang hoạt động trên GDM."
+
+msgid "Enabled"
+msgstr "Đã bật"
+
+msgid "Disabled"
+msgstr "Đã tắt"
+
+msgid "Disabled."
+msgstr "Đã tắt."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "Thiếu GDM và Mô-đun Cross Session."
+
+msgid "GDM dconf override configuration is missing."
+msgstr "Thiếu cấu hình ghi đè dconf GDM."
+
+msgid "GDM integration is not configured."
+msgstr "Tích hợp GDM chưa được cấu hình."
+
+msgid "Upgrade to Pro"
+msgstr "Nâng cấp lên Pro"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "Sở hữu bố cục màn hình đăng nhập GDM lấy cảm hứng từ Sonoma và tự động đồng bộ hóa hình nền từ phiên người dùng đang hoạt động. Để nâng cấp, hãy chạy lệnh đã sao chép trong cửa sổ dòng lệnh."
+
+msgid "Copy upgrade command to clipboard"
+msgstr "Sao chép lệnh nâng cấp vào bộ nhớ tạm"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "Đã sao chép lệnh nâng cấp vào bộ nhớ tạm!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "Gỡ cài đặt Mở rộng GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "Khôi phục bố cục màn hình đăng nhập GDM về Mặc định của GNOME. Để gỡ cài đặt, hãy chạy lệnh đã sao chép trong cửa sổ dòng lệnh."
+
+msgid "Copy uninstall command to clipboard"
+msgstr "Sao chép lệnh gỡ cài đặt vào bộ nhớ tạm"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "Đã sao chép lệnh gỡ cài đặt vào bộ nhớ tạm!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] Tích hợp WACK Shell"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Đã cài đặt. Cho phép các hiệu ứng chuyển cảnh mờ dần và tùy chỉnh giao diện lấy cảm hứng từ Cupertino."
+
+msgid "Installed"
+msgstr "Đã cài đặt"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Chưa cài đặt. Hãy cài đặt WACK Shell để kích hoạt các hiệu ứng chuyển cảnh."
+
+msgid "Not Installed"
+msgstr "Chưa cài đặt"
+
+msgid "Install WACK Shell"
+msgstr "Cài đặt WACK Shell"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "Trải nghiệm các hiệu ứng chuyển cảnh nâng cao của màn hình chính và các tùy chỉnh giao diện lấy cảm hứng từ Cupertino. Có thể có lỗi, vui lòng báo cáo nếu phát hiện."
+
+msgid "Copy install command to clipboard"
+msgstr "Sao chép lệnh cài đặt vào bộ nhớ tạm"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "Đã sao chép lệnh cài đặt WACK Shell vào bộ nhớ tạm!"
+
+msgid "Open WACK Shell repository"
+msgstr "Mở kho lưu trữ WACK Shell"
+

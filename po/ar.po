@@ -191,3 +191,84 @@ msgstr "مهلة الشاشة"
 msgid "Time to wait before turning off the screen"
 msgstr "المدة الزمنية sebelum إطفاء الشاشة"
 
+msgid "Extras"
+msgstr "إضافات"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] توسيع GDM"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "مفعّل. المظهر المخصص نشط على GDM."
+
+msgid "Enabled"
+msgstr "مفعّل"
+
+msgid "Disabled"
+msgstr "معطّل"
+
+msgid "Disabled."
+msgstr "معطّل."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "ملفات GDM و Cross Session مفقودة."
+
+msgid "GDM dconf override configuration is missing."
+msgstr "تكوين تجاوز dconf لـ GDM مفقود."
+
+msgid "GDM integration is not configured."
+msgstr "لم يتم تكوين تكامل GDM."
+
+msgid "Upgrade to Pro"
+msgstr "الترقية إلى Pro"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "احصل على مظهر شاشة تسجيل دخول GDM مستوحى من Sonoma وقم بمزامنة خلفياتك تلقائيًا من جلسة المستخدم النشطة. للترقية، قم بتشغيل الأمر المنسوخ في الطرفية."
+
+msgid "Copy upgrade command to clipboard"
+msgstr "نسخ أمر الترقية إلى الحافظة"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "تم نسخ أمر الترقية إلى الحافظة!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "إلغاء تثبيت توسيع GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "استعادة مظهر شاشة تسجيل دخول GDM إلى الوضع الافتراضي لـ GNOME. لإلغاء التثبيت، قم بتشغيل الأمر المنسوخ في الطرفية."
+
+msgid "Copy uninstall command to clipboard"
+msgstr "نسخ أمر إلغاء التثبيت إلى الحافظة"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "تم نسخ أمر إلغاء التثبيت إلى الحافظة!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] تكامل WACK Shell"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "تم التثبيت. يتيح انتقالات التلاشي المتبادل وتخصيصات الواجهة المستوحاة من كوبرتينو."
+
+msgid "Installed"
+msgstr "مثبت"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "غير مثبت. قم بتثبيت WACK Shell لفتح تأثيرات الانتقال."
+
+msgid "Not Installed"
+msgstr "غير مثبت"
+
+msgid "Install WACK Shell"
+msgstr "تثبيت WACK Shell"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "احصل على انتقالات تلاشي متبادل متقدمة لسطح المكتب وتخصيصات واجهة مستوحاة من كوبرتينو. قد يحتوي على أخطاء، يرجى الإبلاغ عنها إن وجدت."
+
+msgid "Copy install command to clipboard"
+msgstr "نسخ أمر التثبيت إلى الحافظة"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "تم نسخ أمر تثبيت WACK Shell إلى الحافظة!"
+
+msgid "Open WACK Shell repository"
+msgstr "افتح مستودع WACK Shell"
+

@@ -191,3 +191,84 @@ msgstr "หมดเวลาหน้าจอ"
 msgid "Time to wait before turning off the screen"
 msgstr "ระยะเวลารอก่อนปิดหน้าจอ"
 
+msgid "Extras"
+msgstr "คุณสมบัติเพิ่มเติม"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] ส่วนเสริม GDM"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "เปิดใช้งาน เลย์เอาต์แบบกำหนดเองทำงานอยู่บน GDM"
+
+msgid "Enabled"
+msgstr "เปิดใช้งาน"
+
+msgid "Disabled"
+msgstr "ปิดใช้งาน"
+
+msgid "Disabled."
+msgstr "ปิดใช้งาน."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "โมดูล GDM และ Cross Session สูญหาย"
+
+msgid "GDM dconf override configuration is missing."
+msgstr "การกำหนดค่าการแทนที่ dconf GDM สูญหาย"
+
+msgid "GDM integration is not configured."
+msgstr "ไม่ได้กำหนดค่าการรวม GDM"
+
+msgid "Upgrade to Pro"
+msgstr "อัปเกรดเป็น Pro"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "รับเลย์เอาต์หน้าจอเข้าสู่ระบบ GDM ที่ได้รับแรงบันดาลใจจาก Sonoma และซิงโครไนซ์วอลเปเปอร์ของคุณจากเซสชันผู้ใช้ที่ใช้งานอยู่โดยอัตโนมัติ ในการอัปเกรด ให้รันคำสั่งที่คัดลอกมาในเทอร์มินัล"
+
+msgid "Copy upgrade command to clipboard"
+msgstr "คัดลอกคำสั่งอัปเกรดไปยังคลิปบอร์ด"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "คัดลอกคำสั่งอัปเกรดไปยังคลิปบอร์ดแล้ว!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "ถอนการติดตั้งส่วนเสริม GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "ย้อนกลับเลย์เอาต์หน้าจอเข้าสู่ระบบ GDM เป็นค่าเริ่มต้นของ GNOME ในการถอนการติดตั้ง ให้รันคำสั่งที่คัดลอกมาในเทอร์มินัล"
+
+msgid "Copy uninstall command to clipboard"
+msgstr "คัดลอกคำสั่งถอนการติดตั้งไปยังคลิปบอร์ด"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "คัดลอกคำสั่งถอนการติดตั้งไปยังคลิปบอร์ดแล้ว!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] การรวมระบบ WACK Shell"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "ติดตั้งแล้ว เปิดใช้งานการเปลี่ยนผ่านแบบจางและการปรับแต่งเชลล์ที่ได้รับแรงบันดาลใจจากคูเปอร์ติโน"
+
+msgid "Installed"
+msgstr "ติดตั้งแล้ว"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "ไม่ได้ติดตั้ง ติดตั้ง WACK Shell เพื่อปลดล็อกเอฟเฟกต์การเปลี่ยนผ่าน"
+
+msgid "Not Installed"
+msgstr "ไม่ได้ติดตั้ง"
+
+msgid "Install WACK Shell"
+msgstr "ติดตั้ง WACK Shell"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "รับการเปลี่ยนผ่านแบบจางของเดสก์ท็อปขั้นสูงและการปรับแต่งเชลล์ที่ได้รับแรงบันดาลใจจากคูเปอร์ติโน อาจมีบั๊ก โปรดรายงานหากพบ"
+
+msgid "Copy install command to clipboard"
+msgstr "คัดลอกคำสั่งติดตั้งไปยังคลิปบอร์ด"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "คัดลอกคำสั่งติดตั้ง WACK Shell ไปยังคลิปบอร์ดแล้ว!"
+
+msgid "Open WACK Shell repository"
+msgstr "เปิดพื้นที่เก็บข้อมูล WACK Shell"
+

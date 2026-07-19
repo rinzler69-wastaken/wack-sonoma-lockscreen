@@ -191,3 +191,84 @@ msgstr "화면 시간 초과"
 msgid "Time to wait before turning off the screen"
 msgstr "화면이 꺼질 때까지 대기할 시간"
 
+msgid "Extras"
+msgstr "기타 추가 기능"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] GDM 확장"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "활성화됨. GDM에서 사용자 정의 레이아웃이 활성화되어 있습니다."
+
+msgid "Enabled"
+msgstr "활성화됨"
+
+msgid "Disabled"
+msgstr "비활성화됨"
+
+msgid "Disabled."
+msgstr "비활성화됨."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "GDM 및 크로스 세션 모듈이 누락되었습니다."
+
+msgid "GDM dconf override configuration is missing."
+msgstr "GDM dconf 재정의 설정이 누락되었습니다."
+
+msgid "GDM integration is not configured."
+msgstr "GDM 통합이 설정되지 않았습니다."
+
+msgid "Upgrade to Pro"
+msgstr "Pro로 업그레이드"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "Sonoma 스타일의 GDM 로그인 화면 레이아웃을 사용하고 활성 사용자 세션의 배경화면을 자동으로 동기화합니다. 업그레이드하려면 복사한 명령어를 터미널에서 실행하세요."
+
+msgid "Copy upgrade command to clipboard"
+msgstr "업그레이드 명령어를 클립보드에 복사"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "업그레이드 명령어가 클립보드에 복사되었습니다!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "GDM 확장 언인스톨"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "GDM 로그인 화면 레이아웃을 GNOME 기본값으로 되돌립니다. 삭제하려면 복사한 명령어를 터미널에서 실행하세요."
+
+msgid "Copy uninstall command to clipboard"
+msgstr "삭제 명령어를 클립보드에 복사"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "삭제 명령어가 클립보드에 복사되었습니다!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] WACK Shell 통합"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "설치됨. 크로스페이드 트랜지션 및 쿠퍼티노 스타일의 셸 사용자 정의를 활성화합니다."
+
+msgid "Installed"
+msgstr "설치됨"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "설치되지 않음. 전환 효과를 활성화하려면 WACK Shell을 설치하세요."
+
+msgid "Not Installed"
+msgstr "설치되지 않음"
+
+msgid "Install WACK Shell"
+msgstr "WACK Shell 설치"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "고급 데스크톱 크로스페이드 트랜지션 및 쿠퍼티노 스타일의 셸 사용자 정의를 사용해 보세요. 버그가 있을 수 있으니 발견 시 제보해 주세요."
+
+msgid "Copy install command to clipboard"
+msgstr "설치 명령어를 클립보드에 복사"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "WACK Shell 설치 명령어가 클립보드에 복사되었습니다!"
+
+msgid "Open WACK Shell repository"
+msgstr "WACK Shell 레포지토리 열기"
+

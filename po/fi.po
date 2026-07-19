@@ -191,3 +191,84 @@ msgstr "Näytön aikakatkaisu"
 msgid "Time to wait before turning off the screen"
 msgstr "Odotusaika ennen näytön sammuttamista"
 
+msgid "Extras"
+msgstr "Lisäominaisuudet"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] GDM-laajennus"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "Käytössä. Mukautettu asettelu on käytössä GDM:ssä."
+
+msgid "Enabled"
+msgstr "Käytössä"
+
+msgid "Disabled"
+msgstr "Ei käytössä"
+
+msgid "Disabled."
+msgstr "Ei käytössä."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "GDM- ja Cross Session -moduulit puuttuvat."
+
+msgid "GDM dconf override configuration is missing."
+msgstr "GDM dconf -ohituskokoonpano puuttuu."
+
+msgid "GDM integration is not configured."
+msgstr "GDM-integraatiota ei ole määritetty."
+
+msgid "Upgrade to Pro"
+msgstr "Päivitä Pro-versioon"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "Hanki Sonoman inspiroima GDM-kirjautumisruudun asettelu ja synkronoi taustakuvasi automaattisesti aktiivisesta käyttäjäistunnosta. Päivitä suorittamalla kopioitu komento päätteessä."
+
+msgid "Copy upgrade command to clipboard"
+msgstr "Kopioi päivityskomento leikepöydälle"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "Päivityskomento kopioitu leikepöydälle!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "Poista GDM-laajennuksen asennus"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "Palauta GDM-kirjautumisruudun asettelu GNOME-oletukseksi. Poista asennus suorittamalla kopioitu komento päätteessä."
+
+msgid "Copy uninstall command to clipboard"
+msgstr "Kopioi poistokomento leikepöydälle"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "Poistokomento kopioitu leikepöydälle!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] WACK Shell -integraatio"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Asennettu. Ottaa käyttöön ristiinhäivytyssiirtymät ja Cupertinon inspiroimat shell-mukautukset."
+
+msgid "Installed"
+msgstr "Asennettu"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Ei asennettu. Asenna WACK Shell ottaaksesi siirtymätehosteet käyttöön."
+
+msgid "Not Installed"
+msgstr "Ei asennettu"
+
+msgid "Install WACK Shell"
+msgstr "Asenna WACK Shell"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "Hanki edistyneet työpöydän ristiinhäivytyssiirtymät ja Cupertinon inspiroimat shell-mukautukset. Saattaa sisältää virheitä, ilmoita niistä tarvittaessa."
+
+msgid "Copy install command to clipboard"
+msgstr "Kopioi asennuskomento leikepöydälle"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "WACK Shell -asennuskomento kopioitu leikepöydälle!"
+
+msgid "Open WACK Shell repository"
+msgstr "Avaa WACK Shell -arkisto"
+

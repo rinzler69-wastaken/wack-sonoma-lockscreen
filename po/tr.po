@@ -191,3 +191,84 @@ msgstr "Ekran Zaman Aşımı"
 msgid "Time to wait before turning off the screen"
 msgstr "Ekran kapatılmadan önce beklenecek süre"
 
+msgid "Extras"
+msgstr "Ekstralar"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] GDM Genişletmesi"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "Etkin. Özel düzen GDM üzerinde aktif."
+
+msgid "Enabled"
+msgstr "Etkin"
+
+msgid "Disabled"
+msgstr "Devre Dışı"
+
+msgid "Disabled."
+msgstr "Devre Dışı."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "GDM ve Cross Session Modülü eksik."
+
+msgid "GDM dconf override configuration is missing."
+msgstr "GDM dconf geçersiz kılma yapılandırması eksik."
+
+msgid "GDM integration is not configured."
+msgstr "GDM entegrasyonu yapılandırılmamış."
+
+msgid "Upgrade to Pro"
+msgstr "Pro Sürümüne Yükselt"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "Sonoma esintili bir GDM giriş ekranı düzeni elde edin ve duvar kağıtlarınızı aktif kullanıcı oturumundan otomatik olarak senkronize edin. Yükseltmek için kopyalanan komutu bir terminalde çalıştırın."
+
+msgid "Copy upgrade command to clipboard"
+msgstr "Yükseltme komutunu panoya kopyala"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "Yükseltme komutu panoya kopyalandı!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "GDM Genişletmesini Kaldır"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "GDM giriş ekranı düzenini GNOME Varsayılanına döndürün. Kaldırmak için kopyalanan komutu bir terminalde çalıştırın."
+
+msgid "Copy uninstall command to clipboard"
+msgstr "Kaldırma komutunu panoya kopyala"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "Kaldırma komutu panoya kopyalandı!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] WACK Shell Entegrasyonu"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Kuruldu. Çapraz geçişleri ve Cupertino tarzı kabuk özelleştirmelerini etkinleştirir."
+
+msgid "Installed"
+msgstr "Kuruldu"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Kurulmadı. Geçiş efektlerinin kilidini açmak için WACK Shell kurun."
+
+msgid "Not Installed"
+msgstr "Kurulmadı"
+
+msgid "Install WACK Shell"
+msgstr "WACK Shell Kur"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "Gelişmiş masaüstü çapraz geçişleri ve Cupertino tarzı kabuk özelleştirmelerini edinin. Hatalar içerebilir, bulunursa bildirin."
+
+msgid "Copy install command to clipboard"
+msgstr "Kurulum komutunu panoya kopyala"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "WACK Shell kurulum komutu panoya kopyalandı!"
+
+msgid "Open WACK Shell repository"
+msgstr "WACK Shell deposunu aç"
+

@@ -191,3 +191,84 @@ msgstr "פסק זמן מסך"
 msgid "Time to wait before turning off the screen"
 msgstr "זמן ההמתנה לפני כיבוי המסך"
 
+msgid "Extras"
+msgstr "תוספות"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] הרחבת GDM"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "פעיל. פריסה מותאמת אישית מופελת ב־GDM."
+
+msgid "Enabled"
+msgstr "פעיל"
+
+msgid "Disabled"
+msgstr "כבוי"
+
+msgid "Disabled."
+msgstr "כבוי."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "רכיבי GDM וסנכרון הפעילויות (Cross Session) חסרים."
+
+msgid "GDM dconf override configuration is missing."
+msgstr "תצורת דריסת ה־dconf של GDM חסרה."
+
+msgid "GDM integration is not configured."
+msgstr "שילוב ה־GDM אינו מוגדר."
+
+msgid "Upgrade to Pro"
+msgstr "שדרוг לגרסת Pro"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "קבל פriסת מסך כניסה של GDM בהשראת Sonoma וסנכרן אוטומטית את רקעי שולחן העבודה שלך מתוך פעילות המשתמש הנוכחית. לשדروג, הרץ את הפקודה המועתקת במסוף."
+
+msgid "Copy upgrade command to clipboard"
+msgstr "העתק פקודת שדרוג ללוח הגזירים"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "פקודת השדרוг הועתקה ללוח הגזירים!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "הסרת הרחבת GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "החזרת פריסת מסך הכניסה של GDM לברירת המחדל של GNOME. להסרה, הרץ את הפקודה המועתקת במסוף."
+
+msgid "Copy uninstall command to clipboard"
+msgstr "העתק פקודת הסרה ללוח הגזירים"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "פקודת ההסרה הועתקה ללוח הגזירים!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] שילוב WACK Shell"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "מותקן. מאפשר מעברי עמעום והתאמות אישיות של מעטפת המערכת בסגנון קופרטינו."
+
+msgid "Installed"
+msgstr "מותקן"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "לא מותקן. התקן את WACK Shell כדי לאפשר אפקטים של מעבר."
+
+msgid "Not Installed"
+msgstr "לא מותקן"
+
+msgid "Install WACK Shell"
+msgstr "התקנת WACK Shell"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "קבל מעברי עמעום מתקדמים של שולחן העבודה והתאמות אישיות של המעטפת בסגנון קופרטינו. עלול להכيل באגים, אנא דווח אם נמצאו."
+
+msgid "Copy install command to clipboard"
+msgstr "העתק פקודת התקנה ללוח הגזירים"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "פקודת התקנת WACK Shell הועתקה ללוח הגזירים!"
+
+msgid "Open WACK Shell repository"
+msgstr "פתח את מאגר ה־WACK Shell"
+

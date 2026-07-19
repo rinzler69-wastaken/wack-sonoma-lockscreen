@@ -191,3 +191,84 @@ msgstr "Délai d'expiration de l'écran"
 msgid "Time to wait before turning off the screen"
 msgstr "Temps d'attente avant d'éteindre l'écran"
 
+msgid "Extras"
+msgstr "Extras"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] Extension GDM"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "Activé. La disposition personnalisée est active sur GDM."
+
+msgid "Enabled"
+msgstr "Activé"
+
+msgid "Disabled"
+msgstr "Désactivé"
+
+msgid "Disabled."
+msgstr "Désactivé."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "Les modules GDM et Cross Session sont manquants."
+
+msgid "GDM dconf override configuration is missing."
+msgstr "La configuration de remplacement dconf de GDM est manquante."
+
+msgid "GDM integration is not configured."
+msgstr "L'intégration GDM n'est pas configurée."
+
+msgid "Upgrade to Pro"
+msgstr "Passer à la version Pro"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "Bénéficiez d'une disposition d'écran de connexion GDM inspirée de Sonoma et synchronisez automatiquement vos fonds d'écran à partir de la session utilisateur active. Pour mettre à niveau, exécutez la commande copiée dans un terminal."
+
+msgid "Copy upgrade command to clipboard"
+msgstr "Copier la commande de mise à niveau dans le presse-papiers"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "Commande de mise à niveau copiée dans le presse-papiers !"
+
+msgid "Uninstall GDM Expansion"
+msgstr "Désinstaller l'extension GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "Rétablit la disposition de l'écran de connexion GDM par défaut de GNOME. Pour désinstaller, exécutez la commande copiée dans un terminal."
+
+msgid "Copy uninstall command to clipboard"
+msgstr "Copier la commande de désinstallation dans le presse-papiers"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "Commande de désinstallation copiée dans le presse-papiers !"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] Intégration WACK Shell"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Installé. Active les transitions en fondu croisé et les personnalisations du shell inspirées de Cupertino."
+
+msgid "Installed"
+msgstr "Installé"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Non installé. Installez WACK Shell pour débloquer les effets de transition."
+
+msgid "Not Installed"
+msgstr "Non installé"
+
+msgid "Install WACK Shell"
+msgstr "Installer WACK Shell"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "Profitez de transitions avancées en fondu croisé pour le bureau et de personnalisations du shell inspirées de Cupertino. Peut contenir des bogues, à signaler le cas échéant."
+
+msgid "Copy install command to clipboard"
+msgstr "Copier la commande d'installation dans le presse-papiers"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "Commande d'installation de WACK Shell copiée dans le presse-papiers !"
+
+msgid "Open WACK Shell repository"
+msgstr "Ouvrir le dépôt WACK Shell"
+

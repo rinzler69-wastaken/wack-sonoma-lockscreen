@@ -191,3 +191,84 @@ msgstr "Skjermtidsavbrudd"
 msgid "Time to wait before turning off the screen"
 msgstr "Ventetid før skjermen slås av"
 
+msgid "Extras"
+msgstr "Ekstra"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] GDM-utvidelse"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "Aktivert. Tilpasset utforming er aktiv på GDM."
+
+msgid "Enabled"
+msgstr "Aktivert"
+
+msgid "Disabled"
+msgstr "Deaktivert"
+
+msgid "Disabled."
+msgstr "Deaktivert."
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "GDM- og Cross Session-moduler mangler."
+
+msgid "GDM dconf override configuration is missing."
+msgstr "GDM dconf-overstyringskonfigurasjon mangler."
+
+msgid "GDM integration is not configured."
+msgstr "GDM-integrering er ikke konfigurert."
+
+msgid "Upgrade to Pro"
+msgstr "Oppgrader til Pro"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "Få et Sonoma-inspirert GDM-logg-inn-skjermutseende, og synkroniser bakgrunnsbilder automatisk fra den aktive brukersesjonen. For å oppgradere, kjør den kopierte kommandoen i en terminal."
+
+msgid "Copy upgrade command to clipboard"
+msgstr "Kopier oppgraderingskommando til utklippstavle"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "Oppgraderingskommando kopiert til utklippstavlen!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "Avinstaller GDM-utvidelse"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "Tilbakestill GDM-logg-inn-skjermutseende til GNOME-standard. For å avinstallere, kjør den kopierte kommandoen i en terminal."
+
+msgid "Copy uninstall command to clipboard"
+msgstr "Kopier avinstalleringskommando til utklippstavle"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "Avinstalleringskommando kopiert til utklippstavlen!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] WACK Shell-integrering"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Installert. Aktiverer crossfade-overganger og Cupertino-inspirerte skall-tilpasninger."
+
+msgid "Installed"
+msgstr "Installert"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Ikke installert. Installer WACK Shell for å låse opp overgangseffekter."
+
+msgid "Not Installed"
+msgstr "Ikke installert"
+
+msgid "Install WACK Shell"
+msgstr "Installer WACK Shell"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "Få avanserte skrivebordsoverganger og Cupertino-inspirerte skalltilpasninger. Kan inneholde feil, vennligst rapporter dem."
+
+msgid "Copy install command to clipboard"
+msgstr "Kopier installationskommando til utklippstavle"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "WACK Shell-installationskommando kopiert til utklippstavlen!"
+
+msgid "Open WACK Shell repository"
+msgstr "Åpne WACK Shell repository"
+

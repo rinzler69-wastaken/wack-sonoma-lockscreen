@@ -191,3 +191,84 @@ msgstr "स्क्रीन काल समापन"
 msgid "Time to wait before turning off the screen"
 msgstr "स्क्रीन बंद करने से पहले प्रतीक्षा समय"
 
+msgid "Extras"
+msgstr "अतिरिक्त"
+
+msgid "[PRO] GDM Expansion"
+msgstr "[PRO] GDM विस्तार"
+
+msgid "Enabled. Custom layout is active on GDM."
+msgstr "सक्षम। कस्टम लेआउट GDM पर सक्रिय है।"
+
+msgid "Enabled"
+msgstr "सक्षम"
+
+msgid "Disabled"
+msgstr "अक्षम"
+
+msgid "Disabled."
+msgstr "अक्षम।"
+
+msgid "GDM and Cross Session Module are missing."
+msgstr "GDM और क्रॉस सेशन मॉड्यूल गायब हैं।"
+
+msgid "GDM dconf override configuration is missing."
+msgstr "GDM dconf ओवरराइड कॉन्फ़िगरेशन गायब है।"
+
+msgid "GDM integration is not configured."
+msgstr "GDM एकीकरण कॉन्फ़िगर नहीं है।"
+
+msgid "Upgrade to Pro"
+msgstr "प्रो में अपग्रेड करें"
+
+msgid "Get a Sonoma-inspired GDM login screen layout and automatically synchronize your wallpapers from the active user session. To upgrade, run copied command in a terminal."
+msgstr "Sonoma-प्रेरित GDM लॉगिन स्क्रीन लेआउट प्राप्त करें और सक्रिय उपयोगकर्ता सत्र से अपने वॉलपेपर को स्वचालित रूप से सिंक्रनाइज़ करें। अपग्रेड करने के लिए, कॉपी किए गए कमांड को टर्मिनल में चलाएं।"
+
+msgid "Copy upgrade command to clipboard"
+msgstr "अपग्रेड कमांड को क्लिपबोर्ड पर कॉपी करें"
+
+msgid "Copied upgrade command to clipboard!"
+msgstr "अपग्रेड कमांड क्लिपबोर्ड पर कॉपी किया गया!"
+
+msgid "Uninstall GDM Expansion"
+msgstr "GDM विस्तार अनइंस्टॉल करें"
+
+msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgstr "GDM लॉगिन स्क्रीन लेआउट को GNOME डिफ़ॉल्ट पर वापस लाएं। अनइंस्टॉल करने के लिए, कॉपी किए गए कमांड को टर्मिनल में चलाएं।"
+
+msgid "Copy uninstall command to clipboard"
+msgstr "अनइंस्टॉल कमांड को क्लिपबोर्ड पर कॉपी करें"
+
+msgid "Copied uninstall command to clipboard!"
+msgstr "अनइंstॉल कमांड क्लिपबोर्ड पर कॉपी किया गया!"
+
+msgid "[BETA] WACK Shell Integration"
+msgstr "[BETA] WACK Shell एकीकरण"
+
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "स्थापित। क्रॉसफ़ेड संक्रमण और क्यूपर्टिनो-प्रेरित शेल अनुकूलन सक्षम करता है।"
+
+msgid "Installed"
+msgstr "स्थापित"
+
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "स्थापित नहीं है। संक्रमण प्रभावों को अनलॉक करने के लिए WACK Shell स्थापित करें।"
+
+msgid "Not Installed"
+msgstr "स्थापित नहीं"
+
+msgid "Install WACK Shell"
+msgstr "WACK Shell स्थापित करें"
+
+msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgstr "उन्नत डेस्कटॉप क्रॉसफ़ेड संक्रमण और क्यूपर्टिनो-प्रेरित शेल अनुकूलन प्राप्त करें। इसमें बग हो सकते हैं, मिलने पर रिपोर्ट करें।"
+
+msgid "Copy install command to clipboard"
+msgstr "इंस्टॉल कमांड को क्लिपबोर्ड पर कॉपी करें"
+
+msgid "Copied WACK Shell install command to clipboard!"
+msgstr "WACK Shell इंस्टॉल कमांड क्लिपबोर्ड पर कॉपी किया गया!"
+
+msgid "Open WACK Shell repository"
+msgstr "WACK Shell रिपोजिटरी खोलें"
+
