@@ -20,7 +20,7 @@ This specific extension focuses on the lock screen (unlockDialog), replacing the
 
 ## Features, and What it does
 - **NEW: [PRO] GDM Expansion** <br>
-Brings the macOS-style lock screen layouts, crossfade transitions, and custom auth prompt styling system-wide to the GDM login screen. <br><br>
+Brings the macOS-style lock screen layouts and custom auth prompt styling (ONLY Cupertino Mode styling) system-wide to the GDM login screen, as well as synchronised wallpapers between last active session and GDM. <br><br>
 
 - **Custom Clock Layout** <br>
 Repositions the date and time to the upper third of the screen. <br><br>
