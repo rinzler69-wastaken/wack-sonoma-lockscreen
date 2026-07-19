@@ -55,28 +55,37 @@ echo "=== WACK Lockscreen GDM DLC Installer ==="
 echo "Source Directory: $SRC_DIR"
 echo "Target Directory: $TARGET_DIR"
 
-if [ -f "$TARGET_DIR/gdm.js" ] && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
+FORCE=false
+if [ "${1:-}" = "--force" ]; then
+    FORCE=true
+fi
+
+if [ "$FORCE" = false ] && [ -f "$TARGET_DIR/gdm.js" ] && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
     echo ""
     echo "✨ GDM Expansion is already fully installed on this system!"
-    echo "You don't need to run this script again."
+    echo "To force a re-installation or re-configuration, run with --force."
     exit 0
 fi
 
 # 1. Sync extension system-wide
 echo "-> Deploying extension system-wide..."
 mkdir -p "$TARGET_DIR"
-if command -v rsync &> /dev/null; then
-    rsync -a --delete \
-        --exclude=".git*" \
-        --exclude="*.zip" \
-        --exclude="*.bak" \
-        --exclude="checkthisthingblyat" \
-        --exclude="gdm.js" \
-        --exclude="crossSessionManager.js" \
-        "$SRC_DIR/" "$TARGET_DIR/"
+if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
+    if command -v rsync &> /dev/null; then
+        rsync -a --delete \
+            --exclude=".git*" \
+            --exclude="*.zip" \
+            --exclude="*.bak" \
+            --exclude="checkthisthingblyat" \
+            --exclude="gdm.js" \
+            --exclude="crossSessionManager.js" \
+            "$SRC_DIR/" "$TARGET_DIR/"
+    else
+        echo "rsync not found, falling back to cp..."
+        cp -rT "$SRC_DIR" "$TARGET_DIR"
+    fi
 else
-    echo "rsync not found, falling back to cp..."
-    cp -rT "$SRC_DIR" "$TARGET_DIR"
+    echo "   Source and Target are the same directory. Skipping extension files sync."
 fi
 
 # 2. Deploy DLC modules (gdm.js and crossSessionManager.js)
@@ -84,8 +93,12 @@ echo "-> Deploying DLC modules..."
 REPO_RAW_URL="https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main"
 for module in "gdm.js" "crossSessionManager.js"; do
     if [ -f "$SRC_DIR/$module" ]; then
-        echo "   Copying local $module..."
-        cp "$SRC_DIR/$module" "$TARGET_DIR/"
+        if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
+            echo "   Copying local $module..."
+            cp "$SRC_DIR/$module" "$TARGET_DIR/"
+        else
+            echo "   Local $module already in target directory."
+        fi
     else
         echo "   Downloading $module from repository..."
         curl -sSL "$REPO_RAW_URL/$module" -o "$TARGET_DIR/$module"
@@ -138,8 +151,8 @@ dconf update
 
 echo "========================================="
 echo "GDM DLC installation complete!"
-echo "To apply changes, please restart GDM."
-echo "WARNING: Restarting GDM will terminate your current graphical session!"
+echo "To fully apply changes, you can restart GDM (WARNING: this terminates your current session)."
+echo "Alternatively, lock your screen and click 'Switch User' to preview the new GDM look!"
 echo ""
 read -rp "Would you like to restart GDM now? (y/N): " choice
 case "$choice" in
@@ -148,6 +161,7 @@ case "$choice" in
         systemctl restart gdm || service gdm restart
         ;;
     *)
-        echo "Please run 'sudo systemctl restart gdm' later when you are ready to apply the changes."
+        echo "Please run 'sudo systemctl restart gdm' later when you are ready to fully apply the changes,"
+        echo "or lock your screen and click 'Switch User' to see your new GDM lockscreen."
         ;;
 esac
