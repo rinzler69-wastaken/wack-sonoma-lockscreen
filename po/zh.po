@@ -248,6 +248,9 @@ msgstr "[BETA] WACK Shell 集成"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "已安装。启用淡入淡出过渡和受库比蒂诺启发的系统外壳定制。"
 
+msgid "Upcoming and Advanced Features"
+msgstr "即将推出和高级功能"
+
 msgid "Installed"
 msgstr "已安装"
 

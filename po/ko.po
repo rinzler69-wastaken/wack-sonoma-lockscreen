@@ -248,6 +248,9 @@ msgstr "[BETA] WACK Shell 통합"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "설치됨. 크로스페이드 트랜지션 및 쿠퍼티노 스타일의 셸 사용자 정의를 활성화합니다."
 
+msgid "Upcoming and Advanced Features"
+msgstr "향후 및 고급 기능"
+
 msgid "Installed"
 msgstr "설치됨"
 

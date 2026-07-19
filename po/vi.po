@@ -248,6 +248,9 @@ msgstr "[BETA] Tích hợp WACK Shell"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "Đã cài đặt. Cho phép các hiệu ứng chuyển cảnh mờ dần và tùy chỉnh giao diện lấy cảm hứng từ Cupertino."
 
+msgid "Upcoming and Advanced Features"
+msgstr "Tính năng sắp tới và nâng cao"
+
 msgid "Installed"
 msgstr "Đã cài đặt"
 

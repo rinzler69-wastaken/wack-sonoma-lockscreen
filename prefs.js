@@ -779,7 +779,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         if (showDocs) {
             const docsRow = new Adw.ActionRow({
-                title: _('Upcoming Features'),
+                title: _('Upcoming and Advanced Features'),
                 subtitle: _('Check out this extension\'s GitHub repo for cool features in the works.'),
             });
             const docsBtn = new Gtk.Button({

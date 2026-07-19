@@ -248,6 +248,9 @@ msgstr ""
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr ""
 
+msgid "Upcoming and Advanced Features"
+msgstr ""
+
 msgid "Installed"
 msgstr ""
 

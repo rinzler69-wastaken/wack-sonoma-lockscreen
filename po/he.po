@@ -248,6 +248,9 @@ msgstr "[BETA] שילוב WACK Shell"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "מותקן. מאפשר מעברי עמעום והתאמות אישיות של מעטפת המערכת בסגנון קופרטינו."
 
+msgid "Upcoming and Advanced Features"
+msgstr "תכונות קרובות ומתקדמות"
+
 msgid "Installed"
 msgstr "מותקן"
 

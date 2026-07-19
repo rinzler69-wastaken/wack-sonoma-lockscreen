@@ -248,6 +248,9 @@ msgstr "[BETA] WACK Shell एकीकरण"
 msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr "स्थापित। क्रॉसफ़ेड संक्रमण और क्यूपर्टिनो-प्रेरित शेल अनुकूलन सक्षम करता है।"
 
+msgid "Upcoming and Advanced Features"
+msgstr "आने वाली और उन्नत विशेषताएँ"
+
 msgid "Installed"
 msgstr "स्थापित"
 
