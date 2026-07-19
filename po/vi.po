@@ -284,3 +284,9 @@ msgstr "Sao chép lệnh kiểm tra cập nhật vào bộ nhớ tạm"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "Đã sao chép lệnh kiểm tra cập nhật WACK Shell vào bộ nhớ tạm!"
 
+msgid "Extras - Status"
+msgstr "Tiện ích bổ sung - Trạng thái"
+
+msgid "Extras - Actions"
+msgstr "Tiện ích bổ sung - Hành động"
+

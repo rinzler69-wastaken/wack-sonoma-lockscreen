@@ -284,3 +284,9 @@ msgstr "Copia il comando di verifica dell'aggiornamento negli appunti"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "Comando di verifica dell'aggiornamento di WACK Shell copiato negli appunti!"
 
+msgid "Extras - Status"
+msgstr "Extra - Stato"
+
+msgid "Extras - Actions"
+msgstr "Extra - Azioni"
+

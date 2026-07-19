@@ -284,3 +284,9 @@ msgstr "העתק את פקודת בדיקת העדכונים ללוח"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "פקודת בדיקת העדכונים של WACK Shell הועתקה ללוח!"
 
+msgid "Extras - Status"
+msgstr "תוספות - סטטוס"
+
+msgid "Extras - Actions"
+msgstr "תוספות - פעולות"
+

@@ -284,3 +284,9 @@ msgstr "Skopiuj polecenie sprawdzania aktualizacji do schowka"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "Skopiowano polecenie sprawdzania aktualizacji WACK Shell do schowka!"
 
+msgid "Extras - Status"
+msgstr "Dodatki - Status"
+
+msgid "Extras - Actions"
+msgstr "Dodatki - Akcje"
+

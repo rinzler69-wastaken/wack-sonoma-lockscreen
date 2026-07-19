@@ -284,3 +284,9 @@ msgstr "更新確認コマンドをクリップボードにコピー"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "WACK Shell の更新確認コマンドをクリップボードにコピーしました！"
 
+msgid "Extras - Status"
+msgstr "追加機能 - ステータス"
+
+msgid "Extras - Actions"
+msgstr "追加機能 - アクション"
+

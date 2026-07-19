@@ -284,3 +284,9 @@ msgstr "Update-Prüfbefehl in die Zwischenablage kopieren"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "WACK Shell Update-Prüfbefehl in die Zwischenablage kopiert!"
 
+msgid "Extras - Status"
+msgstr "Extras - Status"
+
+msgid "Extras - Actions"
+msgstr "Extras - Aktionen"
+

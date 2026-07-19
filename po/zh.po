@@ -284,3 +284,9 @@ msgstr "复制更新检查命令到剪贴板"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "已复制 WACK Shell 更新检查命令到剪贴板！"
 
+msgid "Extras - Status"
+msgstr "附加功能 - 状态"
+
+msgid "Extras - Actions"
+msgstr "附加功能 - 操作"
+

@@ -284,3 +284,9 @@ msgstr ""
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr ""
 
+msgid "Extras - Status"
+msgstr ""
+
+msgid "Extras - Actions"
+msgstr ""
+

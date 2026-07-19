@@ -284,3 +284,9 @@ msgstr "نسخ أمر التحقق من التحديث إلى الحافظة"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "تم نسخ أمر التحقق من تحديث WACK Shell إلى الحافظة!"
 
+msgid "Extras - Status"
+msgstr "الإضافات - الحالة"
+
+msgid "Extras - Actions"
+msgstr "الإضافات - الإجراءات"
+

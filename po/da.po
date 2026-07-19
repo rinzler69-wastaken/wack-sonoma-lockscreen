@@ -284,3 +284,9 @@ msgstr "Kopier opdateringskontrolkommando til udklipsholder"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "Kopierede WACK Shell-opdateringskontrolkommando til udklipsholder!"
 
+msgid "Extras - Status"
+msgstr "Ekstra - Status"
+
+msgid "Extras - Actions"
+msgstr "Ekstra - Handlinger"
+

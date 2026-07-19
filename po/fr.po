@@ -284,3 +284,9 @@ msgstr "Copier la commande de vérification de mise à jour dans le presse-papie
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "Commande de vérification de mise à jour WACK Shell copiée dans le presse-papiers !"
 
+msgid "Extras - Status"
+msgstr "Extras - Statut"
+
+msgid "Extras - Actions"
+msgstr "Extras - Actions"
+

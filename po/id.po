@@ -284,3 +284,9 @@ msgstr "Salin perintah pemeriksaan pembaruan ke papan klip"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "Perintah pemeriksaan pembaruan WACK Shell disalin ke papan klip!"
 
+msgid "Extras - Status"
+msgstr "Ekstra - Status"
+
+msgid "Extras - Actions"
+msgstr "Ekstra - Tindakan"
+

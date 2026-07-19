@@ -284,3 +284,9 @@ msgstr "Kopieer update-controlecommando naar klembord"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "WACK Shell update-controlecommando naar klembord gekopieerd!"
 
+msgid "Extras - Status"
+msgstr "Extra's - Status"
+
+msgid "Extras - Actions"
+msgstr "Extra's - Acties"
+

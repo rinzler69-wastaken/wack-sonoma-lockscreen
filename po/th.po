@@ -284,3 +284,9 @@ msgstr "คัดลอกคำสั่งตรวจสอบการอั
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "คัดลอกคำสั่งตรวจสอบการอัปเดตของ WACK Shell ไปยังคลิปบอร์ดแล้ว!"
 
+msgid "Extras - Status"
+msgstr "ส่วนเสริม - สถานะ"
+
+msgid "Extras - Actions"
+msgstr "ส่วนเสริม - การดำเนินการ"
+

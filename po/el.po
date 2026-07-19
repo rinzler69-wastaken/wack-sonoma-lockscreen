@@ -284,3 +284,9 @@ msgstr "Αντιγραφή εντολής ελέγχου ενημέρωσης σ
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "Η εντολή ελέγχου ενημέρωσης του WACK Shell αντιγράφηκε στο πρόχειρο!"
 
+msgid "Extras - Status"
+msgstr "Πρόσθετα - Κατάσταση"
+
+msgid "Extras - Actions"
+msgstr "Πρόσθετα - Ενέργειες"
+

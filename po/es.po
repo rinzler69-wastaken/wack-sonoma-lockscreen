@@ -284,3 +284,9 @@ msgstr "Copiar comando de verificación de actualización al portapapeles"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "¡Comando de verif. de actualización de WACK Shell copiado al portapapeles!"
 
+msgid "Extras - Status"
+msgstr "Extras - Estado"
+
+msgid "Extras - Actions"
+msgstr "Extras - Acciones"
+

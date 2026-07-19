@@ -284,3 +284,9 @@ msgstr "Güncelleme kontrol komutunu panoya kopyala"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "WACK Shell güncelleme kontrol komutu panoya kopyalandı!"
 
+msgid "Extras - Status"
+msgstr "Ekstralar - Durum"
+
+msgid "Extras - Actions"
+msgstr "Ekstralar - Eylemler"
+

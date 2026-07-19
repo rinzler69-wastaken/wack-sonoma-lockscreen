@@ -284,3 +284,9 @@ msgstr "Copiar comando de verificação de atualização para a área de transfe
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "Comando de verificação de atualização do WACK Shell copiado para a área de transferência!"
 
+msgid "Extras - Status"
+msgstr "Extras - Status"
+
+msgid "Extras - Actions"
+msgstr "Extras - Ações"
+

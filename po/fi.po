@@ -284,3 +284,9 @@ msgstr "Kopioi päivityksen tarkistuskomento leikepöydälle"
 msgid "Copied WACK Shell update-check command to clipboard!"
 msgstr "WACK Shell -päivityksen tarkistuskomento kopioitu leikepöydälle!"
 
+msgid "Extras - Status"
+msgstr "Lisäominaisuudet - Tila"
+
+msgid "Extras - Actions"
+msgstr "Lisäominaisuudet - Toiminnot"
+
