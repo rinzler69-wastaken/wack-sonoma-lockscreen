@@ -833,7 +833,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             extrasActionsGroup.add(upgradeRow);
         } else {
             const uninstallRow = new Adw.ActionRow({
-                title: _('Uninstall GDM Expansion'),
+                title: _('GDM Expansion - Remove'),
                 subtitle: _('Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal.'),
             });
 
@@ -872,7 +872,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             extrasStatusGroup.add(wackShellRow);
 
             const checkUpdatesRow = new Adw.ActionRow({
-                title: _('Check for Updates'),
+                title: _('WACK Shell - Check for Updates'),
                 subtitle: _('Copy check command to verify if a newer version of WACK Shell is available.'),
             });
 
@@ -900,7 +900,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             extrasStatusGroup.add(wackShellRow);
 
             const installShellRow = new Adw.ActionRow({
-                title: _('Install WACK Shell'),
+                title: _('WACK Shell - Install'),
                 subtitle: _('Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found.'),
             });
 
