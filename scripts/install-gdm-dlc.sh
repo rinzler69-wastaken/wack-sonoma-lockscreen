@@ -60,7 +60,7 @@ fi
 
 # 2. Deploy DLC modules (gdm.js and crossSessionManager.js)
 echo "-> Deploying DLC modules..."
-REPO_RAW_URL="https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main"
+REPO_RAW_URL="https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/gdm-windowfade2"
 for module in "gdm.js" "crossSessionManager.js"; do
     if [ -f "$SRC_DIR/$module" ]; then
         echo "   Copying local $module..."
