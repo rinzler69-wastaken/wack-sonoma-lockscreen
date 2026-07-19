@@ -81,9 +81,21 @@ echo "=========================================="
 # 1. Deploy/Clone repository
 if [ -d "$EXT_DIR" ]; then
     if [ -d "$EXT_DIR/.git" ]; then
-        echo "-> Existing Git repository detected. Pulling latest main..."
+        echo "-> Existing Git repository detected. Checking remote status..."
         cd "$EXT_DIR"
-        git fetch origin main
+        git fetch -q origin main || { echo "Error: Failed to fetch remote repository updates."; exit 1; }
+        
+        LOCAL_SHA=$(git rev-parse HEAD)
+        REMOTE_SHA=$(git rev-parse origin/main)
+        
+        if [ "$LOCAL_SHA" = "$REMOTE_SHA" ] && [ "$1" != "--force" ]; then
+            LOCAL_VER=$(python3 -c "import json; print(json.load(open('metadata.json')).get('version-name', ''))" 2>/dev/null || echo "unknown")
+            echo "-> WACK Shell is already up to date! (Version: $LOCAL_VER, Commit: ${LOCAL_SHA:0:7})"
+            echo "-> If you want to force a re-installation, run with --force."
+            exit 0
+        fi
+        
+        echo "-> Update found or force requested. Pulling latest main..."
         git reset --hard origin/main
     else
         echo "-> Existing directory found (non-Git). Reinstalling cleanly..."
