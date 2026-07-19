@@ -16,8 +16,26 @@ if [ "$EUID" -ne 0 ]; then
     exec sudo bash "$0" "$@"
 fi
 
-# Detect source directory (directory containing this script)
-SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Detect source directory (handle script inside scripts/ subfolder or running via curl | bash)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/../metadata.json" ]; then
+    SRC_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+else
+    # Fallback to local user extension directory
+    # Detect the actual home directory of the sudoer if run under sudo
+    REAL_HOME="${SUDO_USER_HOME:-${HOME}}"
+    if [ -n "${SUDO_USER:-}" ]; then
+        REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+    fi
+    LOCAL_USER_DIR="$REAL_HOME/.local/share/gnome-shell/extensions/$UUID"
+    if [ -f "$LOCAL_USER_DIR/metadata.json" ]; then
+        SRC_DIR="$LOCAL_USER_DIR"
+    else
+        echo "Error: Could not locate Sonoma Lockscreen installation directory."
+        echo "Please install the extension first (e.g. from Extensions.gnome.org)."
+        exit 1
+    fi
+fi
 
 echo "=== WACK Lockscreen GDM DLC Installer ==="
 echo "Source Directory: $SRC_DIR"
@@ -32,13 +50,28 @@ if command -v rsync &> /dev/null; then
         --exclude="*.zip" \
         --exclude="*.bak" \
         --exclude="checkthisthingblyat" \
+        --exclude="gdm.js" \
+        --exclude="crossSessionManager.js" \
         "$SRC_DIR/" "$TARGET_DIR/"
 else
     echo "rsync not found, falling back to cp..."
     cp -rT "$SRC_DIR" "$TARGET_DIR"
 fi
 
-# 2. Patch metadata.json to include 'gdm' in session-modes
+# 2. Deploy DLC modules (gdm.js and crossSessionManager.js)
+echo "-> Deploying DLC modules..."
+REPO_RAW_URL="https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main"
+for module in "gdm.js" "crossSessionManager.js"; do
+    if [ -f "$SRC_DIR/$module" ]; then
+        echo "   Copying local $module..."
+        cp "$SRC_DIR/$module" "$TARGET_DIR/"
+    else
+        echo "   Downloading $module from repository..."
+        curl -sSL "$REPO_RAW_URL/$module" -o "$TARGET_DIR/$module"
+    fi
+done
+
+# 3. Patch metadata.json to include 'gdm' in session-modes
 echo "-> Adding 'gdm' session-mode in metadata.json..."
 python3 -c "
 import json, sys
@@ -60,7 +93,7 @@ except Exception as e:
     sys.exit(1)
 "
 
-# 3. Compile schemas system-wide
+# 4. Compile schemas system-wide
 echo "-> Compiling GSettings schemas..."
 if [ -d "$TARGET_DIR/schemas" ]; then
     glib-compile-schemas "$TARGET_DIR/schemas/"
@@ -68,7 +101,7 @@ else
     echo "Warning: No schemas directory found in target!"
 fi
 
-# 4. Configure GDM dconf system-db overrides
+# 5. Configure GDM dconf system-db overrides
 echo "-> Configuring GDM dconf system-db overrides..."
 mkdir -p "$DCONF_GDM_DIR"
 cat <<EOF > "$DCONF_FILE"
@@ -78,7 +111,7 @@ disable-user-extensions=false
 EOF
 chmod 644 "$DCONF_FILE"
 
-# 5. Compile the GDM dconf binary database
+# 6. Compile the GDM dconf binary database
 echo "-> Compiling dconf database..."
 dconf update
 
