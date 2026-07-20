@@ -129,6 +129,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 _logError(`[WACK/GDM] Failed to dynamically load GDM DLC: ${err.message}`);
             });
         }
+        // </GDM_EXCLUDE>
         // <GDM_EXCLUDE>
         this._syncCrossSessionManager();
         // </GDM_EXCLUDE>

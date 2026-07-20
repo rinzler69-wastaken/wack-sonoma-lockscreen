@@ -34,13 +34,34 @@ function _isWackShellEnabled() {
 // <GDM_EXCLUDE>
 function _getGdmStatus(dir) {
     try {
-        if (!dir)
-            return { enabled: false, reason: 'missing-dir' };
+        const sysPath = '/usr/share/gnome-shell/extensions/wack-lockscreen-clock@rinzler69-wastaken.github.com';
+        const sysDir = Gio.File.new_for_path(sysPath);
 
-        const hasProJs = dir.get_child('pro.js').query_exists(null);
-        const hasCrossSessionJs = dir.get_child('crossSessionManager.js').query_exists(null);
+        const activeDir = (sysDir.query_exists(null)) ? sysDir : dir;
+        if (!activeDir || !activeDir.query_exists(null))
+            return { enabled: false, reason: 'missing-sys-install' };
+
+        const hasProJs = activeDir.get_child('pro.js').query_exists(null);
+        const hasCrossSessionJs = activeDir.get_child('crossSessionManager.js').query_exists(null);
         if (!hasProJs || !hasCrossSessionJs)
             return { enabled: false, reason: 'missing-modules' };
+
+        let hasGdmSessionMode = false;
+        try {
+            const file = activeDir.get_child('metadata.json');
+            const [, contents] = file.load_contents(null);
+            const decoder = new TextDecoder('utf-8');
+            const metadata = JSON.parse(decoder.decode(contents));
+            hasGdmSessionMode = metadata['session-modes']?.includes('gdm') ?? false;
+        } catch (e) {
+            // ignore
+        }
+        if (!hasGdmSessionMode)
+            return { enabled: false, reason: 'missing-session-mode' };
+
+        const dconfFile = Gio.File.new_for_path('/etc/dconf/db/gdm.d/99-wack-lockscreen');
+        if (!dconfFile.query_exists(null))
+            return { enabled: false, reason: 'missing-dconf' };
 
         return { enabled: true, reason: 'ok' };
     } catch (e) {
@@ -739,10 +760,10 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         if (gdmStatus.enabled) {
             showDocs = false;
-            // 1. GDM Expansion Expander Row
+            // 1. GDM Expansion Expander Row (Enabled)
             const gdmExpander = new Adw.ExpanderRow({
                 title: _('[PRO] GDM Expansion'),
-                subtitle: _('Enabled. Custom layout is active on GDM.'),
+                subtitle: _('Status: Enabled. Custom layout is active on GDM.'),
             });
 
             const gdmStatusLabel = new Gtk.Label({
@@ -773,6 +794,54 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
             uninstallRow.add_suffix(copyBtn);
             gdmExpander.add_row(uninstallRow);
+            extrasGroup.add(gdmExpander);
+        } else {
+            let explanation = '';
+            if (gdmStatus.reason === 'missing-sys-install') {
+                explanation = _('Extension is not installed system-wide in /usr/share.');
+            } else if (gdmStatus.reason === 'missing-modules') {
+                explanation = _('GDM expansion modules (pro.js) are missing system-wide.');
+            } else if (gdmStatus.reason === 'missing-session-mode') {
+                explanation = _('GDM session mode is not enabled in system-wide metadata.');
+            } else if (gdmStatus.reason === 'missing-dconf') {
+                explanation = _('GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing.');
+            } else {
+                explanation = _('GDM integration is not configured.');
+            }
+
+            const gdmExpander = new Adw.ExpanderRow({
+                title: _('[PRO] GDM Expansion'),
+                subtitle: `${_('Status: Disabled.')} ${explanation}`,
+            });
+
+            const gdmStatusLabel = new Gtk.Label({
+                valign: Gtk.Align.CENTER,
+                label: _('Disabled'),
+            });
+            gdmStatusLabel.add_css_class('error');
+            gdmExpander.add_suffix(gdmStatusLabel);
+
+            const installRow = new Adw.ActionRow({
+                title: _('Enable GDM DLC Support'),
+                subtitle: _('Click icon to copy installer command, then run it in a terminal.'),
+            });
+
+            const copyInstallBtn = new Gtk.Button({
+                icon_name: 'edit-copy-symbolic',
+                tooltip_text: _('Copy install command to clipboard'),
+                css_classes: ['flat'],
+                valign: Gtk.Align.CENTER,
+            });
+            copyInstallBtn.connect('clicked', () => {
+                const clipboard = Gdk.Display.get_default().get_clipboard();
+                clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-gdm-dlc.sh | bash');
+                window.add_toast(new Adw.Toast({
+                    title: _('Copied install command to clipboard!'),
+                }));
+            });
+
+            installRow.add_suffix(copyInstallBtn);
+            gdmExpander.add_row(installRow);
             extrasGroup.add(gdmExpander);
         }
         // </GDM_EXCLUDE>
