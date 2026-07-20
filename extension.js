@@ -342,6 +342,10 @@ export default class WackLockscreenClockExtension extends Extension {
                         // Fallback in case GDM's finish hangs or never calls onComplete.
                         // Give the shell a short grace period instead of forcing completion
                         // on the very next idle, which can race a legitimate async finish.
+                        if (this._finishFallbackId) {
+                            GLib.source_remove(this._finishFallbackId);
+                            this._finishFallbackId = null;
+                        }
                         this._finishFallbackId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
                             this._finishFallbackId = null;
                             safeOnComplete();
@@ -849,11 +853,16 @@ export default class WackLockscreenClockExtension extends Extension {
         const dialog = this._dialog;
         if (!dialog) return;
 
+        if (this._cursorBlinkTimeoutId) {
+            GLib.source_remove(this._cursorBlinkTimeoutId);
+            this._cursorBlinkTimeoutId = null;
+        }
+
         let visible = true;
         this._cursorBlinkTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
             const currentDialog = this._dialog;
             if (!currentDialog || !this._promptActive) {
-                this._cursorBlinkTimeoutId = 0;
+                this._cursorBlinkTimeoutId = null;
                 return GLib.SOURCE_REMOVE;
             }
 
@@ -881,7 +890,7 @@ export default class WackLockscreenClockExtension extends Extension {
     _stopCursorBlink() {
         if (this._cursorBlinkTimeoutId) {
             GLib.source_remove(this._cursorBlinkTimeoutId);
-            this._cursorBlinkTimeoutId = 0;
+            this._cursorBlinkTimeoutId = null;
         }
     }
 
@@ -1487,6 +1496,11 @@ export default class WackLockscreenClockExtension extends Extension {
             this._cupertinoRestPrompt.setNotifCount(0);
         }
 
+        if (this._inhibitHintTimeoutId) {
+            GLib.source_remove(this._inhibitHintTimeoutId);
+            this._inhibitHintTimeoutId = null;
+        }
+
         this._inhibitHintTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
             this._showingInhibitHint = false;
             this._inhibitHintTimeoutId = null;
@@ -1699,6 +1713,10 @@ export default class WackLockscreenClockExtension extends Extension {
                 this._cupertinoHintIsToggle = false;
                 this._cupertinoRestPrompt.setHintText(this._cupertinoBaseHintText);
 
+                if (this._cupertinoHintCycleId) {
+                    GLib.source_remove(this._cupertinoHintCycleId);
+                    this._cupertinoHintCycleId = null;
+                }
                 this._cupertinoHintCycleId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 8, () => {
                     this._cupertinoHintIsToggle = !this._cupertinoHintIsToggle;
                     const nextText = this._cupertinoHintIsToggle ? this._cupertinoToggleHintText : this._cupertinoBaseHintText;
