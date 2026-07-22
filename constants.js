@@ -50,17 +50,15 @@ export const CROSSFADE_SPEED_SLOW = 400;
 export const CROSSFADE_SPEED_FAST = 300;
 
 export function getPrettyDate() {
+    // Respect LC_TIME (date/time formatting) over LANG (UI language) — toLocaleDateString(undefined) only reads LANG.
+    let locale = (GLib.getenv('LC_TIME') || GLib.getenv('LANG') || '').split('.')[0].replace('_', '-');
+    if (!locale || locale === 'C' || locale === 'POSIX')
+        locale = 'en-US';
     try {
-        const now = GLib.DateTime.new_now_local();
-        const day = now.get_day_of_month();
-        return `${now.format('%A, %B')} ${day}`;
+        return new Date().toLocaleDateString(locale, {weekday: 'long', month: 'long', day: 'numeric'});
     } catch (e) {
-        const now = new Date();
-        return now.toLocaleDateString(undefined, {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-        });
+        // Bad locale string — let the engine pick.
+        return new Date().toLocaleDateString(undefined, {weekday: 'long', month: 'long', day: 'numeric'});
     }
 }
 
