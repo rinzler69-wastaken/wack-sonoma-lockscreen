@@ -805,8 +805,24 @@ _syncLockscreenMessageLayout() {
     }
 
     _createBackground(monitorIndex) {
+        // Disabled 2026-08-21: this created opaque St.Widgets (style_class
+        // 'screen-shield-background', which the stock shell theme renders as
+        // solid black before any inline background-image is set) stacked
+        // above GDM's own native background. _applyWallpaper() only fills
+        // them in when a cross-session wallpaper-sync file exists — which it
+        // never does for a fresh GDM greeter (no one is logged in yet, and
+        // the extension's user-session half isn't installed) — so the layer
+        // stayed permanently black, covering the working
+        // com.ubuntu.login-screen background underneath. No-op'd rather than
+        // guarded in _applyWallpaper, since every call site of that function
+        // needs the same behavior: never create the cover layer, let GDM's
+        // native background render untouched. _bgManagers stays empty, which
+        // the rest of _applyWallpaper() already handles safely (its loops
+        // over _bgManagers just iterate zero times).
+        return;
+        // eslint-disable-next-line no-unreachable
         let monitor = Main.layoutManager.monitors[monitorIndex];
-        
+
         let createWidget = () => new St.Widget({
             style_class: 'screen-shield-background',
             x: monitor.x,
@@ -1559,18 +1575,20 @@ _syncLockscreenMessageLayout() {
                 yCenterFraction: yCenterFraction,
             };
         } else {
-            const bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
-            const uri = bgSettings.get_string('picture-uri');
-            const style = bgSettings.get_enum('picture-options');
-            wallpaperParams = {
-                uri,
-                isColor: style === 0,
-                primaryColor: bgSettings.get_string('primary-color'),
-                secondaryColor: bgSettings.get_string('secondary-color'),
-                shadingType: bgSettings.get_enum('color-shading-type'),
-                wellH: wellH,
-                yCenterFraction: yCenterFraction,
-            };
+            // No cross-session wallpaper-sync metadata exists in gdm mode (no one
+            // is logged in yet, and the extension's user-session half isn't
+            // installed) — this branch previously read org.gnome.desktop.background,
+            // which for the gdm-greeter identity resolves to Ubuntu/Yaru's own
+            // stock default (picture-options=none, primary-color=Ubuntu aubergine),
+            // not our actual com.ubuntu.login-screen wallpaper. That produced an
+            // orange/aubergine prompt background instead of matching our trees
+            // background. Fixed value instead of sampling: a plain dark tint reads
+            // correctly against any GDM background without depending on a schema
+            // that was never meant for this.
+            this._applyPromptEntryBackground(entry, { r: 0, g: 0, b: 0, shadowAlpha: 0.0175 });
+            if (authPrompt.cancelButton)
+                this._applyCancelButtonBackground(authPrompt.cancelButton, { r: 0, g: 0, b: 0, shadowAlpha: 0.0175 });
+            return;
         }
 
         if (!wallpaperParams)
