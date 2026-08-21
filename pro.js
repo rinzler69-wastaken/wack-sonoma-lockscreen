@@ -1577,17 +1577,20 @@ _syncLockscreenMessageLayout() {
         } else {
             // No cross-session wallpaper-sync metadata exists in gdm mode (no one
             // is logged in yet, and the extension's user-session half isn't
-            // installed) — this branch previously read org.gnome.desktop.background,
-            // which for the gdm-greeter identity resolves to Ubuntu/Yaru's own
-            // stock default (picture-options=none, primary-color=Ubuntu aubergine),
-            // not our actual com.ubuntu.login-screen wallpaper. That produced an
-            // orange/aubergine prompt background instead of matching our trees
-            // background. Fixed value instead of sampling: a plain dark tint reads
-            // correctly against any GDM background without depending on a schema
-            // that was never meant for this.
-            this._applyPromptEntryBackground(entry, { r: 0, g: 0, b: 0, shadowAlpha: 0.0175 });
+            // installed there) — this branch previously fell through to sampling
+            // org.gnome.desktop.background, the *user's own* desktop-background
+            // schema. That's meaningless for the gdm-greeter identity: it isn't
+            // the schema GDM itself reads for its background (distros differ —
+            // e.g. Ubuntu's own gdm3 uses com.ubuntu.login-screen instead), so it
+            // resolves to whatever stock/theme default that schema happens to
+            // carry rather than anything related to what's actually on screen.
+            // Fall back to the same neutral dark tint getWallpaperPromptColor()
+            // itself already uses as a safe default (see `sampled` above) instead
+            // of reading a schema that was never meant for this context.
+            const fallback = { r: 40, g: 40, b: 40, shadowAlpha: 0.0175 };
+            this._applyPromptEntryBackground(entry, fallback);
             if (authPrompt.cancelButton)
-                this._applyCancelButtonBackground(authPrompt.cancelButton, { r: 0, g: 0, b: 0, shadowAlpha: 0.0175 });
+                this._applyCancelButtonBackground(authPrompt.cancelButton, fallback);
             return;
         }
 
