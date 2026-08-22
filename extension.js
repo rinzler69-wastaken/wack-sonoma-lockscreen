@@ -134,6 +134,19 @@ export default class WackLockscreenClockExtension extends Extension {
         this._syncCrossSessionManager();
         // </GDM_EXCLUDE>
 
+        // <GDM_EXCLUDE>
+        // Everything below this point patches Main.screenShield._dialog — the
+        // in-session UnlockDialog (unlock-dialog mode). GDM's own LoginDialog
+        // (js/gdm/loginDialog.js) is architecturally distinct: it has no _stack,
+        // no _clock, and several other internal properties this code assumes
+        // exist. pro.js's GdmManager (loaded above) is the complete, independent
+        // implementation for gdm mode, including its own WackClock instance —
+        // this block was never meant to run there at all. Guarding here,
+        // structurally, instead of patching each UnlockDialog-only property
+        // access one at a time as GNOME 50 crashes on them.
+        if (Main.sessionMode.currentMode === 'gdm') return;
+        // </GDM_EXCLUDE>
+
         const dialog = Main.screenShield._dialog;
         _log(`[WACK] enable() called, dialog=${!!dialog}`);
         if (!dialog) return;
@@ -201,14 +214,23 @@ export default class WackLockscreenClockExtension extends Extension {
         }
 
         // ── Justified Duct Tape: User Switch Visibility ───────────────────
-        this._origUpdateUserSwitchVisibility = dialog._updateUserSwitchVisibility.bind(dialog);
-        dialog._updateUserSwitchVisibility = () => {
-            this._origUpdateUserSwitchVisibility();
-            if (this._lockscreenMode === 'cupertino') {
-                dialog._otherUserButton.visible = false;
-            }
-        };
-        dialog._updateUserSwitchVisibility();
+        // GNOME 50.1 renamed/removed dialog._updateUserSwitchVisibility (an internal,
+        // undocumented API to begin with — not guaranteed stable across releases).
+        // Guarded so a missing internal method degrades gracefully (the other-user
+        // button just won't auto-hide on visibility updates) instead of throwing and
+        // aborting the rest of enable() entirely.
+        if (typeof dialog._updateUserSwitchVisibility === 'function') {
+            this._origUpdateUserSwitchVisibility = dialog._updateUserSwitchVisibility.bind(dialog);
+            dialog._updateUserSwitchVisibility = () => {
+                this._origUpdateUserSwitchVisibility();
+                if (this._lockscreenMode === 'cupertino' && dialog._otherUserButton) {
+                    dialog._otherUserButton.visible = false;
+                }
+            };
+            dialog._updateUserSwitchVisibility();
+        } else if (this._lockscreenMode === 'cupertino' && dialog._otherUserButton) {
+            dialog._otherUserButton.visible = false;
+        }
 
         // ── Justified Duct Tape: Finish Intercept for Cupertino Fade-out ──
         this._origFinish = dialog.finish.bind(dialog);
@@ -396,17 +418,23 @@ export default class WackLockscreenClockExtension extends Extension {
             }
         };
 
-        dialog._notificationsBox.connectObject(
-            'notify::height', () => {
-                this._positionHint();
-                this._notifManager.positionOverflow();
-            },
-            'notify::visible', () => {
-                this._positionHint();
-                this._notifManager.positionOverflow();
-            },
-            this
-        );
+        // GNOME 50.1: dialog._notificationsBox renamed/removed (another internal,
+        // undocumented property) — guarded the same way as _updateUserSwitchVisibility
+        // above. Notification-box repositioning just won't auto-track height/visibility
+        // changes if this property is gone; everything else in enable() still runs.
+        if (dialog._notificationsBox) {
+            dialog._notificationsBox.connectObject(
+                'notify::height', () => {
+                    this._positionHint();
+                    this._notifManager.positionOverflow();
+                },
+                'notify::visible', () => {
+                    this._positionHint();
+                    this._notifManager.positionOverflow();
+                },
+                this
+            );
+        }
 
         // ── Clock Setup & Constraint-based Centering ──────────────────────
         dialog._stack.remove_child(dialog._clock);
