@@ -805,22 +805,6 @@ _syncLockscreenMessageLayout() {
     }
 
     _createBackground(monitorIndex) {
-        // Disabled 2026-08-21: this created opaque St.Widgets (style_class
-        // 'screen-shield-background', which the stock shell theme renders as
-        // solid black before any inline background-image is set) stacked
-        // above GDM's own native background. _applyWallpaper() only fills
-        // them in when a cross-session wallpaper-sync file exists — which it
-        // never does for a fresh GDM greeter (no one is logged in yet, and
-        // the extension's user-session half isn't installed) — so the layer
-        // stayed permanently black, covering the working
-        // com.ubuntu.login-screen background underneath. No-op'd rather than
-        // guarded in _applyWallpaper, since every call site of that function
-        // needs the same behavior: never create the cover layer, let GDM's
-        // native background render untouched. _bgManagers stays empty, which
-        // the rest of _applyWallpaper() already handles safely (its loops
-        // over _bgManagers just iterate zero times).
-        return;
-        // eslint-disable-next-line no-unreachable
         let monitor = Main.layoutManager.monitors[monitorIndex];
 
         let createWidget = () => new St.Widget({
@@ -834,8 +818,13 @@ _syncLockscreenMessageLayout() {
 
         let widgetA = createWidget();
         let widgetB = createWidget();
-        
-        widgetB.opacity = 0; // Starts hidden
+
+        // Start both background widgets transparent (opacity = 0) so GDM's native background
+        // (e.g. com.ubuntu.login-screen) renders cleanly when no cross-session wallpaper metadata
+        // is available. _applyWallpaper() will fade in the active widget (opacity = 255) when cached
+        // wallpaper metadata exists in /var/tmp.
+        widgetA.opacity = 0;
+        widgetB.opacity = 0;
 
         this._backgroundGroup.add_child(widgetA);
         this._backgroundGroup.add_child(widgetB);
@@ -1575,22 +1564,10 @@ _syncLockscreenMessageLayout() {
                 yCenterFraction: yCenterFraction,
             };
         } else {
-            // No cross-session wallpaper-sync metadata exists in gdm mode (no one
-            // is logged in yet, and the extension's user-session half isn't
-            // installed there) — this branch previously fell through to sampling
-            // org.gnome.desktop.background, the *user's own* desktop-background
-            // schema. That's meaningless for the gdm-greeter identity: it isn't
-            // the schema GDM itself reads for its background (distros differ —
-            // e.g. Ubuntu's own gdm3 uses com.ubuntu.login-screen instead), so it
-            // resolves to whatever stock/theme default that schema happens to
-            // carry rather than anything related to what's actually on screen.
-            // Fall back to the same neutral dark tint getWallpaperPromptColor()
-            // itself already uses as a safe default (see `sampled` above) instead
-            // of reading a schema that was never meant for this context.
-            const fallback = { r: 40, g: 40, b: 40, shadowAlpha: 0.0175 };
-            this._applyPromptEntryBackground(entry, fallback);
-            if (authPrompt.cancelButton)
-                this._applyCancelButtonBackground(authPrompt.cancelButton, fallback);
+            // When no cross-session wallpaper-sync metadata exists in GDM mode (e.g. before
+            // user authentication), clear inline background overrides so the prompt entry
+            // and cancel button fall back to their base styling defined in stylesheet.css.
+            this._clearCupertinoPromptBackground();
             return;
         }
 
