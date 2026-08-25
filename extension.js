@@ -3,6 +3,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
+import Shell from 'gi://Shell';
 import Gdm from 'gi://Gdm';
 import Gettext from 'gettext';
 import { Extension, InjectionManager } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -195,6 +196,14 @@ export default class WackLockscreenClockExtension extends Extension {
 
         initCache();
 
+        if (Main.screenShield) {
+            Main.screenShield.connectObject('active-changed', () => {
+                if (Main.screenShield.active) {
+                    this._updateCustomWallpaperOverlay();
+                }
+            }, this);
+        }
+
         this._notifManager = new NotificationManager(this);
         this._loadSettings();
         this._unblankManager = new UnblankManager(this);
@@ -205,9 +214,15 @@ export default class WackLockscreenClockExtension extends Extension {
         if (dialog._updateBackgroundEffects) {
             this._origUpdateBgEffects = dialog._updateBackgroundEffects.bind(dialog);
             dialog._updateBackgroundEffects = () => {
-                for (const widget of dialog._backgroundGroup) {
+                for (const widget of dialog._backgroundGroup ?? []) {
                     const effect = widget.get_effect('blur');
                     if (effect) effect.set({ brightness: 1.0, radius: 0 });
+                }
+                if (this._customWallpaperOverlay) {
+                    for (const widget of this._customWallpaperOverlay) {
+                        const effect = widget.get_effect('blur');
+                        if (effect) effect.set({ brightness: 1.0, radius: 0 });
+                    }
                 }
             };
             dialog._updateBackgroundEffects();
@@ -331,7 +346,7 @@ export default class WackLockscreenClockExtension extends Extension {
                         });
                     }
 
-                    const actorsToFade = [this._clockWrapper, this._hintContainer, this._mainBox].filter(a => a != null);
+                    const actorsToFade = [this._clockWrapper, this._hintContainer, this._mainBox, this._customWallpaperOverlay].filter(a => a != null);
                     actorsToFade.forEach(actor => {
                         actor.ease({ opacity: 0, duration, mode });
                     });
@@ -355,6 +370,10 @@ export default class WackLockscreenClockExtension extends Extension {
                             if (this._windowFadeContainer) {
                                 this._windowFadeContainer.destroy();
                                 this._windowFadeContainer = null;
+                            }
+                            if (this._customWallpaperOverlay) {
+                                this._customWallpaperOverlay.destroy();
+                                this._customWallpaperOverlay = null;
                             }
                             global.wack_window_snapshots = [];
                             onComplete();
@@ -760,6 +779,62 @@ export default class WackLockscreenClockExtension extends Extension {
         }
     }
 
+    _updateCustomWallpaperOverlay() {
+        const enabled = this._settings?.get_boolean('lockscreen-wallpaper-enable') ?? false;
+        const path = this._settings?.get_string('lockscreen-wallpaper-path') ?? '';
+        const fileExists = path !== '' && Gio.File.new_for_path(path).query_exists(null);
+
+        // The UnlockDialog (this._dialog) is a direct child of _lockDialogGroup.
+        // Its own _backgroundGroup (which shows the blurred desktop wallpaper) is
+        // the first child of this._dialog. We add our custom overlay as a sibling
+        // of _backgroundGroup — directly into this._dialog above it — so our image
+        // covers the native background while remaining below the UI stack.
+        const dialog = this._dialog;
+        if (!dialog)
+            return;
+
+        if (enabled && fileExists) {
+            const uri = path.startsWith('file://') ? path : `file://${path}`;
+            const styleStr = `background-image: url("${uri}"); background-size: cover; background-position: center; background-repeat: no-repeat;`;
+
+            if (!this._customWallpaperOverlay) {
+                this._customWallpaperOverlay = new Clutter.Actor({ opacity: 255 });
+
+                for (const monitor of Main.layoutManager.monitors) {
+                    const widget = new St.Widget({
+                        style_class: 'screen-shield-background',
+                        x: monitor.x,
+                        y: monitor.y,
+                        width: monitor.width,
+                        height: monitor.height,
+                        effect: new Shell.BlurEffect({ name: 'blur' }),
+                    });
+                    const effect = widget.get_effect('blur');
+                    if (effect)
+                        effect.set({ brightness: 1.0, radius: 0 });
+                    widget.set_style(styleStr);
+                    this._customWallpaperOverlay.add_child(widget);
+                }
+
+                // Add directly into the dialog so it is above the native
+                // _backgroundGroup (index 0) but below the UI stack.
+                dialog.add_child(this._customWallpaperOverlay);
+                if (dialog._backgroundGroup)
+                    dialog.set_child_above_sibling(this._customWallpaperOverlay, dialog._backgroundGroup);
+            } else {
+                for (const child of this._customWallpaperOverlay.get_children())
+                    child.set_style(styleStr);
+                this._customWallpaperOverlay.opacity = 255;
+                this._customWallpaperOverlay.visible = true;
+            }
+        } else {
+            if (this._customWallpaperOverlay) {
+                this._customWallpaperOverlay.destroy();
+                this._customWallpaperOverlay = null;
+            }
+        }
+    }
+
     _updateClockAlpha() {
         this._updateClockAlphaAndPromptColor();
     }
@@ -775,10 +850,19 @@ export default class WackLockscreenClockExtension extends Extension {
 
         const colorScheme = this._interfaceSettings.get_enum('color-scheme');
         const style = this._bgSettings.get_enum('picture-options');
-        const uri = this._bgSettings.get_string(
-            colorScheme === 1 ? 'picture-uri-dark' : 'picture-uri'
-        );
-        const isColor = (style === 0);
+
+        const customWallpaperEnabled = this._settings?.get_boolean('lockscreen-wallpaper-enable') ?? false;
+        const customWallpaperPath = this._settings?.get_string('lockscreen-wallpaper-path') ?? '';
+        let uri;
+        if (customWallpaperEnabled && customWallpaperPath && Gio.File.new_for_path(customWallpaperPath).query_exists(null)) {
+            uri = customWallpaperPath.startsWith('file://') ? customWallpaperPath : `file://${customWallpaperPath}`;
+        } else {
+            uri = this._bgSettings.get_string(
+                colorScheme === 1 ? 'picture-uri-dark' : 'picture-uri'
+            );
+        }
+
+        const isColor = (style === 0 && !customWallpaperEnabled);
         const primaryColor = this._bgSettings.get_string('primary-color');
         const secondaryColor = this._bgSettings.get_string('secondary-color');
         const shadingType = this._bgSettings.get_enum('color-shading-type');
@@ -1126,6 +1210,12 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         syncCursorBlink();
 
+        const syncCustomWallpaper = () => {
+            this._updateCustomWallpaperOverlay();
+            this._updateClockAlphaAndPromptColor();
+        };
+        syncCustomWallpaper();
+
         this._wackShellStateChangedId = Main.extensionManager.connect('extension-state-changed', (_obj, ext) => {
             if (ext.uuid === 'wack-shell@rinzler69-wastaken.github.com') {
                 syncCupertinoUnlockFade();
@@ -1144,6 +1234,8 @@ export default class WackLockscreenClockExtension extends Extension {
             'changed::cursor-blink', syncCursorBlink,
             'changed::cupertino-lockscreen-message-enable', () => this._updateLockscreenMessage(),
             'changed::cupertino-lockscreen-message-text', () => this._updateLockscreenMessage(),
+            'changed::lockscreen-wallpaper-enable', syncCustomWallpaper,
+            'changed::lockscreen-wallpaper-path', syncCustomWallpaper,
             this
         );
     }
@@ -1941,6 +2033,15 @@ export default class WackLockscreenClockExtension extends Extension {
     // custom UI elements, ensuring no resource leaks or state contamination in the
     // GNOME Shell session.
     disable() {
+        if (Main.screenShield) {
+            Main.screenShield.disconnectObject(this);
+        }
+
+        if (this._customWallpaperOverlay) {
+            this._customWallpaperOverlay.destroy();
+            this._customWallpaperOverlay = null;
+        }
+
         this._isActive = false;
         // Invalidate any in-flight async _updateClockAlphaAndPromptColor calls.
         this._wallpaperUpdateSeq = (this._wallpaperUpdateSeq ?? 0) + 1;

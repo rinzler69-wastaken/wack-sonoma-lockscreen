@@ -50,6 +50,8 @@ export class CrossSessionManager {
             'changed::cursor-blink', save,
             'changed::cupertino-lockscreen-message-enable', save,
             'changed::cupertino-lockscreen-message-text', save,
+            'changed::lockscreen-wallpaper-enable', save,
+            'changed::lockscreen-wallpaper-path', save,
             this
         );
         this._bgSettings.connectObject(
@@ -95,11 +97,20 @@ export class CrossSessionManager {
             const userName = GLib.get_user_name();
             const colorScheme = this._interfaceSettings.get_enum('color-scheme');
             const style = this._bgSettings.get_enum('picture-options');
-            const uri = this._bgSettings.get_string(
-                colorScheme === 1 // PREFER_DARK
-                    ? 'picture-uri-dark'
-                    : 'picture-uri'
-            );
+
+            const customWallpaperEnabled = this._settings ? this._settings.get_boolean('lockscreen-wallpaper-enable') : false;
+            const customWallpaperPath = this._settings ? this._settings.get_string('lockscreen-wallpaper-path') : '';
+
+            let uri;
+            if (customWallpaperEnabled && customWallpaperPath && Gio.File.new_for_path(customWallpaperPath).query_exists(null)) {
+                uri = customWallpaperPath.startsWith('file://') ? customWallpaperPath : `file://${customWallpaperPath}`;
+            } else {
+                uri = this._bgSettings.get_string(
+                    colorScheme === 1 // PREFER_DARK
+                        ? 'picture-uri-dark'
+                        : 'picture-uri'
+                );
+            }
 
             if (this._lastMonitoredUri !== uri) {
                 this._lastMonitoredUri = uri;

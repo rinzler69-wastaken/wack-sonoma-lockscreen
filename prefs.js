@@ -307,6 +307,84 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         cursorBlinkRow.activatable_widget = cursorBlinkSwitch;
         modeRow.add_row(cursorBlinkRow);
 
+        const wallpaperEnableRow = new Adw.ActionRow({
+            title: _('Custom Lockscreen Wallpaper'),
+            subtitle: _('Use a custom image overlay for the lockscreen background.'),
+        });
+        const wallpaperEnableSwitch = new Gtk.Switch({
+            valign: Gtk.Align.CENTER,
+            active: settings.get_boolean('lockscreen-wallpaper-enable'),
+        });
+        wallpaperEnableSwitch.connect('notify::active', () => {
+            settings.set_boolean('lockscreen-wallpaper-enable', wallpaperEnableSwitch.active);
+            refreshWallpaperPathSensitivity();
+        });
+        settingsSignalIds.push(settings.connect('changed::lockscreen-wallpaper-enable', () => {
+            wallpaperEnableSwitch.active = settings.get_boolean('lockscreen-wallpaper-enable');
+            refreshWallpaperPathSensitivity();
+        }));
+        wallpaperEnableRow.add_suffix(wallpaperEnableSwitch);
+        wallpaperEnableRow.activatable_widget = wallpaperEnableSwitch;
+        modeRow.add_row(wallpaperEnableRow);
+
+        const wallpaperPathRow = new Adw.ActionRow({
+            title: _('Wallpaper Image Path'),
+            subtitle: settings.get_string('lockscreen-wallpaper-path') || _('No image selected'),
+        });
+
+        const wallpaperChooseBtn = new Gtk.Button({
+            icon_name: 'folder-open-symbolic',
+            tooltip_text: _('Select Image File'),
+            valign: Gtk.Align.CENTER,
+            css_classes: ['flat'],
+        });
+
+        wallpaperChooseBtn.connect('clicked', () => {
+            const chooser = new Gtk.FileChooserNative({
+                title: _('Select Lockscreen Wallpaper'),
+                transient_for: window,
+                action: Gtk.FileChooserAction.OPEN,
+                accept_label: _('Select'),
+                cancel_label: _('Cancel'),
+            });
+
+            const filter = new Gtk.FileFilter();
+            filter.set_name(_('Image Files'));
+            filter.add_mime_type('image/png');
+            filter.add_mime_type('image/jpeg');
+            filter.add_mime_type('image/webp');
+            filter.add_mime_type('image/svg+xml');
+            chooser.add_filter(filter);
+
+            chooser.connect('response', (_self, responseId) => {
+                if (responseId === Gtk.ResponseType.ACCEPT) {
+                    const file = chooser.get_file();
+                    if (file) {
+                        const path = file.get_path();
+                        settings.set_string('lockscreen-wallpaper-path', path);
+                    }
+                }
+                chooser.destroy();
+            });
+
+            chooser.show();
+        });
+
+        wallpaperPathRow.add_suffix(wallpaperChooseBtn);
+
+        const refreshWallpaperPathSensitivity = () => {
+            const enabled = settings.get_boolean('lockscreen-wallpaper-enable');
+            wallpaperPathRow.sensitive = enabled;
+        };
+
+        settingsSignalIds.push(settings.connect('changed::lockscreen-wallpaper-path', () => {
+            const currentPath = settings.get_string('lockscreen-wallpaper-path');
+            wallpaperPathRow.subtitle = currentPath || _('No image selected');
+        }));
+
+        refreshWallpaperPathSensitivity();
+        modeRow.add_row(wallpaperPathRow);
+
         // -- Cupertino options ----------------------------------------------
         const alwaysShowUserRow = new Adw.ActionRow({
             title: _('Always Show User Widget'),
