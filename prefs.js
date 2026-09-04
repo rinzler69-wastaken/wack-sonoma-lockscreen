@@ -353,6 +353,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             filter.add_mime_type('image/png');
             filter.add_mime_type('image/jpeg');
             filter.add_mime_type('image/webp');
+            filter.add_mime_type('image/jxl');
             filter.add_mime_type('image/svg+xml');
             chooser.add_filter(filter);
 
