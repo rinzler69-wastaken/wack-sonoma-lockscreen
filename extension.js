@@ -229,23 +229,16 @@ export default class WackLockscreenClockExtension extends Extension {
         }
 
         // ── Justified Duct Tape: User Switch Visibility ───────────────────
-        // GNOME 50.1 renamed/removed dialog._updateUserSwitchVisibility (an internal,
-        // undocumented API to begin with — not guaranteed stable across releases).
-        // Guarded so a missing internal method degrades gracefully (the other-user
-        // button just won't auto-hide on visibility updates) instead of throwing and
-        // aborting the rest of enable() entirely.
-        if (typeof dialog._updateUserSwitchVisibility === 'function') {
-            this._origUpdateUserSwitchVisibility = dialog._updateUserSwitchVisibility.bind(dialog);
-            dialog._updateUserSwitchVisibility = () => {
-                this._origUpdateUserSwitchVisibility();
-                if (this._lockscreenMode === 'cupertino' && dialog._otherUserButton) {
-                    dialog._otherUserButton.visible = false;
-                }
-            };
-            dialog._updateUserSwitchVisibility();
-        } else if (this._lockscreenMode === 'cupertino' && dialog._otherUserButton) {
-            dialog._otherUserButton.visible = false;
-        }
+        // Hooks dialog._updateUserSwitchVisibility to ensure dialog._otherUserButton
+        // remains hidden whenever Cupertino lockscreen mode is active.
+        this._origUpdateUserSwitchVisibility = dialog._updateUserSwitchVisibility.bind(dialog);
+        dialog._updateUserSwitchVisibility = () => {
+            this._origUpdateUserSwitchVisibility();
+            if (this._lockscreenMode === 'cupertino' && dialog._otherUserButton) {
+                dialog._otherUserButton.visible = false;
+            }
+        };
+        dialog._updateUserSwitchVisibility();
 
         // ── Justified Duct Tape: Finish Intercept for Cupertino Fade-out ──
         this._origFinish = dialog.finish.bind(dialog);
@@ -555,14 +548,14 @@ export default class WackLockscreenClockExtension extends Extension {
                         if (this._isSleepInhibited()) {
                             this._showInhibitHint(this.gettext('Sleep prevented by an active process'));
                         } else {
-                            if (typeof Main.screenShield._loginManager.suspend === 'function') {
+                            if (Main.screenShield._loginManager?.suspend) {
                                 Main.screenShield._loginManager.suspend();
                             } else {
                                 try {
                                     SystemActions.getDefault().activateSuspend();
                                 } catch (e) {
                                     const session = SystemActions.getDefault()._session;
-                                    if (session && typeof session.SuspendAsync === 'function')
+                                    if (session?.SuspendAsync)
                                         session.SuspendAsync().catch(err => console.error(err));
                                 }
                             }
@@ -916,7 +909,7 @@ export default class WackLockscreenClockExtension extends Extension {
         _log(`[WACK/Extension] _updateClockAlphaAndPromptColor - uri: ${uri}, promptColor: ${JSON.stringify(promptColor)}, alpha: ${alpha}, yCenterFraction: ${yCenterFraction}`);
 
         // Apply clock alpha to the live dialog clock widget.
-        if (dialog?._clock && typeof dialog._clock.setWallpaperAlpha === 'function')
+        if (dialog?._clock)
             dialog._clock.setWallpaperAlpha(alpha);
 
         // Commit both values atomically to the cross-session metadata file.
@@ -943,12 +936,11 @@ export default class WackLockscreenClockExtension extends Extension {
         if (!actor)
             return null;
 
-        if (typeof actor.has_style_class_name === 'function' &&
-            actor.has_style_class_name('login-dialog-prompt-entry')) {
+        if (actor.has_style_class_name?.('login-dialog-prompt-entry')) {
             return actor;
         }
 
-        if (typeof actor.get_children !== 'function')
+        if (!actor.get_children)
             return null;
 
         for (const child of actor.get_children()) {
@@ -1815,7 +1807,7 @@ export default class WackLockscreenClockExtension extends Extension {
             );
             const [inhibitors] = result.deepUnpack();
             for (const [what, who, why, mode] of inhibitors) {
-                if (what.includes('sleep') && mode === 'block') {
+                if (what.includes('sleep') && (mode === 'block' || mode === 'block-weak')) {
                     if (why === 'user-active-inhibitor' ||
                         who === 'gnome-session-binary' ||
                         who === 'gnome-session-service' ||

@@ -1333,7 +1333,7 @@ _syncLockscreenMessageLayout() {
         let cursorBlink = true;
         if (this._currentWallpaperMetadata && typeof this._currentWallpaperMetadata.cursorBlink === 'boolean') {
             cursorBlink = this._currentWallpaperMetadata.cursorBlink;
-        } else if (this._extension && typeof this._extension.getSettings === 'function') {
+        } else if (this._extension) {
             cursorBlink = this._extension.getSettings().get_boolean('cursor-blink');
         }
 
@@ -1380,12 +1380,11 @@ _syncLockscreenMessageLayout() {
         if (!actor)
             return null;
 
-        if (typeof actor.has_style_class_name === 'function' &&
-            actor.has_style_class_name('login-dialog-prompt-entry')) {
+        if (actor.has_style_class_name?.('login-dialog-prompt-entry')) {
             return actor;
         }
 
-        if (typeof actor.get_children !== 'function')
+        if (!actor.get_children)
             return null;
 
         for (const child of actor.get_children()) {
