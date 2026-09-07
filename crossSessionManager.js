@@ -7,6 +7,7 @@ function _log(msg) {
     console.debug(msg);
 }
 
+
 export class CrossSessionManager {
     constructor(extensionSettings) {
         this._bgSettings = null;
@@ -48,6 +49,7 @@ export class CrossSessionManager {
         this._settings.connectObject(
             'changed::prompt-vibrancy', save,
             'changed::cursor-blink', save,
+            'changed::lockscreen-mode', save,
             'changed::cupertino-lockscreen-message-enable', save,
             'changed::cupertino-lockscreen-message-text', save,
             'changed::lockscreen-wallpaper-enable', save,
@@ -315,6 +317,7 @@ export class CrossSessionManager {
                 promptColor: this._promptColor,
                 promptVibrancy: this._settings ? this._settings.get_boolean('prompt-vibrancy') : true,
                 cursorBlink: this._settings ? this._settings.get_boolean('cursor-blink') : true,
+                lockscreenMode: this._settings ? this._settings.get_string('lockscreen-mode') : 'cupertino',
                 lockscreenMessageText: this._settings ? this._settings.get_string('cupertino-lockscreen-message-text') : '',
                 lockscreenMessageEnable: this._settings ? this._settings.get_boolean('cupertino-lockscreen-message-enable') : false,
             };
@@ -368,4 +371,3 @@ export class CrossSessionManager {
         }
     }
 }
-
