@@ -2,7 +2,7 @@ UUID = wack-lockscreen-clock@rinzler69-wastaken.github.com
 DEST = $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 EXCLUDES = --exclude=".git*" --exclude="*.zip" --exclude="*.bak" --exclude="checkthisthingblyat" --exclude="scripts" --exclude="crossSessionManager.js" --exclude="pro.js"
 
-.PHONY: install enable pack compile-po deploy-schema
+.PHONY: install enable pack compile-po deploy-schema install-gdm uninstall-gdm
 
 compile-po: ## Compile all .po files to .mo binaries in locale/
 	@python3 po/generate.py
@@ -41,3 +41,9 @@ pack: compile-po ## Create a ZIP package for Extensions.gnome.org
 	@mv prefs.js.bak prefs.js
 	@mv extension.js.bak extension.js
 	@printf 'Created package: %s\n' "$(UUID).zip"
+
+install-gdm: ## Install GDM expansion DLC system-wide
+	@bash scripts/install-gdm-dlc.sh
+
+uninstall-gdm: ## Uninstall GDM expansion DLC
+	@bash scripts/uninstall-gdm-dlc.sh
