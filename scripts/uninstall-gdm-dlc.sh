@@ -53,9 +53,10 @@ if [ ! -d "$USER_DIR" ]; then
         rm -f "$USER_DIR/pro.js" "$USER_DIR/crossSessionManager.js"
     fi
     
-    # Ensure correct ownership for user directory
+    # Ensure correct ownership and permissions for user directory
     if [ -n "${SUDO_USER:-}" ]; then
         chown -R "$SUDO_USER:$(id -gn "$SUDO_USER")" "$USER_DIR"
+        chmod -R u=rwX,go=rX "$USER_DIR"
     fi
 fi
 
@@ -112,7 +113,12 @@ echo "GDM DLC uninstallation complete!"
 echo "To apply changes, please restart GDM."
 echo "WARNING: Restarting GDM will terminate your current graphical session!"
 echo ""
-read -rp "Would you like to restart GDM now? (y/N): " choice
+choice="n"
+if [ -t 0 ]; then
+    read -rp "Would you like to restart GDM now? (y/N): " choice || choice="n"
+elif [ -e /dev/tty ]; then
+    read -rp "Would you like to restart GDM now? (y/N): " choice < /dev/tty || choice="n"
+fi
 case "$choice" in
     [yY][eE][sS]|[yY])
         echo "Restarting GDM..."

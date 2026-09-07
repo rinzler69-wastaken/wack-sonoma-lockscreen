@@ -62,9 +62,20 @@ if [ "${1:-}" = "--force" ]; then
 fi
 
 if [ "$FORCE" = false ] && [ -f "$TARGET_DIR/pro.js" ] && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
+    echo "-> Verifying and repairing system-wide permissions and ownership..."
+    chown -R root:root "$TARGET_DIR"
+    chmod -R u=rwX,go=rX "$TARGET_DIR"
+    find "$TARGET_DIR" -type d -exec chmod 755 {} +
+    find "$TARGET_DIR" -type f -exec chmod 644 {} +
+    if [ -d "$TARGET_DIR/scripts" ]; then
+        find "$TARGET_DIR/scripts" -type f -name "*.sh" -exec chmod 755 {} + || true
+    fi
+    chown root:root "$DCONF_FILE"
+    chmod 644 "$DCONF_FILE"
+    dconf update
     echo ""
-    echo "✨ GDM Expansion is already fully installed on this system!"
-    echo "To force a re-installation or re-configuration, run with --force."
+    echo "✨ GDM Expansion is already installed on this system (permissions verified)."
+    echo "To force a full re-installation or re-download, run with --force."
     exit 0
 fi
 
@@ -165,21 +176,39 @@ else
     echo "Warning: No schemas directory found in target!"
 fi
 
-# 5. Configure GDM dconf system-db overrides
+# 5. Compile gettext translations if generator is present
+if [ -f "$TARGET_DIR/po/generate.py" ]; then
+    echo "-> Compiling gettext translations..."
+    python3 "$TARGET_DIR/po/generate.py" || true
+fi
+
+# 6. Ensure correct file ownership and permissions for GDM
+echo "-> Setting system-wide permissions and ownership (root:root, 755/644)..."
+chown -R root:root "$TARGET_DIR"
+chmod -R u=rwX,go=rX "$TARGET_DIR"
+find "$TARGET_DIR" -type d -exec chmod 755 {} +
+find "$TARGET_DIR" -type f -exec chmod 644 {} +
+if [ -d "$TARGET_DIR/scripts" ]; then
+    find "$TARGET_DIR/scripts" -type f -name "*.sh" -exec chmod 755 {} + || true
+fi
+
+# 7. Configure GDM dconf system-db overrides
 echo "-> Configuring GDM dconf system-db overrides..."
 mkdir -p "$DCONF_GDM_DIR"
+chmod 755 "$DCONF_GDM_DIR"
 cat <<EOF > "$DCONF_FILE"
 [org/gnome/shell]
 enabled-extensions=['$UUID']
 disable-user-extensions=false
 EOF
+chown root:root "$DCONF_FILE"
 chmod 644 "$DCONF_FILE"
 
-# 6. Compile the GDM dconf binary database
+# 8. Compile the GDM dconf binary database
 echo "-> Compiling dconf database..."
 dconf update
 
-# 7. Remove user-level extension copy to prevent session conflicts
+# 9. Remove user-level extension copy to prevent session conflicts
 if [ -d "$LOCAL_USER_DIR" ]; then
     echo "-> Removing user-level extension copy to prevent conflicts..."
     if [ -d "$LOCAL_USER_DIR/.git" ]; then
@@ -195,7 +224,12 @@ echo "GDM DLC installation complete!"
 echo "To fully apply changes, you can restart GDM (WARNING: this terminates your current session)."
 echo "Alternatively, lock your screen and click 'Switch User' to preview the new GDM look!"
 echo ""
-read -rp "Would you like to restart GDM now? (y/N): " choice
+choice="n"
+if [ -t 0 ]; then
+    read -rp "Would you like to restart GDM now? (y/N): " choice || choice="n"
+elif [ -e /dev/tty ]; then
+    read -rp "Would you like to restart GDM now? (y/N): " choice < /dev/tty || choice="n"
+fi
 case "$choice" in
     [yY][eE][sS]|[yY])
         echo "Restarting GDM..."
