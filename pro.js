@@ -75,8 +75,6 @@ export class GdmManager {
         this._findDialogTimeoutId = null;
         this._origShowPrompt = null;
         this._origOnReset = null;
-        this._authPromptNativeResetHandlerId = 0;
-        this._authPromptNativeResetHandlerBlocked = false;
         this._origVfuncAllocate = null;
         this._allocationHandlers = [];
         this._opacityId = null;
@@ -107,19 +105,16 @@ export class GdmManager {
         this._selectedPromptMode = 'cupertino';
         this._legacyPromptChromeVisible = false;
         this._origAuthPromptReset = null;
-        this._origAuthPromptFinish = null;
-        this._authPromptVerificationCompleteId = 0;
-        this._promptResetAnimating = false;
+        this._legacyPromptResetAnimating = false;
         this._legacyResetInstant = false;
         this._verificationSucceeded = false;
         // Explicit prompt animation state. A prompt can be shown either because
         // the user selected an account, or because authentication just succeeded.
         // These states must never share the same entrance animation.
-        this._promptAnimationState = 'idle'; // idle | selection | success
         this._legacyPromptAnimationState = 'idle'; // idle | selection | success
         this._legacySuccessFadeRunning = false;
         this._skipLegacyPromptEntryAnimation = false;
-        this._origShowUserList = null;
+        this._legacyExitClone = null;
         this._origOnSessionOpened = null;
         this._origStartSession = null;
         this._isNotListed = false;
@@ -311,14 +306,16 @@ export class GdmManager {
         });
         this._lockscreenMessageContent.add_child(this._lockscreenMessageLabel);
 
-this._lockscreenMessageScrollView = new St.ScrollView({
-    style_class: 'wack-cupertino-lockscreen-message-scroll',
-    x_align: Clutter.ActorAlign.CENTER,
-    y_align: Clutter.ActorAlign.CENTER,
-    overlay_scrollbars: true,
-    hscrollbar_policy: St.PolicyType.NEVER,
-    vscrollbar_policy: St.PolicyType.NEVER,
-});
+        this._lockscreenMessageScrollView = new St.ScrollView({
+            style_class: 'wack-cupertino-lockscreen-message-scroll',
+            x_align: Clutter.ActorAlign.CENTER,
+            y_align: Clutter.ActorAlign.CENTER,
+            overlay_scrollbars: true,
+            hscrollbar_policy: St.PolicyType.NEVER,
+            vscrollbar_policy: St.PolicyType.NEVER,
+            visible: false,
+            opacity: 0,
+        });
 
 this._lockscreenMessageScrollView.set_child(this._lockscreenMessageContent);
 this._lockscreenMessageScrollView.connectObject(
@@ -456,12 +453,6 @@ this._lockscreenMessageScrollView.connectObject(
             this._connectAllocation(this._lockscreenMessageScrollView, () => this._positionAuthPrompt());
         }
 
-        // Ensure prompt is initially hidden so no unpositioned/full-width prompt flashes before userlist appears
-        if (!dialog._user && !this._isNotListed && !dialog._disableUserList && dialog._authPrompt) {
-            dialog._authPrompt.hide();
-            dialog._authPrompt.opacity = 0;
-        }
-
         // 3a. Tighten user list button widths to max natural content width
         this._setupUserListWidths();
 
@@ -515,116 +506,73 @@ this._lockscreenMessageScrollView.connectObject(
                 if (!this._legacyPromptChromeVisible)
                     this._gdmClockWrapper.opacity = 255;
                 const messageActor = this._getLockscreenMessageActor();
-                if (messageActor && messageActor.visible) {
-                    messageActor.opacity = 255;
+                if (messageActor) {
+                    if (this._selectedPromptMode !== 'wack' && !this._isNotListed && messageActor.visible) {
+                        messageActor.opacity = 255;
+                    } else {
+                        _setActorVisible(messageActor, false, 0);
+                    }
                 }
             } else if (hasBeenFullyVisible) {
                 if (!this._legacyPromptChromeVisible)
                     this._gdmClockWrapper.opacity = op;
                 const messageActor = this._getLockscreenMessageActor();
-                if (messageActor && messageActor.visible) {
-                    messageActor.opacity = op;
+                if (messageActor) {
+                    if (this._selectedPromptMode !== 'wack' && !this._isNotListed && messageActor.visible) {
+                        messageActor.opacity = op;
+                    } else {
+                        _setActorVisible(messageActor, false, 0);
+                    }
                 }
             }
         });
 
-        // 5. On user list shown: cleanly clear any residual success state back to idle
-        if (dialog._showUserList) {
-            this._origShowUserList = dialog._showUserList.bind(dialog);
-            dialog._showUserList = (...args) => {
-                this._verificationSucceeded = false;
-                this._promptAnimationState = 'idle';
-                this._legacyPromptAnimationState = 'idle';
-                return this._origShowUserList(...args);
-            };
-        }
-
-        // 6. On prompt show: reposition native _authPrompt and style as Cupertino
+        // 5. On prompt show: reposition native _authPrompt and style as Cupertino
         this._origShowPrompt = dialog._showPrompt.bind(dialog);
         dialog._showPrompt = (...args) => {
-            const isSuccess = this._verificationSucceeded ||
-                this._promptAnimationState === 'success' ||
-                this._legacyPromptAnimationState === 'success' ||
-                dialog._authPrompt?.verificationStatus === 3;
-
-            if (this._selectedPromptMode === 'wack' && isSuccess) {
+            if (this._selectedPromptMode === 'wack' && (this._verificationSucceeded || this._legacyPromptAnimationState === 'success')) {
                 this._yeetLegacyPromptTransform();
                 return;
             }
 
-            if (this._promptResetAnimating)
-                return;
+            const wasAlreadyVisible = dialog._authPrompt?.visible;
+            this._origShowPrompt(...args);
 
-            // If no user is chosen and not in "Not listed" mode, the user picker is active:
-            // DO NOT show the prompt! Showing it causes a split-second flash of the prompt before the user list appears.
-            if (!dialog._user && !this._isNotListed && !dialog._disableUserList) {
-                dialog._authPrompt?.hide();
-                if (dialog._authPrompt) dialog._authPrompt.opacity = 0;
-                return;
-            }
-
-            // Do not repeat the entrance animation if already in selection state
-            if (this._promptAnimationState === 'selection' || this._legacyPromptAnimationState === 'selection')
+            // In Legacy mode, do not repeat the entrance scale+slide if already in selection state
+            if (this._selectedPromptMode === 'wack' && wasAlreadyVisible && this._legacyPromptAnimationState === 'selection')
                 return;
 
             this._onUserSelected();
         };
 
-        // 7. Find the native 'reset' signal handler that GDM connected at construction time.
-        // dialog._onReset.bind(this) was captured at construction, so replacing dialog._onReset later
-        // does NOT intercept it. Instead we block/unblock the handler around our own animations.
+        // 6. On reset: restore _authPrompt position and avatar
         this._origOnReset = dialog._onReset.bind(dialog);
-        dialog._onReset = (authPrompt, resetType) => {
-            // This path is only reached via direct method calls, NOT via the 'reset' signal.
-            // It is safe to always call through; the signal path is controlled via block/unblock.
-            dialog._user = null;
-            resetType = 0;
-            this._origOnReset(authPrompt, resetType);
-            this._onReset();
+        dialog._onReset = (...args) => {
+            const willDeferReset = this._selectedPromptMode === 'wack'
+                && !this._legacyPromptResetAnimating
+                && !this._verificationSucceeded;
+
+            this._origOnReset(...args);
+
+            if (!willDeferReset)
+                this._onReset();
         };
+        this._authPromptResetId = dialog._authPrompt.connect('reset', () => {
+            this._onReset();
+        });
 
-        if (dialog._authPrompt) {
-            // Find the pre-existing native 'reset' handler so we can block it during animations.
-            // GDM connects it at construction: authPrompt.connect('reset', this._onReset.bind(this))
-            try {
-                const signalId = GObject.signal_lookup('reset', dialog._authPrompt);
-                this._authPromptNativeResetHandlerId = GObject.signal_handler_find(
-                    dialog._authPrompt,
-                    GObject.SignalMatchType.ID, // mask: match by signal ID only
-                    signalId,                   // signal_id
-                    0,                          // detail (0 = any)
-                    null, null, null            // closure, func, data (unused with ID mask)
-                );
-                _log(`[WACK/GdmManager] Found native 'reset' handler id=${this._authPromptNativeResetHandlerId}`);
-            } catch (e) {
-                _log('[WACK/GdmManager] Could not find native reset handler: ' + e);
-                this._authPromptNativeResetHandlerId = 0;
-            }
-        }
-
-        // 8. On session opened / startSession: ensure scale+slide is yeeted and prompt fades out
+        // 7. On session opened / startSession: ensure scale+slide is yeeted and prompt fades out
         if (dialog._onSessionOpened) {
             this._origOnSessionOpened = dialog._onSessionOpened.bind(dialog);
             dialog._onSessionOpened = (...args) => {
                 this._verificationSucceeded = true;
-                this._promptAnimationState = 'success';
-                this._legacyPromptAnimationState = 'success';
-                const messageActor = this._getLockscreenMessageActor();
-                if (messageActor && messageActor.visible) {
-                    messageActor.remove_all_transitions();
-                    messageActor.ease({
-                        opacity: 0,
-                        duration: GDM_CROSSFADE_DURATION,
-                        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                        onComplete: () => {
-                            _setActorVisible(messageActor, false, 0);
-                        },
-                    });
+                if (this._selectedPromptMode === 'wack') {
+                    this._legacyPromptAnimationState = 'success';
+                    this._skipLegacyPromptEntryAnimation = true;
+                    this._yeetLegacyPromptTransform();
+                    if (!this._legacySuccessFadeRunning)
+                        this._animateLegacyPromptSuccessFadeOut(() => {});
                 }
-                this._skipLegacyPromptEntryAnimation = true;
-                this._yeetLegacyPromptTransform();
-                if (!this._legacySuccessFadeRunning)
-                    this._animateLegacyPromptSuccessFadeOut(() => {});
                 return this._origOnSessionOpened(...args);
             };
         }
@@ -633,24 +581,13 @@ this._lockscreenMessageScrollView.connectObject(
             this._origStartSession = dialog._startSession.bind(dialog);
             dialog._startSession = (...args) => {
                 this._verificationSucceeded = true;
-                this._promptAnimationState = 'success';
-                this._legacyPromptAnimationState = 'success';
-                const messageActor = this._getLockscreenMessageActor();
-                if (messageActor && messageActor.visible) {
-                    messageActor.remove_all_transitions();
-                    messageActor.ease({
-                        opacity: 0,
-                        duration: GDM_CROSSFADE_DURATION,
-                        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                        onComplete: () => {
-                            _setActorVisible(messageActor, false, 0);
-                        },
-                    });
+                if (this._selectedPromptMode === 'wack') {
+                    this._legacyPromptAnimationState = 'success';
+                    this._skipLegacyPromptEntryAnimation = true;
+                    this._yeetLegacyPromptTransform();
+                    if (!this._legacySuccessFadeRunning)
+                        this._animateLegacyPromptSuccessFadeOut(() => {});
                 }
-                this._skipLegacyPromptEntryAnimation = true;
-                this._yeetLegacyPromptTransform();
-                if (!this._legacySuccessFadeRunning)
-                    this._animateLegacyPromptSuccessFadeOut(() => {});
                 return this._origStartSession(...args);
             };
         }
@@ -678,127 +615,44 @@ this._lockscreenMessageScrollView.connectObject(
             };
         }
 
-        // 8a. Track authentication completion and session launch
-        if (dialog._authPrompt) {
-            this._authPromptVerificationCompleteId = dialog._authPrompt.connect('verification-complete', () => {
-                _log('[WACK/GdmManager] authPrompt verification-complete: user successfully authenticated');
-                this._verificationSucceeded = true;
-                this._promptAnimationState = 'success';
-                this._legacyPromptAnimationState = 'success';
-            });
-
-            if (dialog._authPrompt.finish) {
-                this._origAuthPromptFinish = dialog._authPrompt.finish.bind(dialog._authPrompt);
-                dialog._authPrompt.finish = (onComplete) => {
-                    _log('[WACK/GdmManager] authPrompt.finish called: user successfully authenticated');
-                    this._verificationSucceeded = true;
-                    this._promptAnimationState = 'success';
-                    this._legacyPromptAnimationState = 'success';
-                    return this._origAuthPromptFinish(onComplete);
-                };
-            }
-        }
-
-        // Intercept reset so successful authentication can keep its fade,
-        // while cancel/back returns to the picker with appropriate animations.
+        // Intercept Legacy reset so successful authentication can keep its fade,
+        // while cancel/back returns to the picker with inverse animations.
         this._origAuthPromptReset = dialog._authPrompt.reset.bind(dialog._authPrompt);
         dialog._authPrompt.reset = (...args) => {
-            const isSuccess = this._verificationSucceeded ||
-                this._promptAnimationState === 'success' ||
-                this._legacyPromptAnimationState === 'success' ||
-                dialog._authPrompt?.verificationStatus === 3; // AuthPromptStatus.VERIFICATION_SUCCEEDED
-
             _log(`[WACK/GdmManager] authPrompt.reset() called: mode=${this._selectedPromptMode}, ` +
-                `isSuccess=${isSuccess}, verified=${this._verificationSucceeded}, ` +
-                `status=${dialog._authPrompt?.verificationStatus}`);
+                `verified=${this._verificationSucceeded}`);
 
-            if (isSuccess) {
-                // ── SUCCESS STATE ──
-                // User authenticated successfully (new session or resuming active session).
-                // Pure fade-out only.
-                // NEVER return to user list, NEVER unblur background, NEVER scale down prompt!
-                this._verificationSucceeded = true;
-                this._promptAnimationState = 'success';
+            if (this._selectedPromptMode !== 'wack')
+                return this._origAuthPromptReset(...args);
+
+            if (this._verificationSucceeded || this._legacyPromptAnimationState === 'success') {
+                // SUCCESS STATE: fade out only. Never invoke the selection
+                // scale+slide animation during this lifecycle.
                 this._legacyPromptAnimationState = 'success';
                 this._skipLegacyPromptEntryAnimation = true;
-                this._promptResetAnimating = true;
+                this._legacyPromptResetAnimating = true;
                 this._yeetLegacyPromptTransform();
-
-                // Block the native 'reset' handler so _showUserList() doesn't fire mid-animation.
-                this._blockNativeResetHandler();
-
-                const messageActor = this._getLockscreenMessageActor();
-                if (messageActor && messageActor.visible) {
-                    messageActor.remove_all_transitions();
-                    messageActor.ease({
-                        opacity: 0,
-                        duration: GDM_CROSSFADE_DURATION,
-                        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                        onComplete: () => {
-                            _setActorVisible(messageActor, false, 0);
-                        },
-                    });
-                }
-
                 this._animateLegacyPromptSuccessFadeOut(() => {
-                    this._promptResetAnimating = false;
-                    // For success, we do NOT call _origAuthPromptReset: GDM handles the session
-                    // transition itself after _authPrompt.finish() / _startSession().
-                    // Unblock so future resets (e.g., on error) work normally.
-                    this._unblockNativeResetHandler();
+                    this._legacyPromptResetAnimating = false;
+                    this._origAuthPromptReset(...args);
                 });
                 return undefined;
             }
 
-            // ── CANCEL STATE ──
-            // User cancelled back to picker (clicked cancel, pressed Esc, etc.)
-            if (this._promptResetAnimating) {
+            // CANCEL STATE: animate reverse back to picker
+            if (this._legacyPromptResetAnimating) {
                 _log('[WACK/GdmManager] authPrompt.reset already animating, ignoring duplicate call');
                 return undefined;
             }
 
-            this._promptAnimationState = 'idle';
             this._legacyPromptAnimationState = 'idle';
-            this._promptResetAnimating = true;
+            this._legacyPromptResetAnimating = true;
 
-            // Mark prompt as cancelled and clear dialog._user so native GDM doesn't reuse username
-            dialog._user = null;
-            if (dialog._authPrompt)
-                dialog._authPrompt.verificationStatus = 4; // AuthPromptStatus.VERIFICATION_CANCELLED
-
-            // Block the native 'reset' signal handler so GDM's _showUserList() doesn't fire
-            // synchronously and kill our in-flight animations.
-            this._blockNativeResetHandler();
-
-            const onCancelComplete = () => {
-                this._promptResetAnimating = false;
-                dialog._user = null;
-                if (dialog._authPrompt)
-                    dialog._authPrompt.verificationStatus = 4;
-                // Unblock before reset so the signal fires normally.
-                this._unblockNativeResetHandler();
+            this._animateLegacyReturnToPicker();
+            this._animateLegacyPromptOut(() => {
+                this._legacyPromptResetAnimating = false;
                 this._origAuthPromptReset(...args);
-                this._onReset();
-            };
-
-            if (this._selectedPromptMode === 'wack') {
-                // Legacy mode:
-                // 1. Clock fade and scale back in
-                // 2. Panel date menu fade out
-                // 3. Blur layer fade out
-                // 4. User list fade back in
-                this._animateLegacyReturnToPicker();
-
-                // 5. Prompt stack scale back down and moves down and fades out
-                this._animateLegacyPromptOut(onCancelComplete);
-            } else {
-                // Cupertino mode:
-                // 1. User list fades back in
-                this._animateCupertinoReturnToPicker();
-
-                // 2. Prompt stack and lockscreen message fade out (no scale, no slide, no blur)
-                this._animateCupertinoPromptOut(onCancelComplete);
-            }
+            });
             return undefined;
         };
 
@@ -806,48 +660,9 @@ this._lockscreenMessageScrollView.connectObject(
 
     // ── Fade-in restart ──────────────────────────────────────────────────────────
 
-    // ── Native 'reset' signal block/unblock ─────────────────────────────────
-    // GDM connects authPrompt's 'reset' signal to dialog._onReset.bind(dialog) at
-    // construction, so replacing dialog._onReset later does NOT intercept the signal.
-    // We must block/unblock the handler ID directly using GObject APIs.
-
-    _blockNativeResetHandler() {
-        const authPrompt = this._dialog?._authPrompt;
-        if (!authPrompt || !this._authPromptNativeResetHandlerId || this._authPromptNativeResetHandlerBlocked)
-            return;
-        try {
-            GObject.signal_handler_block(authPrompt, this._authPromptNativeResetHandlerId);
-            this._authPromptNativeResetHandlerBlocked = true;
-            _log('[WACK/GdmManager] Blocked native reset handler');
-        } catch (e) {
-            _log('[WACK/GdmManager] Could not block native reset handler: ' + e);
-        }
-    }
-
-    _unblockNativeResetHandler() {
-        const authPrompt = this._dialog?._authPrompt;
-        if (!authPrompt || !this._authPromptNativeResetHandlerId || !this._authPromptNativeResetHandlerBlocked)
-            return;
-        try {
-            GObject.signal_handler_unblock(authPrompt, this._authPromptNativeResetHandlerId);
-            this._authPromptNativeResetHandlerBlocked = false;
-            _log('[WACK/GdmManager] Unblocked native reset handler');
-        } catch (e) {
-            _log('[WACK/GdmManager] Could not unblock native reset handler: ' + e);
-            this._authPromptNativeResetHandlerBlocked = false;
-        }
-    }
-
     _restartDialogFadeIn() {
         const dialog = this._dialog;
         if (!dialog) return;
-
-        // Ensure prompt is hidden if user list is active so it never flashes full-width
-        if (!dialog._user && !this._isNotListed && !dialog._disableUserList && dialog._authPrompt) {
-            dialog._authPrompt.hide();
-            dialog._authPrompt.opacity = 0;
-        }
-
         // Cancel GDM's in-progress ease and restart from transparent, ensuring
         // the very first painted frame shows our configured layout, never stock GDM.
         dialog.remove_all_transitions();
@@ -866,11 +681,11 @@ this._lockscreenMessageScrollView.connectObject(
         // Safety net: if the authPrompt is being replaced/destroyed mid-animation,
         // _animateLegacyPromptOut's onComplete may never fire, leaving this flag
         // stuck true and permanently disabling the Legacy inverse animation.
-        this._promptResetAnimating = false;
+        this._legacyPromptResetAnimating = false;
         this._legacySuccessFadeRunning = false;
-        this._promptAnimationState = 'idle';
         this._legacyPromptAnimationState = 'idle';
         this._skipLegacyPromptEntryAnimation = false;
+        this._destroyLegacyExitClone();
         if (!this._dialog) return;
         const dialog = this._dialog;
 
@@ -927,24 +742,13 @@ this._lockscreenMessageScrollView.connectObject(
 
         this._teardownUserListWidths();
 
-        if (this._origShowUserList && dialog) {
-            dialog._showUserList = this._origShowUserList;
-            this._origShowUserList = null;
+        if (this._authPromptResetId && dialog?._authPrompt) {
+            dialog._authPrompt.disconnect(this._authPromptResetId);
+            this._authPromptResetId = 0;
         }
-
         if (this._origAuthPromptReset && dialog?._authPrompt) {
             dialog._authPrompt.reset = this._origAuthPromptReset;
             this._origAuthPromptReset = null;
-        }
-
-        if (this._origAuthPromptFinish && dialog?._authPrompt) {
-            dialog._authPrompt.finish = this._origAuthPromptFinish;
-            this._origAuthPromptFinish = null;
-        }
-
-        if (this._authPromptVerificationCompleteId && dialog?._authPrompt) {
-            dialog._authPrompt.disconnect(this._authPromptVerificationCompleteId);
-            this._authPromptVerificationCompleteId = 0;
         }
 
         for (const { actor, id } of this._allocationHandlers)
@@ -964,9 +768,6 @@ this._lockscreenMessageScrollView.connectObject(
             dialog._onReset = this._origOnReset;
             this._origOnReset = null;
         }
-        // Ensure the native 'reset' handler is never left blocked.
-        this._unblockNativeResetHandler();
-        this._authPromptNativeResetHandlerId = 0;
         if (this._origOnSessionOpened && dialog) {
             dialog._onSessionOpened = this._origOnSessionOpened;
             this._origOnSessionOpened = null;
@@ -1428,7 +1229,7 @@ _syncLockscreenMessageLayout() {
         authPrompt.translation_x = Math.floor(w / 2 - promptW / 2) - (authPrompt.x || 0);
 
         const messageActor = this._getLockscreenMessageActor();
-        if (!dialogBox && messageActor && messageActor.visible && !this._isNotListed) {
+        if (!dialogBox && messageActor && messageActor.visible && !this._isNotListed && this._selectedPromptMode !== 'wack') {
             this._syncLockscreenMessageLayout();
             const msgW = this._lockscreenMessageWidth;
             const msgH = this._lockscreenMessageHeight;
@@ -1436,6 +1237,8 @@ _syncLockscreenMessageLayout() {
             const msgX = alloc.x1 + Math.floor((w - msgW) / 2.0);
             const msgY = alloc.y1 + targetY - MESSAGE_PROMPT_GAP - msgH;
             messageActor.set_position(msgX, msgY);
+        } else if (messageActor && (this._selectedPromptMode === 'wack' || this._isNotListed)) {
+            _setActorVisible(messageActor, false, 0);
         }
 
         _log('[WACK/GdmManager] positionAuthPrompt currentY: ' + currentY + ' targetY: ' + targetY + ' translation_y: ' + authPrompt.translation_y + ' translation_x: ' + authPrompt.translation_x + ' wellH: ' + wellH + ' anchorH: ' + anchorH);
@@ -1636,21 +1439,22 @@ _syncLockscreenMessageLayout() {
         if (!this._lockscreenMessageLabel) return;
         const messageActor = this._getLockscreenMessageActor();
 
-        if (this._promptResetAnimating || this._isNotListed) {
+        const effectiveMetadata = metadata ?? this._currentWallpaperMetadata;
+        const isLegacy = this._selectedPromptMode === 'wack' || effectiveMetadata?.lockscreenMode === 'wack';
+
+        if (this._isNotListed || isLegacy) {
             this._lockscreenMessageHasOverflow = false;
             this._lockscreenMessageHeight = 0;
             this._syncLockscreenMessageFade();
             _setActorVisible(messageActor, false, 0);
             return;
         }
-
-        const effectiveMetadata = metadata ?? this._currentWallpaperMetadata;
         
         const userSelected = !!(this._dialog?._user);
         const userListVisible = !!(this._dialog?._userSelectionBox?.visible);
         const authPromptActive = !!(this._dialog?._authPrompt?.visible);
         
-        const showMessage = authPromptActive && userSelected && !userListVisible && !this._promptResetAnimating;
+        const showMessage = authPromptActive && userSelected && !userListVisible;
 
         // Only show the message when the password prompt is actively shown for a selected user.
         // Keep it hidden during user selection or transitions.
@@ -1661,17 +1465,14 @@ _syncLockscreenMessageLayout() {
             if (enabled && cleanText) {
                 this._lockscreenMessageLabel.text = cleanText;
                 this._syncLockscreenMessageLayout();
-                if (messageActor) {
-                    if (!messageActor.visible || messageActor.opacity < 255) {
-                        messageActor.remove_all_transitions();
-                        messageActor.opacity = 0;
-                        messageActor.visible = true;
-                        messageActor.ease({
-                            opacity: 255,
-                            duration: 250,
-                            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                        });
-                    }
+                if (messageActor && !messageActor.visible) {
+                    messageActor.opacity = 0;
+                    messageActor.visible = true;
+                    messageActor.ease({
+                        opacity: 255,
+                        duration: 250,
+                        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    });
                 }
             } else {
                 this._lockscreenMessageHasOverflow = false;
@@ -1930,7 +1731,15 @@ _syncLockscreenMessageLayout() {
     // ── User selection ────────────────────────────────────────────────────────
 
     _setLegacyPromptChrome(visible, animate = true) {
+        // The clock must snap back on cancel. Never allow a hide operation to
+        // schedule the Legacy clock fade/scale animation, even if another GDM
+        // reset path calls this helper without the explicit flag.
+        if (!visible)
+            animate = false;
+
         const clock = this._gdmClockWrapper;
+        // The panel contains DateMenuButton.container, but setup hid the
+        // DateMenuButton itself. Fade that button, not its always-visible wrapper.
         const dateMenu = Main.panel?.statusArea?.dateMenu;
         this._legacyPromptChromeVisible = visible;
 
@@ -1964,16 +1773,6 @@ _syncLockscreenMessageLayout() {
                 if (dateMenu.menu._boxPointer) {
                     dateMenu.menu._boxPointer.setSourceAlignment(0.5);
                     dateMenu.menu._boxPointer.setPosition(dateMenu, 0.5);
-                }
-            }
-        } else if (this._gdmClockWrapper) {
-            if (dateMenu.menu) {
-                dateMenu.menu.sourceActor = this._gdmClockWrapper;
-                dateMenu.menu._arrowAlignment = 0.5;
-                if (dateMenu.menu._boxPointer) {
-                    dateMenu.menu._boxPointer.updateArrowSide(St.Side.TOP);
-                    dateMenu.menu._boxPointer.setSourceAlignment(0.5);
-                    dateMenu.menu._boxPointer.setPosition(this._gdmClockWrapper, 0.5);
                 }
             }
         }
@@ -2012,11 +1811,11 @@ _syncLockscreenMessageLayout() {
             return;
 
         authPrompt.remove_all_transitions();
+        authPrompt.set_pivot_point(0.5, 0.5);
         authPrompt.scale_x = 1;
         authPrompt.scale_y = 1;
         authPrompt.translation_x = 0;
         authPrompt.translation_y = 0;
-        authPrompt.set_pivot_point(0, 0);
     }
 
     _animateLegacyPromptIn() {
@@ -2034,7 +1833,6 @@ _syncLockscreenMessageLayout() {
 
         authPrompt.remove_all_transitions();
         authPrompt.visible = true;
-        authPrompt.reactive = true;
         authPrompt.set_pivot_point(0.5, 0.5);
 
         // Selection entrance: bottom-center -> final position. The prompt's own
@@ -2057,25 +1855,13 @@ _syncLockscreenMessageLayout() {
 
     _animateLegacyPromptOut(onComplete) {
         _log('[WACK/GdmManager] _animateLegacyPromptOut called');
+        _setActorVisible(this._getLockscreenMessageActor(), false, 0);
         if (this._verificationSucceeded || this._legacyPromptAnimationState === 'success') {
             this._animateLegacyPromptSuccessFadeOut(onComplete);
             return;
         }
 
         const authPrompt = this._dialog?._authPrompt;
-        const messageActor = this._getLockscreenMessageActor();
-        if (messageActor && messageActor.visible) {
-            messageActor.remove_all_transitions();
-            messageActor.ease({
-                opacity: 0,
-                duration: GDM_CROSSFADE_DURATION,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                onComplete: () => {
-                    _setActorVisible(messageActor, false, 0);
-                },
-            });
-        }
-
         if (!authPrompt) {
             _log('[WACK/GdmManager] _animateLegacyPromptOut: no authPrompt, bailing');
             onComplete?.();
@@ -2083,9 +1869,10 @@ _syncLockscreenMessageLayout() {
         }
 
         try {
+            this._destroyLegacyExitClone();
+
             authPrompt.remove_all_transitions();
             authPrompt.visible = true;
-            authPrompt.reactive = false;
             authPrompt.set_pivot_point(0.5, 0.5);
 
             authPrompt.ease({
@@ -2100,8 +1887,6 @@ _syncLockscreenMessageLayout() {
                     this._yeetLegacyPromptTransform();
                     authPrompt.visible = false;
                     authPrompt.opacity = 255;
-                    authPrompt.reactive = true;
-                    _setActorVisible(messageActor, false, 0);
                     onComplete?.();
                 },
             });
@@ -2109,9 +1894,14 @@ _syncLockscreenMessageLayout() {
             _logError('[WACK/GdmManager] _animateLegacyPromptOut threw: ' + e + '\n' + e.stack);
             this._yeetLegacyPromptTransform();
             authPrompt.opacity = 255;
-            authPrompt.reactive = true;
-            _setActorVisible(messageActor, false, 0);
             onComplete?.();
+        }
+    }
+
+    _destroyLegacyExitClone() {
+        if (this._legacyExitClone) {
+            this._legacyExitClone.destroy();
+            this._legacyExitClone = null;
         }
     }
 
@@ -2122,6 +1912,7 @@ _syncLockscreenMessageLayout() {
             return;
         }
 
+        this._destroyLegacyExitClone();
         this._yeetLegacyPromptTransform();
         authPrompt.visible = true;
         this._legacySuccessFadeRunning = true;
@@ -2138,8 +1929,10 @@ _syncLockscreenMessageLayout() {
     }
 
     _animateLegacyReturnToPicker() {
+        _setActorVisible(this._getLockscreenMessageActor(), false, 0);
         this._setLegacyPromptChrome(false, true);
         this._setPromptBackgroundBlur(false, true);
+        this._applyWallpaper(null);
 
         const userSelection = this._dialog?._userSelectionBox;
         if (!userSelection)
@@ -2158,103 +1951,11 @@ _syncLockscreenMessageLayout() {
         });
     }
 
-    _animateCupertinoPromptOut(onComplete) {
-        _log('[WACK/GdmManager] _animateCupertinoPromptOut called');
-        const authPrompt = this._dialog?._authPrompt;
-        const messageActor = this._getLockscreenMessageActor();
-
-        if (messageActor && messageActor.visible) {
-            messageActor.remove_all_transitions();
-            messageActor.ease({
-                opacity: 0,
-                duration: GDM_CROSSFADE_DURATION,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                onComplete: () => {
-                    _setActorVisible(messageActor, false, 0);
-                },
-            });
-        }
-
-        if (!authPrompt) {
-            _log('[WACK/GdmManager] _animateCupertinoPromptOut: no authPrompt, bailing');
-            onComplete?.();
-            return;
-        }
-
-        try {
-            authPrompt.remove_all_transitions();
-            authPrompt.visible = true;
-            authPrompt.reactive = false;
-
-            authPrompt.ease({
-                opacity: 0,
-                duration: GDM_CROSSFADE_DURATION,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                onComplete: () => {
-                    _log('[WACK/GdmManager] _animateCupertinoPromptOut: animation complete');
-                    authPrompt.visible = false;
-                    authPrompt.opacity = 255;
-                    authPrompt.reactive = true;
-                    _setActorVisible(messageActor, false, 0);
-                    onComplete?.();
-                },
-            });
-        } catch (e) {
-            _logError('[WACK/GdmManager] _animateCupertinoPromptOut threw: ' + e + '\n' + e.stack);
-            authPrompt.opacity = 255;
-            authPrompt.reactive = true;
-            _setActorVisible(messageActor, false, 0);
-            onComplete?.();
-        }
-    }
-
-    _animateCupertinoReturnToPicker() {
-        const userSelection = this._dialog?._userSelectionBox;
-        if (!userSelection)
-            return;
-
-        userSelection.remove_all_transitions();
-        userSelection.opacity = 0;
-        userSelection.show();
-        userSelection.ease({
-            opacity: 255,
-            duration: GDM_CROSSFADE_DURATION,
-            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-        });
-    }
-
-    _animateCupertinoPromptIn() {
-        const authPrompt = this._dialog?._authPrompt;
-        if (!authPrompt)
-            return;
-
-        if (this._verificationSucceeded) {
-            authPrompt.opacity = 255;
-            authPrompt.visible = true;
-            return;
-        }
-
-        authPrompt.remove_all_transitions();
-        authPrompt.visible = true;
-        authPrompt.reactive = true;
-        authPrompt.scale_x = 1;
-        authPrompt.scale_y = 1;
-        authPrompt.set_pivot_point(0, 0);
-
-        authPrompt.opacity = 0;
-        authPrompt.ease({
-            opacity: 255,
-            duration: GDM_CROSSFADE_DURATION,
-            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-        });
-    }
-
     _onUserSelected() {
         _log('[WACK/GdmManager] _onUserSelected called');
         const authPrompt = this._dialog?._authPrompt;
         if (!authPrompt) return;
         this._verificationSucceeded = false;
-        this._promptAnimationState = 'selection';
         this._legacyPromptAnimationState = 'selection';
 
         // _applyWallpaper synchronously loads the selected user's shared metadata.
@@ -2305,6 +2006,7 @@ _syncLockscreenMessageLayout() {
         this._dialog.add_child(this._cupertinoRestPromptContainer);
 
         // Style as Cupertino prompt (hides password field chrome, etc.)
+        authPrompt.opacity = 255;
         authPrompt.scale_x = 1;
         authPrompt.scale_y = 1;
         authPrompt.set_pivot_point(0, 0);
@@ -2334,7 +2036,6 @@ _syncLockscreenMessageLayout() {
         this._updateLockscreenMessage();
 
         this._positionAuthPrompt();
-        this._animateCupertinoPromptIn();
         this._startCursorBlink();
     }
 
@@ -2388,7 +2089,6 @@ _syncLockscreenMessageLayout() {
 
         // Native reset is the end of the animation lifecycle.
         if (!this._verificationSucceeded) {
-            this._promptAnimationState = 'idle';
             this._legacyPromptAnimationState = 'idle';
             this._skipLegacyPromptEntryAnimation = false;
         }
