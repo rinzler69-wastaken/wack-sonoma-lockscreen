@@ -219,10 +219,7 @@ export default class WackLockscreenClockExtension extends Extension {
                     if (effect) effect.set({ brightness: 1.0, radius: 0 });
                 }
                 if (this._customWallpaperOverlay) {
-                    for (const widget of this._customWallpaperOverlay) {
-                        const effect = widget.get_effect('blur');
-                        if (effect) effect.set({ brightness: 1.0, radius: 0 });
-                    }
+                    this._setCustomWallpaperBlur(0, 1.0);
                 }
             };
             dialog._updateBackgroundEffects();
@@ -623,6 +620,9 @@ export default class WackLockscreenClockExtension extends Extension {
                 const effect = widget.get_effect('blur');
                 if (effect) effect.set({ radius: globalBlur, brightness: globalBrightness });
             }
+            // The custom wallpaper sits above _backgroundGroup, so blurring only
+            // GNOME's background leaves the visible image sharp in Legacy mode.
+            this._setCustomWallpaperBlur(globalBlur, globalBrightness);
 
             const hasNotifs = this._notifManager.hasVisibleNotifs();
             const cardBlur = hasNotifs ? NOTIF_BLUR_RADIUS * (1 - progress) : 0;
@@ -814,6 +814,14 @@ export default class WackLockscreenClockExtension extends Extension {
                 dialog.add_child(this._customWallpaperOverlay);
                 if (dialog._backgroundGroup)
                     dialog.set_child_above_sibling(this._customWallpaperOverlay, dialog._backgroundGroup);
+
+                const progress = dialog._adjustment?.value ?? 0;
+                const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+                const isCupertino = this._lockscreenMode === 'cupertino';
+                this._setCustomWallpaperBlur(
+                    isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor * progress,
+                    isCupertino ? 1.0 : 1.0 - (1.0 - PROMPT_BLUR_BRIGHTNESS) * progress
+                );
             } else {
                 for (const child of this._customWallpaperOverlay.get_children())
                     child.set_style(styleStr);
@@ -1146,6 +1154,7 @@ export default class WackLockscreenClockExtension extends Extension {
                 const effect = widget.get_effect('blur');
                 if (effect) effect.set({ radius: targetRadius, brightness: targetBrightness });
             }
+            this._setCustomWallpaperBlur(targetRadius, targetBrightness);
 
             if (this._notifManager._notifBox) {
                 this._notifManager._notifBox.opacity = isCupertino ? Math.round(255 * (1 - progress)) : 255;
@@ -1230,6 +1239,14 @@ export default class WackLockscreenClockExtension extends Extension {
             'changed::lockscreen-wallpaper-path', syncCustomWallpaper,
             this
         );
+    }
+
+    _setCustomWallpaperBlur(radius, brightness) {
+        for (const widget of this._customWallpaperOverlay?.get_children() ?? []) {
+            const effect = widget.get_effect('blur');
+            if (effect)
+                effect.set({ radius, brightness });
+        }
     }
 
     _getClockAnimationParams() {
