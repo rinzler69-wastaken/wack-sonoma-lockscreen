@@ -341,10 +341,9 @@ export async function getWallpaperPromptColor(params) {
         if (cached && cached.start && cached.end) {
             const hasPromptImg = cached.imagePath && Gio.File.new_for_path(cached.imagePath).query_exists(null);
             const hasCancelImg = cached.cancelImagePath && Gio.File.new_for_path(cached.cancelImagePath).query_exists(null);
-            const hasHoverImg = !cached.cancelHoverImagePath || Gio.File.new_for_path(cached.cancelHoverImagePath).query_exists(null);
-            const hasActiveImg = !cached.cancelActiveImagePath || Gio.File.new_for_path(cached.cancelActiveImagePath).query_exists(null);
+            const hasHoverImg = cached.cancelHoverImagePath && Gio.File.new_for_path(cached.cancelHoverImagePath).query_exists(null);
+            const hasActiveImg = cached.cancelActiveImagePath && Gio.File.new_for_path(cached.cancelActiveImagePath).query_exists(null);
             if (hasPromptImg && hasCancelImg && hasHoverImg && hasActiveImg) {
-                console.debug(`[WACK/AlphaManager] cache HIT for key: ${cacheKey}`);
                 return cached;
             }
         }
@@ -560,6 +559,39 @@ export async function getWallpaperPromptColor(params) {
                 } catch (saveErr) {
                     _logError(`[WACK/AlphaManager] Failed to save cancel active slice: ${saveErr}`);
                 }
+            }
+
+            // Clean up older slice PNGs for this user — keep only the current hash
+            try {
+                const tmpDir = Gio.File.new_for_path('/var/tmp');
+                if (tmpDir.query_exists(null)) {
+                    const enumerator = tmpDir.enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
+                    const toDelete = [];
+                    let fileInfo;
+                    while ((fileInfo = enumerator.next_file(null)) !== null) {
+                        const fileName = fileInfo.get_name();
+                        const currentSuffix = `-${hash}.png`;
+                        const isUserSlice = (
+                            fileName.startsWith(`wack-prompt-blur-${userName}-`) ||
+                            fileName.startsWith(`wack-cancel-blur-active-${userName}-`) ||
+                            fileName.startsWith(`wack-cancel-blur-hover-${userName}-`) ||
+                            (fileName.startsWith(`wack-cancel-blur-${userName}-`) &&
+                             !fileName.startsWith(`wack-cancel-blur-hover-${userName}-`) &&
+                             !fileName.startsWith(`wack-cancel-blur-active-${userName}-`))
+                        );
+                        if (isUserSlice && !fileName.endsWith(currentSuffix)) {
+                            toDelete.push(`/var/tmp/${fileName}`);
+                        }
+                    }
+                    enumerator.close(null);
+                    for (const path of toDelete) {
+                        try {
+                            Gio.File.new_for_path(path).delete(null);
+                        } catch (_) {}
+                    }
+                }
+            } catch (cleanupErr) {
+                _logError(`[WACK/AlphaManager] Failed to clean old slice cache: ${cleanupErr}`);
             }
         } catch (e) {
             _logError(`[WACK/AlphaManager] Failed to sample wallpaper for prompt color: ${e}`);

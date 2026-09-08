@@ -153,9 +153,12 @@ export class PromptStyling {
 
         let bgStyle;
         let imgPath = color.cancelImagePath;
-        if (button._wackPressed && color.cancelActiveImagePath) {
+        const isHovered = button.hover && !button._wackPressed;
+        const isPressed = button._wackPressed;
+
+        if (isPressed && color.cancelActiveImagePath) {
             imgPath = color.cancelActiveImagePath;
-        } else if (button.hover && color.cancelHoverImagePath) {
+        } else if (isHovered && color.cancelHoverImagePath) {
             imgPath = color.cancelHoverImagePath;
         }
         if (!imgPath && color.imagePath) {
@@ -166,17 +169,23 @@ export class PromptStyling {
             const imageUri = imgPath.startsWith('file://')
                 ? imgPath
                 : `file://${imgPath}`;
-            bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important;`;
+            let overlayStyle = '';
+            if (isPressed && !color.cancelActiveImagePath) {
+                overlayStyle = ' filter: brightness(1.25);';
+            } else if (isHovered && !color.cancelHoverImagePath) {
+                overlayStyle = ' filter: brightness(1.12);';
+            }
+            bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important;${overlayStyle}`;
         } else {
             let r = color.r;
             let g = color.g;
             let b = color.b;
 
-            if (button._wackPressed) {
+            if (isPressed) {
                 r = Math.round(r * 0.75 + 255 * 0.25);
                 g = Math.round(g * 0.75 + 255 * 0.25);
                 b = Math.round(b * 0.75 + 255 * 0.25);
-            } else if (button.hover) {
+            } else if (isHovered) {
                 r = Math.round(r * 0.875 + 255 * 0.125);
                 g = Math.round(g * 0.875 + 255 * 0.125);
                 b = Math.round(b * 0.875 + 255 * 0.125);
