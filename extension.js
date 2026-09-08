@@ -187,7 +187,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._unlockDialogController.install(dialog, lockDialogGroup);
 
         // Setup MainBox layout and lockscreen message
-        const mainBox = dialog.get_child_at_index(dialog.get_n_children() - 1);
+        const mainBox = dialog._stack?.get_parent() ?? dialog.get_child_at_index(dialog.get_n_children() - 1);
         if (mainBox) {
             this._origLayout = mainBox.layout_manager;
             this._messageManager.setup(mainBox);
@@ -304,6 +304,7 @@ export default class WackLockscreenClockExtension extends Extension {
             if (this._hintContainer) {
                 this._hintContainer.opacity = isCupertino ? Math.round(255 * (1 - progress)) : (progress > 0 ? 0 : 255);
             }
+            this._updateLockscreenMessage();
         };
 
         syncClockAnimation();

@@ -17,22 +17,20 @@ export class LockscreenMessageManager {
 
     setup(mainBox) {
         this.label = new St.Label({
-            style_class: 'wack-lockscreen-message',
-            text: '',
+            style_class: 'wack-cupertino-lockscreen-message',
             x_align: Clutter.ActorAlign.CENTER,
             y_align: Clutter.ActorAlign.CENTER,
-            opacity: 0,
-            visible: false,
         });
-        this.label.clutter_text.set_line_wrap(true);
-        this.label.clutter_text.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR);
         this.label.clutter_text.set_ellipsize(Pango.EllipsizeMode.NONE);
+        this.label.clutter_text.set_line_wrap(true);
+        this.label.clutter_text.set_line_alignment(Pango.Alignment.CENTER);
+        this.label.x_expand = true;
 
         this.content = new St.BoxLayout({
             vertical: true,
             x_align: Clutter.ActorAlign.CENTER,
-            y_align: Clutter.ActorAlign.START,
-            x_expand: true,
+            y_align: Clutter.ActorAlign.CENTER,
+            style_class: 'wack-cupertino-lockscreen-message-content',
         });
         this.content.add_child(this.label);
 
@@ -40,19 +38,27 @@ export class LockscreenMessageManager {
             style_class: 'wack-cupertino-lockscreen-message-scroll',
             x_align: Clutter.ActorAlign.CENTER,
             y_align: Clutter.ActorAlign.CENTER,
-            overlay_scrollbars: true,
-            enable_mouse_scrolling: true,
             hscrollbar_policy: St.PolicyType.NEVER,
-            vscrollbar_policy: St.PolicyType.NEVER,
+            vscrollbar_policy: St.PolicyType.AUTOMATIC,
+            enable_mouse_scrolling: false,
+            reactive: false,
+            can_focus: false,
+            track_hover: false,
             visible: false,
+            opacity: 0,
         });
         this.scrollView.set_child(this.content);
+        this.scrollView.connectObject('scroll-event', (_actor, _event) => {
+            return this.hasOverflow
+                ? Clutter.EVENT_PROPAGATE
+                : Clutter.EVENT_STOP;
+        }, this);
 
         const messageScrollbar = this.scrollView.get_vscroll_bar?.();
         if (messageScrollbar) {
-            messageScrollbar.opacity = 0;
-            messageScrollbar.visible = false;
             messageScrollbar.reactive = false;
+            messageScrollbar.can_focus = false;
+            messageScrollbar.track_hover = false;
         }
 
         this.scrollView.vadjustment?.connectObject('notify::value', () => {
@@ -61,26 +67,27 @@ export class LockscreenMessageManager {
 
         if (mainBox) {
             mainBox.add_child(this.scrollView);
+            mainBox.set_child_above_sibling?.(this.scrollView, null);
         }
     }
 
     teardown(mainBox) {
-        if (this.scrollView?.vadjustment) {
-            this.scrollView.vadjustment.disconnectObject(this);
-        }
-        if (this.scrollView && mainBox) {
-            mainBox.remove_child(this.scrollView);
+        if (this.scrollView) {
+            this.scrollView.disconnectObject(this);
+            if (this.scrollView.vadjustment) {
+                this.scrollView.vadjustment.disconnectObject(this);
+            }
+            if (mainBox) {
+                mainBox.remove_child(this.scrollView);
+            }
             this.scrollView.destroy();
             this.scrollView = null;
         }
-        if (this.content) {
-            this.content.destroy();
-            this.content = null;
-        }
-        if (this.label) {
-            this.label.destroy();
-            this.label = null;
-        }
+        this.content = null;
+        this.label = null;
+        this.width = 0;
+        this.height = 0;
+        this.hasOverflow = false;
     }
 
     getMessageActor() {
@@ -119,7 +126,7 @@ export class LockscreenMessageManager {
         }
 
         const [, naturalHeight] = this.label?.get_preferred_height?.(-1) ?? [0, 0];
-        return Math.ceil(naturalHeight);
+        return Math.max(Math.ceil(naturalHeight), 24);
     }
 
     getLineCount() {
@@ -147,20 +154,30 @@ export class LockscreenMessageManager {
 
         this.width = messageWidth;
         this.content.width = messageWidth;
+        this.label.width = messageWidth;
         this.label.x_expand = true;
         this.label.x_align = Clutter.ActorAlign.CENTER;
 
         const lineHeight = this.getLineHeight();
         const maxVisibleHeight = Math.ceil(lineHeight * 4);
         const [, naturalHeight] = this.label.get_preferred_height(messageWidth);
-        const clampedHeight = Math.min(naturalHeight, maxVisibleHeight);
         const lineCount = this.getLineCount();
 
-        this.hasOverflow = lineCount > 4 || (lineCount === 0 && naturalHeight > maxVisibleHeight);
-        this.height = clampedHeight;
+        this.hasOverflow = naturalHeight > maxVisibleHeight || lineCount > 4;
+        const visibleHeight = this.hasOverflow
+            ? maxVisibleHeight
+            : naturalHeight;
 
-        if (!this.hasOverflow)
-            this.scrollView.vadjustment?.set_value(0);
+        this.height = visibleHeight;
+        this.scrollView.set_size(messageWidth, visibleHeight);
+
+        const vadj = this.scrollView.vadjustment;
+        if (vadj && !this.hasOverflow)
+            vadj.set_value(0);
+
+        this.scrollView.enable_mouse_scrolling = this.hasOverflow;
+        this.scrollView.reactive = this.hasOverflow;
+        this.scrollView.can_focus = this.hasOverflow;
 
         this.syncFade();
         this._extension._mainBox?.queue_relayout();

@@ -76,8 +76,14 @@ class WackLayout extends Clutter.LayoutManager {
         this._stack.allocate(stackBox);
 
         if (this._messageContainer && this._messageContainer.visible) {
-            const msgW = this._extension._lockscreenMessageWidth ?? 0;
-            const msgH = this._extension._lockscreenMessageHeight ?? 0;
+            let msgW = this._extension._lockscreenMessageWidth ?? 0;
+            let msgH = this._extension._lockscreenMessageHeight ?? 0;
+
+            if (msgW <= 0 || msgH <= 0) {
+                this._extension._messageManager?.syncLayout();
+                msgW = this._extension._lockscreenMessageWidth ?? 0;
+                msgH = this._extension._lockscreenMessageHeight ?? 0;
+            }
 
             if (msgW > 0 && msgH > 0) {
                 const msgBox = new Clutter.ActorBox();
