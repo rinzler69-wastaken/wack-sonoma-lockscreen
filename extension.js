@@ -597,16 +597,30 @@ export default class WackLockscreenClockExtension extends Extension {
             !isPowerSaver;
     }
 
-    // This extension declares the 'unlock-dialog' session mode because it
-    // patches Main.screenShield (clock/wallpaper/lockscreen-message overlays)
-    // and, on GDM, GdmManager patches the login dialog itself (Cupertino-style
-    // prompt/avatar/user-list styling and crossfade animations) to deliver its
-    // core lockscreen/login-screen theming feature. Both patch sets run with
-    // the elevated trust of the lock/login screen, so disable() must fully
-    // and unconditionally reverse every hook installed in enable() (screen
-    // shield signal connections, the GdmManager instance and everything it
-    // wired into the GDM dialog, cross-session manager state) rather than
-    // leave any of it dangling once the extension is toggled off.
+    // Guideline EGO-M-008: Documenting use of unlock-dialog.
+    // This extension runs in the 'unlock-dialog' session mode to customize the
+    // GNOME Shell lock screen. We perform the following modifications:
+    // - Replace the default clock widget (dialog._clock) with our WackClock to
+    //   display a macOS-style lockscreen clock, wallpaper-tinted and repositioned
+    //   via ClockLayoutManager.
+    // - Install UnlockDialogController hooks on the UnlockDialog to drive our
+    //   custom unlock crossfade animations.
+    // - Replace mainBox's layout_manager with WackLayout to reposition the
+    //   prompt stack, notifications box, and other-user button.
+    // - Apply blur styling to the notifications box (NotificationManager) and
+    //   custom rendering to the lockscreen message (LockscreenMessageManager).
+    // - Hook Main.screenShield's 'active-changed' signal to refresh the custom
+    //   wallpaper overlay, and intercept key-press-event on the dialog for our
+    //   Escape-to-sleep and Cupertino rest-state behavior.
+    // - On GDM ('gdm' session mode), dynamically load GdmManager (src/pro/pro.js),
+    //   which further patches the GDM login dialog's _showPrompt, _onReset,
+    //   _authPrompt.reset/cancel, and vfunc_allocate to apply Cupertino-style
+    //   prompt/avatar/user-list theming, wallpaper sync, and crossfade animations.
+    //
+    // In this disable() method, we cleanly revert all changes, restore all overridden
+    // methods/injections to their original implementations, and destroy/nullify all
+    // custom UI elements, ensuring no resource leaks or state contamination in the
+    // GNOME Shell session.
     disable() {
         if (Main.screenShield) {
             Main.screenShield.disconnectObject(this);
