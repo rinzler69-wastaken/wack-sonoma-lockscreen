@@ -93,6 +93,10 @@ Both axes use eased cubic curves for a polished feel. Disabled in Cupertino Mode
 
 ## [PRO] GDM Login Screen Expansion
 
+<p align="center">
+  <img src="screenshots/gdm.webp" width="85%" />
+</p>
+
 By default, extensions on GNOME Extensions (EGO) cannot run on the GDM login screen. The optional **GDM Expansion DLC** brings the full Sonoma experience system-wide to your actual login screen.
 
 ### What GDM Expansion Adds
