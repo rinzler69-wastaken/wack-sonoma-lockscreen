@@ -40,13 +40,12 @@ A full macOS Sonoma lockscreen reconstruction. The clock stays persistent at the
 - **Custom Clock Positioning** — Date and time pinned to the upper third of the screen, separated cleanly from the auth prompt area.
 - **Locale-Aware Date Formatting** — Respects your `LC_TIME` locale for date display, with a graceful fallback chain.
 - **Centered Clock Constraints** — Clock labels use `Clutter.AlignConstraint` for reliable centering across resolutions and fractional scaling.
-- **Clock Glow** — Subtle text glow rendered behind time and date labels on GDM for legibility.
 
 ### Blur & Visual Polish
-- **Focus-Aware Blur** — Background stays sharp at rest; blur fades in when the password prompt is active, keeping focus on authentication.
+- **Focus-Aware Blur (LEGACY MODE)** — Background stays sharp at rest; blur fades in when the password prompt is active, keeping focus on authentication.
 - **Notification Card Blur** — Individual notification cards carry their own adaptive blur, crossfading with the prompt blur so text stays legible regardless of wallpaper.
 - **Notification Limit** — Caps visible cards at 3, appending a subtle "N+ more" indicator to prevent clutter.
-- **Custom Lockscreen Wallpaper** — Overlay any image (PNG, JPEG, WebP, JXL, SVG) as the lockscreen background via the preferences UI, with integrated blur behaviour that respects the active mode.
+- **Custom Lockscreen Wallpaper** — Use any image (PNG, JPEG, WebP, JXL, SVG) as the custom lockscreen background via the preferences UI, with integrated blur behaviour that respects the active mode.
 
 ### Prompt Vibrancy (Cupertino Mode)
 A perceptually calibrated colour engine that samples the wallpaper behind the prompt chip at lock time and computes an adaptive tint:
@@ -95,9 +94,12 @@ By default, extensions on GNOME Extensions (EGO) cannot run on the GDM login scr
 - **Custom Auth Prompt Styling** — the Cupertino-style prompt chip is styled on GDM, matching the lockscreen's appearance.
 - **User List Resizing** — GDM user list items are width-normalised to the widest entry so the selector looks clean regardless of username length.
 - **GDM Avatar** — user avatar is displayed with the Cupertino-style circular crop.
+- **GDM Date Menu** - The large clock doubles as a calendar button, filling in for the top bar's date menu that's no longer there. Click it to peek at the calendar.
 - **GDM Lockscreen Message** — if you've set a lockscreen message, it appears on GDM too.
 - **Multi-monitor aware** — all backgrounds and layouts are positioned per-monitor.
-- **Animated transitions** — GDM dialog fades in/out via `GdmAnimationController`; the clock position, user list, and auth prompt are dynamically repositioned on monitor-change events.
+- **Animated transitions** — GDM dialog fades in/out via `GdmAnimationController`; the clock position, user list, and auth prompt are dynamically repositioned on monitor-change events. Animations differ between modes:
+  - **Cupertino mode** — the auth prompt crossfades in and out with a simple opacity transition, keeping things minimal and consistent with the rest of the Cupertino flow.
+  - **Legacy mode** — the auth prompt springs up from below (translate Y + scale from 50% + fade-in) and collapses back down on exit. While the prompt is active, the clock simultaneously shrinks and fades out; when returning to the user picker, the user list fades back in.
 
 ### Install GDM DLC
 
