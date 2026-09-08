@@ -88,27 +88,11 @@ export default class WackLockscreenClockExtension extends Extension {
         }
 
         this._isActive = true;
-        // <GDM_EXCLUDE>
-        this._gdmManager = null;
-        // </GDM_EXCLUDE>
-        // <GDM_EXCLUDE>
-        if (Main.sessionMode.currentMode === 'gdm') {
-            import('./src/pro/pro.js').then(module => {
-                if (!this._isActive) return;
-                this._gdmManager = new module.GdmManager(this);
-                this._gdmManager.enable();
-            }).catch(err => {
-                _logError(`[WACK/GDM] Failed to dynamically load GDM DLC: ${err.message}`);
-            });
-        }
-        // </GDM_EXCLUDE>
-        // <GDM_EXCLUDE>
-        this._syncCrossSessionManager();
-        // </GDM_EXCLUDE>
+        
+        
+        
 
-        // <GDM_EXCLUDE>
-        if (Main.sessionMode.currentMode === 'gdm') return;
-        // </GDM_EXCLUDE>
+        
 
         const dialog = Main.screenShield._dialog;
         _log(`[WACK] enable() called, dialog=${!!dialog}`);
@@ -563,28 +547,7 @@ export default class WackLockscreenClockExtension extends Extension {
     _updateCupertinoRestState(animate = false) { this._cupertinoPromptManager?.updateCupertinoRestState(animate); }
     _applyPromptModeLayout() { this._cupertinoPromptManager?.applyPromptModeLayout(); }
 
-    // <GDM_EXCLUDE>
-    _syncCrossSessionManager() {
-        if (Main.sessionMode.currentMode === 'gdm') {
-            if (this._crossSessionManager) {
-                this._crossSessionManager.disable();
-                this._crossSessionManager = null;
-            }
-            return;
-        }
-
-        if (!this._crossSessionManager) {
-            import('./crossSessionManager.js').then(module => {
-                if (!this._isActive) return;
-                if (this._crossSessionManager) return;
-                this._crossSessionManager = new module.CrossSessionManager(this.getSettings());
-                this._crossSessionManager.enable();
-            }).catch(err => {
-                _logError(`[WACK/GDM] Failed to dynamically load CrossSessionManager: ${err.message}`);
-            });
-        }
-    }
-    // </GDM_EXCLUDE>
+    
 
     _syncCupertinoUnlockFade() {
         if (!this._settings)
@@ -627,18 +590,8 @@ export default class WackLockscreenClockExtension extends Extension {
         this._isActive = false;
         this._wallpaperUpdateSeq = (this._wallpaperUpdateSeq ?? 0) + 1;
 
-        // <GDM_EXCLUDE>
-        if (this._gdmManager) {
-            this._gdmManager.disable();
-            this._gdmManager = null;
-        }
-        // </GDM_EXCLUDE>
-        // <GDM_EXCLUDE>
-        if (this._crossSessionManager) {
-            this._crossSessionManager.disable();
-            this._crossSessionManager = null;
-        }
-        // </GDM_EXCLUDE>
+        
+        
 
         if (this._bgSettings) {
             this._bgSettings.disconnectObject(this);
