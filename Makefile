@@ -35,17 +35,11 @@ pack: compile-po ## Create a ZIP package for Extensions.gnome.org
 	@python3 -c "import re; c=open('prefs.js').read(); c=re.sub(r'//\s*<GDM_EXCLUDE>.*?//\s*</GDM_EXCLUDE>', '', c, flags=re.DOTALL); open('prefs.js','w').write(c)"
 	@cp extension.js extension.js.bak
 	@python3 -c "import re; c=open('extension.js').read(); c=re.sub(r'//\s*<GDM_EXCLUDE>.*?//\s*</GDM_EXCLUDE>', '', c, flags=re.DOTALL); open('extension.js','w').write(c)"
-	@cp src/main/constants.js src/main/constants.js.bak
-	@python3 -c "import re; c=open('src/main/constants.js').read(); c=re.sub(r'//\s*<GDM_EXCLUDE>.*?//\s*</GDM_EXCLUDE>', '', c, flags=re.DOTALL); open('src/main/constants.js','w').write(c)"
-	@cp src/main/cupertinoPromptManager.js src/main/cupertinoPromptManager.js.bak
-	@python3 -c "import re; c=open('src/main/cupertinoPromptManager.js').read(); c=re.sub(r'//\s*<GDM_EXCLUDE>.*?//\s*</GDM_EXCLUDE>', '', c, flags=re.DOTALL); open('src/main/cupertinoPromptManager.js','w').write(c)"
 	@zip -qr $(UUID).zip *.js src/main metadata.json stylesheet.css LICENSE schemas locale -x "schemas/gschemas.compiled" -x "po/generate.py" -x "scripts/*" -x "crossSessionManager.js" -x "pro.js" -x "src/pro/*"
 	@mv stylesheet.css.bak stylesheet.css
 	@mv metadata.json.bak metadata.json
 	@mv prefs.js.bak prefs.js
 	@mv extension.js.bak extension.js
-	@mv src/main/constants.js.bak src/main/constants.js
-	@mv src/main/cupertinoPromptManager.js.bak src/main/cupertinoPromptManager.js
 	@printf 'Created package: %s\n' "$(UUID).zip"
 
 install-gdm: ## Install GDM expansion DLC system-wide

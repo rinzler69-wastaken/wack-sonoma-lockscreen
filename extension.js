@@ -88,10 +88,10 @@ export default class WackLockscreenClockExtension extends Extension {
         }
 
         this._isActive = true;
+
         // <GDM_EXCLUDE>
         this._gdmManager = null;
-        // </GDM_EXCLUDE>
-        // <GDM_EXCLUDE>
+        this._crossSessionManager = null;
         if (Main.sessionMode.currentMode === 'gdm') {
             import('./src/pro/pro.js').then(module => {
                 if (!this._isActive) return;
@@ -101,12 +101,8 @@ export default class WackLockscreenClockExtension extends Extension {
                 _logError(`[WACK/GDM] Failed to dynamically load GDM DLC: ${err.message}`);
             });
         }
-        // </GDM_EXCLUDE>
-        // <GDM_EXCLUDE>
         this._syncCrossSessionManager();
-        // </GDM_EXCLUDE>
 
-        // <GDM_EXCLUDE>
         if (Main.sessionMode.currentMode === 'gdm') return;
         // </GDM_EXCLUDE>
 
@@ -468,8 +464,10 @@ export default class WackLockscreenClockExtension extends Extension {
         if (dialog?._clock)
             dialog._clock.setWallpaperAlpha(alpha);
 
+        // <GDM_EXCLUDE>
         if (this._crossSessionManager)
             this._crossSessionManager.setClockAlphaAndPromptColor(alpha, promptColor);
+        // </GDM_EXCLUDE>
 
         const isCupertinoPromptActive = this._promptActor?.has_style_class_name('wack-cupertino-prompt');
         if (isCupertinoPromptActive) {
@@ -632,8 +630,6 @@ export default class WackLockscreenClockExtension extends Extension {
             this._gdmManager.disable();
             this._gdmManager = null;
         }
-        // </GDM_EXCLUDE>
-        // <GDM_EXCLUDE>
         if (this._crossSessionManager) {
             this._crossSessionManager.disable();
             this._crossSessionManager = null;

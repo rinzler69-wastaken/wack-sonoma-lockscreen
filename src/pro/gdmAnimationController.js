@@ -2,8 +2,7 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { WackCupertinoRestPrompt } from '../main/cupertinoPrompt.js';
-import { GDM_CROSSFADE_DURATION } from '../main/constants.js';
-import { _log, _setActorVisible } from './gdmUtils.js';
+import { _log, _setActorVisible, GDM_CROSSFADE_DURATION } from './gdmUtils.js';
 
 export class GdmAnimationController {
     constructor(gdmManager) {

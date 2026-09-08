@@ -5,9 +5,8 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {
     CUPERTINO_PROMPT_VERTICAL_FRACTION,
-    GDM_CROSSFADE_DURATION,
 } from '../main/constants.js';
-import { _log, _logError, _setActorVisible } from './gdmUtils.js';
+import { _log, _logError, _setActorVisible, GDM_CROSSFADE_DURATION } from './gdmUtils.js';
 import { GdmClockManager } from './gdmClockManager.js';
 import { GdmWallpaperManager } from './gdmWallpaperManager.js';
 import { GdmUserListManager } from './gdmUserListManager.js';

@@ -1,6 +1,6 @@
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { GDM_USER_STACK_VERTICAL_FRACTION } from '../main/constants.js';
+import { GDM_USER_STACK_VERTICAL_FRACTION } from './gdmUtils.js';
 
 export class GdmUserListManager {
     constructor(gdmManager) {

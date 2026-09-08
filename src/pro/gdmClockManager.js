@@ -3,10 +3,10 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { WackClock } from '../main/wackClock.js';
 import {
-    GDM_DATETIME_TOP_FRACTION,
     DATE_LABEL_HEIGHT,
     centerClockLabel,
 } from '../main/constants.js';
+import { GDM_DATETIME_TOP_FRACTION } from './gdmUtils.js';
 
 export class GdmClockManager {
     constructor(gdmManager) {

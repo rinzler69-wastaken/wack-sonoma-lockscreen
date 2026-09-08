@@ -6,11 +6,10 @@ import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { getWallpaperAlpha } from '../main/alphaManager.js';
 import {
-    GDM_CROSSFADE_DURATION,
     PROMPT_BLUR_RADIUS,
     PROMPT_BLUR_BRIGHTNESS,
 } from '../main/constants.js';
-import { _log } from './gdmUtils.js';
+import { _log, GDM_CROSSFADE_DURATION } from './gdmUtils.js';
 
 export class GdmWallpaperManager {
     constructor(gdmManager) {
