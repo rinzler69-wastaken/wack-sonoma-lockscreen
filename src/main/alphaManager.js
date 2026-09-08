@@ -2,6 +2,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { CUPERTINO_PROMPT_VERTICAL_FRACTION, CUPERTINO_CHIP_VERTICAL_FRACTION } from './constants.js';
+import { _logError } from './mainUtils.js';
 import {
     parseHexColor,
     getApcaContrast,
@@ -187,7 +188,7 @@ export async function getWallpaperAlpha(params) {
                 bgNoise = diffSum / diffCount;
             }
         } catch (e) {
-            console.error(`[WACK/AlphaManager] Failed to read/scale wallpaper for luminance: ${e}`);
+            _logError(`[WACK/AlphaManager] Failed to read/scale wallpaper for luminance: ${e}`);
         }
     }
 
@@ -478,7 +479,7 @@ export async function getWallpaperPromptColor(params) {
                     sampledEnd = sliceResult.avgColor;
                     direction = 'none';
                 } catch (saveErr) {
-                    console.error(`[WACK/AlphaManager] Failed to save blurred prompt slice: ${saveErr}`);
+                    _logError(`[WACK/AlphaManager] Failed to save blurred prompt slice: ${saveErr}`);
                 }
             }
 
@@ -533,7 +534,7 @@ export async function getWallpaperPromptColor(params) {
                     cFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
                     cancelImagePath = cancelFilePath;
                 } catch (saveErr) {
-                    console.error(`[WACK/AlphaManager] Failed to save cancel slice: ${saveErr}`);
+                    _logError(`[WACK/AlphaManager] Failed to save cancel slice: ${saveErr}`);
                 }
             }
 
@@ -545,7 +546,7 @@ export async function getWallpaperPromptColor(params) {
                     chFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
                     cancelHoverImagePath = cancelHoverFilePath;
                 } catch (saveErr) {
-                    console.error(`[WACK/AlphaManager] Failed to save cancel hover slice: ${saveErr}`);
+                    _logError(`[WACK/AlphaManager] Failed to save cancel hover slice: ${saveErr}`);
                 }
             }
 
@@ -557,11 +558,11 @@ export async function getWallpaperPromptColor(params) {
                     caFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
                     cancelActiveImagePath = cancelActiveFilePath;
                 } catch (saveErr) {
-                    console.error(`[WACK/AlphaManager] Failed to save cancel active slice: ${saveErr}`);
+                    _logError(`[WACK/AlphaManager] Failed to save cancel active slice: ${saveErr}`);
                 }
             }
         } catch (e) {
-            console.error(`[WACK/AlphaManager] Failed to sample wallpaper for prompt color: ${e}`);
+            _logError(`[WACK/AlphaManager] Failed to sample wallpaper for prompt color: ${e}`);
         }
     }
 
