@@ -308,3 +308,9 @@ msgstr "Tính năng sắp tới"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "Kiểm tra các tính năng PRO của tiện ích mở rộng này trên kho lưu trữ GitHub của nó."
 
+msgid "Prompt Vibrancy"
+msgstr "Hiệu ứng kính mờ cho ô nhập mật khẩu"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "Áp dụng hiệu ứng kính mờ cho ô nhập mật khẩu (Làm mờ tĩnh)."
+

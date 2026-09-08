@@ -308,3 +308,9 @@ msgstr "今後の機能"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "この拡張機能のGitHubリポジトリでPRO機能を確認してください。"
 
+msgid "Prompt Vibrancy"
+msgstr "パスワード欄のすりガラス効果"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "パスワード入力欄にすりガラス（フロストガラス）効果を適用します（静的ブラー）。"
+

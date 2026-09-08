@@ -1,26 +1,33 @@
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { CUPERTINO_PROMPT_VERTICAL_FRACTION } from './constants.js';
+import { CUPERTINO_PROMPT_VERTICAL_FRACTION, CUPERTINO_CHIP_VERTICAL_FRACTION } from './constants.js';
 import {
     parseHexColor,
-    getRelativeLuminance,
-    getPerceptualLightness,
     getApcaContrast,
-    getPromptBlendAlpha,
-    getPromptDarkenedHueColor,
-    getPromptInvertedNeutralColor,
-    blendOverOpaque,
-    PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD,
-    PROMPT_BRIGHT_HUE_MIN_CHROMA,
+    rgbToHsl,
+    hslToRgb,
     PROMPT_SHADOW_FLOOR,
-    PROMPT_SHADOW_ROOF,
 } from './colorUtils.js';
 import {
     resolveWallpaperSource,
     getFileMtimeAndSize,
     loadScaledWallpaperPixbuf,
+    getWallpaperFileInfo,
 } from './wallpaperUtils.js';
-import { sampleChromaWeightedColor } from './wallpaperSampler.js';
+import { createBlurredPromptSlice } from './wallpaperSampler.js';
+import {
+    PROMPT_BLUR_RADIUS,
+    PROMPT_BLUR_BRIGHTNESS,
+    CANCEL_BUTTON_BLUR_RADIUS,
+    CANCEL_BUTTON_BLUR_BRIGHTNESS,
+    CANCEL_BUTTON_HOVER_OVERLAY_ALPHA,
+    CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA,
+    CANCEL_BUTTON_WIDTH,
+    CANCEL_BUTTON_HEIGHT,
+    CANCEL_BUTTON_X_OFFSET,
+    CANCEL_BUTTON_Y_OFFSET,
+} from './constants.js';
 import {
     initCache,
     saveCache,
@@ -245,6 +252,8 @@ export async function getWallpaperPromptColor(params) {
         shadingType,
         wellH = 0,
         yCenterFraction = null,
+        promptBounds = null,
+        cancelBounds = null,
     } = params;
 
     await initCache();
@@ -257,45 +266,162 @@ export async function getWallpaperPromptColor(params) {
     const monitorWidth = monitor ? monitor.width : 1920;
     const monitorHeight = monitor ? monitor.height : 1080;
 
-    const { mtime, size } = await getFileMtimeAndSize(targetFilePath);
+    // The prompt chip sits at the bottom of the prompt stack (below the avatar).
+    // While vertical fraction (0.9575) positions the prompt stack as a whole,
+    // the chip itself is located lower on the screen (slightly higher than 0.9575, e.g. ~0.968).
+    const chipVerticalFraction = CUPERTINO_CHIP_VERTICAL_FRACTION ?? 0.968;
+    const yCenter = (yCenterFraction != null && yCenterFraction >= CUPERTINO_PROMPT_VERTICAL_FRACTION)
+        ? yCenterFraction
+        : chipVerticalFraction;
 
-    const cacheKey = `prompt_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${wellH}_${yCenterFraction ? yCenterFraction.toFixed(4) : 'null'}`;
-    if (hasCache(cacheKey)) {
-        console.debug(`[WACK/AlphaManager] cache HIT for key: ${cacheKey}`);
-        return getCache(cacheKey);
+    let normX1, normX2, normY1, normY2;
+    const promptBoundsCenterY = (promptBounds?.y1 != null && promptBounds?.y2 != null)
+        ? (promptBounds.y1 + promptBounds.y2) / 2
+        : null;
+
+    if (promptBounds &&
+        promptBounds.x1 != null &&
+        promptBounds.x2 != null &&
+        promptBounds.x2 > promptBounds.x1 &&
+        promptBounds.x1 >= 0 &&
+        promptBounds.x2 <= 1 &&
+        promptBoundsCenterY !== null &&
+        promptBoundsCenterY >= CUPERTINO_PROMPT_VERTICAL_FRACTION) {
+        normX1 = promptBounds.x1;
+        normX2 = promptBounds.x2;
+        normY1 = promptBounds.y1;
+        normY2 = promptBounds.y2;
+    } else {
+        // Cupertino prompt chip: ~170px width on 1080p (approx 8.9% screen width, centered at 0.50)
+        // and ~36px height (approx 3.3% screen height, centered at yCenter)
+        const halfW = (promptBounds?.x2 && promptBounds?.x1)
+            ? (promptBounds.x2 - promptBounds.x1) / 2
+            : (170 / monitorWidth) / 2;
+        normX1 = Math.max(0, 0.50 - halfW);
+        normX2 = Math.min(1, 0.50 + halfW);
+        const halfH = 18 / monitorHeight;
+        normY1 = Math.max(0, yCenter - halfH);
+        normY2 = Math.min(1, yCenter + halfH);
     }
 
-    let sampled = { r: 40, g: 40, b: 40 };
+    // Cancel button bounds (offset with CANCEL_BUTTON_X_OFFSET / CANCEL_BUTTON_Y_OFFSET)
+    let normCancelX1, normCancelX2, normCancelY1, normCancelY2;
+    const offsetX = CANCEL_BUTTON_X_OFFSET / monitorWidth;
+    const offsetY = CANCEL_BUTTON_Y_OFFSET / monitorHeight;
+    const btnHalfW = (CANCEL_BUTTON_WIDTH / 2) / monitorWidth;
+    const btnHalfH = (CANCEL_BUTTON_HEIGHT / 2) / monitorHeight;
 
-    const yCenter = (yCenterFraction !== undefined && yCenterFraction !== null)
-        ? yCenterFraction
-        : (CUPERTINO_PROMPT_VERTICAL_FRACTION - 0.3 * (wellH / monitorHeight));
+    if (cancelBounds &&
+        cancelBounds.x1 != null && cancelBounds.x2 != null &&
+        cancelBounds.x2 > cancelBounds.x1) {
+        normCancelX1 = Math.max(0, Math.min(1, cancelBounds.x1 + offsetX));
+        normCancelX2 = Math.max(0, Math.min(1, cancelBounds.x2 + offsetX));
+        normCancelY1 = Math.max(0, Math.min(1, cancelBounds.y1 + offsetY));
+        normCancelY2 = Math.max(0, Math.min(1, cancelBounds.y2 + offsetY));
+    } else {
+        // Fallback: placed adjacent to prompt entry left edge (12px gap) plus user offset
+        const baseCenterX = normX1 - (12 / monitorWidth) - btnHalfW;
+        const baseCenterY = (normY1 + normY2) / 2;
+        const centerX = baseCenterX + offsetX;
+        const centerY = baseCenterY + offsetY;
+        normCancelX1 = Math.max(0, Math.min(1, centerX - btnHalfW));
+        normCancelX2 = Math.max(0, Math.min(1, centerX + btnHalfW));
+        normCancelY1 = Math.max(0, Math.min(1, centerY - btnHalfH));
+        normCancelY2 = Math.max(0, Math.min(1, centerY + btnHalfH));
+    }
+
+    const { mtime, size } = await getFileMtimeAndSize(targetFilePath);
+
+    const boundsKey = `${normX1.toFixed(4)}_${normX2.toFixed(4)}_${normY1.toFixed(4)}_${normY2.toFixed(4)}`;
+    const cancelBoundsKey = `${normCancelX1.toFixed(4)}_${normCancelX2.toFixed(4)}_${normCancelY1.toFixed(4)}_${normCancelY2.toFixed(4)}`;
+    const cacheKey = `prompt_grad_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${boundsKey}_cb${cancelBoundsKey}_b${PROMPT_BLUR_RADIUS}_pbr${PROMPT_BLUR_BRIGHTNESS}_cr${CANCEL_BUTTON_BLUR_RADIUS}_cbr${CANCEL_BUTTON_BLUR_BRIGHTNESS}_chov${CANCEL_BUTTON_HOVER_OVERLAY_ALPHA}_cact${CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA}_cover_v8`;
+    if (hasCache(cacheKey)) {
+        const cached = getCache(cacheKey);
+        if (cached && cached.start && cached.end) {
+            const hasPromptImg = cached.imagePath && Gio.File.new_for_path(cached.imagePath).query_exists(null);
+            const hasCancelImg = cached.cancelImagePath && Gio.File.new_for_path(cached.cancelImagePath).query_exists(null);
+            const hasHoverImg = !cached.cancelHoverImagePath || Gio.File.new_for_path(cached.cancelHoverImagePath).query_exists(null);
+            const hasActiveImg = !cached.cancelActiveImagePath || Gio.File.new_for_path(cached.cancelActiveImagePath).query_exists(null);
+            if (hasPromptImg && hasCancelImg && hasHoverImg && hasActiveImg) {
+                console.debug(`[WACK/AlphaManager] cache HIT for key: ${cacheKey}`);
+                return cached;
+            }
+        }
+    }
+
+    let sampledStart = null;
+    let sampledEnd = null;
+    let sampledPrimary = null;
+    let direction = 'vertical';
+    let imagePath = null;
+    let cancelImagePath = null;
+    let cancelHoverImagePath = null;
+    let cancelActiveImagePath = null;
+    let shadowAlpha = undefined;
 
     if (isColor) {
         const c1 = parseHexColor(primaryColor);
         const c2 = parseHexColor(secondaryColor);
 
         if (shadingType === 0) {
-            sampled = c1;
+            const hsl = rgbToHsl(c1.r, c1.g, c1.b);
+            const specularL = Math.min(1.0, hsl.l + 0.05);
+            sampledStart = hslToRgb(hsl.h, hsl.s, specularL);
+            sampledEnd = { ...c1 };
+            sampledPrimary = { ...c1 };
         } else if (shadingType === 1) {
-            // The Cupertino password field sits in the lower third, so bias the
-            // vertical gradient sample toward that lower-centered band.
-            const t = Math.max(0.0, Math.min(1.0, yCenter));
-            sampled = {
-                r: Math.round(c1.r + (c2.r - c1.r) * t),
-                g: Math.round(c1.g + (c2.g - c1.g) * t),
-                b: Math.round(c1.b + (c2.b - c1.b) * t),
+            const y1 = normY1;
+            const y2 = normY2;
+            const yt = (normY1 + normY2) / 2;
+            sampledStart = {
+                r: Math.round(c1.r + (c2.r - c1.r) * y1),
+                g: Math.round(c1.g + (c2.g - c1.g) * y1),
+                b: Math.round(c1.b + (c2.b - c1.b) * y1),
+            };
+            sampledEnd = {
+                r: Math.round(c1.r + (c2.r - c1.r) * y2),
+                g: Math.round(c1.g + (c2.g - c1.g) * y2),
+                b: Math.round(c1.b + (c2.b - c1.b) * y2),
+            };
+            sampledPrimary = {
+                r: Math.round(c1.r + (c2.r - c1.r) * yt),
+                g: Math.round(c1.g + (c2.g - c1.g) * yt),
+                b: Math.round(c1.b + (c2.b - c1.b) * yt),
             };
         } else {
-            sampled = {
+            sampledStart = { ...c1 };
+            sampledEnd = { ...c2 };
+            sampledPrimary = {
                 r: Math.round((c1.r + c2.r) / 2),
                 g: Math.round((c1.g + c2.g) / 2),
                 b: Math.round((c1.b + c2.b) / 2),
             };
+            direction = 'horizontal';
         }
     } else if (targetFilePath) {
         try {
-            const pixbuf = await loadScaledWallpaperPixbuf(targetFilePath, 256, 256, true);
+            const fileInfo = await getWallpaperFileInfo(targetFilePath);
+            let targetW = monitorWidth;
+            let targetH = monitorHeight;
+            if (fileInfo && fileInfo.width > 0 && fileInfo.height > 0) {
+                const origW = fileInfo.width;
+                const origH = fileInfo.height;
+                if (pictureOptions === 'stretched') {
+                    targetW = monitorWidth;
+                    targetH = monitorHeight;
+                } else if (pictureOptions === 'scaled') {
+                    const scale = Math.min(monitorWidth / origW, monitorHeight / origH);
+                    targetW = Math.max(1, Math.round(origW * scale));
+                    targetH = Math.max(1, Math.round(origH * scale));
+                } else {
+                    // zoom / spanned / default: cover
+                    const scale = Math.max(monitorWidth / origW, monitorHeight / origH);
+                    targetW = Math.max(1, Math.round(origW * scale));
+                    targetH = Math.max(1, Math.round(origH * scale));
+                }
+            }
+
+            const pixbuf = await loadScaledWallpaperPixbuf(targetFilePath, targetW, targetH, false);
 
             const pbWidth = pixbuf.get_width();
             const pbHeight = pixbuf.get_height();
@@ -313,15 +439,20 @@ export async function getWallpaperPromptColor(params) {
                     visibleH = pbWidth / monitorAspect;
                     visibleY = (pbHeight - visibleH) / 2;
                 }
+            } else if (pictureOptions === 'scaled') {
+                if (pbAspect > monitorAspect) {
+                    visibleH = pbWidth / monitorAspect;
+                    visibleY = (pbHeight - visibleH) / 2;
+                } else if (pbAspect < monitorAspect) {
+                    visibleW = pbHeight * monitorAspect;
+                    visibleX = (pbWidth - visibleW) / 2;
+                }
             }
 
-            const y1 = yCenter - 20 / monitorHeight;
-            const y2 = yCenter + 20 / monitorHeight;
-
-            const xStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * 0.40)));
-            const xEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * 0.60)));
-            const yStart = Math.max(0, Math.min(pbHeight - 1, Math.round(visibleY + visibleH * y1)));
-            const yEnd = Math.max(1, Math.min(pbHeight, Math.round(visibleY + visibleH * y2)));
+            const xStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normX1)));
+            const xEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * normX2)));
+            const yStart = Math.max(0, Math.min(pbHeight - 1, Math.round(visibleY + visibleH * normY1)));
+            const yEnd = Math.max(1, Math.min(pbHeight, Math.round(visibleY + visibleH * normY2)));
 
             const mappedBounds = {
                 x1: xStart / pbWidth,
@@ -330,50 +461,132 @@ export async function getWallpaperPromptColor(params) {
                 y2: yEnd / pbHeight,
             };
 
-            const centerCoords = {
-                x: ((xStart + xEnd) / 2) / pbWidth,
-                y: ((yStart + yEnd) / 2) / pbHeight,
+            const userName = GLib.get_user_name();
+            const hash = GLib.compute_checksum_for_string(GLib.ChecksumType.MD5, cacheKey, -1).substring(0, 8);
+
+            const sliceResult = createBlurredPromptSlice(pixbuf, mappedBounds, 320, 40, PROMPT_BLUR_RADIUS, PROMPT_BLUR_BRIGHTNESS);
+            if (sliceResult?.pixbuf) {
+                const filePath = `/var/tmp/wack-prompt-blur-${userName}-${hash}.png`;
+                try {
+                    sliceResult.pixbuf.savev(filePath, 'png', [], []);
+                    const pFile = Gio.File.new_for_path(filePath);
+                    pFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
+                    imagePath = filePath;
+                    shadowAlpha = sliceResult.shadowAlpha;
+                    sampledPrimary = sliceResult.avgColor;
+                    sampledStart = sliceResult.avgColor;
+                    sampledEnd = sliceResult.avgColor;
+                    direction = 'none';
+                } catch (saveErr) {
+                    console.error(`[WACK/AlphaManager] Failed to save blurred prompt slice: ${saveErr}`);
+                }
+            }
+
+            // Sample dedicated slice for cancel button
+            const cxStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normCancelX1)));
+            const cxEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * normCancelX2)));
+            const cyStart = Math.max(0, Math.min(pbHeight - 1, Math.round(visibleY + visibleH * normCancelY1)));
+            const cyEnd = Math.max(1, Math.min(pbHeight, Math.round(visibleY + visibleH * normCancelY2)));
+
+            const cancelMappedBounds = {
+                x1: cxStart / pbWidth,
+                x2: cxEnd / pbWidth,
+                y1: cyStart / pbHeight,
+                y2: cyEnd / pbHeight,
             };
 
-            // Sample using chroma-weighted, cluster-aware sampler
-            sampled = sampleChromaWeightedColor(pixbuf, mappedBounds, centerCoords);
+            const cancelSliceResult = createBlurredPromptSlice(
+                pixbuf,
+                cancelMappedBounds,
+                CANCEL_BUTTON_WIDTH,
+                CANCEL_BUTTON_HEIGHT,
+                CANCEL_BUTTON_BLUR_RADIUS,
+                CANCEL_BUTTON_BLUR_BRIGHTNESS,
+                0.0
+            );
+
+            const cancelHoverSliceResult = createBlurredPromptSlice(
+                pixbuf,
+                cancelMappedBounds,
+                CANCEL_BUTTON_WIDTH,
+                CANCEL_BUTTON_HEIGHT,
+                CANCEL_BUTTON_BLUR_RADIUS,
+                CANCEL_BUTTON_BLUR_BRIGHTNESS,
+                CANCEL_BUTTON_HOVER_OVERLAY_ALPHA
+            );
+
+            const cancelActiveSliceResult = createBlurredPromptSlice(
+                pixbuf,
+                cancelMappedBounds,
+                CANCEL_BUTTON_WIDTH,
+                CANCEL_BUTTON_HEIGHT,
+                CANCEL_BUTTON_BLUR_RADIUS,
+                CANCEL_BUTTON_BLUR_BRIGHTNESS,
+                CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA
+            );
+
+            if (cancelSliceResult?.pixbuf) {
+                const cancelFilePath = `/var/tmp/wack-cancel-blur-${userName}-${hash}.png`;
+                try {
+                    cancelSliceResult.pixbuf.savev(cancelFilePath, 'png', [], []);
+                    const cFile = Gio.File.new_for_path(cancelFilePath);
+                    cFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
+                    cancelImagePath = cancelFilePath;
+                } catch (saveErr) {
+                    console.error(`[WACK/AlphaManager] Failed to save cancel slice: ${saveErr}`);
+                }
+            }
+
+            if (cancelHoverSliceResult?.pixbuf) {
+                const cancelHoverFilePath = `/var/tmp/wack-cancel-blur-hover-${userName}-${hash}.png`;
+                try {
+                    cancelHoverSliceResult.pixbuf.savev(cancelHoverFilePath, 'png', [], []);
+                    const chFile = Gio.File.new_for_path(cancelHoverFilePath);
+                    chFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
+                    cancelHoverImagePath = cancelHoverFilePath;
+                } catch (saveErr) {
+                    console.error(`[WACK/AlphaManager] Failed to save cancel hover slice: ${saveErr}`);
+                }
+            }
+
+            if (cancelActiveSliceResult?.pixbuf) {
+                const cancelActiveFilePath = `/var/tmp/wack-cancel-blur-active-${userName}-${hash}.png`;
+                try {
+                    cancelActiveSliceResult.pixbuf.savev(cancelActiveFilePath, 'png', [], []);
+                    const caFile = Gio.File.new_for_path(cancelActiveFilePath);
+                    caFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
+                    cancelActiveImagePath = cancelActiveFilePath;
+                } catch (saveErr) {
+                    console.error(`[WACK/AlphaManager] Failed to save cancel active slice: ${saveErr}`);
+                }
+            }
         } catch (e) {
             console.error(`[WACK/AlphaManager] Failed to sample wallpaper for prompt color: ${e}`);
         }
     }
 
-    const luminance = Math.max(0, Math.min(1, getRelativeLuminance(sampled)));
-    const perceptualL = getPerceptualLightness(luminance);
+    if (!sampledPrimary) {
+        const fallback = { r: 40, g: 40, b: 40 };
+        sampledPrimary = fallback;
+        sampledStart = fallback;
+        sampledEnd = fallback;
+    }
 
-    const maxVal = Math.max(sampled.r, sampled.g, sampled.b);
-    const minVal = Math.min(sampled.r, sampled.g, sampled.b);
-    const chroma = (maxVal - minVal) / 255.0;
-    const isBrightSample = perceptualL > PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD;
-    const isBrightHue = isBrightSample && chroma >= PROMPT_BRIGHT_HUE_MIN_CHROMA;
-
-    const blended = isBrightHue
-        ? getPromptDarkenedHueColor(sampled)
-        : isBrightSample
-            ? getPromptInvertedNeutralColor(sampled, perceptualL)
-            : blendOverOpaque(
-            sampled,
-            { r: 255, g: 255, b: 255 },
-            getPromptBlendAlpha(sampled)
-        );
-
-    // Calculate a dynamic box-shadow alpha to help the entry chip stand out
-    // against light details/clouds in the wallpaper.
-    let shadowAlpha = PROMPT_SHADOW_FLOOR + (PROMPT_SHADOW_ROOF - PROMPT_SHADOW_FLOOR) * perceptualL;
-
-    // Dark chips already separate well; avoid piling a dirty shadow on top.
-    if (isBrightSample) {
+    if (shadowAlpha === undefined) {
         shadowAlpha = PROMPT_SHADOW_FLOOR;
     }
 
     const result = {
-        r: blended.r,
-        g: blended.g,
-        b: blended.b,
+        r: sampledPrimary.r,
+        g: sampledPrimary.g,
+        b: sampledPrimary.b,
+        start: { r: sampledStart.r, g: sampledStart.g, b: sampledStart.b },
+        end: { r: sampledEnd.r, g: sampledEnd.g, b: sampledEnd.b },
+        direction: direction,
+        imagePath: imagePath,
+        cancelImagePath: cancelImagePath,
+        cancelHoverImagePath: cancelHoverImagePath,
+        cancelActiveImagePath: cancelActiveImagePath,
         shadowAlpha: shadowAlpha,
     };
 

@@ -308,3 +308,9 @@ msgstr "Fitur Mendatang"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "Periksa fitur PRO ekstensi ini di repositori GitHub-nya."
 
+msgid "Prompt Vibrancy"
+msgstr "Efek Kaca Buram Kolom Kata Sandi"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "Menerapkan efek kaca buram pada kolom kata sandi (Blur Statis)."
+

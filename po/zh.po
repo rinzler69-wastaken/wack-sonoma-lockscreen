@@ -308,3 +308,9 @@ msgstr "即将推出的功能"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "在此扩展的 GitHub 仓库中查看 PRO 功能。"
 
+msgid "Prompt Vibrancy"
+msgstr "密码框毛玻璃效果"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "为密码输入框应用毛玻璃磨砂效果（静态模糊）。"
+

@@ -16,8 +16,18 @@ export const TIME_LABEL_HEIGHT_FALLBACK = 128; // Fallback natural height for th
 
 // Background blur settings when entering the password prompt
 export const PROMPT_BLUR_RADIUS = 50;
-export const PROMPT_BLUR_BRIGHTNESS = 0.85;
+export const PROMPT_BLUR_BRIGHTNESS = 1.0;
 export const PROMPT_BLUR_DURATION = 300;
+
+// Cancel button sampling constants (for GDM / lockscreen)
+export const CANCEL_BUTTON_BLUR_RADIUS = 50;
+export const CANCEL_BUTTON_BLUR_BRIGHTNESS = 1.0;
+export const CANCEL_BUTTON_HOVER_OVERLAY_ALPHA = 0.12;
+export const CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA = 0.24;
+export const CANCEL_BUTTON_WIDTH = 34; // px
+export const CANCEL_BUTTON_HEIGHT = 34; // px
+export const CANCEL_BUTTON_X_OFFSET = 0; // px
+export const CANCEL_BUTTON_Y_OFFSET = 0; // px
 
 export const SETTINGS_SCHEMA = 'org.gnome.shell.extensions.wack-lockscreen-clock';
 
@@ -29,7 +39,8 @@ export const NOTIF_CARD_RADIUS = 12;
 
 // Cupertino mode prompt positioning
 export const CUPERTINO_PROMPT_VERTICAL_FRACTION = 0.9575; // Prompt center Y as fraction of screen height
-export const CUPERTINO_PROMPT_WHITE_BLEND_ALPHA = 0.08;
+export const CUPERTINO_CHIP_VERTICAL_FRACTION = 0.9025; // Prompt chip actual center Y as fraction of screen height (offset lower than stack)
+export { CUPERTINO_PROMPT_WHITE_BLEND_ALPHA } from './colorUtils.js';
 
 // UI limits
 export const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
@@ -179,3 +190,4 @@ export function centerClockLabel(label, wrapper) {
         factor: 0.5,
     }));
 }
+

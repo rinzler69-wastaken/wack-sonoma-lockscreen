@@ -308,3 +308,9 @@ msgstr "Prossime funzioni"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "Controlla le funzionalità PRO di questa estensione sul suo repository GitHub."
 
+msgid "Prompt Vibrancy"
+msgstr "Vividezza del campo password"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "Applica un effetto vetro satinato al campo della password (sfocatura statica)."
+

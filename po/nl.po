@@ -308,3 +308,9 @@ msgstr "Aankomende functies"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "Bekijk de PRO-functies van deze extensie op de GitHub-repository."
 
+msgid "Prompt Vibrancy"
+msgstr "Matglaseffect van het wachtwoordveld"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "Past een matglaseffect toe op het wachtwoordveld (statische vervaging)."
+

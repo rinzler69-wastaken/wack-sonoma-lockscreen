@@ -1,4 +1,5 @@
 import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { getWallpaperPromptColor } from '../main/alphaManager.js';
@@ -25,7 +26,7 @@ export class GdmPromptStyling {
         const entry = this.findPromptEntry(authPrompt);
         let cursorBlink = true;
         const currentMetadata = this._gdm._currentWallpaperMetadata;
-        if (currentMetadata && typeof currentMetadata.cursorBlink === 'boolean') {
+        if (currentMetadata && currentMetadata.cursorBlink != null) {
             cursorBlink = currentMetadata.cursorBlink;
         } else if (this._gdm._extension) {
             cursorBlink = this._gdm._extension.getSettings().get_boolean('cursor-blink');
@@ -102,7 +103,19 @@ export class GdmPromptStyling {
             shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
         }
 
-        entry.set_style(`${entry._wackOriginalStyle} background-color: rgb(${color.r}, ${color.g}, ${color.b}) !important;${shadowStyle}`);
+        let bgStyle;
+        if (color.imagePath) {
+            const imageUri = color.imagePath.startsWith('file://') ? color.imagePath : `file://${color.imagePath}`;
+            bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important;`;
+        } else if (color.start && color.end && color.direction) {
+            const startStr = `rgb(${color.start.r}, ${color.start.g}, ${color.start.b})`;
+            const endStr = `rgb(${color.end.r}, ${color.end.g}, ${color.end.b})`;
+            bgStyle = ` background-color: transparent !important; background-gradient-direction: ${color.direction} !important; background-gradient-start: ${startStr} !important; background-gradient-end: ${endStr} !important; background-image: none !important;`;
+        } else {
+            bgStyle = ` background-gradient-direction: none !important; background-image: none !important; background-color: rgb(${color.r}, ${color.g}, ${color.b}) !important;`;
+        }
+
+        entry.set_style(`${entry._wackOriginalStyle}${bgStyle}${shadowStyle}`);
     }
 
     applyCancelButtonBackground(button, color) {
@@ -141,26 +154,45 @@ export class GdmPromptStyling {
         if (!button.hover)
             button._wackPressed = false;
 
-        let r = color.r;
-        let g = color.g;
-        let b = color.b;
-
-        if (button._wackPressed) {
-            r = Math.round(r * 0.75 + 255 * 0.25);
-            g = Math.round(g * 0.75 + 255 * 0.25);
-            b = Math.round(b * 0.75 + 255 * 0.25);
-        } else if (button.hover) {
-            r = Math.round(r * 0.875 + 255 * 0.125);
-            g = Math.round(g * 0.875 + 255 * 0.125);
-            b = Math.round(b * 0.875 + 255 * 0.125);
-        }
-
         let shadowStyle = '';
         if (color.shadowAlpha !== undefined) {
             shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
         }
 
-        button.set_style(`${button._wackOriginalStyle} background-color: rgb(${r}, ${g}, ${b}) !important;${shadowStyle}`);
+        let bgStyle;
+        let imgPath = color.cancelImagePath;
+        if (button._wackPressed && color.cancelActiveImagePath) {
+            imgPath = color.cancelActiveImagePath;
+        } else if (button.hover && color.cancelHoverImagePath) {
+            imgPath = color.cancelHoverImagePath;
+        }
+        if (!imgPath && color.imagePath) {
+            imgPath = color.imagePath;
+        }
+
+        if (imgPath) {
+            const imageUri = imgPath.startsWith('file://')
+                ? imgPath
+                : `file://${imgPath}`;
+            bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important;`;
+        } else {
+            let r = color.r;
+            let g = color.g;
+            let b = color.b;
+
+            if (button._wackPressed) {
+                r = Math.round(r * 0.75 + 255 * 0.25);
+                g = Math.round(g * 0.75 + 255 * 0.25);
+                b = Math.round(b * 0.75 + 255 * 0.25);
+            } else if (button.hover) {
+                r = Math.round(r * 0.875 + 255 * 0.125);
+                g = Math.round(g * 0.875 + 255 * 0.125);
+                b = Math.round(b * 0.875 + 255 * 0.125);
+            }
+            bgStyle = ` background-color: rgb(${r}, ${g}, ${b}) !important;`;
+        }
+
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}`);
     }
 
     clearCupertinoPromptBackground() {
@@ -191,10 +223,8 @@ export class GdmPromptStyling {
 
     async updateCupertinoPromptBackground(metadata = null) {
         const authPrompt = this._gdm._dialog?._authPrompt;
-        if (!authPrompt || !authPrompt.has_style_class_name('wack-cupertino-prompt')) {
-            this.clearCupertinoPromptBackground();
+        if (!authPrompt)
             return;
-        }
 
         const entry = this.findPromptEntry(authPrompt);
         if (!entry)
@@ -203,7 +233,7 @@ export class GdmPromptStyling {
         const effectiveMetadata = metadata ?? this._gdm._currentWallpaperMetadata;
 
         let promptVibrancy = true;
-        if (effectiveMetadata && typeof effectiveMetadata.promptVibrancy === 'boolean') {
+        if (effectiveMetadata && effectiveMetadata.promptVibrancy != null) {
             promptVibrancy = effectiveMetadata.promptVibrancy;
         } else {
             const settings = this._gdm._extension.getSettings();
@@ -222,26 +252,63 @@ export class GdmPromptStyling {
         }
 
         let yCenterFraction = null;
+        let promptBounds = null;
         if (entry) {
-            const [, yTrans] = entry.get_transformed_position();
+            const [xTrans, yTrans] = entry.get_transformed_position();
+            const wTrans = entry.get_width() || 0;
             const hTrans = entry.get_height() || 0;
             const monitor = Main.layoutManager?.primaryMonitor;
+            const monitorX = monitor ? monitor.x : 0;
             const monitorY = monitor ? monitor.y : 0;
             const monitorHeight = monitor ? monitor.height : 1080;
-            if (yTrans > 0 && monitorHeight > 0) {
+            const monitorWidth = monitor ? monitor.width : 1920;
+            if (yTrans > 0 && monitorHeight > 0)
                 yCenterFraction = (yTrans + hTrans / 2 - monitorY) / monitorHeight;
+            if (wTrans > 0 && hTrans > 0 && monitorWidth > 0 && monitorHeight > 0 && xTrans >= monitorX && yTrans >= monitorY) {
+                promptBounds = {
+                    x1: Math.max(0, Math.min(1, (xTrans - monitorX) / monitorWidth)),
+                    x2: Math.max(0, Math.min(1, (xTrans + wTrans - monitorX) / monitorWidth)),
+                    y1: Math.max(0, Math.min(1, (yTrans - monitorY) / monitorHeight)),
+                    y2: Math.max(0, Math.min(1, (yTrans + hTrans - monitorY) / monitorHeight)),
+                };
+            }
+        }
+
+        let cancelBounds = null;
+        const cancelButton = authPrompt?.cancelButton;
+        if (cancelButton && cancelButton.get_stage()) {
+            const [cxTrans, cyTrans] = cancelButton.get_transformed_position();
+            const cwTrans = cancelButton.get_width() || 34;
+            const chTrans = cancelButton.get_height() || 34;
+            const monitor = Main.layoutManager?.primaryMonitor;
+            const monitorX = monitor ? monitor.x : 0;
+            const monitorY = monitor ? monitor.y : 0;
+            const monitorHeight = monitor ? monitor.height : 1080;
+            const monitorWidth = monitor ? monitor.width : 1920;
+            if (cwTrans > 0 && chTrans > 0 && monitorWidth > 0 && monitorHeight > 0 && cxTrans >= monitorX && cyTrans >= monitorY) {
+                cancelBounds = {
+                    x1: Math.max(0, Math.min(1, (cxTrans - monitorX) / monitorWidth)),
+                    x2: Math.max(0, Math.min(1, (cxTrans + cwTrans - monitorX) / monitorWidth)),
+                    y1: Math.max(0, Math.min(1, (cyTrans - monitorY) / monitorHeight)),
+                    y2: Math.max(0, Math.min(1, (cyTrans + chTrans - monitorY) / monitorHeight)),
+                };
             }
         }
 
         let wallpaperParams = null;
         if (effectiveMetadata) {
-            if (effectiveMetadata.promptColor &&
-                typeof effectiveMetadata.promptColor.r === 'number' &&
-                typeof effectiveMetadata.promptColor.g === 'number' &&
-                typeof effectiveMetadata.promptColor.b === 'number') {
-                this.applyPromptEntryBackground(entry, effectiveMetadata.promptColor);
+            const promptColor = effectiveMetadata.promptColor;
+            const hasValidPromptImage = promptColor?.imagePath &&
+                Gio.File.new_for_path(promptColor.imagePath).query_exists(null);
+
+            if (promptColor &&
+                promptColor.r != null &&
+                promptColor.g != null &&
+                promptColor.b != null &&
+                hasValidPromptImage) {
+                this.applyPromptEntryBackground(entry, promptColor);
                 if (authPrompt.cancelButton)
-                    this.applyCancelButtonBackground(authPrompt.cancelButton, effectiveMetadata.promptColor);
+                    this.applyCancelButtonBackground(authPrompt.cancelButton, promptColor);
                 return;
             }
 
@@ -253,10 +320,29 @@ export class GdmPromptStyling {
                 shadingType: effectiveMetadata.shading_type,
                 wellH: wellH,
                 yCenterFraction: yCenterFraction,
+                promptBounds: promptBounds,
+                cancelBounds: cancelBounds,
             };
         } else {
-            this.clearCupertinoPromptBackground();
-            return;
+            const bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
+            const uri = bgSettings.get_string('picture-uri');
+            const style = bgSettings.get_enum('picture-options');
+            const primaryColor = bgSettings.get_string('primary-color');
+            const secondaryColor = bgSettings.get_string('secondary-color');
+            const shadingType = bgSettings.get_enum('color-shading-type');
+            const isColor = (style === 0);
+
+            wallpaperParams = {
+                uri,
+                isColor,
+                primaryColor,
+                secondaryColor,
+                shadingType,
+                wellH: wellH,
+                yCenterFraction: yCenterFraction,
+                promptBounds: promptBounds,
+                cancelBounds: cancelBounds,
+            };
         }
 
         if (!wallpaperParams)

@@ -409,7 +409,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
 
         const promptVibrancyRow = new Adw.ActionRow({
             title: _('Prompt Vibrancy'),
-            subtitle: _('Applies dynamic color to the password field based on wallpaper colors.'),
+            subtitle: _('Applies a frosted glass effect to the password field (Static Blur).'),
         });
         const promptVibrancySwitch = new Gtk.Switch({
             valign: Gtk.Align.CENTER,

@@ -303,7 +303,7 @@ export class GdmWallpaperManager {
 
             let alphaPromise;
             if (metadata) {
-                if (typeof metadata.clockAlpha === 'number') {
+                if (metadata.clockAlpha != null) {
                     alphaPromise = Promise.resolve(metadata.clockAlpha);
                 } else {
                     alphaPromise = getWallpaperAlpha({

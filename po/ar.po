@@ -308,3 +308,9 @@ msgstr "الميزات القادمة"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "تحقق من ميزات PRO لهذا الامتداد على مستودع GitHub الخاص به."
 
+msgid "Prompt Vibrancy"
+msgstr "تأثير الزجاج المصنفر لحقل كلمة المرور"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "تطبيق تأثير الزجاج المصنفر على حقل كلمة المرور (تمويه ثابت)."
+

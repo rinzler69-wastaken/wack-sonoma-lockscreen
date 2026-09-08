@@ -308,3 +308,9 @@ msgstr "Kommande funksjoner"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "Sjekk PRO-funktionene til denne utvidelsen i dens GitHub-arkiv."
 
+msgid "Prompt Vibrancy"
+msgstr "Frostet glasseffekt for passordfeltet"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "Bruker en frostet glasseffekt på passordfeltet (statisk uskarphet)."
+

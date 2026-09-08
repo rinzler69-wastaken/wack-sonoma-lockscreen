@@ -308,3 +308,9 @@ msgstr "Tulevat ominaisuudet"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "Katso tämän laajennuksen PRO-ominaisuudet sen GitHub-sivulta."
 
+msgid "Prompt Vibrancy"
+msgstr "Salasanakentän huurrelasitehoste"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "Käyttää huurrelasitehostetta salasanakenttään (staattinen sumennus)."
+

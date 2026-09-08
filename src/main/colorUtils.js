@@ -4,6 +4,7 @@
 //   At ROOF  (0.224): chip is 22.4% white on bright wallpapers — keeps the chip frosted-white.
 export const PROMPT_ALPHA_FLOOR = 0.16;
 export const PROMPT_ALPHA_ROOF = 0.224;
+export const CUPERTINO_PROMPT_WHITE_BLEND_ALPHA = 0.12;
 
 // Bright colorful samples should become a darker version of themselves, rather
 // than getting muddied by blending toward black. This tunes the target lightness
@@ -215,4 +216,33 @@ export function getPromptInvertedNeutralColor(sampled, perceptualL) {
     const alpha = baseAlpha + (PROMPT_INVERSE_ALPHA_CEILING - baseAlpha) * t;
 
     return blendOverOpaque(sampled, { r: 0, g: 0, b: 0 }, alpha);
+}
+
+export function processPromptColor(sampled) {
+    const luminance = Math.max(0, Math.min(1, getRelativeLuminance(sampled)));
+    const perceptualL = getPerceptualLightness(luminance);
+
+    const maxVal = Math.max(sampled.r, sampled.g, sampled.b);
+    const minVal = Math.min(sampled.r, sampled.g, sampled.b);
+    const chroma = (maxVal - minVal) / 255.0;
+    const isBrightSample = perceptualL > PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD;
+    const isBrightHue = isBrightSample && chroma >= PROMPT_BRIGHT_HUE_MIN_CHROMA;
+
+    const blended = isBrightHue
+        ? getPromptDarkenedHueColor(sampled)
+        : isBrightSample
+            ? getPromptInvertedNeutralColor(sampled, perceptualL)
+            : blendOverOpaque(
+            sampled,
+            { r: 255, g: 255, b: 255 },
+            getPromptBlendAlpha(sampled)
+        );
+
+    return {
+        r: blended.r,
+        g: blended.g,
+        b: blended.b,
+        perceptualL: perceptualL,
+        isBrightSample: isBrightSample,
+    };
 }

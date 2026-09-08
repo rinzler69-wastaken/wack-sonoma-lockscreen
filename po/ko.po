@@ -308,3 +308,9 @@ msgstr "출시 예정 기능"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "이 확장의 GitHub 리포지토리에서 PRO 기능을 확인하세요."
 
+msgid "Prompt Vibrancy"
+msgstr "비밀번호 입력창 반투명 효과"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "비밀번호 입력창에 반투명 유리(프로스트 글래스) 효과를 적용합니다 (정적 블러)."
+

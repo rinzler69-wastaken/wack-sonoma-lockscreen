@@ -753,25 +753,41 @@ export class GdmManager {
         }
 
         let yCenterFraction = null;
-        const entry = this._findPromptEntry(authPrompt);
+        let promptBounds = null;
+        const entry = this._findPromptEntry(authPrompt) ?? restPrompt?._hintBox;
         if (entry) {
-            const pos = entry.get_transformed_position();
-            const yTrans = pos[1];
+            const [xTrans, yTrans] = entry.get_transformed_position();
+            const wTrans = entry.get_width() || 0;
             const hTrans = entry.get_height() || 0;
             const monitor = Main.layoutManager?.primaryMonitor;
+            const monitorX = monitor ? monitor.x : 0;
             const monitorY = monitor ? monitor.y : 0;
             const monitorHeight = monitor ? monitor.height : 1080;
+            const monitorWidth = monitor ? monitor.width : 1920;
             if (yTrans > 0 && monitorHeight > 0)
                 yCenterFraction = (yTrans + hTrans / 2 - monitorY) / monitorHeight;
+            if (wTrans > 0 && hTrans > 0 && monitorWidth > 0 && monitorHeight > 0 && xTrans >= monitorX && yTrans >= monitorY) {
+                promptBounds = {
+                    x1: Math.max(0, Math.min(1, (xTrans - monitorX) / monitorWidth)),
+                    x2: Math.max(0, Math.min(1, (xTrans + wTrans - monitorX) / monitorWidth)),
+                    y1: Math.max(0, Math.min(1, (yTrans - monitorY) / monitorHeight)),
+                    y2: Math.max(0, Math.min(1, (yTrans + hTrans - monitorY) / monitorHeight)),
+                };
+            }
         }
 
         const wellChanged = wellH !== this._lastWellH;
         const yCenterChanged = yCenterFraction !== null &&
             (this._lastYCenterFraction === undefined || Math.abs(yCenterFraction - this._lastYCenterFraction) > 0.001);
+        const boundsChanged = promptBounds && (!this._lastPromptBounds ||
+            Math.abs(promptBounds.x1 - this._lastPromptBounds.x1) > 0.002 ||
+            Math.abs(promptBounds.x2 - this._lastPromptBounds.x2) > 0.002 ||
+            Math.abs(promptBounds.y1 - this._lastPromptBounds.y1) > 0.002);
 
-        if (wellChanged || yCenterChanged) {
+        if (wellChanged || yCenterChanged || boundsChanged) {
             if (wellChanged) this._lastWellH = wellH;
             if (yCenterChanged) this._lastYCenterFraction = yCenterFraction;
+            if (boundsChanged) this._lastPromptBounds = promptBounds;
             this._updateCupertinoPromptBackground().catch(e => {
                 _logError('[WACK/GdmManager] Failed to update prompt background in allocation: ' + e);
             });

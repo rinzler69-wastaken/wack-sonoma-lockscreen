@@ -308,3 +308,9 @@ msgstr "आने वाली विशेषताएँ"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "इस एक्सटेंशन के GitHub रिपॉजिटरी पर PRO फीचर्स देखें।"
 
+msgid "Prompt Vibrancy"
+msgstr "पासवर्ड फ़ील्ड का फ्रॉस्टेड ग्लास प्रभाव"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "पासवर्ड फ़ील्ड पर फ्रॉस्टेड ग्लास प्रभाव लागू करता है (स्थिर धुंधलापन)."
+

@@ -308,3 +308,9 @@ msgstr "Nadchodzące funkcje"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "Sprawdź funkcje PRO tego rozszerzenia w jego repozytorium na GitHubie."
 
+msgid "Prompt Vibrancy"
+msgstr "Efekt matowego szkła pola hasła"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "Stosuje efekt matowego szkła do pola wprowadzania hasła (statyczne rozmycie)."
+

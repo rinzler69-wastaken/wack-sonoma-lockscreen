@@ -308,3 +308,9 @@ msgstr ""
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr ""
 
+msgid "Prompt Vibrancy"
+msgstr ""
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr ""
+

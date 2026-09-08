@@ -308,3 +308,9 @@ msgstr "תכונות קרובות"
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "בדוק את תכונות ה-PRO של הרחבה זו במאגר ה-GitHub שלה."
 
+msgid "Prompt Vibrancy"
+msgstr "אפקט זכוכית מטושטשת לשדה הסיסמה"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "החלת אפקט זכוכית מטושטשת על שדה הסיסמה (טשטוש סטטי)."
+

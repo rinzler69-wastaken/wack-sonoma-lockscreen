@@ -308,3 +308,9 @@ msgstr "คุณสมบัติที่กำลังจะมาถึง
 msgid "Check PRO features of this extension on this extension's GitHub repo."
 msgstr "ตรวจสอบคุณสมบัติ PRO ของส่วนขยายนี้บนพื้นที่เก็บข้อมูล GitHub ของส่วนขยายนี้"
 
+msgid "Prompt Vibrancy"
+msgstr "เอฟเฟกต์กระจกฝ้าของช่องรหัสผ่าน"
+
+msgid "Applies a frosted glass effect to the password field (Static Blur)."
+msgstr "ใช้เอฟเฟกต์กระจกฝ้ากับช่องใส่รหัสผ่าน (การเบลอแบบคงที่)"
+
