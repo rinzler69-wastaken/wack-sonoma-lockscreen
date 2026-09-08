@@ -57,6 +57,15 @@ A perceptually calibrated colour engine that samples the wallpaper behind the pr
 - Results are **disk-cached by wallpaper file path, mtime, and size** — no repeat computation on consecutive locks.
 - Supports GNOME background **slideshow XML** (parses `<static>` and `<transition>` blocks with elapsed-time math to pick the correct slide).
 
+<p align="center">
+  <img src="screenshots/pvbr1.png" width="48%" />
+  <img src="screenshots/pvbr2.png" width="48%" />
+</p>
+<p align="center">
+  <img src="screenshots/pvbr3.png" width="48%" />
+  <img src="screenshots/pvbr4.png" width="48%" />
+</p>
+
 ### Custom Clock & Prompt Animations (Legacy Mode)
 Choose how the clock exits and the prompt enters when unlocking:
 
