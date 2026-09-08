@@ -597,6 +597,16 @@ export default class WackLockscreenClockExtension extends Extension {
             !isPowerSaver;
     }
 
+    // This extension declares the 'unlock-dialog' session mode because it
+    // patches Main.screenShield (clock/wallpaper/lockscreen-message overlays)
+    // and, on GDM, GdmManager patches the login dialog itself (Cupertino-style
+    // prompt/avatar/user-list styling and crossfade animations) to deliver its
+    // core lockscreen/login-screen theming feature. Both patch sets run with
+    // the elevated trust of the lock/login screen, so disable() must fully
+    // and unconditionally reverse every hook installed in enable() (screen
+    // shield signal connections, the GdmManager instance and everything it
+    // wired into the GDM dialog, cross-session manager state) rather than
+    // leave any of it dangling once the extension is toggled off.
     disable() {
         if (Main.screenShield) {
             Main.screenShield.disconnectObject(this);
