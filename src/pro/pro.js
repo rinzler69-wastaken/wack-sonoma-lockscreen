@@ -344,7 +344,13 @@ export class GdmManager {
             const wasAlreadyVisible = dialog._authPrompt?.visible;
             this._origShowPrompt(...args);
 
-            if (this._selectedPromptMode === 'wack' && wasAlreadyVisible && this._legacyPromptAnimationState === 'selection')
+            // Guard against re-entering selection on a spurious _showPrompt re-fire
+            // (e.g. GDM re-arming the entry after a wrong-password retry). If the
+            // prompt is already visible and already mid-selection, _onUserSelected()
+            // must not run again for either mode — otherwise animateCupertinoPromptIn()
+            // re-fades an already-opaque authPrompt from 0, producing the double
+            // fade-in, and _cupertinoRestPromptContainer gets needlessly rebuilt.
+            if (wasAlreadyVisible && this._legacyPromptAnimationState === 'selection')
                 return;
 
             this._onUserSelected();
