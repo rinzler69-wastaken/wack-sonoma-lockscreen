@@ -330,7 +330,18 @@ export class GdmPromptStyling {
             }
 
             wallpaperParams = {
-                uri: effectiveMetadata.uri,
+                // Prefer the stable source URI (original wallpaper file) over the
+                // timestamped temp JPG copy. The temp copy gets a fresh mtime every
+                // time _saveWallpaper() runs, which breaks cacheKey stability and
+                // causes the slice cleanup to delete still-valid files on every visit.
+                // For XML slideshows, use resolved_slide_path directly so the cache
+                // key is based on the actual current image file rather than the XML.
+                // source_uri points to the user's actual wallpaper file whose mtime
+                // only changes when the wallpaper genuinely changes — same strategy
+                // as GDM's own background system.
+                uri: effectiveMetadata.resolved_slide_path
+                    ? `file://${effectiveMetadata.resolved_slide_path}`
+                    : (effectiveMetadata.source_uri ?? effectiveMetadata.uri),
                 isColor: effectiveMetadata.is_color,
                 primaryColor: effectiveMetadata.primary_color,
                 secondaryColor: effectiveMetadata.secondary_color,
