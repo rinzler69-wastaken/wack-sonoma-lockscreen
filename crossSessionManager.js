@@ -1,7 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GdkPixbuf from 'gi://GdkPixbuf';
-import { resolveSlideshowXmlContent } from './constants.js';
+import { resolveSlideshowXmlContent } from './src/main/constants.js';
 
 function _log(msg) {
     console.debug(msg);

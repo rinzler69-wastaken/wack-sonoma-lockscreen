@@ -4,7 +4,7 @@ import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import { CLOCK_ANIMATION_OPTIONS, PROMPT_ANIMATION_OPTIONS } from './anims.js';
+import { CLOCK_ANIMATION_OPTIONS, PROMPT_ANIMATION_OPTIONS } from './src/main/anims.js';
 
 function _isWackShellInstalled() {
     const userPath = GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'extensions', 'wack-shell@rinzler69-wastaken.github.com']);
@@ -31,9 +31,11 @@ function _getGdmStatus(dir) {
         if (!activeDir || !activeDir.query_exists(null))
             return { enabled: false, reason: 'missing-sys-install' };
 
-        const hasProJs = activeDir.get_child('pro.js').query_exists(null);
+        const proDir = activeDir.get_child('src').get_child('pro');
+        const hasPro = (proDir.query_exists(null) && proDir.get_child('pro.js').query_exists(null)) ||
+            activeDir.get_child('pro.js').query_exists(null);
         const hasCrossSessionJs = activeDir.get_child('crossSessionManager.js').query_exists(null);
-        if (!hasProJs || !hasCrossSessionJs)
+        if (!hasPro || !hasCrossSessionJs)
             return { enabled: false, reason: 'missing-modules' };
 
         let hasGdmSessionMode = false;
@@ -888,7 +890,7 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
             if (gdmStatus.reason === 'missing-sys-install') {
                 explanation = _('Extension is not installed system-wide in /usr/share.');
             } else if (gdmStatus.reason === 'missing-modules') {
-                explanation = _('GDM expansion modules (pro.js) are missing system-wide.');
+                explanation = _('GDM expansion modules (src/pro) are missing system-wide.');
             } else if (gdmStatus.reason === 'missing-session-mode') {
                 explanation = _('GDM session mode is not enabled in system-wide metadata.');
             } else if (gdmStatus.reason === 'missing-dconf') {

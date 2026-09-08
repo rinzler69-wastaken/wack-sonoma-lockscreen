@@ -61,7 +61,7 @@ if [ "${1:-}" = "--force" ]; then
     FORCE=true
 fi
 
-if [ "$FORCE" = false ] && [ -f "$TARGET_DIR/pro.js" ] && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
+if [ "$FORCE" = false ] && { [ -f "$TARGET_DIR/src/pro/pro.js" ] || [ -f "$TARGET_DIR/pro.js" ]; } && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
     echo "-> Verifying and repairing system-wide permissions and ownership..."
     chown -R root:root "$TARGET_DIR"
     chmod -R u=rwX,go=rX "$TARGET_DIR"
@@ -96,6 +96,7 @@ if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
             --exclude="*.bak" \
             --exclude="checkthisthingblyat" \
             --exclude="pro.js" \
+            --exclude="src/pro" \
             --exclude="crossSessionManager.js" \
             "$SRC_DIR/" "$TARGET_DIR/"
     else
@@ -114,10 +115,38 @@ fi
 # 2. Deploy DLC modules and restore unstripped hook files if needed
 echo "-> Deploying DLC modules and restoring hook files..."
 REPO_RAW_URL="https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main"
-for file in "pro.js" "crossSessionManager.js" "extension.js" "prefs.js"; do
+
+# Clean up legacy root pro.js if present
+rm -f "$TARGET_DIR/pro.js"
+
+mkdir -p "$TARGET_DIR/src/pro"
+PRO_FILES=(
+    "pro.js"
+    "gdmUtils.js"
+    "gdmClockManager.js"
+    "gdmWallpaperManager.js"
+    "gdmUserListManager.js"
+    "gdmMessageManager.js"
+    "gdmPromptStyling.js"
+    "gdmAvatarManager.js"
+    "gdmAnimationController.js"
+)
+for pro_file in "${PRO_FILES[@]}"; do
+    if [ -f "$SRC_DIR/src/pro/$pro_file" ]; then
+        if [ "$SRC_DIR" != "$TARGET_DIR" ]; then
+            echo "   Copying local src/pro/$pro_file..."
+            cp "$SRC_DIR/src/pro/$pro_file" "$TARGET_DIR/src/pro/"
+        fi
+    else
+        echo "   Downloading src/pro/$pro_file from repository..."
+        curl -sSL "$REPO_RAW_URL/src/pro/$pro_file" -o "$TARGET_DIR/src/pro/$pro_file"
+    fi
+done
+
+for file in "crossSessionManager.js" "extension.js" "prefs.js"; do
     USE_LOCAL=false
     if [ -f "$SRC_DIR/$file" ]; then
-        if [ "$file" = "pro.js" ] || [ "$file" = "crossSessionManager.js" ]; then
+        if [ "$file" = "crossSessionManager.js" ]; then
             USE_LOCAL=true
         else
             if grep -q "GDM_EXCLUDE" "$SRC_DIR/$file"; then
