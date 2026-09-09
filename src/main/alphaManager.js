@@ -1,4 +1,3 @@
-import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -34,13 +33,6 @@ import {
     CANCEL_BUTTON_HEIGHT,
     CANCEL_BUTTON_X_OFFSET,
     CANCEL_BUTTON_Y_OFFSET,
-    A11Y_BUTTON_BLUR_RADIUS,
-    A11Y_BUTTON_BLUR_BRIGHTNESS,
-    A11Y_BUTTON_HOVER_OVERLAY_ALPHA,
-    A11Y_BUTTON_ACTIVE_OVERLAY_ALPHA,
-    A11Y_BUTTON_WIDTH,
-    A11Y_BUTTON_HEIGHT,
-    A11Y_BUTTON_MARGIN,
 } from './constants.js';
 import {
     initCache,
@@ -257,32 +249,23 @@ export async function getWallpaperAlpha(params) {
  * @param {number} params.shadingType - Shading type (0=Solid, 1=Vertical, 2=Horizontal)
  * @returns {Promise<{r: number, g: number, b: number}>}
  */
-export async function getWallpaperPromptColor({
-    uri = null,
-    isColor = false,
-    primaryColor = '#000000',
-    secondaryColor = '#000000',
-    shadingType = 0,
-    wellH = 0,
-    yCenterFraction = null,
-    promptBounds = null,
-    cancelBounds = null,
-    a11yBounds = null,
-    avatarBounds = null,
-} = {}) {
+export async function getWallpaperPromptColor(params) {
+    const {
+        uri,
+        isColor,
+        primaryColor,
+        secondaryColor,
+        shadingType,
+        wellH = 0,
+        yCenterFraction = null,
+        promptBounds = null,
+        cancelBounds = null,
+        avatarBounds = null,
+    } = params;
+
     await initCache();
 
-    let targetUri = uri;
-    let targetFilePath = null;
-
-    if (!isColor) {
-        if (!targetUri) {
-            const bgSettings = getBgSettings();
-            targetUri = bgSettings ? bgSettings.get_string('picture-uri') : null;
-        }
-        targetFilePath = resolveWallpaperSource(targetUri);
-    }
-
+    const { targetUri, targetFilePath } = await resolveWallpaperSource(uri);
     const bgSettings = getBgSettings();
     const pictureOptions = bgSettings ? bgSettings.get_string('picture-options') : 'zoom';
 
@@ -354,25 +337,6 @@ export async function getWallpaperPromptColor({
         normCancelY2 = Math.max(0, Math.min(1, centerY + btnHalfH));
     }
 
-    // A11y button bounds (bottom-right on GDM / lockscreen)
-    let normA11yX1, normA11yX2, normA11yY1, normA11yY2;
-    if (a11yBounds &&
-        a11yBounds.x1 != null && a11yBounds.x2 != null &&
-        a11yBounds.x2 > a11yBounds.x1) {
-        normA11yX1 = a11yBounds.x1;
-        normA11yX2 = a11yBounds.x2;
-        normA11yY1 = a11yBounds.y1;
-        normA11yY2 = a11yBounds.y2;
-    } else {
-        const isRtl = Clutter?.get_default_text_direction ? Clutter.get_default_text_direction() === Clutter.TextDirection.RTL : false;
-        const a11yX = isRtl ? A11Y_BUTTON_MARGIN : (monitorWidth - A11Y_BUTTON_MARGIN - A11Y_BUTTON_WIDTH);
-        const a11yY = monitorHeight - A11Y_BUTTON_MARGIN - A11Y_BUTTON_HEIGHT;
-        normA11yX1 = Math.max(0, a11yX / monitorWidth);
-        normA11yX2 = Math.min(1, (a11yX + A11Y_BUTTON_WIDTH) / monitorWidth);
-        normA11yY1 = Math.max(0, a11yY / monitorHeight);
-        normA11yY2 = Math.min(1, (a11yY + A11Y_BUTTON_HEIGHT) / monitorHeight);
-    }
-
     // Avatar bounds for "Not Listed" / empty icon placeholder (circular well)
     let normAvatarX1, normAvatarX2, normAvatarY1, normAvatarY2;
     const defaultAvatarSize = 56;
@@ -385,21 +349,20 @@ export async function getWallpaperPromptColor({
         normAvatarY1 = avatarBounds.y1;
         normAvatarY2 = avatarBounds.y2;
     } else {
+        normAvatarX1 = Math.max(0, 0.50 - avatarHalfW);
+        normAvatarX2 = Math.min(1, 0.50 + avatarHalfW);
         const anchorH = wellH > 0 ? Math.floor(wellH * 1.3) : 108;
         const targetStackY = Math.floor(monitorHeight * CUPERTINO_PROMPT_VERTICAL_FRACTION) - anchorH;
         normAvatarY1 = Math.max(0, targetStackY / monitorHeight);
         normAvatarY2 = Math.min(1, (targetStackY + defaultAvatarSize) / monitorHeight);
-        normAvatarX1 = Math.max(0, 0.50 - avatarHalfW);
-        normAvatarX2 = Math.min(1, 0.50 + avatarHalfW);
     }
 
     const { mtime, size } = await getFileMtimeAndSize(targetFilePath);
 
     const boundsKey = `${normX1.toFixed(4)}_${normX2.toFixed(4)}_${normY1.toFixed(4)}_${normY2.toFixed(4)}`;
     const cancelBoundsKey = `${normCancelX1.toFixed(4)}_${normCancelX2.toFixed(4)}_${normCancelY1.toFixed(4)}_${normCancelY2.toFixed(4)}`;
-    const a11yBoundsKey = `${normA11yX1.toFixed(4)}_${normA11yX2.toFixed(4)}_${normA11yY1.toFixed(4)}_${normA11yY2.toFixed(4)}`;
     const avatarBoundsKey = `${normAvatarX1.toFixed(4)}_${normAvatarX2.toFixed(4)}_${normAvatarY1.toFixed(4)}_${normAvatarY2.toFixed(4)}`;
-    const cacheKey = `prompt_grad_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${boundsKey}_cb${cancelBoundsKey}_a11y${a11yBoundsKey}_av${avatarBoundsKey}_b${PROMPT_BLUR_RADIUS}_pbr${PROMPT_BLUR_BRIGHTNESS}_cr${CANCEL_BUTTON_BLUR_RADIUS}_cbr${CANCEL_BUTTON_BLUR_BRIGHTNESS}_chov${CANCEL_BUTTON_HOVER_OVERLAY_ALPHA}_cact${CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA}_cover_v10`;
+    const cacheKey = `prompt_grad_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${boundsKey}_cb${cancelBoundsKey}_av${avatarBoundsKey}_b${PROMPT_BLUR_RADIUS}_pbr${PROMPT_BLUR_BRIGHTNESS}_cr${CANCEL_BUTTON_BLUR_RADIUS}_cbr${CANCEL_BUTTON_BLUR_BRIGHTNESS}_chov${CANCEL_BUTTON_HOVER_OVERLAY_ALPHA}_cact${CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA}_cover_v9`;
     if (hasCache(cacheKey)) {
         const cached = getCache(cacheKey);
         if (cached && cached.start && cached.end) {
@@ -407,11 +370,8 @@ export async function getWallpaperPromptColor({
             const hasCancelImg = cached.cancelImagePath && Gio.File.new_for_path(cached.cancelImagePath).query_exists(null);
             const hasHoverImg = cached.cancelHoverImagePath && Gio.File.new_for_path(cached.cancelHoverImagePath).query_exists(null);
             const hasActiveImg = cached.cancelActiveImagePath && Gio.File.new_for_path(cached.cancelActiveImagePath).query_exists(null);
-            const hasA11yImg = cached.a11yImagePath && Gio.File.new_for_path(cached.a11yImagePath).query_exists(null);
-            const hasA11yHoverImg = cached.a11yHoverImagePath && Gio.File.new_for_path(cached.a11yHoverImagePath).query_exists(null);
-            const hasA11yActiveImg = cached.a11yActiveImagePath && Gio.File.new_for_path(cached.a11yActiveImagePath).query_exists(null);
             const hasAvatar = !!cached.avatarColor;
-            if (hasPromptImg && hasCancelImg && hasHoverImg && hasActiveImg && hasA11yImg && hasA11yHoverImg && hasA11yActiveImg && hasAvatar) {
+            if (hasPromptImg && hasCancelImg && hasHoverImg && hasActiveImg && hasAvatar) {
                 return cached;
             }
         }
@@ -426,9 +386,6 @@ export async function getWallpaperPromptColor({
     let cancelImagePath = null;
     let cancelHoverImagePath = null;
     let cancelActiveImagePath = null;
-    let a11yImagePath = null;
-    let a11yHoverImagePath = null;
-    let a11yActiveImagePath = null;
     let shadowAlpha = undefined;
 
     if (isColor) {
@@ -647,85 +604,6 @@ export async function getWallpaperPromptColor({
                 }
             }
 
-            // Sample dedicated slice for a11y button
-            const a11yXStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normA11yX1)));
-            const a11yXEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * normA11yX2)));
-            const a11yYStart = Math.max(0, Math.min(pbHeight - 1, Math.round(visibleY + visibleH * normA11yY1)));
-            const a11yYEnd = Math.max(1, Math.min(pbHeight, Math.round(visibleY + visibleH * normA11yY2)));
-
-            const a11yMappedBounds = {
-                x1: a11yXStart / pbWidth,
-                x2: a11yXEnd / pbWidth,
-                y1: a11yYStart / pbHeight,
-                y2: a11yYEnd / pbHeight,
-            };
-
-            const a11ySliceResult = createBlurredPromptSlice(
-                pixbuf,
-                a11yMappedBounds,
-                A11Y_BUTTON_WIDTH,
-                A11Y_BUTTON_HEIGHT,
-                A11Y_BUTTON_BLUR_RADIUS,
-                A11Y_BUTTON_BLUR_BRIGHTNESS,
-                0.0
-            );
-
-            const a11yHoverSliceResult = createBlurredPromptSlice(
-                pixbuf,
-                a11yMappedBounds,
-                A11Y_BUTTON_WIDTH,
-                A11Y_BUTTON_HEIGHT,
-                A11Y_BUTTON_BLUR_RADIUS,
-                A11Y_BUTTON_BLUR_BRIGHTNESS,
-                A11Y_BUTTON_HOVER_OVERLAY_ALPHA
-            );
-
-            const a11yActiveSliceResult = createBlurredPromptSlice(
-                pixbuf,
-                a11yMappedBounds,
-                A11Y_BUTTON_WIDTH,
-                A11Y_BUTTON_HEIGHT,
-                A11Y_BUTTON_BLUR_RADIUS,
-                A11Y_BUTTON_BLUR_BRIGHTNESS,
-                A11Y_BUTTON_ACTIVE_OVERLAY_ALPHA
-            );
-
-            if (a11ySliceResult?.pixbuf) {
-                const a11yFilePath = `/var/tmp/wack-a11y-blur-${userName}-${hash}.png`;
-                try {
-                    a11ySliceResult.pixbuf.savev(a11yFilePath, 'png', [], []);
-                    const aFile = Gio.File.new_for_path(a11yFilePath);
-                    aFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
-                    a11yImagePath = a11yFilePath;
-                } catch (saveErr) {
-                    _logError(`[WACK/AlphaManager] Failed to save a11y slice: ${saveErr}`);
-                }
-            }
-
-            if (a11yHoverSliceResult?.pixbuf) {
-                const a11yHoverFilePath = `/var/tmp/wack-a11y-blur-hover-${userName}-${hash}.png`;
-                try {
-                    a11yHoverSliceResult.pixbuf.savev(a11yHoverFilePath, 'png', [], []);
-                    const ahFile = Gio.File.new_for_path(a11yHoverFilePath);
-                    ahFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
-                    a11yHoverImagePath = a11yHoverFilePath;
-                } catch (saveErr) {
-                    _logError(`[WACK/AlphaManager] Failed to save a11y hover slice: ${saveErr}`);
-                }
-            }
-
-            if (a11yActiveSliceResult?.pixbuf) {
-                const a11yActiveFilePath = `/var/tmp/wack-a11y-blur-active-${userName}-${hash}.png`;
-                try {
-                    a11yActiveSliceResult.pixbuf.savev(a11yActiveFilePath, 'png', [], []);
-                    const aaFile = Gio.File.new_for_path(a11yActiveFilePath);
-                    aaFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
-                    a11yActiveImagePath = a11yActiveFilePath;
-                } catch (saveErr) {
-                    _logError(`[WACK/AlphaManager] Failed to save a11y active slice: ${saveErr}`);
-                }
-            }
-
             // Sample dedicated color for empty avatar placeholder
             const avXStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normAvatarX1)));
             const avXEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * normAvatarX2)));
@@ -768,14 +646,9 @@ export async function getWallpaperPromptColor({
                             fileName.startsWith(`wack-prompt-blur-${userName}-`) ||
                             fileName.startsWith(`wack-cancel-blur-active-${userName}-`) ||
                             fileName.startsWith(`wack-cancel-blur-hover-${userName}-`) ||
-                            fileName.startsWith(`wack-a11y-blur-active-${userName}-`) ||
-                            fileName.startsWith(`wack-a11y-blur-hover-${userName}-`) ||
                             (fileName.startsWith(`wack-cancel-blur-${userName}-`) &&
                              !fileName.startsWith(`wack-cancel-blur-hover-${userName}-`) &&
-                             !fileName.startsWith(`wack-cancel-blur-active-${userName}-`)) ||
-                            (fileName.startsWith(`wack-a11y-blur-${userName}-`) &&
-                             !fileName.startsWith(`wack-a11y-blur-hover-${userName}-`) &&
-                             !fileName.startsWith(`wack-a11y-blur-active-${userName}-`))
+                             !fileName.startsWith(`wack-cancel-blur-active-${userName}-`))
                         );
                         if (isUserSlice && !fileName.endsWith(currentSuffix)) {
                             toDelete.push(`/var/tmp/${fileName}`);
@@ -835,9 +708,6 @@ export async function getWallpaperPromptColor({
         cancelImagePath: cancelImagePath,
         cancelHoverImagePath: cancelHoverImagePath,
         cancelActiveImagePath: cancelActiveImagePath,
-        a11yImagePath: a11yImagePath,
-        a11yHoverImagePath: a11yHoverImagePath,
-        a11yActiveImagePath: a11yActiveImagePath,
         avatarColor: sampledAvatarColor,
         shadowAlpha: shadowAlpha,
     };

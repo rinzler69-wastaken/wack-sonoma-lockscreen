@@ -205,99 +205,6 @@ export class GdmPromptStyling {
         button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}`);
     }
 
-    applyA11yButtonBackground(button, color) {
-        if (!button || !color)
-            return;
-
-        button._wackColor = color;
-
-        if (button._wackOriginalStyle === undefined) {
-            button._wackOriginalStyle = button.get_style() ?? '';
-
-            button.connectObject(
-                'notify::hover', () => this.updateA11yButtonStyle(button),
-                'button-press-event', () => {
-                    button._wackPressed = true;
-                    this.updateA11yButtonStyle(button);
-                    return Clutter.EVENT_PROPAGATE;
-                },
-                'button-release-event', () => {
-                    button._wackPressed = false;
-                    this.updateA11yButtonStyle(button);
-                    return Clutter.EVENT_PROPAGATE;
-                },
-                this
-            );
-
-            if (button.menu) {
-                button.menu.connectObject(
-                    'open-state-changed', () => this.updateA11yButtonStyle(button),
-                    this
-                );
-            }
-        }
-
-        this.updateA11yButtonStyle(button);
-    }
-
-    updateA11yButtonStyle(button) {
-        const color = button._wackColor;
-        if (!color)
-            return;
-
-        if (!button.hover)
-            button._wackPressed = false;
-
-        let shadowStyle = '';
-        if (color.shadowAlpha !== undefined) {
-            shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
-        }
-
-        let bgStyle;
-        let imgPath = color.a11yImagePath;
-        const isHovered = button.hover && !button._wackPressed;
-        const isPressed = button._wackPressed || button.has_style_pseudo_class?.('active') || (button.menu && button.menu.isOpen);
-
-        if (isPressed && color.a11yActiveImagePath) {
-            imgPath = color.a11yActiveImagePath;
-        } else if (isHovered && color.a11yHoverImagePath) {
-            imgPath = color.a11yHoverImagePath;
-        }
-        if (!imgPath && color.imagePath) {
-            imgPath = color.imagePath;
-        }
-
-        if (imgPath) {
-            const imageUri = imgPath.startsWith('file://')
-                ? imgPath
-                : `file://${imgPath}`;
-            let overlayStyle = '';
-            if (isPressed && !color.a11yActiveImagePath) {
-                overlayStyle = ' filter: brightness(1.25);';
-            } else if (isHovered && !color.a11yHoverImagePath) {
-                overlayStyle = ' filter: brightness(1.12);';
-            }
-            bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important;${overlayStyle}`;
-        } else {
-            let r = color.r;
-            let g = color.g;
-            let b = color.b;
-
-            if (isPressed) {
-                r = Math.round(r * 0.75 + 255 * 0.25);
-                g = Math.round(g * 0.75 + 255 * 0.25);
-                b = Math.round(b * 0.75 + 255 * 0.25);
-            } else if (isHovered) {
-                r = Math.round(r * 0.875 + 255 * 0.125);
-                g = Math.round(g * 0.875 + 255 * 0.125);
-                b = Math.round(b * 0.875 + 255 * 0.125);
-            }
-            bgStyle = ` background-color: rgb(${r}, ${g}, ${b}) !important;`;
-        }
-
-        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}`);
-    }
-
     clearCupertinoPromptBackground() {
         const authPrompt = this._gdm._dialog?._authPrompt;
         const entry = this.findPromptEntry(authPrompt);
@@ -321,21 +228,6 @@ export class GdmPromptStyling {
             }
             delete cancelButton._wackColor;
             delete cancelButton._wackPressed;
-        }
-
-        const a11yButton = this._gdm._dialog?._a11yMenuButton ?? this._gdm._dialog?._bottomButtonGroup?._a11yMenuButton;
-        if (a11yButton) {
-            a11yButton.disconnectObject(this);
-            if (a11yButton.menu)
-                a11yButton.menu.disconnectObject(this);
-            if (a11yButton._wackOriginalStyle !== undefined) {
-                a11yButton.set_style(a11yButton._wackOriginalStyle);
-                delete a11yButton._wackOriginalStyle;
-            } else {
-                a11yButton.set_style(null);
-            }
-            delete a11yButton._wackColor;
-            delete a11yButton._wackPressed;
         }
     }
 
@@ -413,27 +305,6 @@ export class GdmPromptStyling {
             }
         }
 
-        let a11yBounds = null;
-        const a11yButton = this._gdm._dialog?._a11yMenuButton ?? this._gdm._dialog?._bottomButtonGroup?._a11yMenuButton;
-        if (a11yButton && a11yButton.get_stage()) {
-            const [axTrans, ayTrans] = a11yButton.get_transformed_position();
-            const awTrans = a11yButton.get_width() || 34;
-            const ahTrans = a11yButton.get_height() || 34;
-            const monitor = Main.layoutManager?.primaryMonitor;
-            const monitorX = monitor ? monitor.x : 0;
-            const monitorY = monitor ? monitor.y : 0;
-            const monitorHeight = monitor ? monitor.height : 1080;
-            const monitorWidth = monitor ? monitor.width : 1920;
-            if (awTrans > 0 && ahTrans > 0 && monitorWidth > 0 && monitorHeight > 0 && axTrans >= monitorX && ayTrans >= monitorY) {
-                a11yBounds = {
-                    x1: Math.max(0, Math.min(1, (axTrans - monitorX) / monitorWidth)),
-                    x2: Math.max(0, Math.min(1, (axTrans + awTrans - monitorX) / monitorWidth)),
-                    y1: Math.max(0, Math.min(1, (ayTrans - monitorY) / monitorHeight)),
-                    y2: Math.max(0, Math.min(1, (ayTrans + ahTrans - monitorY) / monitorHeight)),
-                };
-            }
-        }
-
         let wallpaperParams = null;
         if (effectiveMetadata) {
             const promptColor = effectiveMetadata.promptColor;
@@ -445,12 +316,6 @@ export class GdmPromptStyling {
                 Gio.File.new_for_path(promptColor.cancelHoverImagePath).query_exists(null) &&
                 promptColor?.cancelActiveImagePath &&
                 Gio.File.new_for_path(promptColor.cancelActiveImagePath).query_exists(null);
-            const hasValidA11yImages = promptColor?.a11yImagePath &&
-                Gio.File.new_for_path(promptColor.a11yImagePath).query_exists(null) &&
-                promptColor?.a11yHoverImagePath &&
-                Gio.File.new_for_path(promptColor.a11yHoverImagePath).query_exists(null) &&
-                promptColor?.a11yActiveImagePath &&
-                Gio.File.new_for_path(promptColor.a11yActiveImagePath).query_exists(null);
 
             let avatarColor = promptColor?.avatarColor;
             if (!avatarColor && promptColor && promptColor.r != null) {
@@ -477,12 +342,10 @@ export class GdmPromptStyling {
                 this.applyPromptEntryBackground(entry, promptColor);
                 if (authPrompt.cancelButton)
                     this.applyCancelButtonBackground(authPrompt.cancelButton, promptColor);
-                if (a11yButton)
-                    this.applyA11yButtonBackground(a11yButton, promptColor);
                 if (this._gdm?._avatarManager && avatarColor)
                     this._gdm._avatarManager.updateAvatarVibrancy(avatarColor);
 
-                if (hasValidCancelImages && hasValidA11yImages)
+                if (hasValidCancelImages)
                     return;
             }
 
@@ -507,7 +370,6 @@ export class GdmPromptStyling {
                 yCenterFraction: yCenterFraction,
                 promptBounds: promptBounds,
                 cancelBounds: cancelBounds,
-                a11yBounds: a11yBounds,
             };
         } else {
             const bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
@@ -528,7 +390,6 @@ export class GdmPromptStyling {
                 yCenterFraction: yCenterFraction,
                 promptBounds: promptBounds,
                 cancelBounds: cancelBounds,
-                a11yBounds: a11yBounds,
             };
         }
 
@@ -549,8 +410,6 @@ export class GdmPromptStyling {
         this.applyPromptEntryBackground(currentEntry, color);
         if (currentPrompt.cancelButton)
             this.applyCancelButtonBackground(currentPrompt.cancelButton, color);
-        if (a11yButton)
-            this.applyA11yButtonBackground(a11yButton, color);
         let finalAvatarColor = color?.avatarColor;
         if (!finalAvatarColor && color && color.r != null) {
             const raw = { r: color.r, g: color.g, b: color.b };
