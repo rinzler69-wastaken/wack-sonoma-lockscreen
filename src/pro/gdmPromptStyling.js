@@ -305,6 +305,28 @@ export class GdmPromptStyling {
             }
         }
 
+        let avatarBounds = null;
+        const avatarButton = this._gdm._cupertinoRestPrompt?._userWell?.get_child()?._avatarButton
+            ?? authPrompt?._userWell?.get_child()?._avatarButton;
+        if (avatarButton && avatarButton.get_stage()) {
+            const [axTrans, ayTrans] = avatarButton.get_transformed_position();
+            const awTrans = avatarButton.get_width() || 56;
+            const ahTrans = avatarButton.get_height() || 56;
+            const monitor = Main.layoutManager?.primaryMonitor;
+            const monitorX = monitor ? monitor.x : 0;
+            const monitorY = monitor ? monitor.y : 0;
+            const monitorHeight = monitor ? monitor.height : 1080;
+            const monitorWidth = monitor ? monitor.width : 1920;
+            if (awTrans > 0 && ahTrans > 0 && monitorWidth > 0 && monitorHeight > 0 && axTrans >= monitorX && ayTrans >= monitorY) {
+                avatarBounds = {
+                    x1: Math.max(0, Math.min(1, (axTrans - monitorX) / monitorWidth)),
+                    x2: Math.max(0, Math.min(1, (axTrans + awTrans - monitorX) / monitorWidth)),
+                    y1: Math.max(0, Math.min(1, (ayTrans - monitorY) / monitorHeight)),
+                    y2: Math.max(0, Math.min(1, (ayTrans + ahTrans - monitorY) / monitorHeight)),
+                };
+            }
+        }
+
         let wallpaperParams = null;
         if (effectiveMetadata) {
             const promptColor = effectiveMetadata.promptColor;
@@ -370,6 +392,7 @@ export class GdmPromptStyling {
                 yCenterFraction: yCenterFraction,
                 promptBounds: promptBounds,
                 cancelBounds: cancelBounds,
+                avatarBounds: avatarBounds,
             };
         } else {
             const bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
@@ -390,6 +413,7 @@ export class GdmPromptStyling {
                 yCenterFraction: yCenterFraction,
                 promptBounds: promptBounds,
                 cancelBounds: cancelBounds,
+                avatarBounds: avatarBounds,
             };
         }
 

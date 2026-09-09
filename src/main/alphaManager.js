@@ -31,6 +31,10 @@ import {
     CANCEL_BUTTON_HEIGHT,
     CANCEL_BUTTON_X_OFFSET,
     CANCEL_BUTTON_Y_OFFSET,
+    AVATAR_BUTTON_WIDTH,
+    AVATAR_BUTTON_HEIGHT,
+    AVATAR_BUTTON_X_OFFSET,
+    AVATAR_BUTTON_Y_OFFSET,
 } from './constants.js';
 import {
     initCache,
@@ -337,22 +341,25 @@ export async function getWallpaperPromptColor(params) {
 
     // Avatar bounds for "Not Listed" / empty icon placeholder (circular well)
     let normAvatarX1, normAvatarX2, normAvatarY1, normAvatarY2;
-    const defaultAvatarSize = 56;
-    const avatarHalfW = (defaultAvatarSize / 2) / monitorWidth;
+    const avOffsetX = AVATAR_BUTTON_X_OFFSET / monitorWidth;
+    const avOffsetY = AVATAR_BUTTON_Y_OFFSET / monitorHeight;
+    const avatarHalfW = (AVATAR_BUTTON_WIDTH / 2) / monitorWidth;
+    const avatarHalfH = (AVATAR_BUTTON_HEIGHT / 2) / monitorHeight;
+
     if (avatarBounds &&
         avatarBounds.x1 != null && avatarBounds.x2 != null &&
         avatarBounds.x2 > avatarBounds.x1) {
-        normAvatarX1 = avatarBounds.x1;
-        normAvatarX2 = avatarBounds.x2;
-        normAvatarY1 = avatarBounds.y1;
-        normAvatarY2 = avatarBounds.y2;
+        normAvatarX1 = Math.max(0, Math.min(1, avatarBounds.x1 + avOffsetX));
+        normAvatarX2 = Math.max(0, Math.min(1, avatarBounds.x2 + avOffsetX));
+        normAvatarY1 = Math.max(0, Math.min(1, avatarBounds.y1 + avOffsetY));
+        normAvatarY2 = Math.max(0, Math.min(1, avatarBounds.y2 + avOffsetY));
     } else {
-        normAvatarX1 = Math.max(0, 0.50 - avatarHalfW);
-        normAvatarX2 = Math.min(1, 0.50 + avatarHalfW);
+        normAvatarX1 = Math.max(0, 0.50 - avatarHalfW + avOffsetX);
+        normAvatarX2 = Math.min(1, 0.50 + avatarHalfW + avOffsetX);
         const anchorH = wellH > 0 ? Math.floor(wellH * 1.3) : 108;
         const targetStackY = Math.floor(monitorHeight * CUPERTINO_PROMPT_VERTICAL_FRACTION) - anchorH;
-        normAvatarY1 = Math.max(0, targetStackY / monitorHeight);
-        normAvatarY2 = Math.min(1, (targetStackY + defaultAvatarSize) / monitorHeight);
+        normAvatarY1 = Math.max(0, (targetStackY / monitorHeight) + avOffsetY);
+        normAvatarY2 = Math.min(1, ((targetStackY + AVATAR_BUTTON_HEIGHT) / monitorHeight) + avOffsetY);
     }
 
     const { mtime, size } = await getFileMtimeAndSize(targetFilePath);

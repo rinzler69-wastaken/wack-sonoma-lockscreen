@@ -29,6 +29,12 @@ export const CANCEL_BUTTON_HEIGHT = 34; // px
 export const CANCEL_BUTTON_X_OFFSET = 0; // px
 export const CANCEL_BUTTON_Y_OFFSET = 0; // px
 
+// Avatar button sampling constants (for GDM / lockscreen)
+export const AVATAR_BUTTON_WIDTH = 56; // px
+export const AVATAR_BUTTON_HEIGHT = 56; // px
+export const AVATAR_BUTTON_X_OFFSET = 0; // px
+export const AVATAR_BUTTON_Y_OFFSET = 0; // px
+
 export const SETTINGS_SCHEMA = 'org.gnome.shell.extensions.wack-lockscreen-clock';
 
 // Individual notification card blur settings
