@@ -17,7 +17,6 @@ export const TIME_LABEL_HEIGHT_FALLBACK = 128; // Fallback natural height for th
 // Background blur settings when entering the password prompt
 export const PROMPT_BLUR_RADIUS = 50;
 export const PROMPT_BLUR_BRIGHTNESS = 1.0;
-export const PROMPT_BLUR_DURATION = 300;
 
 // Cancel button sampling constants (for GDM / lockscreen)
 export const CANCEL_BUTTON_BLUR_RADIUS = 50;
@@ -28,6 +27,15 @@ export const CANCEL_BUTTON_WIDTH = 34; // px
 export const CANCEL_BUTTON_HEIGHT = 34; // px
 export const CANCEL_BUTTON_X_OFFSET = 0; // px
 export const CANCEL_BUTTON_Y_OFFSET = 0; // px
+
+// A11y button sampling constants (for GDM / lockscreen)
+export const A11Y_BUTTON_BLUR_RADIUS = 50;
+export const A11Y_BUTTON_BLUR_BRIGHTNESS = 1.0;
+export const A11Y_BUTTON_HOVER_OVERLAY_ALPHA = 0.12;
+export const A11Y_BUTTON_ACTIVE_OVERLAY_ALPHA = 0.24;
+export const A11Y_BUTTON_WIDTH = 48; // px
+export const A11Y_BUTTON_HEIGHT = 48; // px
+export const A11Y_BUTTON_MARGIN = 32; // px from screen edge
 
 export const SETTINGS_SCHEMA = 'org.gnome.shell.extensions.wack-lockscreen-clock';
 

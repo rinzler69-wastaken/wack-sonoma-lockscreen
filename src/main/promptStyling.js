@@ -196,6 +196,99 @@ export class PromptStyling {
         button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}`);
     }
 
+    applyA11yButtonBackground(button, color) {
+        if (!button || !color)
+            return;
+
+        button._wackColor = color;
+
+        if (button._wackOriginalStyle === undefined) {
+            button._wackOriginalStyle = button.get_style() ?? '';
+
+            button.connectObject(
+                'notify::hover', () => this.updateA11yButtonStyle(button),
+                'button-press-event', () => {
+                    button._wackPressed = true;
+                    this.updateA11yButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                'button-release-event', () => {
+                    button._wackPressed = false;
+                    this.updateA11yButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                this
+            );
+
+            if (button.menu) {
+                button.menu.connectObject(
+                    'open-state-changed', () => this.updateA11yButtonStyle(button),
+                    this
+                );
+            }
+        }
+
+        this.updateA11yButtonStyle(button);
+    }
+
+    updateA11yButtonStyle(button) {
+        const color = button._wackColor;
+        if (!color)
+            return;
+
+        if (!button.hover)
+            button._wackPressed = false;
+
+        let shadowStyle = '';
+        if (color.shadowAlpha !== undefined) {
+            shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+        }
+
+        let bgStyle;
+        let imgPath = color.a11yImagePath;
+        const isHovered = button.hover && !button._wackPressed;
+        const isPressed = button._wackPressed || button.has_style_pseudo_class?.('active') || (button.menu && button.menu.isOpen);
+
+        if (isPressed && color.a11yActiveImagePath) {
+            imgPath = color.a11yActiveImagePath;
+        } else if (isHovered && color.a11yHoverImagePath) {
+            imgPath = color.a11yHoverImagePath;
+        }
+        if (!imgPath && color.imagePath) {
+            imgPath = color.imagePath;
+        }
+
+        if (imgPath) {
+            const imageUri = imgPath.startsWith('file://')
+                ? imgPath
+                : `file://${imgPath}`;
+            let overlayStyle = '';
+            if (isPressed && !color.a11yActiveImagePath) {
+                overlayStyle = ' filter: brightness(1.25);';
+            } else if (isHovered && !color.a11yHoverImagePath) {
+                overlayStyle = ' filter: brightness(1.12);';
+            }
+            bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important;${overlayStyle}`;
+        } else {
+            let r = color.r;
+            let g = color.g;
+            let b = color.b;
+
+            if (isPressed) {
+                r = Math.round(r * 0.75 + 255 * 0.25);
+                g = Math.round(g * 0.75 + 255 * 0.25);
+                b = Math.round(b * 0.75 + 255 * 0.25);
+            } else if (isHovered) {
+                r = Math.round(r * 0.875 + 255 * 0.125);
+                g = Math.round(g * 0.875 + 255 * 0.125);
+                b = Math.round(b * 0.875 + 255 * 0.125);
+            }
+            bgStyle = ` background-color: rgb(${r}, ${g}, ${b}) !important;`;
+        }
+
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}`);
+    }
+
     clearCupertinoPromptBackground() {
         const dialog = this._extension._dialog;
         const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
@@ -220,6 +313,21 @@ export class PromptStyling {
             }
             delete cancelButton._wackColor;
             delete cancelButton._wackPressed;
+        }
+
+        const a11yButton = dialog?._a11yMenuButton ?? dialog?._bottomButtonGroup?._a11yMenuButton;
+        if (a11yButton) {
+            a11yButton.disconnectObject(this);
+            if (a11yButton.menu)
+                a11yButton.menu.disconnectObject(this);
+            if (a11yButton._wackOriginalStyle !== undefined) {
+                a11yButton.set_style(a11yButton._wackOriginalStyle);
+                delete a11yButton._wackOriginalStyle;
+            } else {
+                a11yButton.set_style(null);
+            }
+            delete a11yButton._wackColor;
+            delete a11yButton._wackPressed;
         }
     }
 

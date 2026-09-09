@@ -471,6 +471,27 @@ export default class WackLockscreenClockExtension extends Extension {
             }
         }
 
+        let a11yBounds = null;
+        const a11yButton = dialog?._a11yMenuButton ?? dialog?._bottomButtonGroup?._a11yMenuButton;
+        if (a11yButton && a11yButton.get_stage()) {
+            const [axTrans, ayTrans] = a11yButton.get_transformed_position();
+            const awTrans = a11yButton.get_width() || 34;
+            const ahTrans = a11yButton.get_height() || 34;
+            const monitor = Main.layoutManager?.primaryMonitor;
+            const monitorX = monitor ? monitor.x : 0;
+            const monitorY = monitor ? monitor.y : 0;
+            const monitorHeight = monitor ? monitor.height : 1080;
+            const monitorWidth = monitor ? monitor.width : 1920;
+            if (awTrans > 0 && ahTrans > 0 && monitorWidth > 0 && monitorHeight > 0 && axTrans >= monitorX && ayTrans >= monitorY) {
+                a11yBounds = {
+                    x1: Math.max(0, Math.min(1, (axTrans - monitorX) / monitorWidth)),
+                    x2: Math.max(0, Math.min(1, (axTrans + awTrans - monitorX) / monitorWidth)),
+                    y1: Math.max(0, Math.min(1, (ayTrans - monitorY) / monitorHeight)),
+                    y2: Math.max(0, Math.min(1, (ayTrans + ahTrans - monitorY) / monitorHeight)),
+                };
+            }
+        }
+
         const wallpaperParams = {
             uri,
             isColor,
@@ -481,6 +502,7 @@ export default class WackLockscreenClockExtension extends Extension {
             yCenterFraction,
             promptBounds,
             cancelBounds,
+            a11yBounds,
         };
         const textLuminance = dialog?._clock?.getTextLuminance?.() ?? 1.0;
 
@@ -505,6 +527,10 @@ export default class WackLockscreenClockExtension extends Extension {
                 this._crossSessionManager.setClockAlphaAndPromptColor(alpha, promptColor);
             // </GDM_EXCLUDE>
 
+            if (this._cupertinoPromptManager?.restPrompt?.updateAvatarVibrancy && promptColor?.avatarColor) {
+                this._cupertinoPromptManager.restPrompt.updateAvatarVibrancy(promptColor.avatarColor);
+            }
+
             const isCupertinoPromptActive = this._promptActor?.has_style_class_name('wack-cupertino-prompt');
             if (isCupertinoPromptActive) {
                 const currentAuthPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
@@ -512,6 +538,8 @@ export default class WackLockscreenClockExtension extends Extension {
                     this._applyPromptEntryBackground(this._findPromptEntry(currentAuthPrompt), promptColor);
                     if (currentAuthPrompt?.cancelButton)
                         this._applyCancelButtonBackground(currentAuthPrompt.cancelButton, promptColor);
+                    if (a11yButton)
+                        this._applyA11yButtonBackground(a11yButton, promptColor);
                 } else {
                     this._clearCupertinoPromptBackground();
                 }
@@ -576,6 +604,7 @@ export default class WackLockscreenClockExtension extends Extension {
     _stopCursorBlink() { this._promptStyling?.stopCursorBlink(); }
     _applyPromptEntryBackground(entry, color) { this._promptStyling?.applyPromptEntryBackground(entry, color); }
     _applyCancelButtonBackground(button, color) { this._promptStyling?.applyCancelButtonBackground(button, color); }
+    _applyA11yButtonBackground(button, color) { this._promptStyling?.applyA11yButtonBackground(button, color); }
     _clearCupertinoPromptBackground() { this._promptStyling?.clearCupertinoPromptBackground(); }
     _onAuthPromptAllocation() { this._promptStyling?.onAuthPromptAllocation(); }
 

@@ -123,6 +123,11 @@ export function parseHexColor(hex) {
     return { r: 0, g: 0, b: 0 };
 }
 
+export function rgbToHex(r, g, b) {
+    const toHex = c => Math.max(0, Math.min(255, Math.round(c))).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 export function getRelativeLuminance(color) {
     const channelLum = (val) => {
         const s = val / 255;
@@ -216,6 +221,49 @@ export function getPromptInvertedNeutralColor(sampled, perceptualL) {
     const alpha = baseAlpha + (PROMPT_INVERSE_ALPHA_CEILING - baseAlpha) * t;
 
     return blendOverOpaque(sampled, { r: 0, g: 0, b: 0 }, alpha);
+}
+
+export function getPromptBlendOverlay(sampledColor, whiteBlendAlpha = null) {
+    const luminance = Math.max(0, Math.min(1, getRelativeLuminance(sampledColor)));
+    const perceptualL = getPerceptualLightness(luminance);
+    const maxVal = Math.max(sampledColor.r, sampledColor.g, sampledColor.b);
+    const minVal = Math.min(sampledColor.r, sampledColor.g, sampledColor.b);
+    const chroma = (maxVal - minVal) / 255.0;
+    const isBrightSample = perceptualL > PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD;
+    const isBrightHue = isBrightSample && chroma >= PROMPT_BRIGHT_HUE_MIN_CHROMA;
+
+    let overlayR, overlayG, overlayB, blendAlpha;
+    const baseAlpha = (whiteBlendAlpha !== null && whiteBlendAlpha !== undefined)
+        ? whiteBlendAlpha
+        : getPromptBlendAlpha(sampledColor);
+
+    if (isBrightHue) {
+        overlayR = 0; overlayG = 0; overlayB = 0;
+        blendAlpha = (whiteBlendAlpha !== null && whiteBlendAlpha !== undefined)
+            ? whiteBlendAlpha
+            : (1 - PROMPT_BRIGHT_HUE_LIGHTNESS_FACTOR);
+    } else if (isBrightSample) {
+        overlayR = 0; overlayG = 0; overlayB = 0;
+        const t = Math.max(0, Math.min(
+            1,
+            (perceptualL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) /
+            (1 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD)
+        ));
+        blendAlpha = baseAlpha + (PROMPT_INVERSE_ALPHA_CEILING - baseAlpha) * t;
+    } else {
+        overlayR = 255; overlayG = 255; overlayB = 255;
+        blendAlpha = baseAlpha;
+    }
+
+    return {
+        overlayR,
+        overlayG,
+        overlayB,
+        blendAlpha,
+        perceptualL,
+        isBrightSample,
+        isBrightHue,
+    };
 }
 
 export function processPromptColor(sampled) {

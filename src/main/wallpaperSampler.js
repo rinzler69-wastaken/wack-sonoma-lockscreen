@@ -1,13 +1,7 @@
 import GdkPixbuf from 'gi://GdkPixbuf';
 import GLib from 'gi://GLib';
 import {
-    getRelativeLuminance,
-    getPerceptualLightness,
-    getPromptBlendAlpha,
-    PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD,
-    PROMPT_BRIGHT_HUE_MIN_CHROMA,
-    PROMPT_BRIGHT_HUE_LIGHTNESS_FACTOR,
-    PROMPT_INVERSE_ALPHA_CEILING,
+    getPromptBlendOverlay,
     PROMPT_SHADOW_FLOOR,
     PROMPT_SHADOW_ROOF,
     CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
@@ -235,36 +229,8 @@ export function createBlurredPromptSlice(
             b: Math.round(sumB / totalSamples),
         };
 
-        const luminance = Math.max(0, Math.min(1, getRelativeLuminance(avgColor)));
-        const perceptualL = getPerceptualLightness(luminance);
-        const maxVal = Math.max(avgColor.r, avgColor.g, avgColor.b);
-        const minVal = Math.min(avgColor.r, avgColor.g, avgColor.b);
-        const chroma = (maxVal - minVal) / 255.0;
-        const isBrightSample = perceptualL > PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD;
-        const isBrightHue = isBrightSample && chroma >= PROMPT_BRIGHT_HUE_MIN_CHROMA;
-
-        let overlayR, overlayG, overlayB, blendAlpha;
-        const baseAlpha = (whiteBlendAlpha !== null && whiteBlendAlpha !== undefined)
-            ? whiteBlendAlpha
-            : getPromptBlendAlpha(avgColor);
-
-        if (isBrightHue) {
-            overlayR = 0; overlayG = 0; overlayB = 0;
-            blendAlpha = (whiteBlendAlpha !== null && whiteBlendAlpha !== undefined)
-                ? whiteBlendAlpha
-                : (1 - PROMPT_BRIGHT_HUE_LIGHTNESS_FACTOR);
-        } else if (isBrightSample) {
-            overlayR = 0; overlayG = 0; overlayB = 0;
-            const t = Math.max(0, Math.min(
-                1,
-                (perceptualL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) /
-                (1 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD)
-            ));
-            blendAlpha = baseAlpha + (PROMPT_INVERSE_ALPHA_CEILING - baseAlpha) * t;
-        } else {
-            overlayR = 255; overlayG = 255; overlayB = 255;
-            blendAlpha = baseAlpha;
-        }
+        const overlay = getPromptBlendOverlay(avgColor, whiteBlendAlpha);
+        const { overlayR, overlayG, overlayB, blendAlpha, perceptualL, isBrightSample } = overlay;
 
         let shadowAlpha = PROMPT_SHADOW_FLOOR + (PROMPT_SHADOW_ROOF - PROMPT_SHADOW_FLOOR) * perceptualL;
         if (isBrightSample) {
@@ -328,3 +294,59 @@ export function createBlurredPromptSlice(
         return null;
     }
 }
+
+/**
+ * Samples a rectangular region from a source wallpaper pixbuf and computes its average color.
+ *
+ * @param {GdkPixbuf.Pixbuf} srcPixbuf Source wallpaper pixbuf
+ * @param {object} bounds Normalized crop coordinates { x1, x2, y1, y2 }
+ * @returns {{r: number, g: number, b: number}|null}
+ */
+export function sampleRegionAverageColor(srcPixbuf, bounds) {
+    if (!srcPixbuf || !bounds)
+        return null;
+
+    const pbWidth = srcPixbuf.get_width();
+    const pbHeight = srcPixbuf.get_height();
+
+    const startX = Math.max(0, Math.min(pbWidth - 1, Math.floor(bounds.x1 * pbWidth)));
+    const endX = Math.max(1, Math.min(pbWidth, Math.ceil(bounds.x2 * pbWidth)));
+    const startY = Math.max(0, Math.min(pbHeight - 1, Math.floor(bounds.y1 * pbHeight)));
+    const endY = Math.max(1, Math.min(pbHeight, Math.ceil(bounds.y2 * pbHeight)));
+
+    const cropW = endX - startX;
+    const cropH = endY - startY;
+    if (cropW <= 0 || cropH <= 0)
+        return null;
+
+    const rawPix = srcPixbuf.new_subpixbuf(startX, startY, cropW, cropH);
+    const pixels = rawPix.get_pixels();
+    const nChannels = rawPix.get_n_channels();
+    const stride = rawPix.get_rowstride();
+
+    let sumR = 0, sumG = 0, sumB = 0;
+    const stepX = Math.max(1, Math.floor(cropW / 32));
+    const stepY = Math.max(1, Math.floor(cropH / 32));
+    let samples = 0;
+
+    for (let y = 0; y < cropH; y += stepY) {
+        const rowOff = y * stride;
+        for (let x = 0; x < cropW; x += stepX) {
+            const off = rowOff + x * nChannels;
+            sumR += pixels[off];
+            sumG += pixels[off + 1];
+            sumB += pixels[off + 2];
+            samples++;
+        }
+    }
+
+    if (samples === 0)
+        return null;
+
+    return {
+        r: Math.round(sumR / samples),
+        g: Math.round(sumG / samples),
+        b: Math.round(sumB / samples),
+    };
+}
+
