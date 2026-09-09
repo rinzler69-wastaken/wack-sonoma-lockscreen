@@ -169,7 +169,7 @@
 }
 
 .login-dialog-user-list-item {
-    height: 58px;
+    height: 56px;
     padding: 6px;
 }
 
@@ -179,9 +179,9 @@
 }
 
 .login-dialog-user-list-item .user-icon {
-    icon-size: 58px !important;
-    width: 58px !important;
-    height: 58px !important;
+    icon-size: 56px !important;
+    width: 56px !important;
+    height: 56px !important;
 }
 
 
@@ -197,7 +197,7 @@
 .wack-avatar-well .user-icon {
     transition-duration: 150ms;
     border-radius: 999px;
-    box-shadow: inset 0 0 0 0px rgba(255, 255, 255, 0);
+    background-color: rgba(236, 236, 236, 0.175);
 }
 
 .wack-avatar-well.wack-avatar-clickable:hover .user-icon {
@@ -217,20 +217,20 @@
    .wack-cupertino-prompt — entry visible, label suppressed                   */
 
 .wack-cupertino-rest .wack-avatar-well .user-icon {
-    icon-size: 58px;
+    icon-size: 56px;
 }
 
 .wack-cupertino-prompt .wack-avatar-well .user-icon {
-    icon-size: 58px;
+    icon-size: 56px;
 }
 
 .unlock-dialog .wack-cupertino-prompt .user-widget.vertical .user-icon {
-    icon-size: 58px !important;
+    icon-size: 56px !important;
     opacity: 0 !important;
 }
 
 .login-dialog .wack-cupertino-prompt .user-widget.vertical .user-icon {
-    icon-size: 58px !important;
+    icon-size: 56px !important;
     opacity: 1 !important;
 }
 
@@ -495,7 +495,7 @@
 }
 
 .login-dialog-user-list-item {
-    height: 58px;
+    height: 56px;
     padding: 6px;
     padding-right: 0 !important;
 }
@@ -506,8 +506,8 @@
 
 .login-dialog-user-list-item .user-icon {
     margin-left: 0 !important;
-    min-width: 58px !important;
-    max-width: 58px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
 }
 
 .login-dialog-user-list-item .user-widget-label {

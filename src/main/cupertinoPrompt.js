@@ -1,9 +1,11 @@
 import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 import * as UserWidget from 'resource:///org/gnome/shell/ui/userWidget.js';
+import { getPromptBlendOverlay } from './colorUtils.js';
 
 export const WackCupertinoRestPrompt = GObject.registerClass(
     class WackCupertinoRestPrompt extends St.BoxLayout {
@@ -20,6 +22,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
             this._avatarButton = null;
             this._currentText = '';
             this._currentCount = 0;
+            this._lastAvatarColor = null;
 
             this._userWell = new St.Bin({
                 x_expand: true,
@@ -54,13 +57,44 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
             });
             this.add_child(this._hintBoxWrapper);
 
+            this._user = null;
+            this.connectObject('destroy', () => {
+                if (this._user) {
+                    this._user.disconnectObject(this);
+                    this._user = null;
+                }
+                const avatar = this._avatarButton?.get_child();
+                if (avatar && avatar._wackOrigUpdate) {
+                    avatar.update = avatar._wackOrigUpdate;
+                    delete avatar._wackOrigUpdate;
+                }
+            }, this);
+
             this.setUser(user);
         }
 
         setUser(user) {
+            if (this._user) {
+                this._user.disconnectObject(this);
+                this._user = null;
+            }
+            this._user = user;
+            if (this._user) {
+                this._user.connectObject(
+                    'notify::is-loaded', () => this.updateAvatarVibrancy(),
+                    'changed', () => this.updateAvatarVibrancy(),
+                    this
+                );
+            }
+
             const oldChild = this._userWell.get_child();
             if (oldChild) {
                 if (this._avatarButton) {
+                    const oldAvatar = this._avatarButton.get_child();
+                    if (oldAvatar && oldAvatar._wackOrigUpdate) {
+                        oldAvatar.update = oldAvatar._wackOrigUpdate;
+                        delete oldAvatar._wackOrigUpdate;
+                    }
                     this._avatarButton.disconnectObject(this);
                     this._avatarButton = null;
                 }
@@ -83,6 +117,14 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
                 });
                 userWidget.insert_child_at_index(this._avatarButton, 0);
 
+                if (!avatar._wackOrigUpdate) {
+                    avatar._wackOrigUpdate = avatar.update.bind(avatar);
+                    avatar.update = () => {
+                        avatar._wackOrigUpdate();
+                        this.updateAvatarVibrancy();
+                    };
+                }
+
                 this._avatarButton.connectObject('clicked', () => {
                     if (this._extension && this._extension._promptActive) {
                         this._extension.triggerSwitchUser();
@@ -91,6 +133,44 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
             }
 
             this._userWell.set_child(userWidget);
+            this.updateAvatarVibrancy();
+        }
+
+        _hasImageAvatar(avatar) {
+            if (!avatar || !avatar._user) return false;
+            const user = avatar._user;
+            if (typeof user.get_icon_file === 'function') {
+                const iconFile = user.get_icon_file();
+                if (iconFile && typeof iconFile === 'string' && iconFile !== '' && Gio.File.new_for_path(iconFile).query_exists(null))
+                    return true;
+            }
+            return false;
+        }
+
+        updateAvatarVibrancy(avatarColor) {
+            if (avatarColor)
+                this._lastAvatarColor = avatarColor;
+            const color = this._lastAvatarColor;
+            if (!color || !this._avatarButton) return;
+
+            const avatar = this._avatarButton.get_child();
+            if (this._hasImageAvatar(avatar)) {
+                this._avatarButton.set_style(null);
+            } else {
+                const bgRgba = color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`;
+                this._avatarButton.set_style(`background-color: ${bgRgba} !important; border-radius: 999px !important;`);
+                let overlayRgba = color.overlayRgba;
+                if (!overlayRgba) {
+                    if (color.overlayR != null && color.overlayAlpha != null) {
+                        overlayRgba = `rgba(${color.overlayR}, ${color.overlayG}, ${color.overlayB}, ${color.overlayAlpha})`;
+                    } else {
+                        const overlay = getPromptBlendOverlay({ r: color.r, g: color.g, b: color.b });
+                        overlayRgba = `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`;
+                    }
+                }
+                if (avatar)
+                    avatar.set_style(`background-color: ${overlayRgba} !important; border-radius: 999px !important;`);
+            }
         }
 
         setHintText(text) {

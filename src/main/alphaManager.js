@@ -9,6 +9,9 @@ import {
     rgbToHsl,
     hslToRgb,
     PROMPT_SHADOW_FLOOR,
+    getPromptBlendOverlay,
+    CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
+    rgbToHex,
 } from './colorUtils.js';
 import {
     resolveWallpaperSource,
@@ -16,7 +19,7 @@ import {
     loadScaledWallpaperPixbuf,
     getWallpaperFileInfo,
 } from './wallpaperUtils.js';
-import { createBlurredPromptSlice } from './wallpaperSampler.js';
+import { createBlurredPromptSlice, sampleRegionAverageColor } from './wallpaperSampler.js';
 import {
     PROMPT_BLUR_RADIUS,
     PROMPT_BLUR_BRIGHTNESS,
@@ -255,6 +258,7 @@ export async function getWallpaperPromptColor(params) {
         yCenterFraction = null,
         promptBounds = null,
         cancelBounds = null,
+        avatarBounds = null,
     } = params;
 
     await initCache();
@@ -331,11 +335,32 @@ export async function getWallpaperPromptColor(params) {
         normCancelY2 = Math.max(0, Math.min(1, centerY + btnHalfH));
     }
 
+    // Avatar bounds for "Not Listed" / empty icon placeholder (circular well)
+    let normAvatarX1, normAvatarX2, normAvatarY1, normAvatarY2;
+    const defaultAvatarSize = 56;
+    const avatarHalfW = (defaultAvatarSize / 2) / monitorWidth;
+    if (avatarBounds &&
+        avatarBounds.x1 != null && avatarBounds.x2 != null &&
+        avatarBounds.x2 > avatarBounds.x1) {
+        normAvatarX1 = avatarBounds.x1;
+        normAvatarX2 = avatarBounds.x2;
+        normAvatarY1 = avatarBounds.y1;
+        normAvatarY2 = avatarBounds.y2;
+    } else {
+        normAvatarX1 = Math.max(0, 0.50 - avatarHalfW);
+        normAvatarX2 = Math.min(1, 0.50 + avatarHalfW);
+        const anchorH = wellH > 0 ? Math.floor(wellH * 1.3) : 108;
+        const targetStackY = Math.floor(monitorHeight * CUPERTINO_PROMPT_VERTICAL_FRACTION) - anchorH;
+        normAvatarY1 = Math.max(0, targetStackY / monitorHeight);
+        normAvatarY2 = Math.min(1, (targetStackY + defaultAvatarSize) / monitorHeight);
+    }
+
     const { mtime, size } = await getFileMtimeAndSize(targetFilePath);
 
     const boundsKey = `${normX1.toFixed(4)}_${normX2.toFixed(4)}_${normY1.toFixed(4)}_${normY2.toFixed(4)}`;
     const cancelBoundsKey = `${normCancelX1.toFixed(4)}_${normCancelX2.toFixed(4)}_${normCancelY1.toFixed(4)}_${normCancelY2.toFixed(4)}`;
-    const cacheKey = `prompt_grad_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${boundsKey}_cb${cancelBoundsKey}_b${PROMPT_BLUR_RADIUS}_pbr${PROMPT_BLUR_BRIGHTNESS}_cr${CANCEL_BUTTON_BLUR_RADIUS}_cbr${CANCEL_BUTTON_BLUR_BRIGHTNESS}_chov${CANCEL_BUTTON_HOVER_OVERLAY_ALPHA}_cact${CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA}_cover_v8`;
+    const avatarBoundsKey = `${normAvatarX1.toFixed(4)}_${normAvatarX2.toFixed(4)}_${normAvatarY1.toFixed(4)}_${normAvatarY2.toFixed(4)}`;
+    const cacheKey = `prompt_grad_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${boundsKey}_cb${cancelBoundsKey}_av${avatarBoundsKey}_b${PROMPT_BLUR_RADIUS}_pbr${PROMPT_BLUR_BRIGHTNESS}_cr${CANCEL_BUTTON_BLUR_RADIUS}_cbr${CANCEL_BUTTON_BLUR_BRIGHTNESS}_chov${CANCEL_BUTTON_HOVER_OVERLAY_ALPHA}_cact${CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA}_cover_v9`;
     if (hasCache(cacheKey)) {
         const cached = getCache(cacheKey);
         if (cached && cached.start && cached.end) {
@@ -343,7 +368,8 @@ export async function getWallpaperPromptColor(params) {
             const hasCancelImg = cached.cancelImagePath && Gio.File.new_for_path(cached.cancelImagePath).query_exists(null);
             const hasHoverImg = cached.cancelHoverImagePath && Gio.File.new_for_path(cached.cancelHoverImagePath).query_exists(null);
             const hasActiveImg = cached.cancelActiveImagePath && Gio.File.new_for_path(cached.cancelActiveImagePath).query_exists(null);
-            if (hasPromptImg && hasCancelImg && hasHoverImg && hasActiveImg) {
+            const hasAvatar = !!cached.avatarColor;
+            if (hasPromptImg && hasCancelImg && hasHoverImg && hasActiveImg && hasAvatar) {
                 return cached;
             }
         }
@@ -352,6 +378,7 @@ export async function getWallpaperPromptColor(params) {
     let sampledStart = null;
     let sampledEnd = null;
     let sampledPrimary = null;
+    let sampledAvatarColor = null;
     let direction = 'vertical';
     let imagePath = null;
     let cancelImagePath = null;
@@ -398,6 +425,20 @@ export async function getWallpaperPromptColor(params) {
             };
             direction = 'horizontal';
         }
+
+        const overlay = getPromptBlendOverlay(sampledPrimary, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
+        sampledAvatarColor = {
+            r: sampledPrimary.r,
+            g: sampledPrimary.g,
+            b: sampledPrimary.b,
+            rgba: `rgba(${sampledPrimary.r}, ${sampledPrimary.g}, ${sampledPrimary.b}, 1.0)`,
+            hex: rgbToHex(sampledPrimary.r, sampledPrimary.g, sampledPrimary.b),
+            overlayR: overlay.overlayR,
+            overlayG: overlay.overlayG,
+            overlayB: overlay.overlayB,
+            overlayAlpha: overlay.blendAlpha,
+            overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+        };
     } else if (targetFilePath) {
         try {
             const fileInfo = await getWallpaperFileInfo(targetFilePath);
@@ -561,6 +602,34 @@ export async function getWallpaperPromptColor(params) {
                 }
             }
 
+            // Sample dedicated color for empty avatar placeholder
+            const avXStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normAvatarX1)));
+            const avXEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * normAvatarX2)));
+            const avYStart = Math.max(0, Math.min(pbHeight - 1, Math.round(visibleY + visibleH * normAvatarY1)));
+            const avYEnd = Math.max(1, Math.min(pbHeight, Math.round(visibleY + visibleH * normAvatarY2)));
+
+            const avatarMappedBounds = {
+                x1: avXStart / pbWidth,
+                x2: avXEnd / pbWidth,
+                y1: avYStart / pbHeight,
+                y2: avYEnd / pbHeight,
+            };
+
+            const rawAvatarColor = sampleRegionAverageColor(pixbuf, avatarMappedBounds) || sampledPrimary || { r: 40, g: 40, b: 40 };
+            const overlay = getPromptBlendOverlay(rawAvatarColor);
+            sampledAvatarColor = {
+                r: rawAvatarColor.r,
+                g: rawAvatarColor.g,
+                b: rawAvatarColor.b,
+                rgba: `rgba(${rawAvatarColor.r}, ${rawAvatarColor.g}, ${rawAvatarColor.b}, 1.0)`,
+                hex: rgbToHex(rawAvatarColor.r, rawAvatarColor.g, rawAvatarColor.b),
+                overlayR: overlay.overlayR,
+                overlayG: overlay.overlayG,
+                overlayB: overlay.overlayB,
+                overlayAlpha: overlay.blendAlpha,
+                overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+            };
+
             // Clean up older slice PNGs for this user — keep only the current hash
             try {
                 const tmpDir = Gio.File.new_for_path('/var/tmp');
@@ -605,6 +674,23 @@ export async function getWallpaperPromptColor(params) {
         sampledEnd = fallback;
     }
 
+    if (!sampledAvatarColor) {
+        const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
+        const overlay = getPromptBlendOverlay(raw);
+        sampledAvatarColor = {
+            r: raw.r,
+            g: raw.g,
+            b: raw.b,
+            rgba: `rgba(${raw.r}, ${raw.g}, ${raw.b}, 1.0)`,
+            hex: rgbToHex(raw.r, raw.g, raw.b),
+            overlayR: overlay.overlayR,
+            overlayG: overlay.overlayG,
+            overlayB: overlay.overlayB,
+            overlayAlpha: overlay.blendAlpha,
+            overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+        };
+    }
+
     if (shadowAlpha === undefined) {
         shadowAlpha = PROMPT_SHADOW_FLOOR;
     }
@@ -620,6 +706,7 @@ export async function getWallpaperPromptColor(params) {
         cancelImagePath: cancelImagePath,
         cancelHoverImagePath: cancelHoverImagePath,
         cancelActiveImagePath: cancelActiveImagePath,
+        avatarColor: sampledAvatarColor,
         shadowAlpha: shadowAlpha,
     };
 

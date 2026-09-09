@@ -505,6 +505,10 @@ export default class WackLockscreenClockExtension extends Extension {
                 this._crossSessionManager.setClockAlphaAndPromptColor(alpha, promptColor);
             // </GDM_EXCLUDE>
 
+            if (this._cupertinoPromptManager?.restPrompt?.updateAvatarVibrancy && promptColor?.avatarColor) {
+                this._cupertinoPromptManager.restPrompt.updateAvatarVibrancy(promptColor.avatarColor);
+            }
+
             const isCupertinoPromptActive = this._promptActor?.has_style_class_name('wack-cupertino-prompt');
             if (isCupertinoPromptActive) {
                 const currentAuthPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;

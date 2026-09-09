@@ -3,6 +3,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { getWallpaperPromptColor } from '../main/alphaManager.js';
+import { getPromptBlendOverlay } from '../main/colorUtils.js';
 import { _logError } from './gdmUtils.js';
 
 export class GdmPromptStyling {
@@ -316,6 +317,23 @@ export class GdmPromptStyling {
                 promptColor?.cancelActiveImagePath &&
                 Gio.File.new_for_path(promptColor.cancelActiveImagePath).query_exists(null);
 
+            let avatarColor = promptColor?.avatarColor;
+            if (!avatarColor && promptColor && promptColor.r != null) {
+                const raw = { r: promptColor.r, g: promptColor.g, b: promptColor.b };
+                const overlay = getPromptBlendOverlay(raw);
+                avatarColor = {
+                    r: raw.r,
+                    g: raw.g,
+                    b: raw.b,
+                    rgba: `rgba(${raw.r}, ${raw.g}, ${raw.b}, 1.0)`,
+                    overlayR: overlay.overlayR,
+                    overlayG: overlay.overlayG,
+                    overlayB: overlay.overlayB,
+                    overlayAlpha: overlay.blendAlpha,
+                    overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+                };
+            }
+
             if (promptColor &&
                 promptColor.r != null &&
                 promptColor.g != null &&
@@ -324,6 +342,8 @@ export class GdmPromptStyling {
                 this.applyPromptEntryBackground(entry, promptColor);
                 if (authPrompt.cancelButton)
                     this.applyCancelButtonBackground(authPrompt.cancelButton, promptColor);
+                if (this._gdm?._avatarManager && avatarColor)
+                    this._gdm._avatarManager.updateAvatarVibrancy(avatarColor);
 
                 if (hasValidCancelImages)
                     return;
@@ -390,5 +410,23 @@ export class GdmPromptStyling {
         this.applyPromptEntryBackground(currentEntry, color);
         if (currentPrompt.cancelButton)
             this.applyCancelButtonBackground(currentPrompt.cancelButton, color);
+        let finalAvatarColor = color?.avatarColor;
+        if (!finalAvatarColor && color && color.r != null) {
+            const raw = { r: color.r, g: color.g, b: color.b };
+            const overlay = getPromptBlendOverlay(raw);
+            finalAvatarColor = {
+                r: raw.r,
+                g: raw.g,
+                b: raw.b,
+                rgba: `rgba(${raw.r}, ${raw.g}, ${raw.b}, 1.0)`,
+                overlayR: overlay.overlayR,
+                overlayG: overlay.overlayG,
+                overlayB: overlay.overlayB,
+                overlayAlpha: overlay.blendAlpha,
+                overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+            };
+        }
+        if (this._gdm?._avatarManager && finalAvatarColor)
+            this._gdm._avatarManager.updateAvatarVibrancy(finalAvatarColor);
     }
 }

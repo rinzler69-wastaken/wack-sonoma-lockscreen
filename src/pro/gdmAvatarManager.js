@@ -1,6 +1,8 @@
 import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
 import St from 'gi://St';
 import { _log } from './gdmUtils.js';
+import { getPromptBlendOverlay } from '../main/colorUtils.js';
 
 export class GdmAvatarManager {
     constructor(gdmManager) {
@@ -9,6 +11,8 @@ export class GdmAvatarManager {
         this.gdmOrigUpdateUser = null;
         this.gdmOrigMethodName = null;
         this.gdmOrigUserWellYAlign = null;
+        this._lastAvatarColor = null;
+        this._connectedUser = null;
     }
 
     setup() {
@@ -51,8 +55,63 @@ export class GdmAvatarManager {
         this.gdmOrigUpdateUser = null;
         this.gdmOrigMethodName = null;
 
+        if (this._connectedUser) {
+            this._connectedUser.disconnectObject(this);
+            this._connectedUser = null;
+        }
+
         this.unwrapGdmAvatar();
         this.gdmAvatarSetup = false;
+        this._lastAvatarColor = null;
+    }
+
+    _hasImageAvatar(avatar) {
+        if (!avatar || !avatar._user) return false;
+        const user = avatar._user;
+        if (typeof user.get_icon_file === 'function') {
+            const iconFile = user.get_icon_file();
+            if (iconFile && typeof iconFile === 'string' && iconFile !== '' && Gio.File.new_for_path(iconFile).query_exists(null))
+                return true;
+        }
+        return false;
+    }
+
+    updateAvatarVibrancy(avatarColor) {
+        if (avatarColor)
+            this._lastAvatarColor = avatarColor;
+        const color = this._lastAvatarColor;
+        if (!color) return;
+
+        const bgRgba = color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`;
+        const buttonStyle = `background-color: ${bgRgba} !important; border-radius: 999px !important;`;
+        let overlayRgba = color.overlayRgba;
+        if (!overlayRgba) {
+            if (color.overlayR != null && color.overlayAlpha != null) {
+                overlayRgba = `rgba(${color.overlayR}, ${color.overlayG}, ${color.overlayB}, ${color.overlayAlpha})`;
+            } else {
+                const overlay = getPromptBlendOverlay({ r: color.r, g: color.g, b: color.b });
+                overlayRgba = `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`;
+            }
+        }
+        const avatarOverlayStyle = `background-color: ${overlayRgba} !important; border-radius: 999px !important;`;
+
+        const applyToWell = (uw) => {
+            if (!uw) return;
+            const avatar = uw._avatar || uw._avatarButton?.get_child();
+            const avatarButton = uw._avatarButton;
+            if (!avatarButton) return;
+
+            if (this._hasImageAvatar(avatar)) {
+                avatarButton.set_style(null);
+            } else {
+                avatarButton.set_style(buttonStyle);
+                if (avatar) avatar.set_style(avatarOverlayStyle);
+            }
+        };
+
+        const authPrompt = this._gdm._dialog?._authPrompt;
+        applyToWell(authPrompt?._userWell?.get_child());
+        applyToWell(this._gdm._cupertinoRestPrompt?._userWell?.get_child());
     }
 
     wrapGdmAvatar() {
@@ -78,6 +137,14 @@ export class GdmAvatarManager {
             });
             uw.insert_child_at_index(uw._avatarButton, 0);
 
+            if (avatar && !avatar._wackOrigUpdate) {
+                avatar._wackOrigUpdate = avatar.update.bind(avatar);
+                avatar.update = () => {
+                    avatar._wackOrigUpdate();
+                    this.updateAvatarVibrancy();
+                };
+            }
+
             const label = uw?._label;
             if (label && label.vfunc_allocate) {
                 if (label._wackOrigVfuncAllocate === undefined)
@@ -94,10 +161,29 @@ export class GdmAvatarManager {
                     this._userNameLabel.allocate(childBox);
                 };
             }
+            if (this._connectedUser) {
+                this._connectedUser.disconnectObject(this);
+                this._connectedUser = null;
+            }
+            if (avatar && avatar._user) {
+                this._connectedUser = avatar._user;
+                this._connectedUser.connectObject(
+                    'notify::is-loaded', () => this.updateAvatarVibrancy(),
+                    'changed', () => this.updateAvatarVibrancy(),
+                    this
+                );
+            }
         }
+
+        this.updateAvatarVibrancy();
     }
 
     unwrapGdmAvatar() {
+        if (this._connectedUser) {
+            this._connectedUser.disconnectObject(this);
+            this._connectedUser = null;
+        }
+
         const authPrompt = this._gdm._dialog?._authPrompt;
         if (!authPrompt) return;
 
@@ -111,8 +197,14 @@ export class GdmAvatarManager {
 
         if (uw && uw._avatarButton) {
             const button = uw._avatarButton;
+            button.set_style(null);
             const avatar = button.get_child();
             if (avatar) {
+                if (avatar._wackOrigUpdate) {
+                    avatar.update = avatar._wackOrigUpdate;
+                    delete avatar._wackOrigUpdate;
+                }
+                avatar.set_style(null);
                 button.set_child(null);
                 uw.remove_child(button);
                 uw.insert_child_at_index(avatar, 0);
@@ -121,3 +213,4 @@ export class GdmAvatarManager {
         }
     }
 }
+
