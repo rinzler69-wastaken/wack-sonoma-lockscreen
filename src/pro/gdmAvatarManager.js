@@ -80,38 +80,46 @@ export class GdmAvatarManager {
         if (avatarColor)
             this._lastAvatarColor = avatarColor;
         const color = this._lastAvatarColor;
-        if (!color) return;
+        if (!color || this._updatingVibrancy) return;
 
-        const bgRgba = color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`;
-        const buttonStyle = `background-color: ${bgRgba} !important; border-radius: 999px !important;`;
-        let overlayRgba = color.overlayRgba;
-        if (!overlayRgba) {
-            if (color.overlayR != null && color.overlayAlpha != null) {
-                overlayRgba = `rgba(${color.overlayR}, ${color.overlayG}, ${color.overlayB}, ${color.overlayAlpha})`;
-            } else {
-                const overlay = getPromptBlendOverlay({ r: color.r, g: color.g, b: color.b });
-                overlayRgba = `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`;
+        this._updatingVibrancy = true;
+        try {
+            const bgRgba = color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`;
+            const buttonStyle = `background-color: ${bgRgba} !important; border-radius: 999px !important;`;
+            let overlayRgba = color.overlayRgba;
+            if (!overlayRgba) {
+                if (color.overlayR != null && color.overlayAlpha != null) {
+                    overlayRgba = `rgba(${color.overlayR}, ${color.overlayG}, ${color.overlayB}, ${color.overlayAlpha})`;
+                } else {
+                    const overlay = getPromptBlendOverlay({ r: color.r, g: color.g, b: color.b });
+                    overlayRgba = `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`;
+                }
             }
+            const avatarOverlayStyle = `background-color: ${overlayRgba} !important; border-radius: 999px !important;`;
+
+            const applyToWell = (uw) => {
+                if (!uw) return;
+                const avatar = uw._avatar || uw._avatarButton?.get_child();
+                const avatarButton = uw._avatarButton;
+                if (!avatarButton) return;
+
+                if (this._hasImageAvatar(avatar)) {
+                    if (avatarButton.get_style() !== null)
+                        avatarButton.set_style(null);
+                } else {
+                    if (avatarButton.get_style() !== buttonStyle)
+                        avatarButton.set_style(buttonStyle);
+                    if (avatar && avatar.get_style() !== avatarOverlayStyle)
+                        avatar.set_style(avatarOverlayStyle);
+                }
+            };
+
+            const authPrompt = this._gdm._dialog?._authPrompt;
+            applyToWell(authPrompt?._userWell?.get_child());
+            applyToWell(this._gdm._cupertinoRestPrompt?._userWell?.get_child());
+        } finally {
+            this._updatingVibrancy = false;
         }
-        const avatarOverlayStyle = `background-color: ${overlayRgba} !important; border-radius: 999px !important;`;
-
-        const applyToWell = (uw) => {
-            if (!uw) return;
-            const avatar = uw._avatar || uw._avatarButton?.get_child();
-            const avatarButton = uw._avatarButton;
-            if (!avatarButton) return;
-
-            if (this._hasImageAvatar(avatar)) {
-                avatarButton.set_style(null);
-            } else {
-                avatarButton.set_style(buttonStyle);
-                if (avatar) avatar.set_style(avatarOverlayStyle);
-            }
-        };
-
-        const authPrompt = this._gdm._dialog?._authPrompt;
-        applyToWell(authPrompt?._userWell?.get_child());
-        applyToWell(this._gdm._cupertinoRestPrompt?._userWell?.get_child());
     }
 
     wrapGdmAvatar() {

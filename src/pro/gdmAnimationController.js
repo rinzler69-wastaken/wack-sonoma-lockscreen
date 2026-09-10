@@ -331,9 +331,12 @@ export class GdmAnimationController {
         this._gdm._skipLegacyPromptEntryAnimation = false;
         this._gdm._legacyPromptAnimationState = 'selection';
         this.animateSessionMenuButtonIn();
+        this._gdm._clearCupertinoPromptBackground();
 
         if (this._gdm._dialog._user)
             this._gdm._applyWallpaper(this._gdm._dialog._user.get_user_name());
+        else
+            this._gdm._applyWallpaper(null);
         this._gdm._selectedPromptMode = this._gdm._currentWallpaperMetadata?.lockscreenMode === 'wack'
             ? 'wack'
             : 'cupertino';

@@ -4,6 +4,16 @@ import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { getWallpaperPromptColor } from '../main/alphaManager.js';
 import { getPromptBlendOverlay } from '../main/colorUtils.js';
+import {
+    A11Y_BUTTON_WIDTH,
+    A11Y_BUTTON_HEIGHT,
+    A11Y_BUTTON_X_OFFSET,
+    A11Y_BUTTON_Y_OFFSET,
+    SESSION_BUTTON_WIDTH,
+    SESSION_BUTTON_HEIGHT,
+    SESSION_BUTTON_X_OFFSET,
+    SESSION_BUTTON_Y_OFFSET,
+} from '../main/constants.js';
 import { _logError } from './gdmUtils.js';
 
 export class GdmPromptStyling {
@@ -93,15 +103,25 @@ export class GdmPromptStyling {
     }
 
     applyPromptEntryBackground(entry, color) {
-        if (!entry || !color)
+        if (!color) {
+            if (entry._wackOriginalStyle !== undefined) {
+                entry.set_style(entry._wackOriginalStyle);
+                delete entry._wackOriginalStyle;
+            } else {
+                entry.set_style(null);
+            }
+            delete entry._wackColor;
             return;
+        }
+
+        entry._wackColor = color;
 
         if (entry._wackOriginalStyle === undefined)
             entry._wackOriginalStyle = entry.get_style() ?? '';
 
         let shadowStyle = '';
         if (color.shadowAlpha !== undefined) {
-            shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+            shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
         }
 
         let bgStyle;
@@ -120,8 +140,21 @@ export class GdmPromptStyling {
     }
 
     applyCancelButtonBackground(button, color) {
-        if (!button || !color)
+        if (!button)
             return;
+
+        if (!color) {
+            button.disconnectObject(this);
+            if (button._wackOriginalStyle !== undefined) {
+                button.set_style(button._wackOriginalStyle);
+                delete button._wackOriginalStyle;
+            } else {
+                button.set_style(null);
+            }
+            delete button._wackColor;
+            delete button._wackPressed;
+            return;
+        }
 
         button._wackColor = color;
 
@@ -130,6 +163,8 @@ export class GdmPromptStyling {
 
             button.connectObject(
                 'notify::hover', () => this.updateCancelButtonStyle(button),
+                'key-focus-in', () => this.updateCancelButtonStyle(button),
+                'key-focus-out', () => this.updateCancelButtonStyle(button),
                 'button-press-event', () => {
                     button._wackPressed = true;
                     this.updateCancelButtonStyle(button);
@@ -155,15 +190,17 @@ export class GdmPromptStyling {
         if (!button.hover)
             button._wackPressed = false;
 
-        let shadowStyle = '';
-        if (color.shadowAlpha !== undefined) {
-            shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
-        }
-
-        let bgStyle;
-        let imgPath = color.cancelImagePath;
         const isHovered = button.hover && !button._wackPressed;
         const isPressed = button._wackPressed;
+        const isFocused = button.has_key_focus() || (button.has_style_pseudo_class?.('focus') ?? false);
+
+        const borderStyle = isFocused
+            ? ' border: 1px solid rgba(255, 255, 255, 0.4) !important; outline: none !important;'
+            : ' border: 1px solid transparent !important;';
+
+        let bgStyle;
+        let shadowStyle;
+        let imgPath = color.cancelImagePath;
 
         if (isPressed && color.cancelActiveImagePath) {
             imgPath = color.cancelActiveImagePath;
@@ -175,6 +212,9 @@ export class GdmPromptStyling {
         }
 
         if (imgPath) {
+            // Pre-baked per-state slice (or CSS filter fallback) carries the
+            // interaction feedback here — box-shadow stays the constant ambient
+            // drop-shadow regardless of hover/press.
             const imageUri = imgPath.startsWith('file://')
                 ? imgPath
                 : `file://${imgPath}`;
@@ -185,24 +225,198 @@ export class GdmPromptStyling {
                 overlayStyle = ' filter: brightness(1.12);';
             }
             bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important;${overlayStyle}`;
+            shadowStyle = color.shadowAlpha !== undefined
+                ? ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`
+                : '';
         } else {
-            let r = color.r;
-            let g = color.g;
-            let b = color.b;
-
+            // Flat sampled color, never recolored — a plain overlay wash carries
+            // the interaction feedback instead of a per-channel blend.
+            bgStyle = ` background-color: rgb(${color.r}, ${color.g}, ${color.b}) !important;`;
             if (isPressed) {
-                r = Math.round(r * 0.75 + 255 * 0.25);
-                g = Math.round(g * 0.75 + 255 * 0.25);
-                b = Math.round(b * 0.75 + 255 * 0.25);
+                shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.25) !important;';
             } else if (isHovered) {
-                r = Math.round(r * 0.875 + 255 * 0.125);
-                g = Math.round(g * 0.875 + 255 * 0.125);
-                b = Math.round(b * 0.875 + 255 * 0.125);
+                shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.125) !important;';
+            } else if (color.shadowAlpha !== undefined) {
+                shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+            } else {
+                shadowStyle = '';
             }
-            bgStyle = ` background-color: rgb(${r}, ${g}, ${b}) !important;`;
         }
 
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}${borderStyle}`);
+    }
+
+    applyA11yButtonBackground(button, color) {
+        if (!button)
+            return;
+
+        if (!color) {
+            button.disconnectObject(this);
+            const menu = button._menu ?? button.menu;
+            if (menu)
+                menu.disconnectObject(this);
+            if (button._wackOriginalStyle !== undefined) {
+                button.set_style(button._wackOriginalStyle);
+                delete button._wackOriginalStyle;
+            } else {
+                button.set_style(null);
+            }
+            delete button._wackColor;
+            delete button._wackPressed;
+            return;
+        }
+
+        button._wackColor = color;
+
+        if (button._wackOriginalStyle === undefined) {
+            button._wackOriginalStyle = button.get_style() ?? '';
+
+            button.connectObject(
+                'notify::hover', () => this.updateA11yButtonStyle(button),
+                'key-focus-in', () => this.updateA11yButtonStyle(button),
+                'key-focus-out', () => this.updateA11yButtonStyle(button),
+                'button-press-event', () => {
+                    button._wackPressed = true;
+                    this.updateA11yButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                'button-release-event', () => {
+                    button._wackPressed = false;
+                    this.updateA11yButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                this
+            );
+
+            const menu = button._menu ?? button.menu;
+            if (menu) {
+                menu.connectObject(
+                    'open-state-changed', () => this.updateA11yButtonStyle(button),
+                    this
+                );
+            }
+        }
+
+        this.updateA11yButtonStyle(button);
+    }
+
+    updateA11yButtonStyle(button) {
+        const color = button._wackColor;
+        if (!color)
+            return;
+
+        if (!button.hover)
+            button._wackPressed = false;
+
+        const colorObj = color.a11yColor ?? color;
+        const { r, g, b } = colorObj;
+
+        const menu = button._menu ?? button.menu;
+        const isHovered = button.hover && !button._wackPressed;
+        const isPressed = button._wackPressed || button.has_style_pseudo_class?.('active') || (menu && menu.isOpen);
+
+        let shadowStyle;
+        if (isPressed) {
+            shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.25) !important;';
+        } else if (isHovered) {
+            shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.125) !important;';
+        } else if (color.shadowAlpha !== undefined) {
+            shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+        } else {
+            shadowStyle = '';
+        }
+
+        // Border/focus ring is owned entirely by the stylesheet's :focus rule now —
+        // St tracks key-focus natively per-actor, so there's nothing for JS to desync.
+        const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: rgb(${r}, ${g}, ${b}) !important;`;
         button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}`);
+    }
+
+    applySessionButtonBackground(button, color) {
+        if (!button)
+            return;
+
+        if (!color) {
+            button.disconnectObject(this);
+            const menu = button._menu ?? button.menu;
+            if (menu)
+                menu.disconnectObject(this);
+            if (button._wackOriginalStyle !== undefined) {
+                button.set_style(button._wackOriginalStyle);
+                delete button._wackOriginalStyle;
+            } else {
+                button.set_style(null);
+            }
+            delete button._wackColor;
+            delete button._wackPressed;
+            return;
+        }
+
+        button._wackColor = color;
+
+        if (button._wackOriginalStyle === undefined) {
+            button._wackOriginalStyle = button.get_style() ?? '';
+
+            button.connectObject(
+                'notify::hover', () => this.updateSessionButtonStyle(button),
+                'button-press-event', () => {
+                    button._wackPressed = true;
+                    this.updateSessionButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                'button-release-event', () => {
+                    button._wackPressed = false;
+                    this.updateSessionButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                this
+            );
+
+            const menu = button._menu ?? button.menu;
+            if (menu) {
+                menu.connectObject(
+                    'open-state-changed', () => this.updateSessionButtonStyle(button),
+                    this
+                );
+            }
+        }
+
+        this.updateSessionButtonStyle(button);
+    }
+
+    updateSessionButtonStyle(button) {
+        const color = button._wackColor;
+        if (!color)
+            return;
+
+        if (!button.hover)
+            button._wackPressed = false;
+
+        const colorObj = color.sessionColor ?? color;
+        const { r, g, b } = colorObj;
+
+        const menu = button._menu ?? button.menu;
+        const isHovered = button.hover && !button._wackPressed;
+        const isPressed = button._wackPressed || button.has_style_pseudo_class?.('active') || (menu && menu.isOpen);
+        const isFocused = button.has_key_focus() || (button.has_style_pseudo_class?.('focus') ?? false);
+
+        let shadowStyle;
+        if (isPressed) {
+            shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.25) !important;';
+        } else if (isHovered) {
+            shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.125) !important;';
+        } else if (color.shadowAlpha !== undefined) {
+            shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+        } else {
+            shadowStyle = '';
+        }
+
+        const borderStyle = isFocused
+            ? ' border: 1px solid rgba(255, 255, 255, 0.4) !important; outline: none !important;'
+            : ' border: 1px solid transparent !important;';
+
+        const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: rgb(${r}, ${g}, ${b}) !important;`;
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}${borderStyle}`);
     }
 
     clearCupertinoPromptBackground() {
@@ -215,6 +429,7 @@ export class GdmPromptStyling {
             } else {
                 entry.set_style(null);
             }
+            delete entry._wackColor;
         }
 
         const cancelButton = authPrompt?.cancelButton;
@@ -229,6 +444,47 @@ export class GdmPromptStyling {
             delete cancelButton._wackColor;
             delete cancelButton._wackPressed;
         }
+
+        const a11yButton = this._gdm._dialog?._a11yMenuButton
+            ?? this._gdm._dialog?._bottomButtonGroup?._a11yMenuButton
+            ?? this._gdm._dialog?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('a11y-button'));
+        if (a11yButton) {
+            a11yButton.disconnectObject(this);
+            const menu = a11yButton._menu ?? a11yButton.menu;
+            if (menu)
+                menu.disconnectObject(this);
+            if (a11yButton._wackOriginalStyle !== undefined) {
+                a11yButton.set_style(a11yButton._wackOriginalStyle);
+                delete a11yButton._wackOriginalStyle;
+            } else {
+                a11yButton.set_style(null);
+            }
+            delete a11yButton._wackColor;
+            delete a11yButton._wackPressed;
+        }
+
+        const sessionButton = this._gdm._dialog?._authMenuButton
+            ?? this._gdm._dialog?._sessionMenuButton?._button
+            ?? this._gdm._dialog?._sessionMenuButton?.get_child?.()
+            ?? this._gdm._dialog?._sessionMenuButton
+            ?? this._gdm._dialog?._bottomButtonGroup?._authMenuButton
+            ?? this._gdm._dialog?._bottomButtonGroup?._sessionMenuButton?._button
+            ?? this._gdm._dialog?._bottomButtonGroup?._sessionMenuButton
+            ?? this._gdm._dialog?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('login-dialog-auth-menu-button') || c.has_style_class_name?.('login-dialog-session-list-button'));
+        if (sessionButton) {
+            sessionButton.disconnectObject(this);
+            const menu = sessionButton._menu ?? sessionButton.menu;
+            if (menu)
+                menu.disconnectObject(this);
+            if (sessionButton._wackOriginalStyle !== undefined) {
+                sessionButton.set_style(sessionButton._wackOriginalStyle);
+                delete sessionButton._wackOriginalStyle;
+            } else {
+                sessionButton.set_style(null);
+            }
+            delete sessionButton._wackColor;
+            delete sessionButton._wackPressed;
+        }
     }
 
     async updateCupertinoPromptBackground(metadata = null) {
@@ -239,6 +495,11 @@ export class GdmPromptStyling {
         const entry = this.findPromptEntry(authPrompt);
         if (!entry)
             return;
+
+        if (!authPrompt.has_style_class_name('wack-cupertino-prompt')) {
+            this.clearCupertinoPromptBackground();
+            return;
+        }
 
         const effectiveMetadata = metadata ?? this._gdm._currentWallpaperMetadata;
 
@@ -327,6 +588,62 @@ export class GdmPromptStyling {
             }
         }
 
+        let a11yBounds = null;
+        const currentDialog = this._gdm._dialog;
+        const a11yButton = currentDialog?._a11yMenuButton
+            ?? currentDialog?._bottomButtonGroup?._a11yMenuButton
+            ?? currentDialog?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('a11y-button'));
+        if (a11yButton && a11yButton.get_stage()) {
+            const [axTrans, ayTrans] = a11yButton.get_transformed_position();
+            const awTrans = a11yButton.get_width() || A11Y_BUTTON_WIDTH;
+            const ahTrans = a11yButton.get_height() || A11Y_BUTTON_HEIGHT;
+            const monitor = Main.layoutManager?.primaryMonitor;
+            const monitorX = monitor ? monitor.x : 0;
+            const monitorY = monitor ? monitor.y : 0;
+            const monitorHeight = monitor ? monitor.height : 1080;
+            const monitorWidth = monitor ? monitor.width : 1920;
+            if (awTrans > 0 && ahTrans > 0 && monitorWidth > 0 && monitorHeight > 0 && axTrans >= monitorX && ayTrans >= monitorY) {
+                const effectiveX = axTrans + A11Y_BUTTON_X_OFFSET;
+                const effectiveY = ayTrans + A11Y_BUTTON_Y_OFFSET;
+                a11yBounds = {
+                    x1: Math.max(0, Math.min(1, (effectiveX - monitorX) / monitorWidth)),
+                    x2: Math.max(0, Math.min(1, (effectiveX + awTrans - monitorX) / monitorWidth)),
+                    y1: Math.max(0, Math.min(1, (effectiveY - monitorY) / monitorHeight)),
+                    y2: Math.max(0, Math.min(1, (effectiveY + ahTrans - monitorY) / monitorHeight)),
+                };
+            }
+        }
+
+        let sessionBounds = null;
+        const sessionButton = currentDialog?._authMenuButton
+            ?? currentDialog?._sessionMenuButton?._button
+            ?? currentDialog?._sessionMenuButton?.get_child?.()
+            ?? currentDialog?._sessionMenuButton
+            ?? currentDialog?._bottomButtonGroup?._authMenuButton
+            ?? currentDialog?._bottomButtonGroup?._sessionMenuButton?._button
+            ?? currentDialog?._bottomButtonGroup?._sessionMenuButton
+            ?? currentDialog?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('login-dialog-auth-menu-button') || c.has_style_class_name?.('login-dialog-session-list-button'));
+        if (sessionButton && sessionButton.get_stage()) {
+            const [sxTrans, syTrans] = sessionButton.get_transformed_position();
+            const swTrans = sessionButton.get_width() || SESSION_BUTTON_WIDTH;
+            const shTrans = sessionButton.get_height() || SESSION_BUTTON_HEIGHT;
+            const monitor = Main.layoutManager?.primaryMonitor;
+            const monitorX = monitor ? monitor.x : 0;
+            const monitorY = monitor ? monitor.y : 0;
+            const monitorHeight = monitor ? monitor.height : 1080;
+            const monitorWidth = monitor ? monitor.width : 1920;
+            if (swTrans > 0 && shTrans > 0 && monitorWidth > 0 && monitorHeight > 0 && sxTrans >= monitorX && syTrans >= monitorY) {
+                const effectiveX = sxTrans + SESSION_BUTTON_X_OFFSET;
+                const effectiveY = syTrans + SESSION_BUTTON_Y_OFFSET;
+                sessionBounds = {
+                    x1: Math.max(0, Math.min(1, (effectiveX - monitorX) / monitorWidth)),
+                    x2: Math.max(0, Math.min(1, (effectiveX + swTrans - monitorX) / monitorWidth)),
+                    y1: Math.max(0, Math.min(1, (effectiveY - monitorY) / monitorHeight)),
+                    y2: Math.max(0, Math.min(1, (effectiveY + shTrans - monitorY) / monitorHeight)),
+                };
+            }
+        }
+
         let wallpaperParams = null;
         if (effectiveMetadata) {
             const promptColor = effectiveMetadata.promptColor;
@@ -366,6 +683,10 @@ export class GdmPromptStyling {
                     this.applyCancelButtonBackground(authPrompt.cancelButton, promptColor);
                 if (this._gdm?._avatarManager && avatarColor)
                     this._gdm._avatarManager.updateAvatarVibrancy(avatarColor);
+                if (a11yButton)
+                    this.applyA11yButtonBackground(a11yButton, promptColor);
+                if (sessionButton)
+                    this.applySessionButtonBackground(sessionButton, promptColor);
 
                 if (hasValidCancelImages)
                     return;
@@ -393,6 +714,8 @@ export class GdmPromptStyling {
                 promptBounds: promptBounds,
                 cancelBounds: cancelBounds,
                 avatarBounds: avatarBounds,
+                a11yBounds: a11yBounds,
+                sessionBounds: sessionBounds,
             };
         } else {
             const bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
@@ -414,6 +737,8 @@ export class GdmPromptStyling {
                 promptBounds: promptBounds,
                 cancelBounds: cancelBounds,
                 avatarBounds: avatarBounds,
+                a11yBounds: a11yBounds,
+                sessionBounds: sessionBounds,
             };
         }
 
@@ -431,9 +756,15 @@ export class GdmPromptStyling {
         if (!currentPrompt || !currentEntry || !currentPrompt.has_style_class_name('wack-cupertino-prompt'))
             return;
 
+        if (!color) {
+            this.clearCupertinoPromptBackground();
+            return;
+        }
+
         this.applyPromptEntryBackground(currentEntry, color);
         if (currentPrompt.cancelButton)
             this.applyCancelButtonBackground(currentPrompt.cancelButton, color);
+
         let finalAvatarColor = color?.avatarColor;
         if (!finalAvatarColor && color && color.r != null) {
             const raw = { r: color.r, g: color.g, b: color.b };
@@ -452,5 +783,10 @@ export class GdmPromptStyling {
         }
         if (this._gdm?._avatarManager && finalAvatarColor)
             this._gdm._avatarManager.updateAvatarVibrancy(finalAvatarColor);
+
+        if (a11yButton)
+            this.applyA11yButtonBackground(a11yButton, color);
+        if (sessionButton)
+            this.applySessionButtonBackground(sessionButton, color);
     }
 }
