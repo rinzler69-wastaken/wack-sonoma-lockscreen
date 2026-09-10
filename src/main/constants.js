@@ -35,6 +35,18 @@ export const AVATAR_BUTTON_HEIGHT = 56; // px
 export const AVATAR_BUTTON_X_OFFSET = 0; // px
 export const AVATAR_BUTTON_Y_OFFSET = 0; // px
 
+// Accessibility button sampling constants (for GDM / lockscreen)
+export const A11Y_BUTTON_WIDTH = 34; // px
+export const A11Y_BUTTON_HEIGHT = 34; // px
+export const A11Y_BUTTON_X_OFFSET = 0; // px
+export const A11Y_BUTTON_Y_OFFSET = 0; // px
+
+// Desktop Environment / Session select button sampling constants (for GDM / lockscreen)
+export const SESSION_BUTTON_WIDTH = 34; // px
+export const SESSION_BUTTON_HEIGHT = 34; // px
+export const SESSION_BUTTON_X_OFFSET = 0; // px
+export const SESSION_BUTTON_Y_OFFSET = 0; // px
+
 export const SETTINGS_SCHEMA = 'org.gnome.shell.extensions.wack-lockscreen-clock';
 
 // Individual notification card blur settings

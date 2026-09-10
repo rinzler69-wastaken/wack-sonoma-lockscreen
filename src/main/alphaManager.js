@@ -12,6 +12,7 @@ import {
     getPromptBlendOverlay,
     CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
     rgbToHex,
+    blendOverOpaque,
 } from './colorUtils.js';
 import {
     resolveWallpaperSource,
@@ -35,6 +36,14 @@ import {
     AVATAR_BUTTON_HEIGHT,
     AVATAR_BUTTON_X_OFFSET,
     AVATAR_BUTTON_Y_OFFSET,
+    A11Y_BUTTON_WIDTH,
+    A11Y_BUTTON_HEIGHT,
+    A11Y_BUTTON_X_OFFSET,
+    A11Y_BUTTON_Y_OFFSET,
+    SESSION_BUTTON_WIDTH,
+    SESSION_BUTTON_HEIGHT,
+    SESSION_BUTTON_X_OFFSET,
+    SESSION_BUTTON_Y_OFFSET,
 } from './constants.js';
 import {
     initCache,
@@ -263,6 +272,8 @@ export async function getWallpaperPromptColor(params) {
         promptBounds = null,
         cancelBounds = null,
         avatarBounds = null,
+        a11yBounds = null,
+        sessionBounds = null,
     } = params;
 
     await initCache();
@@ -362,12 +373,62 @@ export async function getWallpaperPromptColor(params) {
         normAvatarY2 = Math.min(1, ((targetStackY + AVATAR_BUTTON_HEIGHT) / monitorHeight) + avOffsetY);
     }
 
+    // A11y button bounds (offset with A11Y_BUTTON_X_OFFSET / A11Y_BUTTON_Y_OFFSET)
+    let normA11yX1, normA11yX2, normA11yY1, normA11yY2;
+    const a11yOffsetX = A11Y_BUTTON_X_OFFSET / monitorWidth;
+    const a11yOffsetY = A11Y_BUTTON_Y_OFFSET / monitorHeight;
+    const a11yHalfW = (A11Y_BUTTON_WIDTH / 2) / monitorWidth;
+    const a11yHalfH = (A11Y_BUTTON_HEIGHT / 2) / monitorHeight;
+
+    if (a11yBounds &&
+        a11yBounds.x1 != null && a11yBounds.x2 != null &&
+        a11yBounds.x2 > a11yBounds.x1) {
+        normA11yX1 = Math.max(0, Math.min(1, a11yBounds.x1 + a11yOffsetX));
+        normA11yX2 = Math.max(0, Math.min(1, a11yBounds.x2 + a11yOffsetX));
+        normA11yY1 = Math.max(0, Math.min(1, a11yBounds.y1 + a11yOffsetY));
+        normA11yY2 = Math.max(0, Math.min(1, a11yBounds.y2 + a11yOffsetY));
+    } else {
+        // Fallback: bottom right corner of primary monitor (approx 24px margin + half button)
+        const fallbackA11yCenterX = 1.0 - (24 + A11Y_BUTTON_WIDTH / 2) / monitorWidth + a11yOffsetX;
+        const fallbackA11yCenterY = 1.0 - (24 + A11Y_BUTTON_HEIGHT / 2) / monitorHeight + a11yOffsetY;
+        normA11yX1 = Math.max(0, Math.min(1, fallbackA11yCenterX - a11yHalfW));
+        normA11yX2 = Math.max(0, Math.min(1, fallbackA11yCenterX + a11yHalfW));
+        normA11yY1 = Math.max(0, Math.min(1, fallbackA11yCenterY - a11yHalfH));
+        normA11yY2 = Math.max(0, Math.min(1, fallbackA11yCenterY + a11yHalfH));
+    }
+
+    // Session (DE select) button bounds (offset with SESSION_BUTTON_X_OFFSET / SESSION_BUTTON_Y_OFFSET)
+    let normSessionX1, normSessionX2, normSessionY1, normSessionY2;
+    const sessionOffsetX = SESSION_BUTTON_X_OFFSET / monitorWidth;
+    const sessionOffsetY = SESSION_BUTTON_Y_OFFSET / monitorHeight;
+    const sessionHalfW = (SESSION_BUTTON_WIDTH / 2) / monitorWidth;
+    const sessionHalfH = (SESSION_BUTTON_HEIGHT / 2) / monitorHeight;
+
+    if (sessionBounds &&
+        sessionBounds.x1 != null && sessionBounds.x2 != null &&
+        sessionBounds.x2 > sessionBounds.x1) {
+        normSessionX1 = Math.max(0, Math.min(1, sessionBounds.x1 + sessionOffsetX));
+        normSessionX2 = Math.max(0, Math.min(1, sessionBounds.x2 + sessionOffsetX));
+        normSessionY1 = Math.max(0, Math.min(1, sessionBounds.y1 + sessionOffsetY));
+        normSessionY2 = Math.max(0, Math.min(1, sessionBounds.y2 + sessionOffsetY));
+    } else {
+        // Fallback: to the left of a11y button (approx 12px gap)
+        const fallbackSessionCenterX = 1.0 - (24 + A11Y_BUTTON_WIDTH + 12 + SESSION_BUTTON_WIDTH / 2) / monitorWidth + sessionOffsetX;
+        const fallbackSessionCenterY = 1.0 - (24 + SESSION_BUTTON_HEIGHT / 2) / monitorHeight + sessionOffsetY;
+        normSessionX1 = Math.max(0, Math.min(1, fallbackSessionCenterX - sessionHalfW));
+        normSessionX2 = Math.max(0, Math.min(1, fallbackSessionCenterX + sessionHalfW));
+        normSessionY1 = Math.max(0, Math.min(1, fallbackSessionCenterY - sessionHalfH));
+        normSessionY2 = Math.max(0, Math.min(1, fallbackSessionCenterY + sessionHalfH));
+    }
+
     const { mtime, size } = await getFileMtimeAndSize(targetFilePath);
 
     const boundsKey = `${normX1.toFixed(4)}_${normX2.toFixed(4)}_${normY1.toFixed(4)}_${normY2.toFixed(4)}`;
     const cancelBoundsKey = `${normCancelX1.toFixed(4)}_${normCancelX2.toFixed(4)}_${normCancelY1.toFixed(4)}_${normCancelY2.toFixed(4)}`;
     const avatarBoundsKey = `${normAvatarX1.toFixed(4)}_${normAvatarX2.toFixed(4)}_${normAvatarY1.toFixed(4)}_${normAvatarY2.toFixed(4)}`;
-    const cacheKey = `prompt_grad_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${boundsKey}_cb${cancelBoundsKey}_av${avatarBoundsKey}_b${PROMPT_BLUR_RADIUS}_pbr${PROMPT_BLUR_BRIGHTNESS}_cr${CANCEL_BUTTON_BLUR_RADIUS}_cbr${CANCEL_BUTTON_BLUR_BRIGHTNESS}_chov${CANCEL_BUTTON_HOVER_OVERLAY_ALPHA}_cact${CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA}_cover_v9`;
+    const a11yBoundsKey = `${normA11yX1.toFixed(4)}_${normA11yX2.toFixed(4)}_${normA11yY1.toFixed(4)}_${normA11yY2.toFixed(4)}`;
+    const sessionBoundsKey = `${normSessionX1.toFixed(4)}_${normSessionX2.toFixed(4)}_${normSessionY1.toFixed(4)}_${normSessionY2.toFixed(4)}`;
+    const cacheKey = `prompt_grad_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${boundsKey}_cb${cancelBoundsKey}_av${avatarBoundsKey}_a11y${a11yBoundsKey}_sess${sessionBoundsKey}_b${PROMPT_BLUR_RADIUS}_pbr${PROMPT_BLUR_BRIGHTNESS}_cr${CANCEL_BUTTON_BLUR_RADIUS}_cbr${CANCEL_BUTTON_BLUR_BRIGHTNESS}_chov${CANCEL_BUTTON_HOVER_OVERLAY_ALPHA}_cact${CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA}_cover_v10`;
     if (hasCache(cacheKey)) {
         const cached = getCache(cacheKey);
         if (cached && cached.start && cached.end) {
@@ -376,7 +437,10 @@ export async function getWallpaperPromptColor(params) {
             const hasHoverImg = cached.cancelHoverImagePath && Gio.File.new_for_path(cached.cancelHoverImagePath).query_exists(null);
             const hasActiveImg = cached.cancelActiveImagePath && Gio.File.new_for_path(cached.cancelActiveImagePath).query_exists(null);
             const hasAvatar = !!cached.avatarColor;
-            if (hasPromptImg && hasCancelImg && hasHoverImg && hasActiveImg && hasAvatar) {
+            const hasA11y = !!cached.a11yColor;
+            const hasSession = !!cached.sessionColor;
+            if (hasPromptImg && hasCancelImg && hasHoverImg && hasActiveImg &&
+                hasAvatar && hasA11y && hasSession) {
                 return cached;
             }
         }
@@ -386,6 +450,8 @@ export async function getWallpaperPromptColor(params) {
     let sampledEnd = null;
     let sampledPrimary = null;
     let sampledAvatarColor = null;
+    let sampledA11yColor = null;
+    let sampledSessionColor = null;
     let direction = 'vertical';
     let imagePath = null;
     let cancelImagePath = null;
@@ -445,6 +511,75 @@ export async function getWallpaperPromptColor(params) {
             overlayB: overlay.overlayB,
             overlayAlpha: overlay.blendAlpha,
             overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+        };
+
+        let rawA11y;
+        let rawSession;
+        if (shadingType === 0) {
+            rawA11y = { ...c1 };
+            rawSession = { ...c1 };
+        } else if (shadingType === 1) {
+            const ytA11y = (normA11yY1 + normA11yY2) / 2;
+            rawA11y = {
+                r: Math.round(c1.r + (c2.r - c1.r) * ytA11y),
+                g: Math.round(c1.g + (c2.g - c1.g) * ytA11y),
+                b: Math.round(c1.b + (c2.b - c1.b) * ytA11y),
+            };
+            const ytSess = (normSessionY1 + normSessionY2) / 2;
+            rawSession = {
+                r: Math.round(c1.r + (c2.r - c1.r) * ytSess),
+                g: Math.round(c1.g + (c2.g - c1.g) * ytSess),
+                b: Math.round(c1.b + (c2.b - c1.b) * ytSess),
+            };
+        } else {
+            const xtA11y = (normA11yX1 + normA11yX2) / 2;
+            rawA11y = {
+                r: Math.round(c1.r + (c2.r - c1.r) * xtA11y),
+                g: Math.round(c1.g + (c2.g - c1.g) * xtA11y),
+                b: Math.round(c1.b + (c2.b - c1.b) * xtA11y),
+            };
+            const xtSess = (normSessionX1 + normSessionX2) / 2;
+            rawSession = {
+                r: Math.round(c1.r + (c2.r - c1.r) * xtSess),
+                g: Math.round(c1.g + (c2.g - c1.g) * xtSess),
+                b: Math.round(c1.b + (c2.b - c1.b) * xtSess),
+            };
+        }
+
+        const a11yOverlay = getPromptBlendOverlay(rawA11y, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
+        const a11yBlended = blendOverOpaque(rawA11y, { r: a11yOverlay.overlayR, g: a11yOverlay.overlayG, b: a11yOverlay.overlayB }, a11yOverlay.blendAlpha);
+        sampledA11yColor = {
+            r: a11yBlended.r,
+            g: a11yBlended.g,
+            b: a11yBlended.b,
+            rawR: rawA11y.r,
+            rawG: rawA11y.g,
+            rawB: rawA11y.b,
+            rgba: `rgba(${a11yBlended.r}, ${a11yBlended.g}, ${a11yBlended.b}, 1.0)`,
+            hex: rgbToHex(a11yBlended.r, a11yBlended.g, a11yBlended.b),
+            overlayR: a11yOverlay.overlayR,
+            overlayG: a11yOverlay.overlayG,
+            overlayB: a11yOverlay.overlayB,
+            overlayAlpha: a11yOverlay.blendAlpha,
+            overlayRgba: `rgba(${a11yOverlay.overlayR}, ${a11yOverlay.overlayG}, ${a11yOverlay.overlayB}, ${a11yOverlay.blendAlpha.toFixed(4)})`,
+        };
+
+        const sessionOverlay = getPromptBlendOverlay(rawSession, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
+        const sessionBlended = blendOverOpaque(rawSession, { r: sessionOverlay.overlayR, g: sessionOverlay.overlayG, b: sessionOverlay.overlayB }, sessionOverlay.blendAlpha);
+        sampledSessionColor = {
+            r: sessionBlended.r,
+            g: sessionBlended.g,
+            b: sessionBlended.b,
+            rawR: rawSession.r,
+            rawG: rawSession.g,
+            rawB: rawSession.b,
+            rgba: `rgba(${sessionBlended.r}, ${sessionBlended.g}, ${sessionBlended.b}, 1.0)`,
+            hex: rgbToHex(sessionBlended.r, sessionBlended.g, sessionBlended.b),
+            overlayR: sessionOverlay.overlayR,
+            overlayG: sessionOverlay.overlayG,
+            overlayB: sessionOverlay.overlayB,
+            overlayAlpha: sessionOverlay.blendAlpha,
+            overlayRgba: `rgba(${sessionOverlay.overlayR}, ${sessionOverlay.overlayG}, ${sessionOverlay.overlayB}, ${sessionOverlay.blendAlpha.toFixed(4)})`,
         };
     } else if (targetFilePath) {
         try {
@@ -637,6 +772,70 @@ export async function getWallpaperPromptColor(params) {
                 overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
             };
 
+            // Sample dedicated color for a11y button
+            const a11yXStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normA11yX1)));
+            const a11yXEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * normA11yX2)));
+            const a11yYStart = Math.max(0, Math.min(pbHeight - 1, Math.round(visibleY + visibleH * normA11yY1)));
+            const a11yYEnd = Math.max(1, Math.min(pbHeight, Math.round(visibleY + visibleH * normA11yY2)));
+
+            const a11yMappedBounds = {
+                x1: a11yXStart / pbWidth,
+                x2: a11yXEnd / pbWidth,
+                y1: a11yYStart / pbHeight,
+                y2: a11yYEnd / pbHeight,
+            };
+
+            const rawA11yColor = sampleRegionAverageColor(pixbuf, a11yMappedBounds) || sampledPrimary || { r: 40, g: 40, b: 40 };
+            const a11yOverlay = getPromptBlendOverlay(rawA11yColor);
+            const a11yBlended = blendOverOpaque(rawA11yColor, { r: a11yOverlay.overlayR, g: a11yOverlay.overlayG, b: a11yOverlay.overlayB }, a11yOverlay.blendAlpha);
+            sampledA11yColor = {
+                r: a11yBlended.r,
+                g: a11yBlended.g,
+                b: a11yBlended.b,
+                rawR: rawA11yColor.r,
+                rawG: rawA11yColor.g,
+                rawB: rawA11yColor.b,
+                rgba: `rgba(${a11yBlended.r}, ${a11yBlended.g}, ${a11yBlended.b}, 1.0)`,
+                hex: rgbToHex(a11yBlended.r, a11yBlended.g, a11yBlended.b),
+                overlayR: a11yOverlay.overlayR,
+                overlayG: a11yOverlay.overlayG,
+                overlayB: a11yOverlay.overlayB,
+                overlayAlpha: a11yOverlay.blendAlpha,
+                overlayRgba: `rgba(${a11yOverlay.overlayR}, ${a11yOverlay.overlayG}, ${a11yOverlay.overlayB}, ${a11yOverlay.blendAlpha.toFixed(4)})`,
+            };
+
+            // Sample dedicated color for session (DE select) button
+            const sessionXStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normSessionX1)));
+            const sessionXEnd = Math.max(1, Math.min(pbWidth, Math.round(visibleX + visibleW * normSessionX2)));
+            const sessionYStart = Math.max(0, Math.min(pbHeight - 1, Math.round(visibleY + visibleH * normSessionY1)));
+            const sessionYEnd = Math.max(1, Math.min(pbHeight, Math.round(visibleY + visibleH * normSessionY2)));
+
+            const sessionMappedBounds = {
+                x1: sessionXStart / pbWidth,
+                x2: sessionXEnd / pbWidth,
+                y1: sessionYStart / pbHeight,
+                y2: sessionYEnd / pbHeight,
+            };
+
+            const rawSessionColor = sampleRegionAverageColor(pixbuf, sessionMappedBounds) || sampledPrimary || { r: 40, g: 40, b: 40 };
+            const sessionOverlay = getPromptBlendOverlay(rawSessionColor);
+            const sessionBlended = blendOverOpaque(rawSessionColor, { r: sessionOverlay.overlayR, g: sessionOverlay.overlayG, b: sessionOverlay.overlayB }, sessionOverlay.blendAlpha);
+            sampledSessionColor = {
+                r: sessionBlended.r,
+                g: sessionBlended.g,
+                b: sessionBlended.b,
+                rawR: rawSessionColor.r,
+                rawG: rawSessionColor.g,
+                rawB: rawSessionColor.b,
+                rgba: `rgba(${sessionBlended.r}, ${sessionBlended.g}, ${sessionBlended.b}, 1.0)`,
+                hex: rgbToHex(sessionBlended.r, sessionBlended.g, sessionBlended.b),
+                overlayR: sessionOverlay.overlayR,
+                overlayG: sessionOverlay.overlayG,
+                overlayB: sessionOverlay.overlayB,
+                overlayAlpha: sessionOverlay.blendAlpha,
+                overlayRgba: `rgba(${sessionOverlay.overlayR}, ${sessionOverlay.overlayG}, ${sessionOverlay.overlayB}, ${sessionOverlay.blendAlpha.toFixed(4)})`,
+            };
+
             // Clean up older slice PNGs for this user — keep only the current hash
             try {
                 const tmpDir = Gio.File.new_for_path('/var/tmp');
@@ -647,13 +846,18 @@ export async function getWallpaperPromptColor(params) {
                     while ((fileInfo = enumerator.next_file(null)) !== null) {
                         const fileName = fileInfo.get_name();
                         const currentSuffix = `-${hash}.png`;
+                        // Remove any old a11y or session blur slices completely
+                        if (fileName.startsWith(`wack-a11y-blur-`) || fileName.startsWith(`wack-session-blur-`)) {
+                            toDelete.push(`/var/tmp/${fileName}`);
+                            continue;
+                        }
                         const isUserSlice = (
                             fileName.startsWith(`wack-prompt-blur-${userName}-`) ||
                             fileName.startsWith(`wack-cancel-blur-active-${userName}-`) ||
                             fileName.startsWith(`wack-cancel-blur-hover-${userName}-`) ||
                             (fileName.startsWith(`wack-cancel-blur-${userName}-`) &&
-                             !fileName.startsWith(`wack-cancel-blur-hover-${userName}-`) &&
-                             !fileName.startsWith(`wack-cancel-blur-active-${userName}-`))
+                                !fileName.startsWith(`wack-cancel-blur-hover-${userName}-`) &&
+                                !fileName.startsWith(`wack-cancel-blur-active-${userName}-`))
                         );
                         if (isUserSlice && !fileName.endsWith(currentSuffix)) {
                             toDelete.push(`/var/tmp/${fileName}`);
@@ -663,7 +867,7 @@ export async function getWallpaperPromptColor(params) {
                     for (const path of toDelete) {
                         try {
                             Gio.File.new_for_path(path).delete(null);
-                        } catch (_) {}
+                        } catch (_) { }
                     }
                 }
             } catch (cleanupErr) {
@@ -698,6 +902,48 @@ export async function getWallpaperPromptColor(params) {
         };
     }
 
+    if (!sampledA11yColor) {
+        const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
+        const overlay = getPromptBlendOverlay(raw);
+        const blended = blendOverOpaque(raw, { r: overlay.overlayR, g: overlay.overlayG, b: overlay.overlayB }, overlay.blendAlpha);
+        sampledA11yColor = {
+            r: blended.r,
+            g: blended.g,
+            b: blended.b,
+            rawR: raw.r,
+            rawG: raw.g,
+            rawB: raw.b,
+            rgba: `rgba(${blended.r}, ${blended.g}, ${blended.b}, 1.0)`,
+            hex: rgbToHex(blended.r, blended.g, blended.b),
+            overlayR: overlay.overlayR,
+            overlayG: overlay.overlayG,
+            overlayB: overlay.overlayB,
+            overlayAlpha: overlay.blendAlpha,
+            overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+        };
+    }
+
+    if (!sampledSessionColor) {
+        const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
+        const overlay = getPromptBlendOverlay(raw);
+        const blended = blendOverOpaque(raw, { r: overlay.overlayR, g: overlay.overlayG, b: overlay.overlayB }, overlay.blendAlpha);
+        sampledSessionColor = {
+            r: blended.r,
+            g: blended.g,
+            b: blended.b,
+            rawR: raw.r,
+            rawG: raw.g,
+            rawB: raw.b,
+            rgba: `rgba(${blended.r}, ${blended.g}, ${blended.b}, 1.0)`,
+            hex: rgbToHex(blended.r, blended.g, blended.b),
+            overlayR: overlay.overlayR,
+            overlayG: overlay.overlayG,
+            overlayB: overlay.overlayB,
+            overlayAlpha: overlay.blendAlpha,
+            overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+        };
+    }
+
     if (shadowAlpha === undefined) {
         shadowAlpha = PROMPT_SHADOW_FLOOR;
     }
@@ -714,6 +960,8 @@ export async function getWallpaperPromptColor(params) {
         cancelHoverImagePath: cancelHoverImagePath,
         cancelActiveImagePath: cancelActiveImagePath,
         avatarColor: sampledAvatarColor,
+        a11yColor: sampledA11yColor,
+        sessionColor: sampledSessionColor,
         shadowAlpha: shadowAlpha,
     };
 

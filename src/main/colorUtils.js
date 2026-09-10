@@ -4,7 +4,7 @@
 //   At ROOF  (0.224): chip is 22.4% white on bright wallpapers — keeps the chip frosted-white.
 export const PROMPT_ALPHA_FLOOR = 0.16;
 export const PROMPT_ALPHA_ROOF = 0.224;
-export const CUPERTINO_PROMPT_WHITE_BLEND_ALPHA = 0.12;
+export const CUPERTINO_PROMPT_WHITE_BLEND_ALPHA = 0.16;
 
 // Bright colorful samples should become a darker version of themselves, rather
 // than getting muddied by blending toward black. This tunes the target lightness
@@ -212,13 +212,12 @@ export function getPromptDarkenedHueColor(sampled) {
 }
 
 export function getPromptInvertedNeutralColor(sampled, perceptualL) {
-    const baseAlpha = getPromptBlendAlpha(sampled);
     const t = Math.max(0, Math.min(
         1,
         (perceptualL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) /
-            (1 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD)
+        (1 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD)
     ));
-    const alpha = baseAlpha + (PROMPT_INVERSE_ALPHA_CEILING - baseAlpha) * t;
+    const alpha = PROMPT_INVERSE_ALPHA_CEILING * t;
 
     return blendOverOpaque(sampled, { r: 0, g: 0, b: 0 }, alpha);
 }
@@ -249,21 +248,13 @@ export function getPromptBlendOverlay(sampledColor, whiteBlendAlpha = null) {
             (perceptualL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) /
             (1 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD)
         ));
-        blendAlpha = baseAlpha + (PROMPT_INVERSE_ALPHA_CEILING - baseAlpha) * t;
+        blendAlpha = PROMPT_INVERSE_ALPHA_CEILING * t;
     } else {
         overlayR = 255; overlayG = 255; overlayB = 255;
         blendAlpha = baseAlpha;
     }
 
-    return {
-        overlayR,
-        overlayG,
-        overlayB,
-        blendAlpha,
-        perceptualL,
-        isBrightSample,
-        isBrightHue,
-    };
+    return { overlayR, overlayG, overlayB, blendAlpha, perceptualL, isBrightSample, isBrightHue };
 }
 
 export function processPromptColor(sampled) {
@@ -281,10 +272,10 @@ export function processPromptColor(sampled) {
         : isBrightSample
             ? getPromptInvertedNeutralColor(sampled, perceptualL)
             : blendOverOpaque(
-            sampled,
-            { r: 255, g: 255, b: 255 },
-            getPromptBlendAlpha(sampled)
-        );
+                sampled,
+                { r: 255, g: 255, b: 255 },
+                getPromptBlendAlpha(sampled)
+            );
 
     return {
         r: blended.r,

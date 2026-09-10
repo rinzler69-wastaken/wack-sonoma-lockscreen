@@ -87,12 +87,24 @@ export class PromptStyling {
         if (!entry || !color)
             return;
 
+        if (!color) {
+            if (entry._wackOriginalStyle !== undefined) {
+                entry.set_style(entry._wackOriginalStyle);
+                delete entry._wackOriginalStyle;
+            } else {
+                entry.set_style(null);
+            }
+            delete entry._wackColor;
+            return;
+        }
+
+        entry._wackColor = color;
         if (entry._wackOriginalStyle === undefined)
             entry._wackOriginalStyle = entry.get_style() ?? '';
 
         let shadowStyle = '';
         if (color.shadowAlpha !== undefined) {
-            shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+            shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
         }
 
         let bgStyle;
@@ -111,8 +123,21 @@ export class PromptStyling {
     }
 
     applyCancelButtonBackground(button, color) {
-        if (!button || !color)
+        if (!button)
             return;
+
+        if (!color) {
+            button.disconnectObject(this);
+            if (button._wackOriginalStyle !== undefined) {
+                button.set_style(button._wackOriginalStyle);
+                delete button._wackOriginalStyle;
+            } else {
+                button.set_style(null);
+            }
+            delete button._wackColor;
+            delete button._wackPressed;
+            return;
+        }
 
         button._wackColor = color;
 
@@ -121,6 +146,8 @@ export class PromptStyling {
 
             button.connectObject(
                 'notify::hover', () => this.updateCancelButtonStyle(button),
+                'key-focus-in', () => this.updateCancelButtonStyle(button),
+                'key-focus-out', () => this.updateCancelButtonStyle(button),
                 'button-press-event', () => {
                     button._wackPressed = true;
                     this.updateCancelButtonStyle(button);
@@ -148,8 +175,13 @@ export class PromptStyling {
 
         let shadowStyle = '';
         if (color.shadowAlpha !== undefined) {
-            shadowStyle = ` box-shadow: 0 2px 24px 16px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+            shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
         }
+
+        const isFocused = button.has_key_focus() || (button.has_style_pseudo_class?.('focus') ?? false);
+        const borderStyle = isFocused
+            ? ' border: 1px solid rgba(255, 255, 255, 0.4) !important; outline: none !important;'
+            : ' border: 1px solid transparent !important;';
 
         let bgStyle;
         let imgPath = color.cancelImagePath;
@@ -193,7 +225,197 @@ export class PromptStyling {
             bgStyle = ` background-color: rgb(${r}, ${g}, ${b}) !important;`;
         }
 
-        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}`);
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}${borderStyle}`);
+    }
+
+    applyA11yButtonBackground(button, color) {
+        if (!button)
+            return;
+
+        if (!color) {
+            button.disconnectObject(this);
+            const menu = button._menu ?? button.menu;
+            if (menu)
+                menu.disconnectObject(this);
+            if (button._wackOriginalStyle !== undefined) {
+                button.set_style(button._wackOriginalStyle);
+                delete button._wackOriginalStyle;
+            } else {
+                button.set_style(null);
+            }
+            delete button._wackColor;
+            delete button._wackPressed;
+            return;
+        }
+
+        button._wackColor = color;
+
+        if (button._wackOriginalStyle === undefined) {
+            button._wackOriginalStyle = button.get_style() ?? '';
+
+            button.connectObject(
+                'notify::hover', () => this.updateA11yButtonStyle(button),
+                'key-focus-in', () => this.updateA11yButtonStyle(button),
+                'key-focus-out', () => this.updateA11yButtonStyle(button),
+                'button-press-event', () => {
+                    button._wackPressed = true;
+                    this.updateA11yButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                'button-release-event', () => {
+                    button._wackPressed = false;
+                    this.updateA11yButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                this
+            );
+
+            const menu = button._menu ?? button.menu;
+            if (menu) {
+                menu.connectObject(
+                    'open-state-changed', () => this.updateA11yButtonStyle(button),
+                    this
+                );
+            }
+        }
+
+        this.updateA11yButtonStyle(button);
+    }
+
+    updateA11yButtonStyle(button) {
+        const color = button._wackColor;
+        if (!color)
+            return;
+
+        if (!button.hover)
+            button._wackPressed = false;
+
+        const colorObj = color.a11yColor ?? color;
+        let r = colorObj.r;
+        let g = colorObj.g;
+        let b = colorObj.b;
+
+        const menu = button._menu ?? button.menu;
+        const isHovered = button.hover && !button._wackPressed;
+        const isPressed = button._wackPressed || button.has_style_pseudo_class?.('active') || (menu && menu.isOpen);
+        const isFocused = button.has_key_focus() || (button.has_style_pseudo_class?.('focus') ?? false);
+
+        if (isPressed) {
+            r = Math.round(r * 0.75 + 255 * 0.25);
+            g = Math.round(g * 0.75 + 255 * 0.25);
+            b = Math.round(b * 0.75 + 255 * 0.25);
+        } else if (isHovered) {
+            r = Math.round(r * 0.875 + 255 * 0.125);
+            g = Math.round(g * 0.875 + 255 * 0.125);
+            b = Math.round(b * 0.875 + 255 * 0.125);
+        }
+
+        let shadowStyle = '';
+        if (color.shadowAlpha !== undefined) {
+            shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+        }
+
+        const borderStyle = isFocused
+            ? ' border: 1px solid rgba(255, 255, 255, 0.4) !important; outline: none !important;'
+            : ' border: 1px solid transparent !important;';
+
+        const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: rgb(${r}, ${g}, ${b}) !important;`;
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}${borderStyle}`);
+    }
+
+    applySessionButtonBackground(button, color) {
+        if (!button)
+            return;
+
+        if (!color) {
+            button.disconnectObject(this);
+            const menu = button._menu ?? button.menu;
+            if (menu)
+                menu.disconnectObject(this);
+            if (button._wackOriginalStyle !== undefined) {
+                button.set_style(button._wackOriginalStyle);
+                delete button._wackOriginalStyle;
+            } else {
+                button.set_style(null);
+            }
+            delete button._wackColor;
+            delete button._wackPressed;
+            return;
+        }
+
+        button._wackColor = color;
+
+        if (button._wackOriginalStyle === undefined) {
+            button._wackOriginalStyle = button.get_style() ?? '';
+
+            button.connectObject(
+                'notify::hover', () => this.updateSessionButtonStyle(button),
+                'key-focus-in', () => this.updateSessionButtonStyle(button),
+                'key-focus-out', () => this.updateSessionButtonStyle(button),
+                'button-press-event', () => {
+                    button._wackPressed = true;
+                    this.updateSessionButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                'button-release-event', () => {
+                    button._wackPressed = false;
+                    this.updateSessionButtonStyle(button);
+                    return Clutter.EVENT_PROPAGATE;
+                },
+                this
+            );
+
+            const menu = button._menu ?? button.menu;
+            if (menu) {
+                menu.connectObject(
+                    'open-state-changed', () => this.updateSessionButtonStyle(button),
+                    this
+                );
+            }
+        }
+
+        this.updateSessionButtonStyle(button);
+    }
+
+    updateSessionButtonStyle(button) {
+        const color = button._wackColor;
+        if (!color)
+            return;
+
+        if (!button.hover)
+            button._wackPressed = false;
+
+        const colorObj = color.sessionColor ?? color;
+        let r = colorObj.r;
+        let g = colorObj.g;
+        let b = colorObj.b;
+
+        const menu = button._menu ?? button.menu;
+        const isHovered = button.hover && !button._wackPressed;
+        const isPressed = button._wackPressed || button.has_style_pseudo_class?.('active') || (menu && menu.isOpen);
+        const isFocused = button.has_key_focus() || (button.has_style_pseudo_class?.('focus') ?? false);
+
+        if (isPressed) {
+            r = Math.round(r * 0.75 + 255 * 0.25);
+            g = Math.round(g * 0.75 + 255 * 0.25);
+            b = Math.round(b * 0.75 + 255 * 0.25);
+        } else if (isHovered) {
+            r = Math.round(r * 0.875 + 255 * 0.125);
+            g = Math.round(g * 0.875 + 255 * 0.125);
+            b = Math.round(b * 0.875 + 255 * 0.125);
+        }
+
+        let shadowStyle = '';
+        if (color.shadowAlpha !== undefined) {
+            shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
+        }
+
+        const borderStyle = isFocused
+            ? ' border: 1px solid rgba(255, 255, 255, 0.4) !important; outline: none !important;'
+            : ' border: 1px solid transparent !important;';
+
+        const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: rgb(${r}, ${g}, ${b}) !important;`;
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}${borderStyle}`);
     }
 
     clearCupertinoPromptBackground() {
@@ -207,6 +429,7 @@ export class PromptStyling {
             } else {
                 entry.set_style(null);
             }
+            delete entry._wackColor;
         }
 
         const cancelButton = authPrompt?.cancelButton;
@@ -220,6 +443,47 @@ export class PromptStyling {
             }
             delete cancelButton._wackColor;
             delete cancelButton._wackPressed;
+        }
+
+        const a11yButton = dialog?._a11yMenuButton
+            ?? dialog?._bottomButtonGroup?._a11yMenuButton
+            ?? dialog?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('a11y-button'));
+        if (a11yButton) {
+            a11yButton.disconnectObject(this);
+            const menu = a11yButton._menu ?? a11yButton.menu;
+            if (menu)
+                menu.disconnectObject(this);
+            if (a11yButton._wackOriginalStyle !== undefined) {
+                a11yButton.set_style(a11yButton._wackOriginalStyle);
+                delete a11yButton._wackOriginalStyle;
+            } else {
+                a11yButton.set_style(null);
+            }
+            delete a11yButton._wackColor;
+            delete a11yButton._wackPressed;
+        }
+
+        const sessionButton = dialog?._authMenuButton
+            ?? dialog?._sessionMenuButton?._button
+            ?? dialog?._sessionMenuButton?.get_child?.()
+            ?? dialog?._sessionMenuButton
+            ?? dialog?._bottomButtonGroup?._authMenuButton
+            ?? dialog?._bottomButtonGroup?._sessionMenuButton?._button
+            ?? dialog?._bottomButtonGroup?._sessionMenuButton
+            ?? dialog?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('login-dialog-auth-menu-button') || c.has_style_class_name?.('login-dialog-session-list-button'));
+        if (sessionButton) {
+            sessionButton.disconnectObject(this);
+            const menu = sessionButton._menu ?? sessionButton.menu;
+            if (menu)
+                menu.disconnectObject(this);
+            if (sessionButton._wackOriginalStyle !== undefined) {
+                sessionButton.set_style(sessionButton._wackOriginalStyle);
+                delete sessionButton._wackOriginalStyle;
+            } else {
+                sessionButton.set_style(null);
+            }
+            delete sessionButton._wackColor;
+            delete sessionButton._wackPressed;
         }
     }
 

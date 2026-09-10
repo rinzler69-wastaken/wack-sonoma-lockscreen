@@ -42,6 +42,18 @@ export class CrossSessionManager {
             } else if (c1.avatarColor || c2.avatarColor) {
                 return false;
             }
+            if (c1.a11yColor && c2.a11yColor) {
+                if (c1.a11yColor.r !== c2.a11yColor.r || c1.a11yColor.g !== c2.a11yColor.g || c1.a11yColor.b !== c2.a11yColor.b) return false;
+                if (c1.a11yColor.rgba !== c2.a11yColor.rgba) return false;
+            } else if (c1.a11yColor || c2.a11yColor) {
+                return false;
+            }
+            if (c1.sessionColor && c2.sessionColor) {
+                if (c1.sessionColor.r !== c2.sessionColor.r || c1.sessionColor.g !== c2.sessionColor.g || c1.sessionColor.b !== c2.sessionColor.b) return false;
+                if (c1.sessionColor.rgba !== c2.sessionColor.rgba) return false;
+            } else if (c1.sessionColor || c2.sessionColor) {
+                return false;
+            }
             return true;
         };
         const userName = GLib.get_user_name();

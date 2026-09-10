@@ -25,7 +25,7 @@ export function initCache() {
                 const [success, contents] = file.load_contents_finish(res);
                 if (success) {
                     const data = JSON.parse(new TextDecoder().decode(contents));
-                    if (data && data.__version__ === 'v9') {
+                    if (data && data.__version__ === 'v10') {
                         for (const [k, v] of Object.entries(data)) {
                             if (k !== '__version__')
                                 _cache.set(k, v);
@@ -46,7 +46,7 @@ export function initCache() {
 
 export function saveCache() {
     try {
-        const obj = { __version__: 'v9' };
+        const obj = { __version__: 'v10' };
         for (const [k, v] of _cache.entries())
             obj[k] = v;
         const data = JSON.stringify(obj);

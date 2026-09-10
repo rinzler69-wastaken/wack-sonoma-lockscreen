@@ -151,25 +151,36 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
             if (avatarColor)
                 this._lastAvatarColor = avatarColor;
             const color = this._lastAvatarColor;
-            if (!color || !this._avatarButton) return;
+            if (!color || !this._avatarButton || this._updatingVibrancy) return;
 
-            const avatar = this._avatarButton.get_child();
-            if (this._hasImageAvatar(avatar)) {
-                this._avatarButton.set_style(null);
-            } else {
-                const bgRgba = color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`;
-                this._avatarButton.set_style(`background-color: ${bgRgba} !important; border-radius: 999px !important;`);
-                let overlayRgba = color.overlayRgba;
-                if (!overlayRgba) {
-                    if (color.overlayR != null && color.overlayAlpha != null) {
-                        overlayRgba = `rgba(${color.overlayR}, ${color.overlayG}, ${color.overlayB}, ${color.overlayAlpha})`;
-                    } else {
-                        const overlay = getPromptBlendOverlay({ r: color.r, g: color.g, b: color.b });
-                        overlayRgba = `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`;
+            this._updatingVibrancy = true;
+            try {
+                const avatar = this._avatarButton.get_child();
+                if (this._hasImageAvatar(avatar)) {
+                    if (this._avatarButton.get_style() !== null)
+                        this._avatarButton.set_style(null);
+                    this._avatarButton.remove_style_class_name('wack-vibrancied');
+                } else {
+                    this._avatarButton.add_style_class_name('wack-vibrancied');
+                    const bgRgba = color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`;
+                    const btnStyle = `background-color: ${bgRgba} !important; border-radius: 999px !important;`;
+                    if (this._avatarButton.get_style() !== btnStyle)
+                        this._avatarButton.set_style(btnStyle);
+                    let overlayRgba = color.overlayRgba;
+                    if (!overlayRgba) {
+                        if (color.overlayR != null && color.overlayAlpha != null) {
+                            overlayRgba = `rgba(${color.overlayR}, ${color.overlayG}, ${color.overlayB}, ${color.overlayAlpha})`;
+                        } else {
+                            const overlay = getPromptBlendOverlay({ r: color.r, g: color.g, b: color.b });
+                            overlayRgba = `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`;
+                        }
                     }
+                    const avOverlayStyle = `background-color: ${overlayRgba} !important; border-radius: 999px !important;`;
+                    if (avatar && avatar.get_style() !== avOverlayStyle)
+                        avatar.set_style(avOverlayStyle);
                 }
-                if (avatar)
-                    avatar.set_style(`background-color: ${overlayRgba} !important; border-radius: 999px !important;`);
+            } finally {
+                this._updatingVibrancy = false;
             }
         }
 

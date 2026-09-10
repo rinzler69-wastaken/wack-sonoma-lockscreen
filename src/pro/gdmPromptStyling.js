@@ -163,8 +163,6 @@ export class GdmPromptStyling {
 
             button.connectObject(
                 'notify::hover', () => this.updateCancelButtonStyle(button),
-                'key-focus-in', () => this.updateCancelButtonStyle(button),
-                'key-focus-out', () => this.updateCancelButtonStyle(button),
                 'button-press-event', () => {
                     button._wackPressed = true;
                     this.updateCancelButtonStyle(button);
@@ -192,14 +190,8 @@ export class GdmPromptStyling {
 
         const isHovered = button.hover && !button._wackPressed;
         const isPressed = button._wackPressed;
-        const isFocused = button.has_key_focus() || (button.has_style_pseudo_class?.('focus') ?? false);
-
-        const borderStyle = isFocused
-            ? ' border: 1px solid rgba(255, 255, 255, 0.4) !important; outline: none !important;'
-            : ' border: 1px solid transparent !important;';
 
         let bgStyle;
-        let shadowStyle;
         let imgPath = color.cancelImagePath;
 
         if (isPressed && color.cancelActiveImagePath) {
@@ -212,12 +204,7 @@ export class GdmPromptStyling {
         }
 
         if (imgPath) {
-            // Pre-baked per-state slice (or CSS filter fallback) carries the
-            // interaction feedback here — box-shadow stays the constant ambient
-            // drop-shadow regardless of hover/press.
-            const imageUri = imgPath.startsWith('file://')
-                ? imgPath
-                : `file://${imgPath}`;
+            const imageUri = imgPath.startsWith('file://') ? imgPath : `file://${imgPath}`;
             let overlayStyle = '';
             if (isPressed && !color.cancelActiveImagePath) {
                 overlayStyle = ' filter: brightness(1.25);';
@@ -225,25 +212,12 @@ export class GdmPromptStyling {
                 overlayStyle = ' filter: brightness(1.12);';
             }
             bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important;${overlayStyle}`;
-            shadowStyle = color.shadowAlpha !== undefined
-                ? ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`
-                : '';
         } else {
-            // Flat sampled color, never recolored — a plain overlay wash carries
-            // the interaction feedback instead of a per-channel blend.
+            // Flat sampled color only — CSS :hover/:active own the overlay.
             bgStyle = ` background-color: rgb(${color.r}, ${color.g}, ${color.b}) !important;`;
-            if (isPressed) {
-                shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.25) !important;';
-            } else if (isHovered) {
-                shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.125) !important;';
-            } else if (color.shadowAlpha !== undefined) {
-                shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
-            } else {
-                shadowStyle = '';
-            }
         }
 
-        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}${borderStyle}`);
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}`);
     }
 
     applyA11yButtonBackground(button, color) {
@@ -251,10 +225,6 @@ export class GdmPromptStyling {
             return;
 
         if (!color) {
-            button.disconnectObject(this);
-            const menu = button._menu ?? button.menu;
-            if (menu)
-                menu.disconnectObject(this);
             if (button._wackOriginalStyle !== undefined) {
                 button.set_style(button._wackOriginalStyle);
                 delete button._wackOriginalStyle;
@@ -262,40 +232,13 @@ export class GdmPromptStyling {
                 button.set_style(null);
             }
             delete button._wackColor;
-            delete button._wackPressed;
             return;
         }
 
         button._wackColor = color;
 
-        if (button._wackOriginalStyle === undefined) {
+        if (button._wackOriginalStyle === undefined)
             button._wackOriginalStyle = button.get_style() ?? '';
-
-            button.connectObject(
-                'notify::hover', () => this.updateA11yButtonStyle(button),
-                'key-focus-in', () => this.updateA11yButtonStyle(button),
-                'key-focus-out', () => this.updateA11yButtonStyle(button),
-                'button-press-event', () => {
-                    button._wackPressed = true;
-                    this.updateA11yButtonStyle(button);
-                    return Clutter.EVENT_PROPAGATE;
-                },
-                'button-release-event', () => {
-                    button._wackPressed = false;
-                    this.updateA11yButtonStyle(button);
-                    return Clutter.EVENT_PROPAGATE;
-                },
-                this
-            );
-
-            const menu = button._menu ?? button.menu;
-            if (menu) {
-                menu.connectObject(
-                    'open-state-changed', () => this.updateA11yButtonStyle(button),
-                    this
-                );
-            }
-        }
 
         this.updateA11yButtonStyle(button);
     }
@@ -305,31 +248,14 @@ export class GdmPromptStyling {
         if (!color)
             return;
 
-        if (!button.hover)
-            button._wackPressed = false;
-
         const colorObj = color.a11yColor ?? color;
         const { r, g, b } = colorObj;
 
-        const menu = button._menu ?? button.menu;
-        const isHovered = button.hover && !button._wackPressed;
-        const isPressed = button._wackPressed || button.has_style_pseudo_class?.('active') || (menu && menu.isOpen);
-
-        let shadowStyle;
-        if (isPressed) {
-            shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.25) !important;';
-        } else if (isHovered) {
-            shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.125) !important;';
-        } else if (color.shadowAlpha !== undefined) {
-            shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
-        } else {
-            shadowStyle = '';
-        }
-
-        // Border/focus ring is owned entirely by the stylesheet's :focus rule now —
-        // St tracks key-focus natively per-actor, so there's nothing for JS to desync.
+        // Flat sampled color only — hover/focus/active are owned entirely by
+        // the existing stylesheet :hover/:focus/:active rules, same "sampled
+        // circle + CSS overlay" model as the vibrancy avatar.
         const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: rgb(${r}, ${g}, ${b}) !important;`;
-        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}`);
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}`);
     }
 
     applySessionButtonBackground(button, color) {
@@ -337,10 +263,6 @@ export class GdmPromptStyling {
             return;
 
         if (!color) {
-            button.disconnectObject(this);
-            const menu = button._menu ?? button.menu;
-            if (menu)
-                menu.disconnectObject(this);
             if (button._wackOriginalStyle !== undefined) {
                 button.set_style(button._wackOriginalStyle);
                 delete button._wackOriginalStyle;
@@ -348,38 +270,13 @@ export class GdmPromptStyling {
                 button.set_style(null);
             }
             delete button._wackColor;
-            delete button._wackPressed;
             return;
         }
 
         button._wackColor = color;
 
-        if (button._wackOriginalStyle === undefined) {
+        if (button._wackOriginalStyle === undefined)
             button._wackOriginalStyle = button.get_style() ?? '';
-
-            button.connectObject(
-                'notify::hover', () => this.updateSessionButtonStyle(button),
-                'button-press-event', () => {
-                    button._wackPressed = true;
-                    this.updateSessionButtonStyle(button);
-                    return Clutter.EVENT_PROPAGATE;
-                },
-                'button-release-event', () => {
-                    button._wackPressed = false;
-                    this.updateSessionButtonStyle(button);
-                    return Clutter.EVENT_PROPAGATE;
-                },
-                this
-            );
-
-            const menu = button._menu ?? button.menu;
-            if (menu) {
-                menu.connectObject(
-                    'open-state-changed', () => this.updateSessionButtonStyle(button),
-                    this
-                );
-            }
-        }
 
         this.updateSessionButtonStyle(button);
     }
@@ -389,34 +286,14 @@ export class GdmPromptStyling {
         if (!color)
             return;
 
-        if (!button.hover)
-            button._wackPressed = false;
-
         const colorObj = color.sessionColor ?? color;
         const { r, g, b } = colorObj;
 
-        const menu = button._menu ?? button.menu;
-        const isHovered = button.hover && !button._wackPressed;
-        const isPressed = button._wackPressed || button.has_style_pseudo_class?.('active') || (menu && menu.isOpen);
-        const isFocused = button.has_key_focus() || (button.has_style_pseudo_class?.('focus') ?? false);
-
-        let shadowStyle;
-        if (isPressed) {
-            shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.25) !important;';
-        } else if (isHovered) {
-            shadowStyle = ' box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.125) !important;';
-        } else if (color.shadowAlpha !== undefined) {
-            shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
-        } else {
-            shadowStyle = '';
-        }
-
-        const borderStyle = isFocused
-            ? ' border: 1px solid rgba(255, 255, 255, 0.4) !important; outline: none !important;'
-            : ' border: 1px solid transparent !important;';
-
+        // Flat sampled color only — hover/focus/active are owned entirely by
+        // the existing stylesheet :hover/:focus/:active rules, same "sampled
+        // circle + CSS overlay" model as the vibrancy avatar.
         const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: rgb(${r}, ${g}, ${b}) !important;`;
-        button.set_style(`${button._wackOriginalStyle}${bgStyle}${shadowStyle}${borderStyle}`);
+        button.set_style(`${button._wackOriginalStyle}${bgStyle}`);
     }
 
     clearCupertinoPromptBackground() {
