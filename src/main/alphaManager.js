@@ -9,10 +9,11 @@ import {
     rgbToHsl,
     hslToRgb,
     PROMPT_SHADOW_FLOOR,
-    getPromptBlendOverlay,
+    resolvePromptVisualState,
+    applyPromptVisualState,
     CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
+    PROMPT_VISUAL_ALGORITHM_VERSION,
     rgbToHex,
-    blendOverOpaque,
 } from './colorUtils.js';
 import {
     resolveWallpaperSource,
@@ -428,10 +429,10 @@ export async function getWallpaperPromptColor(params) {
     const avatarBoundsKey = `${normAvatarX1.toFixed(4)}_${normAvatarX2.toFixed(4)}_${normAvatarY1.toFixed(4)}_${normAvatarY2.toFixed(4)}`;
     const a11yBoundsKey = `${normA11yX1.toFixed(4)}_${normA11yX2.toFixed(4)}_${normA11yY1.toFixed(4)}_${normA11yY2.toFixed(4)}`;
     const sessionBoundsKey = `${normSessionX1.toFixed(4)}_${normSessionX2.toFixed(4)}_${normSessionY1.toFixed(4)}_${normSessionY2.toFixed(4)}`;
-    const cacheKey = `prompt_grad_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${boundsKey}_cb${cancelBoundsKey}_av${avatarBoundsKey}_a11y${a11yBoundsKey}_sess${sessionBoundsKey}_b${PROMPT_BLUR_RADIUS}_pbr${PROMPT_BLUR_BRIGHTNESS}_cr${CANCEL_BUTTON_BLUR_RADIUS}_cbr${CANCEL_BUTTON_BLUR_BRIGHTNESS}_chov${CANCEL_BUTTON_HOVER_OVERLAY_ALPHA}_cact${CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA}_cover_v10`;
+    const cacheKey = `prompt_grad_${targetUri}_${mtime}_${size}_${isColor}_${primaryColor}_${secondaryColor}_${shadingType}_${pictureOptions}_${monitorWidth}x${monitorHeight}_${boundsKey}_cb${cancelBoundsKey}_av${avatarBoundsKey}_a11y${a11yBoundsKey}_sess${sessionBoundsKey}_b${PROMPT_BLUR_RADIUS}_pbr${PROMPT_BLUR_BRIGHTNESS}_cr${CANCEL_BUTTON_BLUR_RADIUS}_cbr${CANCEL_BUTTON_BLUR_BRIGHTNESS}_chov${CANCEL_BUTTON_HOVER_OVERLAY_ALPHA}_cact${CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA}_cover_vis${PROMPT_VISUAL_ALGORITHM_VERSION}`;
     if (hasCache(cacheKey)) {
         const cached = getCache(cacheKey);
-        if (cached && cached.start && cached.end) {
+        if (cached && cached.start && cached.end && cached.visualState?.overlay) {
             const hasPromptImg = cached.imagePath && Gio.File.new_for_path(cached.imagePath).query_exists(null);
             const hasCancelImg = cached.cancelImagePath && Gio.File.new_for_path(cached.cancelImagePath).query_exists(null);
             const hasHoverImg = cached.cancelHoverImagePath && Gio.File.new_for_path(cached.cancelHoverImagePath).query_exists(null);
@@ -449,6 +450,7 @@ export async function getWallpaperPromptColor(params) {
     let sampledStart = null;
     let sampledEnd = null;
     let sampledPrimary = null;
+    let promptVisualState = null;
     let sampledAvatarColor = null;
     let sampledA11yColor = null;
     let sampledSessionColor = null;
@@ -499,19 +501,15 @@ export async function getWallpaperPromptColor(params) {
             direction = 'horizontal';
         }
 
-        const overlay = getPromptBlendOverlay(sampledPrimary, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
-        sampledAvatarColor = {
-            r: sampledPrimary.r,
-            g: sampledPrimary.g,
-            b: sampledPrimary.b,
-            rgba: `rgba(${sampledPrimary.r}, ${sampledPrimary.g}, ${sampledPrimary.b}, 1.0)`,
-            hex: rgbToHex(sampledPrimary.r, sampledPrimary.g, sampledPrimary.b),
-            overlayR: overlay.overlayR,
-            overlayG: overlay.overlayG,
-            overlayB: overlay.overlayB,
-            overlayAlpha: overlay.blendAlpha,
-            overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
-        };
+        promptVisualState = resolvePromptVisualState(sampledPrimary, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
+        sampledStart = applyPromptVisualState(sampledStart, promptVisualState, { preblend: true });
+        sampledEnd = applyPromptVisualState(sampledEnd, promptVisualState, { preblend: true });
+        sampledPrimary = applyPromptVisualState(sampledPrimary, promptVisualState, { preblend: true });
+        sampledAvatarColor = applyPromptVisualState(
+            { r: sampledPrimary.rawR, g: sampledPrimary.rawG, b: sampledPrimary.rawB },
+            promptVisualState,
+            { preblend: false }
+        );
 
         let rawA11y;
         let rawSession;
@@ -546,41 +544,8 @@ export async function getWallpaperPromptColor(params) {
             };
         }
 
-        const a11yOverlay = getPromptBlendOverlay(rawA11y, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
-        const a11yBlended = blendOverOpaque(rawA11y, { r: a11yOverlay.overlayR, g: a11yOverlay.overlayG, b: a11yOverlay.overlayB }, a11yOverlay.blendAlpha);
-        sampledA11yColor = {
-            r: a11yBlended.r,
-            g: a11yBlended.g,
-            b: a11yBlended.b,
-            rawR: rawA11y.r,
-            rawG: rawA11y.g,
-            rawB: rawA11y.b,
-            rgba: `rgba(${a11yBlended.r}, ${a11yBlended.g}, ${a11yBlended.b}, 1.0)`,
-            hex: rgbToHex(a11yBlended.r, a11yBlended.g, a11yBlended.b),
-            overlayR: a11yOverlay.overlayR,
-            overlayG: a11yOverlay.overlayG,
-            overlayB: a11yOverlay.overlayB,
-            overlayAlpha: a11yOverlay.blendAlpha,
-            overlayRgba: `rgba(${a11yOverlay.overlayR}, ${a11yOverlay.overlayG}, ${a11yOverlay.overlayB}, ${a11yOverlay.blendAlpha.toFixed(4)})`,
-        };
-
-        const sessionOverlay = getPromptBlendOverlay(rawSession, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
-        const sessionBlended = blendOverOpaque(rawSession, { r: sessionOverlay.overlayR, g: sessionOverlay.overlayG, b: sessionOverlay.overlayB }, sessionOverlay.blendAlpha);
-        sampledSessionColor = {
-            r: sessionBlended.r,
-            g: sessionBlended.g,
-            b: sessionBlended.b,
-            rawR: rawSession.r,
-            rawG: rawSession.g,
-            rawB: rawSession.b,
-            rgba: `rgba(${sessionBlended.r}, ${sessionBlended.g}, ${sessionBlended.b}, 1.0)`,
-            hex: rgbToHex(sessionBlended.r, sessionBlended.g, sessionBlended.b),
-            overlayR: sessionOverlay.overlayR,
-            overlayG: sessionOverlay.overlayG,
-            overlayB: sessionOverlay.overlayB,
-            overlayAlpha: sessionOverlay.blendAlpha,
-            overlayRgba: `rgba(${sessionOverlay.overlayR}, ${sessionOverlay.overlayG}, ${sessionOverlay.overlayB}, ${sessionOverlay.blendAlpha.toFixed(4)})`,
-        };
+        sampledA11yColor = applyPromptVisualState(rawA11y, promptVisualState, { preblend: true });
+        sampledSessionColor = applyPromptVisualState(rawSession, promptVisualState, { preblend: true });
     } else if (targetFilePath) {
         try {
             const fileInfo = await getWallpaperFileInfo(targetFilePath);
@@ -660,6 +625,8 @@ export async function getWallpaperPromptColor(params) {
                     sampledStart = sliceResult.avgColor;
                     sampledEnd = sliceResult.avgColor;
                     direction = 'none';
+                    promptVisualState = sliceResult.visualState
+                        ?? resolvePromptVisualState(sliceResult.avgColor, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
                 } catch (saveErr) {
                     _logError(`[WACK/AlphaManager] Failed to save blurred prompt slice: ${saveErr}`);
                 }
@@ -685,7 +652,9 @@ export async function getWallpaperPromptColor(params) {
                 CANCEL_BUTTON_HEIGHT,
                 CANCEL_BUTTON_BLUR_RADIUS,
                 CANCEL_BUTTON_BLUR_BRIGHTNESS,
-                0.0
+                0.0,
+                CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
+                promptVisualState
             );
 
             const cancelHoverSliceResult = createBlurredPromptSlice(
@@ -695,7 +664,9 @@ export async function getWallpaperPromptColor(params) {
                 CANCEL_BUTTON_HEIGHT,
                 CANCEL_BUTTON_BLUR_RADIUS,
                 CANCEL_BUTTON_BLUR_BRIGHTNESS,
-                CANCEL_BUTTON_HOVER_OVERLAY_ALPHA
+                CANCEL_BUTTON_HOVER_OVERLAY_ALPHA,
+                CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
+                promptVisualState
             );
 
             const cancelActiveSliceResult = createBlurredPromptSlice(
@@ -705,7 +676,9 @@ export async function getWallpaperPromptColor(params) {
                 CANCEL_BUTTON_HEIGHT,
                 CANCEL_BUTTON_BLUR_RADIUS,
                 CANCEL_BUTTON_BLUR_BRIGHTNESS,
-                CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA
+                CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA,
+                CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
+                promptVisualState
             );
 
             if (cancelSliceResult?.pixbuf) {
@@ -758,19 +731,13 @@ export async function getWallpaperPromptColor(params) {
             };
 
             const rawAvatarColor = sampleRegionAverageColor(pixbuf, avatarMappedBounds) || sampledPrimary || { r: 40, g: 40, b: 40 };
-            const overlay = getPromptBlendOverlay(rawAvatarColor);
-            sampledAvatarColor = {
-                r: rawAvatarColor.r,
-                g: rawAvatarColor.g,
-                b: rawAvatarColor.b,
-                rgba: `rgba(${rawAvatarColor.r}, ${rawAvatarColor.g}, ${rawAvatarColor.b}, 1.0)`,
-                hex: rgbToHex(rawAvatarColor.r, rawAvatarColor.g, rawAvatarColor.b),
-                overlayR: overlay.overlayR,
-                overlayG: overlay.overlayG,
-                overlayB: overlay.overlayB,
-                overlayAlpha: overlay.blendAlpha,
-                overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
-            };
+            if (!promptVisualState) {
+                promptVisualState = resolvePromptVisualState(
+                    sampledPrimary || rawAvatarColor,
+                    CUPERTINO_PROMPT_WHITE_BLEND_ALPHA
+                );
+            }
+            sampledAvatarColor = applyPromptVisualState(rawAvatarColor, promptVisualState, { preblend: false });
 
             // Sample dedicated color for a11y button
             const a11yXStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normA11yX1)));
@@ -786,23 +753,7 @@ export async function getWallpaperPromptColor(params) {
             };
 
             const rawA11yColor = sampleRegionAverageColor(pixbuf, a11yMappedBounds) || sampledPrimary || { r: 40, g: 40, b: 40 };
-            const a11yOverlay = getPromptBlendOverlay(rawA11yColor);
-            const a11yBlended = blendOverOpaque(rawA11yColor, { r: a11yOverlay.overlayR, g: a11yOverlay.overlayG, b: a11yOverlay.overlayB }, a11yOverlay.blendAlpha);
-            sampledA11yColor = {
-                r: a11yBlended.r,
-                g: a11yBlended.g,
-                b: a11yBlended.b,
-                rawR: rawA11yColor.r,
-                rawG: rawA11yColor.g,
-                rawB: rawA11yColor.b,
-                rgba: `rgba(${a11yBlended.r}, ${a11yBlended.g}, ${a11yBlended.b}, 1.0)`,
-                hex: rgbToHex(a11yBlended.r, a11yBlended.g, a11yBlended.b),
-                overlayR: a11yOverlay.overlayR,
-                overlayG: a11yOverlay.overlayG,
-                overlayB: a11yOverlay.overlayB,
-                overlayAlpha: a11yOverlay.blendAlpha,
-                overlayRgba: `rgba(${a11yOverlay.overlayR}, ${a11yOverlay.overlayG}, ${a11yOverlay.overlayB}, ${a11yOverlay.blendAlpha.toFixed(4)})`,
-            };
+            sampledA11yColor = applyPromptVisualState(rawA11yColor, promptVisualState, { preblend: true });
 
             // Sample dedicated color for session (DE select) button
             const sessionXStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normSessionX1)));
@@ -818,23 +769,7 @@ export async function getWallpaperPromptColor(params) {
             };
 
             const rawSessionColor = sampleRegionAverageColor(pixbuf, sessionMappedBounds) || sampledPrimary || { r: 40, g: 40, b: 40 };
-            const sessionOverlay = getPromptBlendOverlay(rawSessionColor);
-            const sessionBlended = blendOverOpaque(rawSessionColor, { r: sessionOverlay.overlayR, g: sessionOverlay.overlayG, b: sessionOverlay.overlayB }, sessionOverlay.blendAlpha);
-            sampledSessionColor = {
-                r: sessionBlended.r,
-                g: sessionBlended.g,
-                b: sessionBlended.b,
-                rawR: rawSessionColor.r,
-                rawG: rawSessionColor.g,
-                rawB: rawSessionColor.b,
-                rgba: `rgba(${sessionBlended.r}, ${sessionBlended.g}, ${sessionBlended.b}, 1.0)`,
-                hex: rgbToHex(sessionBlended.r, sessionBlended.g, sessionBlended.b),
-                overlayR: sessionOverlay.overlayR,
-                overlayG: sessionOverlay.overlayG,
-                overlayB: sessionOverlay.overlayB,
-                overlayAlpha: sessionOverlay.blendAlpha,
-                overlayRgba: `rgba(${sessionOverlay.overlayR}, ${sessionOverlay.overlayG}, ${sessionOverlay.overlayB}, ${sessionOverlay.blendAlpha.toFixed(4)})`,
-            };
+            sampledSessionColor = applyPromptVisualState(rawSessionColor, promptVisualState, { preblend: true });
 
             // Clean up older slice PNGs for this user — keep only the current hash
             try {

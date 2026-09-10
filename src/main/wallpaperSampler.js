@@ -1,9 +1,8 @@
 import GdkPixbuf from 'gi://GdkPixbuf';
 import GLib from 'gi://GLib';
 import {
-    getPromptBlendOverlay,
+    resolvePromptVisualState,
     PROMPT_SHADOW_FLOOR,
-    PROMPT_SHADOW_ROOF,
     CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
 } from './colorUtils.js';
 
@@ -72,7 +71,9 @@ function fastBoxBlur(srcPixels, w, h, stride, channels, r) {
  * @param {number} brightness Brightness multiplier factor
  * @param {number} highlightAlpha Optional overlay highlight/tint alpha (0.0 - 1.0)
  * @param {number|null} whiteBlendAlpha Frosted glass white overlay alpha (defaults to CUPERTINO_PROMPT_WHITE_BLEND_ALPHA)
- * @returns {{pixbuf: GdkPixbuf.Pixbuf, avgColor: {r: number, g: number, b: number}, shadowAlpha: number}|null}
+ * @param {object|null} visualState Optional already-resolved prompt visual state. When provided,
+ *   overlay/inverse policy is applied as-is instead of being re-derived from this slice.
+ * @returns {{pixbuf: GdkPixbuf.Pixbuf, avgColor: {r: number, g: number, b: number}, shadowAlpha: number, visualState: object}|null}
  */
 export function createBlurredPromptSlice(
     srcPixbuf,
@@ -82,7 +83,8 @@ export function createBlurredPromptSlice(
     blurRadius = 40,
     brightness = 1.0,
     highlightAlpha = 0.0,
-    whiteBlendAlpha = CUPERTINO_PROMPT_WHITE_BLEND_ALPHA
+    whiteBlendAlpha = CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
+    visualState = null
 ) {
     if (!srcPixbuf)
         return null;
@@ -112,40 +114,15 @@ export function createBlurredPromptSlice(
         const w = scaledPix.get_width();
         const h = scaledPix.get_height();
         const bFactor = Math.max(0, brightness);
-        const baseAlpha = (whiteBlendAlpha !== null && whiteBlendAlpha !== undefined)
-            ? whiteBlendAlpha
-            : 0.0;
-        const totalOverlayAlpha = Math.min(1.0, baseAlpha + highlightAlpha);
-        const oInv = 1.0 - totalOverlayAlpha;
 
         let sumR = 0, sumG = 0, sumB = 0;
         const total = w * h;
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
                 const off = y * stride + x * nChannels;
-                let r = pixels[off];
-                let g = pixels[off + 1];
-                let b = pixels[off + 2];
-
-                if (bFactor !== 1.0) {
-                    r = Math.max(0, Math.min(255, Math.round(r * bFactor)));
-                    g = Math.max(0, Math.min(255, Math.round(g * bFactor)));
-                    b = Math.max(0, Math.min(255, Math.round(b * bFactor)));
-                }
-
-                if (totalOverlayAlpha > 0) {
-                    r = Math.max(0, Math.min(255, Math.round(r * oInv + 255 * totalOverlayAlpha)));
-                    g = Math.max(0, Math.min(255, Math.round(g * oInv + 255 * totalOverlayAlpha)));
-                    b = Math.max(0, Math.min(255, Math.round(b * oInv + 255 * totalOverlayAlpha)));
-                }
-
-                pixels[off] = r;
-                pixels[off + 1] = g;
-                pixels[off + 2] = b;
-
-                sumR += r;
-                sumG += g;
-                sumB += b;
+                sumR += pixels[off];
+                sumG += pixels[off + 1];
+                sumB += pixels[off + 2];
             }
         }
         const avgColor = {
@@ -153,10 +130,40 @@ export function createBlurredPromptSlice(
             g: Math.round(sumG / total),
             b: Math.round(sumB / total),
         };
+        const resolvedState = visualState ?? resolvePromptVisualState(avgColor, whiteBlendAlpha);
+        const overlayR = resolvedState.overlay.r;
+        const overlayG = resolvedState.overlay.g;
+        const overlayB = resolvedState.overlay.b;
+        const blendAlpha = resolvedState.overlay.alpha;
+        const invAlpha = 1 - blendAlpha;
+        const hInv = highlightAlpha > 0 ? (1 - highlightAlpha) : 1;
+        const hR = resolvedState.useInverse ? 0 : 255;
+        const hG = resolvedState.useInverse ? 0 : 255;
+        const hB = resolvedState.useInverse ? 0 : 255;
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const off = y * stride + x * nChannels;
+                let r = (pixels[off] * invAlpha + overlayR * blendAlpha) * bFactor;
+                let g = (pixels[off + 1] * invAlpha + overlayG * blendAlpha) * bFactor;
+                let b = (pixels[off + 2] * invAlpha + overlayB * blendAlpha) * bFactor;
+
+                if (highlightAlpha > 0) {
+                    r = r * hInv + hR * highlightAlpha;
+                    g = g * hInv + hG * highlightAlpha;
+                    b = b * hInv + hB * highlightAlpha;
+                }
+
+                pixels[off] = Math.max(0, Math.min(255, Math.round(r)));
+                pixels[off + 1] = Math.max(0, Math.min(255, Math.round(g)));
+                pixels[off + 2] = Math.max(0, Math.min(255, Math.round(b)));
+            }
+        }
         return {
             pixbuf: scaledPix,
             avgColor,
-            shadowAlpha: PROMPT_SHADOW_FLOOR,
+            shadowAlpha: resolvedState.shadowAlpha ?? PROMPT_SHADOW_FLOOR,
+            visualState: resolvedState,
         };
     }
 
@@ -229,20 +236,19 @@ export function createBlurredPromptSlice(
             b: Math.round(sumB / totalSamples),
         };
 
-        const overlay = getPromptBlendOverlay(avgColor, whiteBlendAlpha);
-        const { overlayR, overlayG, overlayB, blendAlpha, perceptualL, isBrightSample } = overlay;
-
-        let shadowAlpha = PROMPT_SHADOW_FLOOR + (PROMPT_SHADOW_ROOF - PROMPT_SHADOW_FLOOR) * perceptualL;
-        if (isBrightSample) {
-            shadowAlpha = PROMPT_SHADOW_FLOOR;
-        }
+        const resolvedState = visualState ?? resolvePromptVisualState(avgColor, whiteBlendAlpha);
+        const overlayR = resolvedState.overlay.r;
+        const overlayG = resolvedState.overlay.g;
+        const overlayB = resolvedState.overlay.b;
+        const blendAlpha = resolvedState.overlay.alpha;
+        const shadowAlpha = resolvedState.shadowAlpha;
 
         const bFactor = Math.max(0, brightness);
         const invAlpha = 1 - blendAlpha;
         const hInv = highlightAlpha > 0 ? (1 - highlightAlpha) : 1;
-        const hR = isBrightSample ? 0 : 255;
-        const hG = isBrightSample ? 0 : 255;
-        const hB = isBrightSample ? 0 : 255;
+        const hR = resolvedState.useInverse ? 0 : 255;
+        const hG = resolvedState.useInverse ? 0 : 255;
+        const hB = resolvedState.useInverse ? 0 : 255;
 
         for (let y = 0; y < dsCropH; y++) {
             const clampedY = Math.max(0, Math.min(dsH - 1, y + dsOffY));
@@ -288,6 +294,7 @@ export function createBlurredPromptSlice(
             pixbuf: finalPixbuf,
             avgColor,
             shadowAlpha,
+            visualState: resolvedState,
         };
     } catch (e) {
         console.error(`[WACK/WallpaperSampler] createBlurredPromptSlice error: ${e}`);

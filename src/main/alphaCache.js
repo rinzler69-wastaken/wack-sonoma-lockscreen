@@ -1,8 +1,10 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import { PROMPT_VISUAL_ALGORITHM_VERSION } from './colorUtils.js';
 
 const userName = GLib.get_user_name();
 const CACHE_FILE = `/var/tmp/wack-wallpaper-alpha-cache-${userName}.json`;
+const CACHE_FORMAT_VERSION = `v${PROMPT_VISUAL_ALGORITHM_VERSION}`;
 
 const _cache = new Map();
 let _loaded = false;
@@ -25,7 +27,7 @@ export function initCache() {
                 const [success, contents] = file.load_contents_finish(res);
                 if (success) {
                     const data = JSON.parse(new TextDecoder().decode(contents));
-                    if (data && data.__version__ === 'v10') {
+                    if (data && data.__version__ === CACHE_FORMAT_VERSION) {
                         for (const [k, v] of Object.entries(data)) {
                             if (k !== '__version__')
                                 _cache.set(k, v);
@@ -46,7 +48,7 @@ export function initCache() {
 
 export function saveCache() {
     try {
-        const obj = { __version__: 'v10' };
+        const obj = { __version__: CACHE_FORMAT_VERSION };
         for (const [k, v] of _cache.entries())
             obj[k] = v;
         const data = JSON.stringify(obj);

@@ -20,6 +20,10 @@ export const PROMPT_INVERSE_ALPHA_CEILING = 0.125;
 export const PROMPT_SHADOW_FLOOR = 0.0175;
 export const PROMPT_SHADOW_ROOF = 0.1175;
 
+// Bump this when the prompt visual-state algorithm changes so persistent cache
+// entries computed with a previous decision pipeline are discarded automatically.
+export const PROMPT_VISUAL_ALGORITHM_VERSION = 11;
+
 export function rgbToHsl(r, g, b) {
     const rNorm = r / 255;
     const gNorm = g / 255;
@@ -222,27 +226,47 @@ export function getPromptInvertedNeutralColor(sampled, perceptualL) {
     return blendOverOpaque(sampled, { r: 0, g: 0, b: 0 }, alpha);
 }
 
-export function getPromptBlendOverlay(sampledColor, whiteBlendAlpha = null) {
-    const luminance = Math.max(0, Math.min(1, getRelativeLuminance(sampledColor)));
+/**
+ * Single owner of password-prompt inverse/blend policy.
+ * Sampled wallpaper color in → complete PromptVisualState out.
+ * Consumers must apply this result rather than re-classifying brightness.
+ *
+ * @param {{r: number, g: number, b: number}} sampledColor
+ * @param {number|null} [whiteBlendAlpha=null] Optional override used by the prompt chip path
+ * @returns {object} PromptVisualState
+ */
+export function resolvePromptVisualState(sampledColor, whiteBlendAlpha = null) {
+    const sourceColor = {
+        r: sampledColor?.r ?? 0,
+        g: sampledColor?.g ?? 0,
+        b: sampledColor?.b ?? 0,
+    };
+
+    const luminance = Math.max(0, Math.min(1, getRelativeLuminance(sourceColor)));
     const perceptualL = getPerceptualLightness(luminance);
-    const maxVal = Math.max(sampledColor.r, sampledColor.g, sampledColor.b);
-    const minVal = Math.min(sampledColor.r, sampledColor.g, sampledColor.b);
+    const maxVal = Math.max(sourceColor.r, sourceColor.g, sourceColor.b);
+    const minVal = Math.min(sourceColor.r, sourceColor.g, sourceColor.b);
     const chroma = (maxVal - minVal) / 255.0;
     const isBrightSample = perceptualL > PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD;
     const isBrightHue = isBrightSample && chroma >= PROMPT_BRIGHT_HUE_MIN_CHROMA;
+    const useInverse = isBrightSample;
+
+    const hasWhiteBlendOverride = whiteBlendAlpha !== null && whiteBlendAlpha !== undefined;
+    const adaptiveAlpha = getPromptBlendAlpha(sourceColor);
+    const baseAlpha = hasWhiteBlendOverride ? whiteBlendAlpha : adaptiveAlpha;
 
     let overlayR, overlayG, overlayB, blendAlpha;
-    const baseAlpha = (whiteBlendAlpha !== null && whiteBlendAlpha !== undefined)
-        ? whiteBlendAlpha
-        : getPromptBlendAlpha(sampledColor);
-
     if (isBrightHue) {
-        overlayR = 0; overlayG = 0; overlayB = 0;
-        blendAlpha = (whiteBlendAlpha !== null && whiteBlendAlpha !== undefined)
+        overlayR = 0;
+        overlayG = 0;
+        overlayB = 0;
+        blendAlpha = hasWhiteBlendOverride
             ? whiteBlendAlpha
             : (1 - PROMPT_BRIGHT_HUE_LIGHTNESS_FACTOR);
     } else if (isBrightSample) {
-        overlayR = 0; overlayG = 0; overlayB = 0;
+        overlayR = 0;
+        overlayG = 0;
+        overlayB = 0;
         const t = Math.max(0, Math.min(
             1,
             (perceptualL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) /
@@ -250,38 +274,120 @@ export function getPromptBlendOverlay(sampledColor, whiteBlendAlpha = null) {
         ));
         blendAlpha = PROMPT_INVERSE_ALPHA_CEILING * t;
     } else {
-        overlayR = 255; overlayG = 255; overlayB = 255;
+        overlayR = 255;
+        overlayG = 255;
+        overlayB = 255;
         blendAlpha = baseAlpha;
     }
 
-    return { overlayR, overlayG, overlayB, blendAlpha, perceptualL, isBrightSample, isBrightHue };
+    const overlay = {
+        r: overlayR,
+        g: overlayG,
+        b: overlayB,
+        alpha: blendAlpha,
+        rgba: `rgba(${overlayR}, ${overlayG}, ${overlayB}, ${blendAlpha.toFixed(4)})`,
+    };
+
+    const finalColor = isBrightHue && !hasWhiteBlendOverride
+        ? getPromptDarkenedHueColor(sourceColor)
+        : blendOverOpaque(sourceColor, { r: overlayR, g: overlayG, b: overlayB }, blendAlpha);
+
+    let shadowAlpha = PROMPT_SHADOW_FLOOR + (PROMPT_SHADOW_ROOF - PROMPT_SHADOW_FLOOR) * perceptualL;
+    if (isBrightSample)
+        shadowAlpha = PROMPT_SHADOW_FLOOR;
+
+    console.debug(
+        `[WACK/PromptVisual] sampledColor=(${sourceColor.r},${sourceColor.g},${sourceColor.b}) ` +
+        `perceptualL=${perceptualL.toFixed(4)} chroma=${chroma.toFixed(4)} ` +
+        `isBrightSample=${isBrightSample} isBrightHue=${isBrightHue} useInverse=${useInverse} ` +
+        `overlayRGBA=${overlay.rgba} blendAlpha=${blendAlpha.toFixed(4)}`
+    );
+
+    return {
+        sourceColor,
+        luminance,
+        perceptualL,
+        chroma,
+        isBrightSample,
+        isBrightHue,
+        useInverse,
+        overlay,
+        finalColor,
+        shadowAlpha,
+        blendAlpha,
+    };
+}
+
+export function ensurePromptVisualState(color, whiteBlendAlpha = CUPERTINO_PROMPT_WHITE_BLEND_ALPHA) {
+    if (color?.visualState?.overlay)
+        return color.visualState;
+    return resolvePromptVisualState(
+        { r: color?.r ?? 0, g: color?.g ?? 0, b: color?.b ?? 0 },
+        whiteBlendAlpha
+    );
+}
+
+/**
+ * Apply an already-resolved prompt visual policy to a locally sampled base color.
+ * Does not re-decide inverse vs normal blend.
+ *
+ * @param {{r: number, g: number, b: number}} sourceColor
+ * @param {object} visualState
+ * @param {{preblend?: boolean}} [options]
+ */
+export function applyPromptVisualState(sourceColor, visualState, options = {}) {
+    const overlay = visualState.overlay;
+    const blended = blendOverOpaque(
+        sourceColor,
+        { r: overlay.r, g: overlay.g, b: overlay.b },
+        overlay.alpha
+    );
+    const display = options.preblend ? blended : sourceColor;
+
+    return {
+        r: display.r,
+        g: display.g,
+        b: display.b,
+        rawR: sourceColor.r,
+        rawG: sourceColor.g,
+        rawB: sourceColor.b,
+        rgba: `rgba(${display.r}, ${display.g}, ${display.b}, 1.0)`,
+        hex: rgbToHex(display.r, display.g, display.b),
+        overlayR: overlay.r,
+        overlayG: overlay.g,
+        overlayB: overlay.b,
+        overlayAlpha: overlay.alpha,
+        overlayRgba: overlay.rgba,
+        useInverse: visualState.useInverse,
+        isBrightSample: visualState.isBrightSample,
+        isBrightHue: visualState.isBrightHue,
+        visualState,
+    };
+}
+
+export function getPromptBlendOverlay(sampledColor, whiteBlendAlpha = null) {
+    const state = resolvePromptVisualState(sampledColor, whiteBlendAlpha);
+    return {
+        overlayR: state.overlay.r,
+        overlayG: state.overlay.g,
+        overlayB: state.overlay.b,
+        blendAlpha: state.overlay.alpha,
+        perceptualL: state.perceptualL,
+        isBrightSample: state.isBrightSample,
+        isBrightHue: state.isBrightHue,
+        useInverse: state.useInverse,
+    };
 }
 
 export function processPromptColor(sampled) {
-    const luminance = Math.max(0, Math.min(1, getRelativeLuminance(sampled)));
-    const perceptualL = getPerceptualLightness(luminance);
-
-    const maxVal = Math.max(sampled.r, sampled.g, sampled.b);
-    const minVal = Math.min(sampled.r, sampled.g, sampled.b);
-    const chroma = (maxVal - minVal) / 255.0;
-    const isBrightSample = perceptualL > PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD;
-    const isBrightHue = isBrightSample && chroma >= PROMPT_BRIGHT_HUE_MIN_CHROMA;
-
-    const blended = isBrightHue
-        ? getPromptDarkenedHueColor(sampled)
-        : isBrightSample
-            ? getPromptInvertedNeutralColor(sampled, perceptualL)
-            : blendOverOpaque(
-                sampled,
-                { r: 255, g: 255, b: 255 },
-                getPromptBlendAlpha(sampled)
-            );
-
+    const state = resolvePromptVisualState(sampled);
     return {
-        r: blended.r,
-        g: blended.g,
-        b: blended.b,
-        perceptualL: perceptualL,
-        isBrightSample: isBrightSample,
+        r: state.finalColor.r,
+        g: state.finalColor.g,
+        b: state.finalColor.b,
+        perceptualL: state.perceptualL,
+        isBrightSample: state.isBrightSample,
+        isBrightHue: state.isBrightHue,
+        useInverse: state.useInverse,
     };
 }
