@@ -155,6 +155,7 @@ export default class WackLockscreenClockExtension extends Extension {
             Main.screenShield.connectObject('active-changed', () => {
                 if (Main.screenShield.active) {
                     this._updateCustomWallpaperOverlay();
+                    this._updateClockAlphaAndPromptColor();
                 }
             }, this);
         }

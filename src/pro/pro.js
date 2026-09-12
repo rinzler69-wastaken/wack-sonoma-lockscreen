@@ -788,9 +788,15 @@ export class GdmManager {
             if (wellChanged) this._lastWellH = wellH;
             if (yCenterChanged) this._lastYCenterFraction = yCenterFraction;
             if (boundsChanged) this._lastPromptBounds = promptBounds;
-            this._updateCupertinoPromptBackground().catch(e => {
-                _logError('[WACK/GdmManager] Failed to update prompt background in allocation: ' + e);
-            });
+            // Don't re-sample during the initial animation-in: the entry's transformed
+            // position is still changing as translation_y settles, producing stale bounds
+            // that may map to a brighter wallpaper region and overwrite the correct
+            // inverse/dark overlay already applied by onUserSelected().
+            if (this._legacyPromptAnimationState !== 'selection') {
+                this._updateCupertinoPromptBackground().catch(e => {
+                    _logError('[WACK/GdmManager] Failed to update prompt background in allocation: ' + e);
+                });
+            }
         }
     }
 
@@ -810,6 +816,7 @@ export class GdmManager {
     _findPromptEntry(actor) { return this._promptStyling.findPromptEntry(actor); }
     _clearCupertinoPromptBackground() { this._promptStyling.clearCupertinoPromptBackground(); }
     _updateCupertinoPromptBackground(metadata = null) { return this._promptStyling.updateCupertinoPromptBackground(metadata); }
+    _updateBottomButtonsBackground(metadata = null) { return this._promptStyling.updateBottomButtonsBackground(metadata); }
 
     _setupGdmAvatarOverride() { this._avatarManager.setup(); }
     _teardownGdmAvatarOverride() { this._avatarManager.teardown(); }

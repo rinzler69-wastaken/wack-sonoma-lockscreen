@@ -508,7 +508,7 @@ export async function getWallpaperPromptColor(params) {
         sampledAvatarColor = applyPromptVisualState(
             { r: sampledPrimary.rawR, g: sampledPrimary.rawG, b: sampledPrimary.rawB },
             promptVisualState,
-            { preblend: false }
+            { preblend: true }
         );
 
         let rawA11y;
@@ -737,7 +737,7 @@ export async function getWallpaperPromptColor(params) {
                     CUPERTINO_PROMPT_WHITE_BLEND_ALPHA
                 );
             }
-            sampledAvatarColor = applyPromptVisualState(rawAvatarColor, promptVisualState, { preblend: false });
+            sampledAvatarColor = applyPromptVisualState(rawAvatarColor, promptVisualState, { preblend: true });
 
             // Sample dedicated color for a11y button
             const a11yXStart = Math.max(0, Math.min(pbWidth - 1, Math.round(visibleX + visibleW * normA11yX1)));

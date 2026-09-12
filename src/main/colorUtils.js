@@ -22,7 +22,7 @@ export const PROMPT_SHADOW_ROOF = 0.1175;
 
 // Bump this when the prompt visual-state algorithm changes so persistent cache
 // entries computed with a previous decision pipeline are discarded automatically.
-export const PROMPT_VISUAL_ALGORITHM_VERSION = 11;
+export const PROMPT_VISUAL_ALGORITHM_VERSION = 12;
 
 export function rgbToHsl(r, g, b) {
     const rNorm = r / 255;

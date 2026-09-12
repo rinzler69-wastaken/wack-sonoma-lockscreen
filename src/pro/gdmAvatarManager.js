@@ -2,7 +2,6 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import St from 'gi://St';
 import { _log } from './gdmUtils.js';
-import { getPromptBlendOverlay } from '../main/colorUtils.js';
 
 export class GdmAvatarManager {
     constructor(gdmManager) {
@@ -84,18 +83,16 @@ export class GdmAvatarManager {
 
         this._updatingVibrancy = true;
         try {
+            // avatarColor.r/g/b is the final pre-blended opaque color (preblend:true).
+            // We apply this solid color to BOTH the button wrapper AND the inner avatar
+            // widget. The button's background-color is visually behind the avatar widget
+            // and thus never seen. The avatar widget itself HAS an opaque background
+            // (its CSS background-color paints the circle), so setting set_style() on it
+            // with the solid pre-blended dark/light color is what actually shows through.
+            // This mirrors exactly how a11y/session buttons are colored: one solid
+            // background-color on the visible widget, no semi-transparent overlay layers.
             const bgRgba = color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`;
             const buttonStyle = `background-color: ${bgRgba} !important; border-radius: 999px !important;`;
-            let overlayRgba = color.overlayRgba;
-            if (!overlayRgba) {
-                if (color.overlayR != null && color.overlayAlpha != null) {
-                    overlayRgba = `rgba(${color.overlayR}, ${color.overlayG}, ${color.overlayB}, ${color.overlayAlpha})`;
-                } else {
-                    const overlay = getPromptBlendOverlay({ r: color.r, g: color.g, b: color.b });
-                    overlayRgba = `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`;
-                }
-            }
-            const avatarOverlayStyle = `background-color: ${overlayRgba} !important; border-radius: 999px !important;`;
 
             const applyToWell = (uw) => {
                 if (!uw) return;
@@ -106,11 +103,15 @@ export class GdmAvatarManager {
                 if (this._hasImageAvatar(avatar)) {
                     if (avatarButton.get_style() !== null)
                         avatarButton.set_style(null);
+                    if (avatar && avatar.get_style() !== null)
+                        avatar.set_style(null);
                 } else {
                     if (avatarButton.get_style() !== buttonStyle)
                         avatarButton.set_style(buttonStyle);
-                    if (avatar && avatar.get_style() !== avatarOverlayStyle)
-                        avatar.set_style(avatarOverlayStyle);
+                    // Apply to the avatar widget directly — its background-color is the
+                    // circle fill that the user actually sees; the button's is behind it.
+                    if (avatar && avatar.get_style() !== buttonStyle)
+                        avatar.set_style(buttonStyle);
                 }
             };
 

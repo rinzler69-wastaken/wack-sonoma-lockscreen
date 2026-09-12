@@ -345,6 +345,9 @@ export class GdmWallpaperManager {
             this._gdm._updateCupertinoPromptBackground(metadata).catch(e => {
                 _log('[WACK/GdmManager] Failed to compute prompt background: ' + e);
             });
+            this._gdm._updateBottomButtonsBackground(metadata).catch(e => {
+                _log('[WACK/GdmManager] Failed to compute bottom buttons background: ' + e);
+            });
 
             if (this.appliedWallpaperUser === resolvedUserName &&
                 this.appliedWallpaperSignature === wallpaperSignature) {

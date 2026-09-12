@@ -3,7 +3,6 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { getWallpaperPromptColor } from '../main/alphaManager.js';
-import { getPromptBlendOverlay } from '../main/colorUtils.js';
 import {
     A11Y_BUTTON_WIDTH,
     A11Y_BUTTON_HEIGHT,
@@ -21,6 +20,7 @@ export class GdmPromptStyling {
         this._gdm = gdmManager;
         this.cursorBlinkTimeoutId = 0;
         this.promptColorRequestId = 0;
+        this.bottomButtonsColorRequestId = 0;
     }
 
     teardown() {
@@ -535,18 +535,17 @@ export class GdmPromptStyling {
 
             let avatarColor = promptColor?.avatarColor;
             if (!avatarColor && promptColor && promptColor.r != null) {
-                const raw = { r: promptColor.r, g: promptColor.g, b: promptColor.b };
-                const overlay = getPromptBlendOverlay(raw);
+                // Derive avatar color directly from the already-blended prompt color.
+                // Do NOT call getPromptBlendOverlay() here — that would make an
+                // independent useInverse decision on the already-blended (potentially
+                // dark) prompt color and invert the direction. The prompt color's
+                // r/g/b IS the correct final pre-blended result from the unified
+                // promptVisualState, so use it directly as the avatar background.
                 avatarColor = {
-                    r: raw.r,
-                    g: raw.g,
-                    b: raw.b,
-                    rgba: `rgba(${raw.r}, ${raw.g}, ${raw.b}, 1.0)`,
-                    overlayR: overlay.overlayR,
-                    overlayG: overlay.overlayG,
-                    overlayB: overlay.overlayB,
-                    overlayAlpha: overlay.blendAlpha,
-                    overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+                    r: promptColor.r,
+                    g: promptColor.g,
+                    b: promptColor.b,
+                    rgba: promptColor.rgba ?? `rgba(${promptColor.r}, ${promptColor.g}, ${promptColor.b}, 1.0)`,
                 };
             }
 
@@ -644,18 +643,17 @@ export class GdmPromptStyling {
 
         let finalAvatarColor = color?.avatarColor;
         if (!finalAvatarColor && color && color.r != null) {
-            const raw = { r: color.r, g: color.g, b: color.b };
-            const overlay = getPromptBlendOverlay(raw);
+            // Derive avatar color directly from the already-blended prompt color.
+            // Do NOT call getPromptBlendOverlay() here — that would make an
+            // independent useInverse decision on the already-blended (potentially
+            // dark) prompt color and invert the direction. The prompt color's
+            // r/g/b IS the correct final pre-blended result from the unified
+            // promptVisualState, so use it directly as the avatar background.
             finalAvatarColor = {
-                r: raw.r,
-                g: raw.g,
-                b: raw.b,
-                rgba: `rgba(${raw.r}, ${raw.g}, ${raw.b}, 1.0)`,
-                overlayR: overlay.overlayR,
-                overlayG: overlay.overlayG,
-                overlayB: overlay.overlayB,
-                overlayAlpha: overlay.blendAlpha,
-                overlayRgba: `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`,
+                r: color.r,
+                g: color.g,
+                b: color.b,
+                rgba: color.rgba ?? `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`,
             };
         }
         if (this._gdm?._avatarManager && finalAvatarColor)
@@ -665,5 +663,162 @@ export class GdmPromptStyling {
             this.applyA11yButtonBackground(a11yButton, color);
         if (sessionButton)
             this.applySessionButtonBackground(sessionButton, color);
+    }
+
+    /**
+     * Style the a11y and session bottom buttons from the wallpaper, with no
+     * dependency on authPrompt or the wack-cupertino-prompt class.  Called
+     * immediately on GDM cold boot (applyWallpaper) so the buttons are
+     * vibrancy-coloured before any user is selected.
+     */
+    async updateBottomButtonsBackground(metadata = null) {
+        const effectiveMetadata = metadata ?? this._gdm._currentWallpaperMetadata;
+
+        let promptVibrancy = true;
+        if (effectiveMetadata && effectiveMetadata.promptVibrancy != null) {
+            promptVibrancy = effectiveMetadata.promptVibrancy;
+        } else if (this._gdm._extension) {
+            promptVibrancy = this._gdm._extension.getSettings().get_boolean('prompt-vibrancy');
+        }
+
+        const currentDialog = this._gdm._dialog;
+
+        const a11yButton = currentDialog?._a11yMenuButton
+            ?? currentDialog?._bottomButtonGroup?._a11yMenuButton
+            ?? currentDialog?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('a11y-button'));
+
+        const sessionButton = currentDialog?._authMenuButton
+            ?? currentDialog?._sessionMenuButton?._button
+            ?? currentDialog?._sessionMenuButton?.get_child?.()
+            ?? currentDialog?._sessionMenuButton
+            ?? currentDialog?._bottomButtonGroup?._authMenuButton
+            ?? currentDialog?._bottomButtonGroup?._sessionMenuButton?._button
+            ?? currentDialog?._bottomButtonGroup?._sessionMenuButton
+            ?? currentDialog?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('login-dialog-auth-menu-button') || c.has_style_class_name?.('login-dialog-session-list-button'));
+
+        if (!promptVibrancy) {
+            if (a11yButton) this.applyA11yButtonBackground(a11yButton, null);
+            if (sessionButton) this.applySessionButtonBackground(sessionButton, null);
+            return;
+        }
+
+        if (!a11yButton && !sessionButton)
+            return;
+
+        // Build minimal bounds for the buttons we found — prompt/cancel/avatar
+        // are left null so alphaManager only samples what it needs.
+        const monitor = Main.layoutManager?.primaryMonitor;
+        const monitorX = monitor ? monitor.x : 0;
+        const monitorY = monitor ? monitor.y : 0;
+        const monitorWidth = monitor ? monitor.width : 1920;
+        const monitorHeight = monitor ? monitor.height : 1080;
+
+        let a11yBounds = null;
+        if (a11yButton && a11yButton.get_stage()) {
+            const [ax, ay] = a11yButton.get_transformed_position();
+            const aw = a11yButton.get_width() || A11Y_BUTTON_WIDTH;
+            const ah = a11yButton.get_height() || A11Y_BUTTON_HEIGHT;
+            if (aw > 0 && ah > 0 && monitorWidth > 0 && monitorHeight > 0 && ax >= monitorX && ay >= monitorY) {
+                const ex = ax + A11Y_BUTTON_X_OFFSET;
+                const ey = ay + A11Y_BUTTON_Y_OFFSET;
+                a11yBounds = {
+                    x1: Math.max(0, Math.min(1, (ex - monitorX) / monitorWidth)),
+                    x2: Math.max(0, Math.min(1, (ex + aw - monitorX) / monitorWidth)),
+                    y1: Math.max(0, Math.min(1, (ey - monitorY) / monitorHeight)),
+                    y2: Math.max(0, Math.min(1, (ey + ah - monitorY) / monitorHeight)),
+                };
+            }
+        }
+
+        let sessionBounds = null;
+        if (sessionButton && sessionButton.get_stage()) {
+            const [sx, sy] = sessionButton.get_transformed_position();
+            const sw = sessionButton.get_width() || SESSION_BUTTON_WIDTH;
+            const sh = sessionButton.get_height() || SESSION_BUTTON_HEIGHT;
+            if (sw > 0 && sh > 0 && monitorWidth > 0 && monitorHeight > 0 && sx >= monitorX && sy >= monitorY) {
+                const ex = sx + SESSION_BUTTON_X_OFFSET;
+                const ey = sy + SESSION_BUTTON_Y_OFFSET;
+                sessionBounds = {
+                    x1: Math.max(0, Math.min(1, (ex - monitorX) / monitorWidth)),
+                    x2: Math.max(0, Math.min(1, (ex + sw - monitorX) / monitorWidth)),
+                    y1: Math.max(0, Math.min(1, (ey - monitorY) / monitorHeight)),
+                    y2: Math.max(0, Math.min(1, (ey + sh - monitorY) / monitorHeight)),
+                };
+            }
+        }
+
+        // Fast path: use cached color from cross-session metadata if available.
+        if (effectiveMetadata) {
+            const promptColor = effectiveMetadata.promptColor;
+            if (promptColor && promptColor.r != null) {
+                if (a11yButton) this.applyA11yButtonBackground(a11yButton, promptColor);
+                if (sessionButton) this.applySessionButtonBackground(sessionButton, promptColor);
+                // Also kick off the full async sample in case cached data is stale,
+                // but don't block the fast-path styling above.
+            }
+        }
+
+        let wallpaperParams;
+        if (effectiveMetadata) {
+            wallpaperParams = {
+                uri: effectiveMetadata.resolved_slide_path
+                    ? `file://${effectiveMetadata.resolved_slide_path}`
+                    : (effectiveMetadata.source_uri ?? effectiveMetadata.uri),
+                isColor: effectiveMetadata.is_color,
+                primaryColor: effectiveMetadata.primary_color,
+                secondaryColor: effectiveMetadata.secondary_color,
+                shadingType: effectiveMetadata.shading_type,
+                wellH: 0,
+                yCenterFraction: null,
+                promptBounds: null,
+                cancelBounds: null,
+                avatarBounds: null,
+                a11yBounds,
+                sessionBounds,
+            };
+        } else {
+            const bgSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.background' });
+            const uri = bgSettings.get_string('picture-uri');
+            const style = bgSettings.get_enum('picture-options');
+            wallpaperParams = {
+                uri,
+                isColor: (style === 0),
+                primaryColor: bgSettings.get_string('primary-color'),
+                secondaryColor: bgSettings.get_string('secondary-color'),
+                shadingType: bgSettings.get_enum('color-shading-type'),
+                wellH: 0,
+                yCenterFraction: null,
+                promptBounds: null,
+                cancelBounds: null,
+                avatarBounds: null,
+                a11yBounds,
+                sessionBounds,
+            };
+        }
+
+        const requestId = ++this.bottomButtonsColorRequestId;
+        const color = await getWallpaperPromptColor(wallpaperParams);
+
+        if (requestId !== this.bottomButtonsColorRequestId)
+            return;
+        if (!color)
+            return;
+
+        // Re-resolve buttons after the await — the dialog may have been replaced.
+        const dlg = this._gdm._dialog;
+        const freshA11y = dlg?._a11yMenuButton
+            ?? dlg?._bottomButtonGroup?._a11yMenuButton
+            ?? dlg?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('a11y-button'));
+        const freshSession = dlg?._authMenuButton
+            ?? dlg?._sessionMenuButton?._button
+            ?? dlg?._sessionMenuButton?.get_child?.()
+            ?? dlg?._sessionMenuButton
+            ?? dlg?._bottomButtonGroup?._authMenuButton
+            ?? dlg?._bottomButtonGroup?._sessionMenuButton?._button
+            ?? dlg?._bottomButtonGroup?._sessionMenuButton
+            ?? dlg?._bottomButtonGroup?.get_children?.().find?.(c => c.has_style_class_name?.('login-dialog-auth-menu-button') || c.has_style_class_name?.('login-dialog-session-list-button'));
+
+        if (freshA11y) this.applyA11yButtonBackground(freshA11y, color);
+        if (freshSession) this.applySessionButtonBackground(freshSession, color);
     }
 }
