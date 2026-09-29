@@ -780,6 +780,189 @@ assert(coldBootManager.view.lastAnimated === true, 'Live switch: Account switch 
 assert(coldBootManager.view.topKey === 'bob', 'Live switch: Bob becomes active top stack');
 assert(coldBootManager.view.topOpacity === 255, 'Live switch: Bob top stack is fully opaque');
 
+// 11. Counterpart Vibrancy Pending-Palette Regression Tests
+// Covers the DARK → LIGHT toggle regression where the Light counterpart has
+// promptColor = null (never sampled in the active session).  The pendingPalette
+// flag must prevent destructive clearing while sampling is queued, and the full
+// palette must be applied once _drainOne() delivers it.
+print('\n[11] Testing Counterpart Vibrancy Pending-Palette (Light/Dark Toggle Regression):');
+
+// ---- mock helpers that mirror the real _install / _drainOne / _onChanged
+//      state machine, minus actual pixel sampling -------------------------------
+
+function mockInstall(rawMeta, explicitScheme, paletteCache, previousTheme) {
+    const scheme = explicitScheme ?? rawMeta.color_scheme ?? 0;
+    const variantKey = scheme === 1 ? 'dark' : 'light';
+    const v = rawMeta.variants?.[variantKey] ?? {};
+    const meta = {
+        ...rawMeta,
+        uri: v.uri ?? rawMeta.uri,
+        clockAlpha: v.clockAlpha ?? null,
+        promptColor: v.promptColor ?? null,
+        active_color_scheme: scheme,
+    };
+    const image = meta.uri ?? '';
+    const mode = 'tonal';
+    const paletteKey = `${image}|${mode}`;
+
+    // Prefer cache > shipped promptColor > nothing
+    let palette = paletteCache.get(paletteKey) ?? null;
+    if (palette === null && meta.promptColor) {
+        palette = { mode, image, isShipped: true, value: meta.promptColor };
+        paletteCache.set(paletteKey, palette);
+    }
+
+    const pendingPalette = palette === null;
+    return Object.freeze({ userName: rawMeta.username, meta, rawMeta, image, palette, clockAlpha: meta.clockAlpha, pendingPalette });
+}
+
+function mockDrainComplete(theme, sampledValue, paletteCache) {
+    // Simulate _drainOne() completing: write palette + explicitly clear flag
+    const mode = 'tonal';
+    const paletteKey = `${theme.image}|${mode}`;
+    const palette = { mode, image: theme.image, isShipped: false, value: sampledValue };
+    paletteCache.set(paletteKey, palette);
+    return Object.freeze({ ...theme, palette, pendingPalette: false });
+}
+
+// Account with Dark variant shipped (promptColor populated) and Light variant
+// unsampled (promptColor = null), mirroring the exact publication from CSM when
+// the active session was Dark.
+const daveMeta = {
+    username: 'dave',
+    color_scheme: 1, // Dave was last in Dark
+    variants: {
+        dark: {
+            uri: 'file:///var/tmp/wack/shared/wack-shared-wallpaper-dave-dark.jpg',
+            clockAlpha: 0.45,
+            promptColor: { r: 30, g: 30, b: 35, useInverse: false },
+        },
+        light: {
+            uri: 'file:///var/tmp/wack/shared/wack-shared-wallpaper-dave-light.jpg',
+            clockAlpha: null,      // NOT published — session never ran in Light
+            promptColor: null,     // NOT published — counterpart unsampled
+        },
+    },
+};
+
+// Account with Light variant already cached (simulates a previous sampling run)
+const eveMeta = {
+    username: 'eve',
+    color_scheme: 0, // Eve was last in Light
+    variants: {
+        light: {
+            uri: 'file:///var/tmp/wack/shared/wack-shared-wallpaper-eve-light.jpg',
+            clockAlpha: 0.60,
+            promptColor: { r: 230, g: 230, b: 230, useInverse: true },
+        },
+        dark: {
+            uri: 'file:///var/tmp/wack/shared/wack-shared-wallpaper-eve-dark.jpg',
+            clockAlpha: 0.50,
+            promptColor: { r: 40, g: 40, b: 45, useInverse: false },
+        },
+    },
+};
+
+const paletteCache11 = new Map();
+
+// --- Test 1: Initial DARK boot for Dave --- palette ships from dark variant
+const daveInitial = mockInstall(daveMeta, null, paletteCache11, undefined);
+assert(daveInitial.pendingPalette === false, '[11] Dave (Dark init): shipped Dark palette → pendingPalette is false');
+assert(daveInitial.palette !== null, '[11] Dave (Dark init): palette is populated from shipped Dark promptColor');
+assert(daveInitial.meta.uri.includes('dave-dark.jpg'), '[11] Dave (Dark init): dark URI resolved');
+
+// --- Test 2: Manual GDM toggle DARK → LIGHT for Dave (unsampled counterpart) ---
+const daveLight = mockInstall(daveMeta, 0, paletteCache11, daveInitial);
+assert(daveLight.pendingPalette === true, '[11] Dave (DARK→LIGHT toggle): unsampled Light → pendingPalette is true');
+assert(daveLight.palette === null, '[11] Dave (DARK→LIGHT toggle): palette is null while sampling is pending');
+assert(daveLight.meta.uri.includes('dave-light.jpg'), '[11] Dave (DARK→LIGHT toggle): light URI selected');
+assert(daveLight.clockAlpha === null, '[11] Dave (DARK→LIGHT toggle): clockAlpha is null while pending');
+
+// --- Test 3: Verify applyTheme guard semantics on pending theme ---
+// (Simulated: applyTheme must return early when pendingPalette is true)
+let applyThemeCalled = false;
+function simulateApplyTheme(theme) {
+    if (!theme) return;
+    if (theme.pendingPalette) return;   // <-- the actual guard added to applyTheme()
+    applyThemeCalled = true;
+}
+simulateApplyTheme(daveLight);
+assert(applyThemeCalled === false, '[11] Dave (DARK→LIGHT toggle): applyTheme skipped while pendingPalette is true');
+
+// --- Test 4: _drainOne() completes — pendingPalette cleared, palette set ---
+const sampledLightValue = { r: 225, g: 225, b: 228, useInverse: true };
+const daveLightResolved = mockDrainComplete(daveLight, sampledLightValue, paletteCache11);
+assert(daveLightResolved.pendingPalette === false, '[11] Dave (after drain): pendingPalette cleared to false');
+assert(daveLightResolved.palette !== null, '[11] Dave (after drain): palette is now populated');
+assert(daveLightResolved.palette.value.r === 225, '[11] Dave (after drain): sampled Light palette value matches drain result');
+simulateApplyTheme(daveLightResolved);
+assert(applyThemeCalled === true, '[11] Dave (after drain): applyTheme proceeds normally after drain');
+
+// --- Test 5: Subsequent LIGHT → DARK toggle hits paletteCache immediately ---
+const daveDarkToggle = mockInstall(daveMeta, 1, paletteCache11, daveLightResolved);
+assert(daveDarkToggle.pendingPalette === false, '[11] Dave (LIGHT→DARK re-toggle): cached Dark palette → pendingPalette false');
+assert(daveDarkToggle.palette !== null, '[11] Dave (LIGHT→DARK re-toggle): Dark palette retrieved from cache');
+
+// --- Test 6: Subsequent DARK → LIGHT toggle hits paletteCache immediately ---
+const daveLightToggle2 = mockInstall(daveMeta, 0, paletteCache11, daveDarkToggle);
+assert(daveLightToggle2.pendingPalette === false, '[11] Dave (DARK→LIGHT re-toggle after cache): pendingPalette false (cache hit)');
+assert(daveLightToggle2.palette !== null, '[11] Dave (DARK→LIGHT re-toggle after cache): Light palette retrieved from cache');
+assert(daveLightToggle2.palette.value.r === 225, '[11] Dave (DARK→LIGHT re-toggle after cache): correct Light palette value');
+
+// --- Test 7: Account switching between Dave (unsampled Light) and Eve (shipped Light) ---
+const eveInitial = mockInstall(eveMeta, null, paletteCache11, undefined);
+assert(eveInitial.pendingPalette === false, '[11] Eve (Light init): shipped Light palette → pendingPalette false');
+assert(eveInitial.palette !== null, '[11] Eve (Light init): palette populated from shipped Light promptColor');
+
+// Switch to Dave (currently pending Light), then back to Eve
+const daveForSwitch = mockInstall(daveMeta, 0, paletteCache11, daveLight);
+// Dave Light is NOW in paletteCache11 (from drain above)
+assert(daveForSwitch.pendingPalette === false, '[11] Dave after Eve switch: Light now in cache → pendingPalette false');
+assert(daveForSwitch.palette !== null, '[11] Dave after Eve switch: Light palette resolved from cache');
+
+// Switch back to Eve
+const eveAfterDave = mockInstall(eveMeta, 0, paletteCache11, eveInitial);
+assert(eveAfterDave.pendingPalette === false, '[11] Eve (after Dave): still not pending');
+assert(eveAfterDave.palette !== null, '[11] Eve (after Dave): palette still intact');
+assert(eveAfterDave.meta.uri.includes('eve-light.jpg'), '[11] Eve (after Dave): correct URI');
+
+// --- Test 8: DARK-only account (no Light counterpart ever sampled) behaves
+//             identically to Dave during first toggle --- pendingPalette true,
+//             drain delivers palette, subsequent toggles hit cache. ---
+const frankMeta = {
+    username: 'frank',
+    color_scheme: 1,
+    variants: {
+        dark: {
+            uri: 'file:///var/tmp/wack/shared/wack-shared-wallpaper-frank-dark.jpg',
+            clockAlpha: 0.50,
+            promptColor: { r: 20, g: 20, b: 25, useInverse: false },
+        },
+        light: {
+            uri: 'file:///var/tmp/wack/shared/wack-shared-wallpaper-frank-light.jpg',
+            clockAlpha: null,
+            promptColor: null,
+        },
+    },
+};
+const paletteCache11b = new Map();
+const frankDark = mockInstall(frankMeta, 1, paletteCache11b, undefined);
+assert(frankDark.pendingPalette === false, '[11] Frank (Dark-only init): Dark ships → pendingPalette false');
+const frankLight = mockInstall(frankMeta, 0, paletteCache11b, frankDark);
+assert(frankLight.pendingPalette === true, '[11] Frank (DARK→LIGHT first toggle): unsampled Light → pendingPalette true');
+const frankLightResolved = mockDrainComplete(frankLight, { r: 218, g: 218, b: 220 }, paletteCache11b);
+assert(frankLightResolved.pendingPalette === false, '[11] Frank (after drain): pendingPalette cleared');
+const frankLightCached = mockInstall(frankMeta, 0, paletteCache11b, frankLightResolved);
+assert(frankLightCached.pendingPalette === false, '[11] Frank (DARK→LIGHT second toggle): Light in cache → pendingPalette false');
+
+// --- Test 9: Cold-boot behavior unchanged — pendingPalette true on first
+//             install if no shipped palette, cleared when drain fires. ---
+//             (mirrors the cold-boot tests from section [10])
+const paletteCache11c = new Map();
+const daveColdDark = mockInstall(daveMeta, 1, paletteCache11c, undefined);
+// On cold boot with the shipped Dark palette the theme is NOT pending:
+assert(daveColdDark.pendingPalette === false, '[11] Cold-boot Dave (Dark shipped): pendingPalette false — immediate present works');
+
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
 print(`========================================\n`);

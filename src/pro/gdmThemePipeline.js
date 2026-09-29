@@ -351,6 +351,9 @@ export class GdmThemeStore {
             image,          // the single image the palette is sampled from
             palette,        // { mode, image, layoutKey, isShipped, value } | null
             clockAlpha,
+            // True while async sampling is queued but not yet complete.  Consumers
+            // must preserve existing vibrancy styling rather than wiping it.
+            pendingPalette: palette === null,
         });
         this._themes.set(userName, theme);
 
@@ -512,7 +515,7 @@ export class GdmThemeStore {
                 value,
             };
             this._paletteCache.set(this._paletteKey(snapshot.image, userVibrancy), palette);
-            this._themes.set(userName, this._freeze({ ...current, palette, clockAlpha: alpha }));
+            this._themes.set(userName, this._freeze({ ...current, palette, clockAlpha: alpha, pendingPalette: false }));
             this._onChanged(userName);
         } finally {
             this._busy = false;
