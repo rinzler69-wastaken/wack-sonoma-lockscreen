@@ -18,11 +18,9 @@ export class GdmWallpaperManager {
         this.sharedWallpaperMonitor = null;
         this.sharedWallpaperRefreshId = null;
         this.currentWallpaperMetadata = null;
-        this._initialized = false;
     }
 
     setup(dialog, dialogParent) {
-        this._initialized = false;
         this.view = new GdmWallpaperView(dialogParent, dialog);
         this.view.rebuild();
 
@@ -30,7 +28,7 @@ export class GdmWallpaperManager {
             const activeUser = this._gdm._dialog?._user?.get_user_name() ?? null;
             const effectiveUser = activeUser ?? this.themeStore._defaultUser;
             if (userName === null || userName === effectiveUser || (activeUser === null && userName === this.themeStore._defaultUser)) {
-                this.applyWallpaper(activeUser, this._initialized, false);
+                this.applyWallpaper(activeUser, true);
             }
         });
 
@@ -49,13 +47,11 @@ export class GdmWallpaperManager {
                 this.view.warm(theme);
             }
             const activeUser = this._gdm._dialog?._user?.get_user_name() ?? null;
-            this.applyWallpaper(activeUser, false, true);
+            this.applyWallpaper(activeUser, false);
         }
-        this._initialized = true;
     }
 
     teardown() {
-        this._initialized = false;
         if (this.monitorsChangedId) {
             Main.layoutManager.disconnect(this.monitorsChangedId);
             this.monitorsChangedId = null;
@@ -138,24 +134,34 @@ export class GdmWallpaperManager {
         }
     }
 
-    applyWallpaper(requestedUserName = null, animate = true, syncColorScheme = true) {
+    applyWallpaper(requestedUserName = null, animate = true, isExplicitSelection = false) {
         if (!this.themeStore || !this.view)
             return;
 
-        let theme = this.themeStore.peek(requestedUserName);
-        if (!theme)
-            return;
-
-        if (syncColorScheme) {
-            const raw = theme.rawMeta ?? theme.meta;
-            const targetScheme = raw?.color_scheme ?? theme.meta?.active_color_scheme;
-            if (targetScheme !== undefined && this.themeStore.getColorScheme() !== targetScheme) {
-                this.themeStore.setColorScheme(targetScheme);
-                const updated = this.themeStore.peek(requestedUserName);
-                if (updated)
-                    theme = updated;
+        // On an explicit account switch, restore the selected account's canonical
+        // color scheme to the global setting.  This wipes any ephemeral QS-toggle
+        // override so _onColorSchemeChanged re-installs themes using the account's
+        // stored preference.  All other callers (toggle callback, initial load,
+        // slideshow ticks) leave the global untouched so the QS toggle remains
+        // effective as a diskless, ephemeral in-session override.
+        if (isExplicitSelection && requestedUserName !== null) {
+            const rawMeta = this.themeStore._themes.get(requestedUserName)?.rawMeta ?? null;
+            const canonicalScheme = rawMeta?.color_scheme ?? null;
+            if (canonicalScheme !== null) {
+                const globalScheme = this.themeStore._getColorScheme();
+                if (canonicalScheme !== globalScheme)
+                    this.themeStore._interfaceSettings.set_enum('color-scheme', canonicalScheme);
+                // _onColorSchemeChanged fires -> re-installs all themes with the
+                // canonical scheme -> _onChanged(requestedUserName) -> applyWallpaper
+                // called again with isExplicitSelection=false -> no further write.
+                // We continue below so the wallpaper is presented immediately
+                // without waiting for the async signal round-trip.
             }
         }
+
+        const theme = this.themeStore.peek(requestedUserName);
+        if (!theme)
+            return;
 
         this._gdm._currentWallpaperMetadata = theme.meta;
         this.currentWallpaperMetadata = theme.meta;

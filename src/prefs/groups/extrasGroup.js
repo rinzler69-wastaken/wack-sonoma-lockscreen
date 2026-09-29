@@ -2,10 +2,7 @@ import GLib from 'gi://GLib';
 import Gdk from 'gi://Gdk';
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
-import { isWackShellInstalled, flushWackCache } from '../prefsUtils.js';
-// <GDM_EXCLUDE>
-import { getGdmStatus } from '../prefsUtils.js';
-// </GDM_EXCLUDE>
+import { isWackShellInstalled, getGdmStatus, flushWackCache } from '../prefsUtils.js';
 
 export function buildExtrasGroup(extensionPreferences, window, _) {
     const extrasGroup = new Adw.PreferencesGroup({

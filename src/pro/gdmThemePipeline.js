@@ -264,18 +264,6 @@ export class GdmThemeStore {
         return meta?.promptVibrancyMode ?? this._vibrancy;
     }
 
-    getColorScheme() {
-        return this._getColorScheme();
-    }
-
-    setColorScheme(scheme) {
-        try {
-            if (this._interfaceSettings && this._getColorScheme() !== scheme) {
-                this._interfaceSettings.set_enum('color-scheme', scheme);
-            }
-        } catch (_) {}
-    }
-
     _getColorScheme() {
         try {
             if (this._interfaceSettings)
@@ -292,10 +280,11 @@ export class GdmThemeStore {
     _resolveVariant(rawMeta, colorScheme = null) {
         if (!rawMeta)
             return null;
-        const scheme = colorScheme ?? rawMeta.color_scheme ?? this._getColorScheme();
+        const scheme = colorScheme ?? this._getColorScheme();
         const variantKey = scheme === 1 ? 'dark' : 'light';
         if (rawMeta.variants && rawMeta.variants[variantKey]) {
             const v = rawMeta.variants[variantKey];
+            const isSameSource = !v.source_uri || !rawMeta.source_uri || (v.source_uri === rawMeta.source_uri);
             return {
                 ...rawMeta,
                 source_uri: v.source_uri ?? rawMeta.source_uri,
@@ -306,8 +295,8 @@ export class GdmThemeStore {
                 resolved_slide_path: v.resolved_slide_path ?? rawMeta.resolved_slide_path,
                 resolved_slide_progress: v.resolved_slide_progress ?? rawMeta.resolved_slide_progress,
                 is_color: v.is_color ?? rawMeta.is_color,
-                clockAlpha: v.clockAlpha ?? null,
-                promptColor: v.promptColor ?? null,
+                clockAlpha: v.clockAlpha ?? (isSameSource ? rawMeta.clockAlpha : null),
+                promptColor: v.promptColor ?? (isSameSource ? rawMeta.promptColor : null),
                 active_color_scheme: scheme,
             };
         }
@@ -317,8 +306,8 @@ export class GdmThemeStore {
         };
     }
 
-    _install(userName, rawMeta, xmlText, explicitColorScheme = null) {
-        const meta = this._resolveVariant(rawMeta, explicitColorScheme);
+    _install(userName, rawMeta, xmlText) {
+        const meta = this._resolveVariant(rawMeta);
         const slide = this._resolveSlide(meta, xmlText);
         const image = this._imageKey(meta, slide);
         const userVibrancy = this._userVibrancy(meta);
@@ -328,6 +317,15 @@ export class GdmThemeStore {
         // matches current slide) > previous palette (stale fallback for display only if matching image).
         const previous = this._themes.get(userName);
         let palette = this._paletteCache.get(paletteKey) ?? null;
+        // For ACRYLIC palettes the visual result depends on a PNG file artifact.
+        // If that artifact was deleted (e.g. by the sibling Light/Dark variant's
+        // pruning pass) while the in-memory entry survived, treat it as a miss so
+        // the generation pipeline is triggered to recreate the file.
+        if (palette !== null && !isSolidMode(palette.mode) &&
+            !(palette.value?.imagePath && Gio.File.new_for_path(palette.value.imagePath).query_exists(null))) {
+            this._paletteCache.delete(paletteKey);
+            palette = null;
+        }
         if (palette === null)
             palette = this._adoptShippedPalette(meta, image, slide);
         if (palette === null && previous !== undefined && previous.palette !== null && previous.palette.image === image && previous.palette.mode === userVibrancy)
@@ -351,9 +349,6 @@ export class GdmThemeStore {
             image,          // the single image the palette is sampled from
             palette,        // { mode, image, layoutKey, isShipped, value } | null
             clockAlpha,
-            // True while async sampling is queued but not yet complete.  Consumers
-            // must preserve existing vibrancy styling rather than wiping it.
-            pendingPalette: palette === null,
         });
         this._themes.set(userName, theme);
 
@@ -468,7 +463,12 @@ export class GdmThemeStore {
         try {
             const meta = snapshot.meta;
             const layout = this._layout;
-            const sampleUri = resolveGdmAccessibleUri(meta) || snapshot.image || meta.uri;
+            let sampleUri;
+            if (meta.source_uri && (meta.source_uri.endsWith('.xml') || meta.source_uri.endsWith('.xml.in'))) {
+                sampleUri = meta.source_uri.startsWith('file://') ? meta.source_uri : `file://${meta.source_uri}`;
+            } else {
+                sampleUri = resolveGdmAccessibleUri(meta) || snapshot.image || meta.uri;
+            }
 
             const common = {
                 uri: sampleUri,
@@ -515,7 +515,7 @@ export class GdmThemeStore {
                 value,
             };
             this._paletteCache.set(this._paletteKey(snapshot.image, userVibrancy), palette);
-            this._themes.set(userName, this._freeze({ ...current, palette, clockAlpha: alpha, pendingPalette: false }));
+            this._themes.set(userName, this._freeze({ ...current, palette, clockAlpha: alpha }));
             this._onChanged(userName);
         } finally {
             this._busy = false;
@@ -568,8 +568,7 @@ export class GdmThemeStore {
             if (theme.slide === null)
                 continue;
             const raw = theme.rawMeta ?? theme.meta;
-            const currentScheme = theme.meta?.active_color_scheme ?? null;
-            this._install(name, raw, theme.xmlText, currentScheme);   // keeps the old palette until replaced
+            this._install(name, raw, theme.xmlText);   // keeps the old palette until replaced
             const updated = this._themes.get(name);
             if (updated && this._isPaletteValid(updated)) {
                 this._onChanged(name);
@@ -579,7 +578,6 @@ export class GdmThemeStore {
 
     _onColorSchemeChanged() {
         this._fallback = this._buildFallbackTheme();
-        const explicitScheme = this._getColorScheme();
         if (this._themes.size === 0) {
             if (this._onChanged)
                 this._onChanged(null);
@@ -587,7 +585,7 @@ export class GdmThemeStore {
         }
         for (const [name, theme] of this._themes) {
             const raw = theme.rawMeta ?? theme.meta;
-            this._install(name, raw, theme.xmlText, explicitScheme);
+            this._install(name, raw, theme.xmlText);
             const updated = this._themes.get(name);
             if (updated && this._onChanged) {
                 this._onChanged(name);
@@ -816,7 +814,7 @@ export class GdmWallpaperView {
 
     _createStack(m, theme) {
         const s = theme.slide;
-        const root = new St.Widget({ width: m.monitor.width, height: m.monitor.height, opacity: 0 });
+        const root = new St.Widget({ width: m.monitor.width, height: m.monitor.height, opacity: 255 });
         const mk = image => new St.Widget({
             width: m.monitor.width, height: m.monitor.height,
             style: this._backgroundStyle(theme.meta, image),

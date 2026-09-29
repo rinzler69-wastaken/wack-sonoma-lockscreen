@@ -83,6 +83,8 @@ export class CrossSessionManager {
         this._settings = extensionSettings;
         this._clockAlpha = null;
         this._promptColor = null;
+        this._inactiveClockAlpha = null;
+        this._inactivePromptColor = null;
         this._wallpaperFileMonitor = null;
         this._wallpaperFileMonitorId = 0;
         this._lastMonitoredUri = null;
@@ -92,7 +94,7 @@ export class CrossSessionManager {
         this._dirty = false;
     }
 
-    setClockAlphaAndPromptColor(alpha, promptColor) {
+    setClockAlphaAndPromptColor(alpha, promptColor, inactiveClockAlpha = null, inactivePromptColor = null) {
         const isColorMatch = (c1, c2) => {
             if (!c1 && !c2) return true;
             if (!c1 || !c2) return false;
@@ -146,6 +148,8 @@ export class CrossSessionManager {
             return;
         this._clockAlpha = alpha;
         this._promptColor = promptColor;
+        this._inactiveClockAlpha = inactiveClockAlpha;
+        this._inactivePromptColor = inactivePromptColor;
         this._triggerSave();
     }
 
@@ -532,22 +536,53 @@ export class CrossSessionManager {
             }
         }
 
-        // Attach session's computed visuals to active variant
+        // Attach session's computed visuals to active variant and preserve/reuse for inactive variant.
+        // For ACRYLIC variants the promptColor carries an imagePath; validate it still exists
+        // before publishing — never write a dead artifact reference into the manifest.
+        const _isPromptColorLive = pc => {
+            if (!pc) return false;
+            if (!pc.imagePath) return true;   // TONAL / scalar — no file dependency
+            return Gio.File.new_for_path(pc.imagePath).query_exists(null);
+        };
+
         if (activeColorScheme === 1) {
             darkVariant.clockAlpha = this._clockAlpha ?? 0.6;
             darkVariant.promptColor = this._promptColor;
-            if (existingLight && existingLight.promptColor && existingLight.source_uri === lightVariant?.source_uri && existingLight.source_mtime === lightVariant?.source_mtime) {
+            if (lightVariant && lightVariant.source_uri === darkVariant.source_uri) {
+                lightVariant.clockAlpha = darkVariant.clockAlpha;
+                lightVariant.promptColor = darkVariant.promptColor;
+            } else if (existingLight && existingLight.promptColor && _isPromptColorLive(existingLight.promptColor) &&
+                       existingLight.source_uri === lightVariant?.source_uri && existingLight.source_mtime === lightVariant?.source_mtime) {
                 lightVariant.clockAlpha = existingLight.clockAlpha ?? 0.6;
                 lightVariant.promptColor = existingLight.promptColor;
+            } else if (lightVariant && this._inactivePromptColor && _isPromptColorLive(this._inactivePromptColor)) {
+                // Pre-warmed by extension.js for the inactive URI — use it directly.
+                lightVariant.clockAlpha = this._inactiveClockAlpha ?? null;
+                lightVariant.promptColor = this._inactivePromptColor;
+            } else if (lightVariant) {
+                lightVariant.clockAlpha = null;
+                lightVariant.promptColor = null;
             }
         } else {
             lightVariant.clockAlpha = this._clockAlpha ?? 0.6;
             lightVariant.promptColor = this._promptColor;
-            if (existingDark && existingDark.promptColor && existingDark.source_uri === darkVariant?.source_uri && existingDark.source_mtime === darkVariant?.source_mtime) {
+            if (darkVariant && darkVariant.source_uri === lightVariant.source_uri) {
+                darkVariant.clockAlpha = lightVariant.clockAlpha;
+                darkVariant.promptColor = lightVariant.promptColor;
+            } else if (existingDark && existingDark.promptColor && _isPromptColorLive(existingDark.promptColor) &&
+                       existingDark.source_uri === darkVariant?.source_uri && existingDark.source_mtime === darkVariant?.source_mtime) {
                 darkVariant.clockAlpha = existingDark.clockAlpha ?? 0.6;
                 darkVariant.promptColor = existingDark.promptColor;
+            } else if (darkVariant && this._inactivePromptColor && _isPromptColorLive(this._inactivePromptColor)) {
+                // Pre-warmed by extension.js for the inactive URI — use it directly.
+                darkVariant.clockAlpha = this._inactiveClockAlpha ?? null;
+                darkVariant.promptColor = this._inactivePromptColor;
+            } else if (darkVariant) {
+                darkVariant.clockAlpha = null;
+                darkVariant.promptColor = null;
             }
         }
+
 
         const activeVariant = activeColorScheme === 1 ? darkVariant : lightVariant;
 

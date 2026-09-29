@@ -333,7 +333,7 @@ export class GdmAnimationController {
         this.animateSessionMenuButtonIn();
 
         const selectedUser = this._gdm._dialog._user ? this._gdm._dialog._user.get_user_name() : null;
-        this._gdm._applyWallpaper(selectedUser);
+        this._gdm._applyWallpaper(selectedUser, true, true);
 
         this._gdm._selectedPromptMode = this._gdm._currentWallpaperMetadata?.lockscreenMode === 'wack'
             ? 'wack'

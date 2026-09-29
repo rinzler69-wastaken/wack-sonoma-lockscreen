@@ -87,7 +87,7 @@ export class GdmManager {
                 }
                 this._dialog = Main.screenShield._dialog;
                 this._setup();
-                this._applyWallpaper(null, false, true);
+                this._applyWallpaper();
                 this._restartDialogFadeIn();
             }
             return res;
@@ -97,7 +97,7 @@ export class GdmManager {
         if (existingDialog) {
             this._dialog = existingDialog;
             this._setup();
-            this._applyWallpaper(null, false, true);
+            this._applyWallpaper();
             this._restartDialogFadeIn();
         } else {
             let attempts = 0;
@@ -106,7 +106,7 @@ export class GdmManager {
                 if (dlg && !this._dialog) {
                     this._dialog = dlg;
                     this._setup();
-                    this._applyWallpaper(null, false, true);
+                    this._applyWallpaper();
                     this._restartDialogFadeIn();
                     this._findDialogTimeoutId = null;
                     return GLib.SOURCE_REMOVE;
@@ -875,7 +875,7 @@ export class GdmManager {
     _updateLockscreenMessage(metadata = null) { this._messageManager.update(metadata); }
 
     _setPromptBackgroundBlur(active, animate = true) { this._wallpaperManager.setPromptBackgroundBlur(active, animate); }
-    _applyWallpaper(userName = null, animate = true, syncColorScheme = true) { this._wallpaperManager.applyWallpaper(userName, animate, syncColorScheme); }
+    _applyWallpaper(userName = null, animate = true, isExplicitSelection = false) { this._wallpaperManager.applyWallpaper(userName, animate, isExplicitSelection); }
 
     _positionClock(dialogBox = null) { this._clockManager.positionClock(dialogBox); }
     _positionUserList(dialogBox = null) { this._userListManager.positionUserList(dialogBox); }

@@ -599,14 +599,6 @@ export class GdmPromptStyling {
         if (!theme)
             return;
 
-        // The palette for this variant is still being asynchronously sampled
-        // (_drainOne is queued).  Preserve whatever vibrancy is currently
-        // displayed rather than destructively clearing it to bare CSS defaults.
-        // _onChanged will fire again once _drainOne writes the resolved palette,
-        // at which point pendingPalette is false and styling proceeds normally.
-        if (theme.pendingPalette)
-            return;
-
         const authPrompt = this._gdm._dialog ? this._gdm._dialog._authPrompt : null;
         const entry = authPrompt ? this.findPromptEntry(authPrompt) : null;
         const cancelButton = authPrompt ? (authPrompt.cancelButton || authPrompt._cancelButton) : null;
@@ -663,8 +655,8 @@ export class GdmPromptStyling {
             this.applySessionButtonBackground(sessionButton, sessionColorToApply);
         }
 
-        if (theme.clockAlpha != null || promptColor != null) {
-            this.updatePromptMessageStyle(promptColor, theme.clockAlpha);
+        if (theme.clockAlpha != null) {
+            this.updatePromptMessageStyle(null, theme.clockAlpha);
         }
     }
 

@@ -430,11 +430,16 @@ export default class WackLockscreenClockExtension extends Extension {
         const customWallpaperEnabled = this._settings?.get_boolean('lockscreen-wallpaper-enable') ?? false;
         const customWallpaperPath = this._settings?.get_string('lockscreen-wallpaper-path') ?? '';
         let uri;
+        let inactiveUri;
         if (customWallpaperEnabled && customWallpaperPath && Gio.File.new_for_path(customWallpaperPath).query_exists(null)) {
             uri = customWallpaperPath.startsWith('file://') ? customWallpaperPath : `file://${customWallpaperPath}`;
+            inactiveUri = uri; // custom wallpaper is the same for both variants
         } else {
             uri = this._bgSettings.get_string(
                 colorScheme === 1 ? 'picture-uri-dark' : 'picture-uri'
+            );
+            inactiveUri = this._bgSettings.get_string(
+                colorScheme === 1 ? 'picture-uri' : 'picture-uri-dark'
             );
         }
 
@@ -596,10 +601,22 @@ export default class WackLockscreenClockExtension extends Extension {
             });
         }
 
+        // For ACRYLIC vibrancy, the inactive Light/Dark variant needs its PNG pre-generated
+        // in the user session so the cross-session manifest can publish a complete
+        // presentation package for both variants before GDM is entered.
+        // Reuse the same prompt/UI bounds — the chip region is identical regardless
+        // of which wallpaper is displayed.
+        const hasDistinctInactive = !isColor && inactiveUri && inactiveUri !== uri;
+        const inactiveWallpaperParams = hasDistinctInactive
+            ? { ...wallpaperParams, uri: inactiveUri }
+            : null;
+
         try {
-            const [alpha, promptColor] = await Promise.all([
+            const [alpha, promptColor, inactiveAlpha, inactivePromptColor] = await Promise.all([
                 getWallpaperAlpha({ ...wallpaperParams, textLuminance }),
                 getWallpaperPromptColor(wallpaperParams),
+                inactiveWallpaperParams ? getWallpaperAlpha({ ...inactiveWallpaperParams, textLuminance }) : Promise.resolve(null),
+                inactiveWallpaperParams ? getWallpaperPromptColor(inactiveWallpaperParams) : Promise.resolve(null),
             ]);
 
             if (seq !== this._wallpaperUpdateSeq)
@@ -615,7 +632,7 @@ export default class WackLockscreenClockExtension extends Extension {
 
             // <GDM_EXCLUDE>
             if (this._crossSessionManager)
-                this._crossSessionManager.setClockAlphaAndPromptColor(alpha, promptColor);
+                this._crossSessionManager.setClockAlphaAndPromptColor(alpha, promptColor, inactiveAlpha, inactivePromptColor);
             // </GDM_EXCLUDE>
 
             if (this._cupertinoPromptManager?.restPrompt?.updateVisuals) {
