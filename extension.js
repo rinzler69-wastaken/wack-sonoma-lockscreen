@@ -131,11 +131,6 @@ export default class WackLockscreenClockExtension extends Extension {
 
         this._themeManager.applyUserTheme();
 
-        if (Main.panel?.statusArea?.dateMenu?.container) {
-            this._wasDateMenuVisible = Main.panel.statusArea.dateMenu.container.visible;
-            Main.panel.statusArea.dateMenu.container.hide();
-        }
-
         this._dialog = dialog;
         this._originalClock = dialog._clock;
         this._injectionManager = new InjectionManager();
@@ -622,7 +617,7 @@ export default class WackLockscreenClockExtension extends Extension {
             if (seq !== this._wallpaperUpdateSeq)
                 return;
 
-            _log(`[WACK/Extension] _updateClockAlphaAndPromptColor - uri: ${uri}, promptColor: ${JSON.stringify(promptColor)}, alpha: ${alpha}, yCenterFraction: ${yCenterFraction}`);
+            _log(`[WACK/Extension] _updateClockAlphaAndPromptColor - uri: ${uri}, alpha: ${alpha}, yCenterFraction: ${yCenterFraction}`);
 
             if (dialog?._clock)
                 dialog._clock.setWallpaperAlpha(alpha, promptColor);
@@ -896,11 +891,6 @@ export default class WackLockscreenClockExtension extends Extension {
         if (this._unblankManager) {
             this._unblankManager.destroy();
             this._unblankManager = null;
-        }
-
-        if (Main.panel?.statusArea?.dateMenu?.container) {
-            if (this._wasDateMenuVisible) Main.panel.statusArea.dateMenu.container.show();
-            this._wasDateMenuVisible = null;
         }
 
         if (this._idleSources) {

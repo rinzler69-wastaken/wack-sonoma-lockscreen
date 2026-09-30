@@ -2,7 +2,7 @@ UUID = wack-lockscreen-clock@rinzler69-wastaken.github.com
 DEST = $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 EXCLUDES = --exclude=".git*" --exclude="*.zip" --exclude="*.bak" --exclude="checkthisthingblyat" --exclude="scripts" --exclude="crossSessionManager.js" --exclude="pro.js" --exclude="src/pro*"
 
-.PHONY: install enable pack compile-po deploy-schema install-gdm uninstall-gdm
+.PHONY: install enable pack poke compile-po deploy-schema install-gdm uninstall-gdm
 
 compile-po: ## Compile all .po files to .mo binaries in locale/
 	@python3 po/generate.py
@@ -32,12 +32,15 @@ pack: compile-po ## Create a ZIP package for Extensions.gnome.org
 	@sed -i -e "s|font-family: 'SF Pro Display';|/* font-family: 'SF Pro Display'; */|g" -e "s|font-family: '\.SF Soft Numeric';|/* font-family: '.SF Soft Numeric'; */|g" stylesheet.css
 	@cp metadata.json metadata.json.bak
 	@python3 -c "import json; d=json.load(open('metadata.json')); d['session-modes'] = [m for m in d.get('session-modes', []) if m != 'gdm']; d['version-name'] = str(d.get('version-name', '')).replace(' PRO', '').replace('PRO', '').strip(); json.dump(d, open('metadata.json','w'), indent=2)"
-	@python3 -c "import glob, os, re; [open(f + '.bak', 'w').write(open(f).read()) or open(f, 'w').write(re.sub(r'//\s*<GDM_EXCLUDE>.*?//\s*</GDM_EXCLUDE>', '', open(f + '.bak').read(), flags=re.DOTALL)) for f in glob.glob('**/*.js', recursive=True) if not f.endswith('.bak') and '<GDM_EXCLUDE>' in open(f).read()]"
+	@python3 -c "import glob, re; [open(f + '.bak', 'w').write(c) and None or open(f, 'w').write(re.sub(r'//\s*<GDM_EXCLUDE>.*?//\s*</GDM_EXCLUDE>', '', c, flags=re.DOTALL)) for f in glob.glob('**/*.js', recursive=True) if not f.endswith('.bak') for c in [open(f).read()] if '<GDM_EXCLUDE>' in c]"
 	@zip -qr $(UUID).zip *.js src/main src/prefs metadata.json stylesheet.css LICENSE schemas locale -x "schemas/gschemas.compiled" -x "po/generate.py" -x "scripts/*" -x "crossSessionManager.js" -x "pro.js" -x "src/pro/*" -x "*.bak"
 	@python3 -c "import glob, os; [os.replace(f, f[:-4]) for f in glob.glob('**/*.js.bak', recursive=True)]"
 	@mv stylesheet.css.bak stylesheet.css
 	@mv metadata.json.bak metadata.json
 	@printf 'Created package: %s\n' "$(UUID).zip"
+
+poke: pack ## Verify that the packaged EGO ZIP contains zero GDM-only code or markers
+	@python3 scripts/poke-ego-artifact.py $(UUID).zip
 
 install-gdm: ## Install GDM expansion DLC system-wide
 	@bash scripts/install-gdm-dlc.sh

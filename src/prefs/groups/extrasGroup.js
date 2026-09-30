@@ -1,8 +1,11 @@
 import GLib from 'gi://GLib';
-import Gdk from 'gi://Gdk';
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
-import { isWackShellInstalled, getGdmStatus, flushWackCache } from '../prefsUtils.js';
+import { isWackShellInstalled, flushWackCache } from '../prefsUtils.js';
+
+// <GDM_EXCLUDE>
+import { getGdmStatus } from '../prefsUtils.js';
+// </GDM_EXCLUDE>
 
 export function buildExtrasGroup(extensionPreferences, window, _) {
     const extrasGroup = new Adw.PreferencesGroup({
@@ -30,25 +33,21 @@ export function buildExtrasGroup(extensionPreferences, window, _) {
         gdmExpander.add_suffix(gdmStatusLabel);
 
         const uninstallRow = new Adw.ActionRow({
-            title: _('GDM Expansion - Remove'),
-            subtitle: _('Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal.'),
+            title: _('GDM Expansion Documentation'),
+            subtitle: _('Revert GDM login screen layout to GNOME Default. See repository instructions.'),
         });
 
-        const copyBtn = new Gtk.Button({
-            icon_name: 'edit-copy-symbolic',
-            tooltip_text: _('Copy uninstall command to clipboard'),
+        const linkBtn = new Gtk.Button({
+            icon_name: 'adw-external-link-symbolic',
+            tooltip_text: _('Open repository documentation'),
             css_classes: ['flat'],
             valign: Gtk.Align.CENTER,
         });
-        copyBtn.connect('clicked', () => {
-            const clipboard = Gdk.Display.get_default().get_clipboard();
-            clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/uninstall-gdm-dlc.sh | bash');
-            window.add_toast(new Adw.Toast({
-                title: _('Copied uninstall command to clipboard!'),
-            }));
+        linkBtn.connect('clicked', () => {
+            Gtk.show_uri(window, 'https://github.com/rinzler69-wastaken/wack-sonoma-lockscreen', GLib.CURRENT_TIME);
         });
 
-        uninstallRow.add_suffix(copyBtn);
+        uninstallRow.add_suffix(linkBtn);
         gdmExpander.add_row(uninstallRow);
         extrasGroup.add(gdmExpander);
     } else {
@@ -78,25 +77,21 @@ export function buildExtrasGroup(extensionPreferences, window, _) {
         gdmExpander.add_suffix(gdmStatusLabel);
 
         const installRow = new Adw.ActionRow({
-            title: _('Enable GDM DLC Support'),
-            subtitle: _('Click icon to copy installer command, then run it in a terminal.'),
+            title: _('GDM DLC Documentation'),
+            subtitle: _('Visit the repository to view setup and installation documentation.'),
         });
 
-        const copyInstallBtn = new Gtk.Button({
-            icon_name: 'edit-copy-symbolic',
-            tooltip_text: _('Copy install command to clipboard'),
+        const linkInstallBtn = new Gtk.Button({
+            icon_name: 'adw-external-link-symbolic',
+            tooltip_text: _('Open repository documentation'),
             css_classes: ['flat'],
             valign: Gtk.Align.CENTER,
         });
-        copyInstallBtn.connect('clicked', () => {
-            const clipboard = Gdk.Display.get_default().get_clipboard();
-            clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-gdm-dlc.sh | bash');
-            window.add_toast(new Adw.Toast({
-                title: _('Copied install command to clipboard!'),
-            }));
+        linkInstallBtn.connect('clicked', () => {
+            Gtk.show_uri(window, 'https://github.com/rinzler69-wastaken/wack-sonoma-lockscreen', GLib.CURRENT_TIME);
         });
 
-        installRow.add_suffix(copyInstallBtn);
+        installRow.add_suffix(linkInstallBtn);
         gdmExpander.add_row(installRow);
         extrasGroup.add(gdmExpander);
     }
@@ -136,53 +131,12 @@ export function buildExtrasGroup(extensionPreferences, window, _) {
         wackShellExpander.add_suffix(wackShellStatusLabel);
 
         const checkUpdatesRow = new Adw.ActionRow({
-            title: _('WACK Shell - Check for Updates'),
-            subtitle: _('Copy check command to verify if a newer version of WACK Shell is available.'),
-        });
-
-        const checkBtn = new Gtk.Button({
-            icon_name: 'edit-copy-symbolic',
-            tooltip_text: _('Copy update-check command to clipboard'),
-            css_classes: ['flat'],
-            valign: Gtk.Align.CENTER,
-        });
-        checkBtn.connect('clicked', () => {
-            const clipboard = Gdk.Display.get_default().get_clipboard();
-            clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken.github.com/wack-sonoma-lockscreen/main/scripts/install-wack-shell.sh | bash -s -- --check');
-            window.add_toast(new Adw.Toast({
-                title: _('Copied WACK Shell update-check command to clipboard!'),
-            }));
-        });
-
-        checkUpdatesRow.add_suffix(checkBtn);
-        wackShellExpander.add_row(checkUpdatesRow);
-    } else {
-        wackShellExpander.subtitle = _('Not installed. Install WACK Shell to unlock transition effects.');
-        wackShellStatusLabel.label = _('Not Installed');
-        wackShellStatusLabel.add_css_class('error');
-        wackShellExpander.add_suffix(wackShellStatusLabel);
-
-        const installShellRow = new Adw.ActionRow({
-            title: _('WACK Shell - Install'),
-            subtitle: _('Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found.'),
-        });
-
-        const copyBtn = new Gtk.Button({
-            icon_name: 'edit-copy-symbolic',
-            tooltip_text: _('Copy install command to clipboard'),
-            css_classes: ['flat'],
-            valign: Gtk.Align.CENTER,
-        });
-        copyBtn.connect('clicked', () => {
-            const clipboard = Gdk.Display.get_default().get_clipboard();
-            clipboard.set('curl -sSL https://raw.githubusercontent.com/rinzler69-wastaken/wack-sonoma-lockscreen/main/scripts/install-wack-shell.sh | bash');
-            window.add_toast(new Adw.Toast({
-                title: _('Copied WACK Shell install command to clipboard!'),
-            }));
+            title: _('WACK Shell Repository'),
+            subtitle: _('Open the WACK Shell repository for documentation and updates.'),
         });
 
         const linkBtn = new Gtk.Button({
-            icon_name: 'web-browser-symbolic',
+            icon_name: 'adw-external-link-symbolic',
             tooltip_text: _('Open WACK Shell repository'),
             css_classes: ['flat'],
             valign: Gtk.Align.CENTER,
@@ -191,7 +145,29 @@ export function buildExtrasGroup(extensionPreferences, window, _) {
             Gtk.show_uri(window, 'https://github.com/rinzler69-wastaken/wack-shell', GLib.CURRENT_TIME);
         });
 
-        installShellRow.add_suffix(copyBtn);
+        checkUpdatesRow.add_suffix(linkBtn);
+        wackShellExpander.add_row(checkUpdatesRow);
+    } else {
+        wackShellExpander.subtitle = _('Not installed. Install WACK Shell to unlock transition effects.');
+        wackShellStatusLabel.label = _('Not Installed');
+        wackShellStatusLabel.add_css_class('error');
+        wackShellExpander.add_suffix(wackShellStatusLabel);
+
+        const installShellRow = new Adw.ActionRow({
+            title: _('WACK Shell Repository'),
+            subtitle: _('Visit the repository to view installation instructions and release packages.'),
+        });
+
+        const linkBtn = new Gtk.Button({
+            icon_name: 'adw-external-link-symbolic',
+            tooltip_text: _('Open WACK Shell repository'),
+            css_classes: ['flat'],
+            valign: Gtk.Align.CENTER,
+        });
+        linkBtn.connect('clicked', () => {
+            Gtk.show_uri(window, 'https://github.com/rinzler69-wastaken/wack-shell', GLib.CURRENT_TIME);
+        });
+
         installShellRow.add_suffix(linkBtn);
         wackShellExpander.add_row(installShellRow);
     }

@@ -44,40 +44,10 @@ export class PromptStyling {
         const authPrompt = dialog._authPrompt ?? dialog._promptBox?._authPrompt;
         const entry = this.findPromptEntry(authPrompt);
         if (entry && entry.clutter_text) {
-            entry.clutter_text.cursor_blink = (this._extension._cursorBlink !== false);
-            entry.clutter_text.cursor_visible = true;
+            const shouldBlink = (this._extension._cursorBlink !== false);
+            entry.clutter_text.cursor_blink = shouldBlink;
+            entry.clutter_text.cursor_visible = shouldBlink;
         }
-
-        if (this._extension._cursorBlink === false)
-            return;
-
-        let visible = true;
-        this.cursorBlinkTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
-            const currentDialog = this._extension._dialog;
-            if (!currentDialog || !this._extension._promptActive) {
-                this.cursorBlinkTimeoutId = null;
-                return GLib.SOURCE_REMOVE;
-            }
-
-            const currentAuthPrompt = currentDialog._authPrompt ?? currentDialog._promptBox?._authPrompt;
-            if (!currentAuthPrompt) {
-                return GLib.SOURCE_CONTINUE;
-            }
-
-            const currentEntry = this.findPromptEntry(currentAuthPrompt);
-            if (!currentEntry || !currentEntry.clutter_text) {
-                return GLib.SOURCE_CONTINUE;
-            }
-
-            if (!currentEntry.clutter_text.has_key_focus()) {
-                currentEntry.clutter_text.cursor_visible = false;
-                return GLib.SOURCE_CONTINUE;
-            }
-
-            visible = !visible;
-            currentEntry.clutter_text.cursor_visible = visible;
-            return GLib.SOURCE_CONTINUE;
-        });
     }
 
     stopCursorBlink() {
@@ -594,7 +564,6 @@ export class PromptStyling {
     }
 
     onAuthPromptAllocation() {
-        _log(`[WACK/Extension] onAuthPromptAllocation() called. promptActive=${this._extension._promptActive}`);
         if (!this._extension._promptActor || !this._extension._promptActor.has_style_class_name('wack-cupertino-prompt'))
             return;
 

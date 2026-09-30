@@ -105,7 +105,6 @@ export function getPrettyDate(style = 'full', wallClock = null, explicitLocale =
                 if (datePart)
                     return datePart;
             } catch {
-                // Fallback if WallClock failed
             }
         }
 
@@ -116,7 +115,6 @@ export function getPrettyDate(style = 'full', wallClock = null, explicitLocale =
             if (trimmed)
                 return trimmed;
         } catch {
-            // Fallback to Intl if GLib failed
         }
 
         try {

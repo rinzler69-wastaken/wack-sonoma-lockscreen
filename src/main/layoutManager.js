@@ -2,10 +2,9 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import { CUPERTINO_PROMPT_VERTICAL_FRACTION } from './constants.js';
 
-// Extracted magic numbers for clarity and easy tweaking
-const NOTIF_MIN_TOP_MARGIN_FRACTION = 0.1; // Was: height / 10.0
+const NOTIF_MIN_TOP_MARGIN_FRACTION = 0.1;
 const MESSAGE_PROMPT_GAP = 48;
-const SWITCH_USER_MARGIN = 24; // Logical pixels for switch user button spacing
+const SWITCH_USER_MARGIN = 24;
 
 export const WackLayout = GObject.registerClass(
 class WackLayout extends Clutter.LayoutManager {
@@ -29,11 +28,10 @@ class WackLayout extends Clutter.LayoutManager {
     vfunc_allocate(container, box) {
         const [width, height] = box.get_size();
         
-        // 1. Get natural sizes safely
         const [, , stackWidth, stackHeight] = this._stack.get_preferred_size();
         const [, , notifWidth, notifHeight] = this._notifications.get_preferred_size();
 
-        // 2. Allocate Notifications (independent width, prevents auth prompt stretching)
+        // Allocate notifications with independent width to prevent auth prompt stretching
         const notifBox = new Clutter.ActorBox();
         const maxNotifHeight = Math.min(notifHeight, height - (height * NOTIF_MIN_TOP_MARGIN_FRACTION) - stackHeight);
         
@@ -43,14 +41,12 @@ class WackLayout extends Clutter.LayoutManager {
         notifBox.y2 = notifBox.y1 + maxNotifHeight;
         this._notifications.allocate(notifBox);
 
-        // 3. Allocate Stack (Auth Prompt)
+        // Allocate authentication prompt stack
         const stackBox = new Clutter.ActorBox();
         let stackY;
 
         if (this._extension._lockscreenMode === 'cupertino') {
-            // FAIL-SAFE DUMMY MEASUREMENT: 
-            // Prefer allocated height (cheap & safe). Fallback to preferred_size. 
-            // Ultimate fallback to stackHeight to prevent NaN/0 layout jumps.
+            // Anchor well height to allocation or preferred size with stack fallback
             const restPrompt = this._extension._cupertinoRestPrompt;
             const userWell = restPrompt?._userWell;
             
@@ -99,7 +95,7 @@ class WackLayout extends Clutter.LayoutManager {
             }
         }
 
-        // 4. Allocate Switch User Button (if visible and exists)
+        // Allocate switch user button if present
         if (this._switchUserButton?.visible) {
             const [, , natWidth, natHeight] = this._switchUserButton.get_preferred_size();
             const switchBox = new Clutter.ActorBox();

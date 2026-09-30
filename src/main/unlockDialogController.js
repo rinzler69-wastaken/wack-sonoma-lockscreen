@@ -48,7 +48,7 @@ export class UnlockDialogController {
     }
 
     install(dialog, lockDialogGroup) {
-        // 1. AuthPrompt lifecycle & PAM message intercept
+        // AuthPrompt lifecycle & PAM message intercept
         if (dialog._ensureAuthPrompt) {
             this.origEnsureAuthPrompt = dialog._ensureAuthPrompt.bind(dialog);
             dialog._ensureAuthPrompt = () => {
@@ -63,7 +63,7 @@ export class UnlockDialogController {
             this._setupAuthPrompt(dialog._authPrompt);
         }
 
-        // 2. Background Effects Override
+        // Background effects override
         if (dialog._updateBackgroundEffects) {
             this.origUpdateBgEffects = dialog._updateBackgroundEffects.bind(dialog);
             dialog._updateBackgroundEffects = () => {
@@ -78,7 +78,7 @@ export class UnlockDialogController {
             dialog._updateBackgroundEffects();
         }
 
-        // 2. User Switch Visibility Override
+        // User switch visibility override
         this.origUpdateUserSwitchVisibility = dialog._updateUserSwitchVisibility.bind(dialog);
         dialog._updateUserSwitchVisibility = () => {
             this.origUpdateUserSwitchVisibility();
@@ -88,7 +88,7 @@ export class UnlockDialogController {
         };
         dialog._updateUserSwitchVisibility();
 
-        // 3. Finish Intercept for Cupertino Fade-out
+        // Finish intercept for Cupertino fade-out
         this.origFinish = dialog.finish.bind(dialog);
         dialog.finish = (onComplete) => {
             const isCupertino = this._extension._lockscreenMode === 'cupertino';
@@ -123,9 +123,12 @@ export class UnlockDialogController {
                     }
 
                     if (capturedSnapshots.length > 0) {
+                        const stageWidth = global.stage.width;
+                        const stageHeight = global.stage.height;
+
                         this.windowFadeContainer = new Clutter.Actor({
-                            width: global.screen_width,
-                            height: global.screen_height,
+                            width: stageWidth,
+                            height: stageHeight,
                         });
 
                         lockDialogGroup.add_child(this.windowFadeContainer);
@@ -144,8 +147,8 @@ export class UnlockDialogController {
 
                             const w = Math.max(1, snapshot.rect.width);
                             const h = Math.max(1, snapshot.rect.height);
-                            const pivotX = (global.screen_width / 2 - snapshot.rect.x) / w;
-                            const pivotY = (global.screen_height / 2 - snapshot.rect.y) / h;
+                            const pivotX = (stageWidth / 2 - snapshot.rect.x) / w;
+                            const pivotY = (stageHeight / 2 - snapshot.rect.y) / h;
                             actor.set_pivot_point(pivotX, pivotY);
 
                             actor.scale_x = 0.92;
@@ -225,7 +228,7 @@ export class UnlockDialogController {
             }
         };
 
-        // 4. NotificationsBox changes tracking
+        // NotificationsBox changes tracking
         if (dialog._notificationsBox) {
             dialog._notificationsBox.connectObject(
                 'notify::height', () => {
@@ -244,7 +247,7 @@ export class UnlockDialogController {
             );
         }
 
-        // 6. Core Transition Logic Intercept
+        // Core transition logic intercept
         this.origSetTransitionProgress = dialog._setTransitionProgress.bind(dialog);
         dialog._setTransitionProgress = (progress) => {
             this.origSetTransitionProgress(progress);

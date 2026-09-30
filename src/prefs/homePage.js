@@ -47,24 +47,12 @@ export function buildHomePage(extensionPreferences, window, _) {
     });
     homeBox.append(descriptionLabel);
 
-    let versionName = extensionPreferences.metadata['version-name'] || extensionPreferences.metadata.version || '';
-    if (!versionName && extensionPreferences.dir) {
-        try {
-            const file = extensionPreferences.dir.get_child('metadata.json');
-            const [, contents] = file.load_contents(null);
-            const decoder = new TextDecoder('utf-8');
-            const parsedMetadata = JSON.parse(decoder.decode(contents));
-            versionName = parsedMetadata['version-name'] || parsedMetadata.version || '';
-        } catch (e) {
-            console.error('Failed to parse metadata.json:', e);
-        }
-    }
-
-    versionName = String(versionName);
+    const rawVersion = extensionPreferences.metadata?.['version-name'] ?? extensionPreferences.metadata?.version ?? '2.1.0';
+    const versionName = String(rawVersion);
 
     const versionLabel = versionName
         ? (versionName.startsWith('v') ? versionName : `v${versionName}`)
-        : 'v1.1.0';
+        : 'v2.1.0';
 
     const versionButton = new Gtk.Button({
         label: versionLabel,
@@ -109,20 +97,9 @@ export function buildHomePage(extensionPreferences, window, _) {
         description: _('Consider supporting its development!'),
     });
 
-    let donations = extensionPreferences.metadata.donations;
-    if (!donations && extensionPreferences.dir) {
-        try {
-            const file = extensionPreferences.dir.get_child('metadata.json');
-            const [, contents] = file.load_contents(null);
-            const decoder = new TextDecoder('utf-8');
-            donations = JSON.parse(decoder.decode(contents)).donations;
-        } catch (e) {
-            console.error('Failed to parse metadata.json:', e);
-        }
-    }
-    donations = donations || {
+    const donations = extensionPreferences.metadata?.donations ?? {
         kofi: 'mikerinzler69',
-        custom: 'https://saweria.co/rinzler69'
+        custom: 'https://saweria.co/rinzler69',
     };
 
     const kofiRow = new Adw.ActionRow({
