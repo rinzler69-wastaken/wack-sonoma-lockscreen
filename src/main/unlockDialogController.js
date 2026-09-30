@@ -99,17 +99,7 @@ export class UnlockDialogController {
 
                 const panel = Main.panel;
                 if (panel) {
-                    // The panel sits above the screen shield, so blanking it (or hiding
-                    // it) is visible and reads as a flicker. Slide it out of view
-                    // instead: that is recognisable motion, and it also hides the panel
-                    // restyle below, which only happens once the panel is off-screen.
-                    panel.remove_all_transitions();
-                    panel.opacity = 255;
-                    panel.ease({
-                        translation_y: -(panel.height || 60),
-                        duration: CUPERTINO_UNLOCK_PANEL_FADE,
-                        mode: Clutter.AnimationMode.EASE_IN_QUAD,
-                    });
+                    panel.ease({ opacity: 0, duration: CUPERTINO_UNLOCK_PANEL_FADE, mode: Clutter.AnimationMode.EASE_OUT_QUAD });
                 }
 
                 if (this.finishTimeoutId) {
@@ -127,15 +117,9 @@ export class UnlockDialogController {
                     if (panel) {
                         panel.remove_all_transitions();
                         const panelHeight = panel.height || 60;
-                        // Parked exactly off-screen, so the style change above was not
-                        // visible; now slide back in with the freshly applied look.
                         panel.translation_y = -panelHeight;
                         panel.opacity = 255;
-                        panel.ease({
-                            translation_y: 0,
-                            duration: Math.max(120, duration - CUPERTINO_UNLOCK_TSO_DELAY),
-                            mode,
-                        });
+                        panel.ease({ translation_y: 0, duration, mode });
                     }
 
                     if (capturedSnapshots.length > 0) {
