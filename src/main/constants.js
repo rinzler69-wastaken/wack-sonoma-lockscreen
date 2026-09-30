@@ -63,8 +63,8 @@ export { CUPERTINO_PROMPT_WHITE_BLEND_ALPHA } from './colorUtils.js';
 export const MAX_VISIBLE_CARDS = 3; // Maximum number of notification cards to show simultaneously
 
 // Cupertino unlock transition timings
-export const CUPERTINO_UNLOCK_PANEL_FADE = 150;  // ms — panel slides out before the override fires (0 blanks it in one frame)
-export const CUPERTINO_UNLOCK_TSO_DELAY = 150;   // ms — wait after the panel leaves before session mode override + slide-in
+export const CUPERTINO_UNLOCK_PANEL_FADE = 0;  // ms — panel fades out before the override fires
+export const CUPERTINO_UNLOCK_TSO_DELAY = 0;   // ms — wait after panel fade before session mode override + slide-in
 export const CUPERTINO_UNLOCK_FADE_DURATION = 400; // ms — duration of the actors fade-out + panel slide-in
 
 // Crossfade speed presets (ms) for the unlock transition
