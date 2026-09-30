@@ -56,6 +56,16 @@ const PREFIX = 'wack-shared-wallpaper-';
 const SLIDE_STEPS = 16;
 const MAX_WARM_STACKS = 4;
 
+export const CURRENT_MANIFEST_VERSION = 1;
+
+export function isManifestVersionSupported(meta) {
+    if (!meta || typeof meta !== 'object')
+        return false;
+    if (meta.__manifest_version__ === undefined)
+        return true;
+    return meta.__manifest_version__ === CURRENT_MANIFEST_VERSION;
+}
+
 const isSolidMode = mode => mode === 'tonal' || mode === 'less';
 
 export class GdmThemeStore {
@@ -91,11 +101,12 @@ export class GdmThemeStore {
             this._onColorSchemeChanged();
         }, this);
 
-        try {
-            St.Settings.get().connectObject('notify::color-scheme', () => {
+        this._stSettings = St.Settings.get();
+        if (this._stSettings) {
+            this._stSettings.connectObject('notify::color-scheme', () => {
                 this._onColorSchemeChanged();
             }, this);
-        } catch (_) {}
+        }
 
         const monitor = Main.layoutManager?.primaryMonitor;
         const monitorWidth = monitor ? monitor.width : 1920;
@@ -204,6 +215,10 @@ export class GdmThemeStore {
             const [ok, contents] = metaFile.load_contents(null);
             if (!ok) return;
             const meta = JSON.parse(new TextDecoder().decode(contents));
+            if (!isManifestVersionSupported(meta)) {
+                _log(`[WACK/ThemeStore] Unsupported manifest version ${meta.__manifest_version__} for user ${userName} (expected ${CURRENT_MANIFEST_VERSION}), skipping`);
+                return;
+            }
             let xmlText = meta.slideshow_xml_text || null;
             if (!xmlText && meta.source_uri && (meta.source_uri.endsWith('.xml') || meta.source_uri.endsWith('.xml.in'))) {
                 try {
@@ -245,6 +260,10 @@ export class GdmThemeStore {
         try {
             const [bytes] = await loadContentsAsync(metaFile, this._cancellable);
             meta = JSON.parse(new TextDecoder().decode(bytes));
+            if (!isManifestVersionSupported(meta)) {
+                _log(`[WACK/ThemeStore] Unsupported manifest version ${meta.__manifest_version__} for user ${userName} (expected ${CURRENT_MANIFEST_VERSION}), skipping`);
+                return;
+            }
             xmlText = await this._readSlideXml(meta);
         } catch (e) {
             if (!this._cancellable.is_cancelled())
@@ -701,9 +720,10 @@ export class GdmThemeStore {
             this._interfaceSettings.disconnectObject(this);
             this._interfaceSettings = null;
         }
-        try {
-            St.Settings.get().disconnectObject(this);
-        } catch (_) {}
+        if (this._stSettings) {
+            this._stSettings.disconnectObject(this);
+            this._stSettings = null;
+        }
         this._themes.clear();
         this._paletteCache.clear();
         this._pending = [];

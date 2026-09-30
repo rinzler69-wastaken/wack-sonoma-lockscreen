@@ -444,6 +444,119 @@ const legacyMeta = {
 const resolvedLegacy = resolveVariant(legacyMeta, 1);
 assert(resolvedLegacy.uri === legacyMeta.uri, 'Legacy metadata without variants gracefully falls back to root fields');
 
+// 10. Test Manifest Schema Versioning & Compatibility Gate
+print('\n[10] Testing Cross-Session Manifest Schema Versioning & Compatibility:');
+
+const CURRENT_MANIFEST_VERSION = 1;
+
+function isManifestVersionSupported(meta) {
+    if (!meta || typeof meta !== 'object')
+        return false;
+    if (meta.__manifest_version__ === undefined)
+        return true;
+    return meta.__manifest_version__ === CURRENT_MANIFEST_VERSION;
+}
+
+// 1. Version 1 manifest is accepted
+const v1Manifest = {
+    __manifest_version__: 1,
+    username: 'alice',
+    uri: 'file:///var/tmp/wack/shared/wack-shared-wallpaper-alice-dark.jpg',
+};
+assert(isManifestVersionSupported(v1Manifest) === true, 'Version 1 manifest is accepted');
+
+// 2. Missing version is accepted (legacy unversioned manifest)
+const legacyUnversionedManifest = {
+    username: 'bob',
+    uri: 'file:///var/tmp/wack/shared/wack-shared-wallpaper-bob.jpg',
+};
+assert(isManifestVersionSupported(legacyUnversionedManifest) === true, 'Missing __manifest_version__ (legacy) is accepted');
+assert(isManifestVersionSupported({ ...legacyUnversionedManifest, __manifest_version__: undefined }) === true, 'Undefined __manifest_version__ is accepted');
+
+// 3. Unsupported version is rejected
+const futureV2Manifest = {
+    __manifest_version__: 2,
+    username: 'charlie',
+    uri: 'file:///var/tmp/wack/shared/wack-shared-wallpaper-charlie-v2.jpg',
+};
+const unsupportedVersionManifest = {
+    __manifest_version__: 99,
+    username: 'charlie',
+};
+const nonNumberVersionManifest = {
+    __manifest_version__: '1',
+    username: 'charlie',
+};
+assert(isManifestVersionSupported(futureV2Manifest) === false, 'Future version 2 manifest is rejected');
+assert(isManifestVersionSupported(unsupportedVersionManifest) === false, 'Unsupported version 99 manifest is rejected');
+assert(isManifestVersionSupported(nonNumberVersionManifest) === false, 'Non-matching type version manifest is rejected');
+
+// Minimal ThemeStore model to verify store state retention across sync/async paths
+class MockGdmThemeStore {
+    constructor() {
+        this.themes = new Map();
+        this.changedCount = 0;
+    }
+
+    _install(userName, meta, xmlText) {
+        this.themes.set(userName, { meta, xmlText });
+    }
+
+    _onChanged(userName) {
+        this.changedCount++;
+    }
+
+    loadUserSync(userName, meta) {
+        if (!meta) return;
+        if (!isManifestVersionSupported(meta))
+            return;
+        const effectiveName = meta.username || userName;
+        this._install(effectiveName, meta, null);
+    }
+
+    async loadUser(userName, meta) {
+        if (!meta) return;
+        if (!isManifestVersionSupported(meta))
+            return;
+        const effectiveName = meta.username || userName;
+        this._install(effectiveName, meta, null);
+        this._onChanged(effectiveName);
+    }
+}
+
+// 4. Rejection does not replace an existing valid presentation
+const store = new MockGdmThemeStore();
+store.loadUserSync('alice', v1Manifest);
+assert(store.themes.get('alice')?.meta?.uri === v1Manifest.uri, 'Initial valid presentation installed');
+
+// Attempt sync load of unsupported version
+store.loadUserSync('alice', futureV2Manifest);
+assert(store.themes.get('alice')?.meta?.uri === v1Manifest.uri, 'Sync load of unsupported version leaves existing valid presentation untouched');
+
+// Attempt async load of unsupported version
+await store.loadUser('alice', futureV2Manifest);
+assert(store.themes.get('alice')?.meta?.uri === v1Manifest.uri, 'Async load of unsupported version leaves existing valid presentation untouched');
+assert(store.changedCount === 0, 'No change notification fired on rejected manifest');
+
+// 5. Both synchronous and asynchronous manifest loading paths apply the same rule
+const syncStore = new MockGdmThemeStore();
+const asyncStore = new MockGdmThemeStore();
+
+// Test both paths with legacy unversioned
+syncStore.loadUserSync('bob', legacyUnversionedManifest);
+await asyncStore.loadUser('bob', legacyUnversionedManifest);
+assert(syncStore.themes.has('bob') && asyncStore.themes.has('bob'), 'Both sync and async paths accept legacy unversioned manifest');
+
+// Test both paths with supported v1
+syncStore.loadUserSync('alice', v1Manifest);
+await asyncStore.loadUser('alice', v1Manifest);
+assert(syncStore.themes.has('alice') && asyncStore.themes.has('alice'), 'Both sync and async paths accept version 1 manifest');
+
+// Test both paths with unsupported v2
+syncStore.loadUserSync('charlie', futureV2Manifest);
+await asyncStore.loadUser('charlie', futureV2Manifest);
+assert(!syncStore.themes.has('charlie') && !asyncStore.themes.has('charlie'), 'Both sync and async paths reject unsupported version 2 manifest');
+
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
 print(`========================================\n`);

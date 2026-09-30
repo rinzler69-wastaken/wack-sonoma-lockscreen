@@ -589,6 +589,7 @@ export class CrossSessionManager {
         // Strict Publication Invariant:
         // Metadata is published AFTER the referenced JPEGs are verified and on disk.
         const metadata = {
+            __manifest_version__: 1,
             username: userName,
             color_scheme: activeColorScheme,
             source_uri: activeVariant.source_uri,
