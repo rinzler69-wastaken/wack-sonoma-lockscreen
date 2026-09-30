@@ -223,7 +223,7 @@ export class GdmAnimationController {
         _setActorVisible(this._gdm._getLockscreenMessageActor(), false, 0);
         this.setLegacyPromptChrome(false, true);
         this._gdm._setPromptBackgroundBlur(false, true);
-        this._gdm._applyWallpaper(null);
+        this._gdm._applyWallpaper(null, true, true);
 
         const userSelection = this._gdm._dialog?._userSelectionBox;
         if (!userSelection)
@@ -305,7 +305,7 @@ export class GdmAnimationController {
     }
 
     animateCupertinoReturnToPicker() {
-        this._gdm._applyWallpaper(null);
+        this._gdm._applyWallpaper(null, true, true);
 
         const userSelection = this._gdm._dialog?._userSelectionBox;
         if (!userSelection)
@@ -462,7 +462,7 @@ export class GdmAnimationController {
             authPrompt._capsLockWarningLabel.remove_style_class_name('wack-cupertino-caps-lock-warning');
         }
 
-        this._gdm._applyWallpaper(null);
+        this._gdm._applyWallpaper(null, true, true);
 
         this._gdm._legacyPromptAnimationState = 'idle';
         this._gdm._skipLegacyPromptEntryAnimation = false;

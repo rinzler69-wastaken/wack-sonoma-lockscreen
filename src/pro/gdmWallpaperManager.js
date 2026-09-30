@@ -138,24 +138,25 @@ export class GdmWallpaperManager {
         if (!this.themeStore || !this.view)
             return;
 
-        // On an explicit account switch, restore the selected account's canonical
-        // color scheme to the global setting.  This wipes any ephemeral QS-toggle
-        // override so _onColorSchemeChanged re-installs themes using the account's
-        // stored preference.  All other callers (toggle callback, initial load,
-        // slideshow ticks) leave the global untouched so the QS toggle remains
-        // effective as a diskless, ephemeral in-session override.
-        if (isExplicitSelection && requestedUserName !== null) {
-            const rawMeta = this.themeStore._themes.get(requestedUserName)?.rawMeta ?? null;
+        // On an explicit account switch (or cancel back to the user list), restore
+        // the canonical color scheme of the target user.  For a named user this is
+        // the account's stored last-known scheme.  For null (cancel/reset), the entry
+        // state owner is the default user — the last-active session that launched GDM.
+        // This wipes any ephemeral QS-toggle or per-account scheme write that occurred
+        // during navigation, ensuring every cancel atomically restores the entry state.
+        if (isExplicitSelection) {
+            const schemeOwner = requestedUserName ?? this.themeStore._defaultUser ?? null;
+            const rawMeta = schemeOwner !== null
+                ? (this.themeStore._themes.get(schemeOwner)?.rawMeta ?? null)
+                : null;
             const canonicalScheme = rawMeta?.color_scheme ?? null;
             if (canonicalScheme !== null) {
                 const globalScheme = this.themeStore._getColorScheme();
                 if (canonicalScheme !== globalScheme)
                     this.themeStore._interfaceSettings.set_enum('color-scheme', canonicalScheme);
-                // _onColorSchemeChanged fires -> re-installs all themes with the
-                // canonical scheme -> _onChanged(requestedUserName) -> applyWallpaper
-                // called again with isExplicitSelection=false -> no further write.
-                // We continue below so the wallpaper is presented immediately
-                // without waiting for the async signal round-trip.
+                // _onColorSchemeChanged fires -> re-installs themes under canonical scheme
+                // -> _onChanged -> applyWallpaper with isExplicitSelection=false -> no
+                // further write.  We continue below so presentation is immediate.
             }
         }
 
