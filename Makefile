@@ -39,8 +39,9 @@ pack: compile-po ## Create a ZIP package for Extensions.gnome.org
 	@mv metadata.json.bak metadata.json
 	@printf 'Created package: %s\n' "$(UUID).zip"
 
-poke: pack ## Verify that the packaged EGO ZIP contains zero GDM-only code or markers
+poke: pack ## Verify that the packaged EGO ZIP contains zero GDM-only code or markers and passes shexli
 	@python3 scripts/poke-ego-artifact.py $(UUID).zip
+	@if command -v shexli >/dev/null 2>&1; then shexli $(UUID).zip; fi
 
 install-gdm: ## Install GDM expansion DLC system-wide
 	@bash scripts/install-gdm-dlc.sh
