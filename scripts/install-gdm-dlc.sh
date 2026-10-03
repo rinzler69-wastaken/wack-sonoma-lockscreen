@@ -131,6 +131,7 @@ PRO_FILES=(
     "gdmAvatarManager.js"
     "gdmAnimationController.js"
     "gdm.css"
+    "gdmThemePipeline.js"
 )
 for pro_file in "${PRO_FILES[@]}"; do
     if [ -f "$SRC_DIR/src/pro/$pro_file" ]; then
