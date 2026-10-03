@@ -279,6 +279,19 @@ export default class WackLockscreenClockExtension extends Extension {
             this._notifManager.positionOverflow();
             this._applyPromptModeLayout();
             this._syncLockscreenMessageLayout();
+
+            // Monitor hot-plug changes the virtual desktop geometry.
+            // Rebuild the custom wallpaper actors after Mutter settles so
+            // each monitor gets an overlay with the correct x/y/size.
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250, () => {
+                if (!this._isActive)
+                    return GLib.SOURCE_REMOVE;
+
+                this._wallpaperManager?.teardown();
+                this._updateCustomWallpaperOverlay();
+
+                return GLib.SOURCE_REMOVE;
+            });
         }, this);
     }
 
