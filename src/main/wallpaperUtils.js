@@ -140,11 +140,7 @@ export async function resolveWallpaperSource(uri) {
         } else if (uri.startsWith('/')) {
             filePath = uri;
             // Normalize targetUri to be a file:// URI for caching consistency
-            try {
-                targetUri = GLib.filename_to_uri(uri, null);
-            } catch (e) {
-                targetUri = `file://${uri}`;
-            }
+            targetUri = Gio.File.new_for_path(uri).get_uri();
         }
 
         if (filePath) {
@@ -155,10 +151,10 @@ export async function resolveWallpaperSource(uri) {
                 if (resolved) {
                     if (typeof resolved === 'string') {
                         targetFilePath = resolved;
-                        targetUri = GLib.filename_to_uri(resolved, null);
+                        targetUri = Gio.File.new_for_path(resolved).get_uri();
                     } else if (resolved.filePath) {
                         targetFilePath = resolved.filePath;
-                        targetUri = GLib.filename_to_uri(resolved.filePath, null);
+                        targetUri = Gio.File.new_for_path(resolved.filePath).get_uri();
                         transitionInfo = resolved;
                     }
                 }

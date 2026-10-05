@@ -472,16 +472,15 @@ export function buildModeGroup(settings, window, _, settingsSignalIds, cleanupCa
     ];
 
     for (const path of extensionDirs) {
-        try {
-            const monitor = Gio.File.new_for_path(path).monitor_directory(Gio.FileMonitorFlags.NONE, null);
-            const changedId = monitor.connect('changed', refreshUnlockFadeAvailability);
-            cleanupCallbacks.push(() => {
-                monitor.disconnect(changedId);
-                monitor.cancel();
-            });
-        } catch (e) {
-            // Ignore unavailable extension roots.
-        }
+        const dir = Gio.File.new_for_path(path);
+        if (!dir.query_exists(null))
+            continue;
+        const monitor = dir.monitor_directory(Gio.FileMonitorFlags.NONE, null);
+        const changedId = monitor.connect('changed', refreshUnlockFadeAvailability);
+        cleanupCallbacks.push(() => {
+            monitor.disconnect(changedId);
+            monitor.cancel();
+        });
     }
 
     syncModeFromSettings();

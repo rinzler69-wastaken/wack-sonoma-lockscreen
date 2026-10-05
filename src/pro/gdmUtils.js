@@ -30,11 +30,9 @@ export function resolveGdmAccessibleUri(meta) {
     if (!meta)
         return null;
     if (meta.uri) {
-        try {
-            const uriPath = meta.uri.startsWith('file://') ? meta.uri.substring(7) : meta.uri;
-            if (Gio.File.new_for_path(uriPath).query_exists(null))
-                return meta.uri.startsWith('file://') ? meta.uri : `file://${meta.uri}`;
-        } catch (_) {}
+        const uriPath = meta.uri.startsWith('file://') ? meta.uri.substring(7) : meta.uri;
+        if (Gio.File.new_for_path(uriPath).query_exists(null))
+            return meta.uri.startsWith('file://') ? meta.uri : `file://${meta.uri}`;
     }
     if (meta.resolved_slide_path)
         return meta.resolved_slide_path.startsWith('file://') ? meta.resolved_slide_path : `file://${meta.resolved_slide_path}`;

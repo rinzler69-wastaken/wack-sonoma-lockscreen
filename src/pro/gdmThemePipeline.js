@@ -221,13 +221,11 @@ export class GdmThemeStore {
             }
             let xmlText = meta.slideshow_xml_text || null;
             if (!xmlText && meta.source_uri && (meta.source_uri.endsWith('.xml') || meta.source_uri.endsWith('.xml.in'))) {
-                try {
-                    const f = meta.source_uri.startsWith('file://') ? Gio.File.new_for_uri(meta.source_uri) : Gio.File.new_for_path(meta.source_uri);
-                    if (f.query_exists(null)) {
-                        const [xOk, xBytes] = f.load_contents(null);
-                        if (xOk) xmlText = new TextDecoder().decode(xBytes);
-                    }
-                } catch (_) {}
+                const f = meta.source_uri.startsWith('file://') ? Gio.File.new_for_uri(meta.source_uri) : Gio.File.new_for_path(meta.source_uri);
+                if (f.query_exists(null)) {
+                    const [xOk, xBytes] = f.load_contents(null);
+                    if (xOk) xmlText = new TextDecoder().decode(xBytes);
+                }
             }
             const effectiveName = meta.username || userName;
             this._install(effectiveName, meta, xmlText);
@@ -284,15 +282,11 @@ export class GdmThemeStore {
     }
 
     _getColorScheme() {
-        try {
-            if (this._interfaceSettings)
-                return this._interfaceSettings.get_enum('color-scheme');
-        } catch (_) {}
-        try {
-            const stScheme = St.Settings.get().color_scheme;
-            if (stScheme === St.SystemColorScheme.PREFER_DARK || stScheme === 1)
-                return 1;
-        } catch (_) {}
+        if (this._interfaceSettings)
+            return this._interfaceSettings.get_enum('color-scheme');
+        const stScheme = St.Settings.get()?.color_scheme;
+        if (stScheme === St.SystemColorScheme.PREFER_DARK || stScheme === 1)
+            return 1;
         return 0;
     }
 
@@ -654,11 +648,8 @@ export class GdmThemeStore {
                 if (!this._cancellable.is_cancelled())
                     _logError(`[WACK/ThemeStore] list ${dPath}: ${e}`);
             } finally {
-                if (enumerator !== null) {
-                    try {
-                        enumerator.close(null);
-                    } catch (_) {}
-                }
+                if (enumerator !== null)
+                    enumerator.close(null);
             }
         }
         out.sort((a, b) => b.mtime - a.mtime);

@@ -86,17 +86,15 @@ export class GdmWallpaperManager {
 
         const SHARED_DIR = '/var/tmp/wack/shared';
         for (const dPath of ['/var/tmp/wack', SHARED_DIR]) {
-            try {
-                const d = Gio.File.new_for_path(dPath);
-                if (!d.query_exists(null)) {
-                    d.make_directory_with_parents(null);
-                    d.set_attribute_uint32('unix::mode', 0o1777, Gio.FileQueryInfoFlags.NONE, null);
-                }
-            } catch (_) {}
+            const d = Gio.File.new_for_path(dPath);
+            if (!d.query_exists(null)) {
+                d.make_directory_with_parents(null);
+                d.set_attribute_uint32('unix::mode', 0o1777, Gio.FileQueryInfoFlags.NONE, null);
+            }
         }
 
-        try {
-            const dir = Gio.File.new_for_path(SHARED_DIR);
+        const dir = Gio.File.new_for_path(SHARED_DIR);
+        if (dir.query_exists(null)) {
             this.sharedWallpaperMonitor = dir.monitor_directory(
                 Gio.FileMonitorFlags.NONE,
                 null
@@ -129,8 +127,6 @@ export class GdmWallpaperManager {
                 });
                 GLib.Source.set_name_by_id(this.sharedWallpaperRefreshId, '[WACK] GdmWallpaperManager.sharedWallpaperRefresh');
             }, this);
-        } catch (e) {
-            _log('[WACK/GdmWallpaperManager] Failed to monitor shared wallpaper directory: ' + e);
         }
     }
 
@@ -208,13 +204,11 @@ export class GdmWallpaperManager {
         try {
             const SHARED_DIR = '/var/tmp/wack/shared';
             for (const dPath of ['/var/tmp/wack', SHARED_DIR]) {
-                try {
-                    const d = Gio.File.new_for_path(dPath);
-                    if (!d.query_exists(null)) {
-                        d.make_directory_with_parents(null);
-                        d.set_attribute_uint32('unix::mode', 0o1777, Gio.FileQueryInfoFlags.NONE, null);
-                    }
-                } catch (_) {}
+                const d = Gio.File.new_for_path(dPath);
+                if (!d.query_exists(null)) {
+                    d.make_directory_with_parents(null);
+                    d.set_attribute_uint32('unix::mode', 0o1777, Gio.FileQueryInfoFlags.NONE, null);
+                }
             }
             const metaFile = Gio.File.new_for_path(`${SHARED_DIR}/wack-shared-wallpaper-gdm.json`);
             metaFile.replace_contents(

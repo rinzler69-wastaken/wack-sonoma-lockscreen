@@ -427,18 +427,16 @@ export class CrossSessionManager {
                     _log(`[WACK/CrossSession] Successfully optimized and saved wallpaper JPEG (${variantTag})`);
                 } catch (err) {
                     _log(`[WACK/CrossSession] Fallback to direct copy due to GdkPixbuf error (${variantTag}): ${err}`);
-                    try {
-                        const srcPath = realSrcFile.get_path();
-                        let srcExt = '.jpg';
-                        const lastDot = srcPath.lastIndexOf('.');
-                        if (lastDot !== -1)
-                            srcExt = srcPath.substring(lastDot);
-                        targetPath = `${SHARED_DIR}/wack-shared-wallpaper-${userName}-${variantTag}-${timestamp}${srcExt}`;
-                        const destFile = Gio.File.new_for_path(targetPath);
-                        realSrcFile.copy(destFile, Gio.FileCopyFlags.OVERWRITE, null, null);
-                        destFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
-                        success = true;
-                    } catch (_) {}
+                    const srcPath = realSrcFile.get_path();
+                    let srcExt = '.jpg';
+                    const lastDot = srcPath.lastIndexOf('.');
+                    if (lastDot !== -1)
+                        srcExt = srcPath.substring(lastDot);
+                    targetPath = `${SHARED_DIR}/wack-shared-wallpaper-${userName}-${variantTag}-${timestamp}${srcExt}`;
+                    const destFile = Gio.File.new_for_path(targetPath);
+                    realSrcFile.copy(destFile, Gio.FileCopyFlags.OVERWRITE, null, null);
+                    destFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
+                    success = true;
                 }
             }
         }
@@ -462,13 +460,11 @@ export class CrossSessionManager {
         const LEGACY_SHARED_DIR = '/var/tmp';
 
         for (const dPath of ['/var/tmp/wack', SHARED_DIR]) {
-            try {
-                const d = Gio.File.new_for_path(dPath);
-                if (!d.query_exists(null)) {
-                    d.make_directory_with_parents(null);
-                    d.set_attribute_uint32('unix::mode', 0o1777, Gio.FileQueryInfoFlags.NONE, null);
-                }
-            } catch (_) {}
+            const d = Gio.File.new_for_path(dPath);
+            if (!d.query_exists(null)) {
+                d.make_directory_with_parents(null);
+                d.set_attribute_uint32('unix::mode', 0o1777, Gio.FileQueryInfoFlags.NONE, null);
+            }
         }
 
         if (!this._interfaceSettings || !this._bgSettings)
@@ -631,9 +627,7 @@ export class CrossSessionManager {
             Gio.FileCreateFlags.REPLACE_DESTINATION,
             null
         );
-        try {
-            destMetaFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
-        } catch (_) {}
+        destMetaFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
 
         // Clean up older wallpaper files for this user in shared directory and legacy /var/tmp
         const validPaths = new Set();
@@ -658,10 +652,8 @@ export class CrossSessionManager {
                             if (name.startsWith(`wack-shared-wallpaper-${userName}-`) &&
                                 (name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png')) &&
                                 !validPaths.has(`${dPath}/${name}`)) {
-                                try {
-                                    const oldFile = Gio.File.new_for_path(`${dPath}/${name}`);
-                                    oldFile.delete(null);
-                                } catch (_) {}
+                                const oldFile = Gio.File.new_for_path(`${dPath}/${name}`);
+                                oldFile.delete_async(GLib.PRIORITY_DEFAULT, null, null);
                             }
                         }
                     }
@@ -670,11 +662,9 @@ export class CrossSessionManager {
         }
 
         // Clean up legacy root JSON file if present
-        try {
-            const legacyFile = Gio.File.new_for_path(`${LEGACY_SHARED_DIR}/wack-shared-wallpaper-${userName}.json`);
-            if (legacyFile.query_exists(null))
-                legacyFile.delete(null);
-        } catch (_) {}
+        const legacyFile = Gio.File.new_for_path(`${LEGACY_SHARED_DIR}/wack-shared-wallpaper-${userName}.json`);
+        if (legacyFile.query_exists(null))
+            legacyFile.delete_async(GLib.PRIORITY_DEFAULT, null, null);
     }
 
     _updateWallpaperFileMonitor(uri) {
@@ -690,26 +680,22 @@ export class CrossSessionManager {
         if (!uri || uri === '')
             return;
 
-        try {
-            let file = null;
-            if (uri.startsWith('file://')) {
-                file = Gio.File.new_for_uri(uri);
-            } else if (uri.startsWith('/')) {
-                file = Gio.File.new_for_path(uri);
-            }
+        let file = null;
+        if (uri.startsWith('file://')) {
+            file = Gio.File.new_for_uri(uri);
+        } else if (uri.startsWith('/')) {
+            file = Gio.File.new_for_path(uri);
+        }
 
-            if (file && file.query_exists(null)) {
-                this._wallpaperFileMonitor = file.monitor_file(Gio.FileMonitorFlags.NONE, null);
-                this._wallpaperFileMonitorId = this._wallpaperFileMonitor.connect('changed', (_monitor, _file, _other, eventType) => {
-                    if (eventType === Gio.FileMonitorEvent.CHANGED ||
-                        eventType === Gio.FileMonitorEvent.CHANGES_DONE_HINT) {
-                        _log('[WACK/CrossSession] Wallpaper file modified on disk, triggering save');
-                        this._triggerSave();
-                    }
-                });
-            }
-        } catch (e) {
-            _log(`[WACK/CrossSession] Failed to monitor wallpaper file: ${e}`);
+        if (file && file.query_exists(null)) {
+            this._wallpaperFileMonitor = file.monitor_file(Gio.FileMonitorFlags.NONE, null);
+            this._wallpaperFileMonitorId = this._wallpaperFileMonitor.connect('changed', (_monitor, _file, _other, eventType) => {
+                if (eventType === Gio.FileMonitorEvent.CHANGED ||
+                    eventType === Gio.FileMonitorEvent.CHANGES_DONE_HINT) {
+                    _log('[WACK/CrossSession] Wallpaper file modified on disk, triggering save');
+                    this._triggerSave();
+                }
+            });
         }
     }
 }

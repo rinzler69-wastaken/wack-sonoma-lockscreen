@@ -181,9 +181,8 @@ export function createBlurredPromptSlice(
         };
     }
 
-    try {
-        // Calculate padding in pixbuf coordinates equivalent to blurRadius screen pixels
-        const rInPixbuf = Math.round(blurRadius / uniformScale);
+    // Calculate padding in pixbuf coordinates equivalent to blurRadius screen pixels
+    const rInPixbuf = Math.round(blurRadius / uniformScale);
 
         const padStartX = Math.max(0, startX - rInPixbuf);
         const padEndX = Math.min(pbWidth, endX + rInPixbuf);
@@ -323,11 +322,7 @@ export function createBlurredPromptSlice(
             shadowAlpha,
             visualState: resolvedState,
         };
-    } catch (e) {
-        _logError(`[WACK/WallpaperSampler] createBlurredPromptSlice error: ${e}`);
-        return null;
     }
-}
 
 /**
  * Samples a rectangular region from a source wallpaper pixbuf and computes its average color.

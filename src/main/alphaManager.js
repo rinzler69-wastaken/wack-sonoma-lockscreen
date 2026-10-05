@@ -193,11 +193,9 @@ export async function getWallpaperAlpha(params) {
     })();
 
     _inFlightAlphaQueries.set(cacheKey, queryPromise);
-    try {
-        return await queryPromise;
-    } finally {
+    return queryPromise.finally(() => {
         _inFlightAlphaQueries.delete(cacheKey);
-    }
+    });
 }
 
 /**
@@ -390,28 +388,24 @@ export async function getWallpaperPromptColor(params) {
                     const targetDestW = Math.max(1, Math.round(targetDestH * (actualCropW / actualCropH)));
                     const sliceResult = createBlurredPromptSlice(pixbuf, mappedBounds, targetDestW, targetDestH, PROMPT_BLUR_RADIUS, PROMPT_BLUR_BRIGHTNESS);
                     if (sliceResult?.pixbuf) {
-                        try {
-                            const tmpPath = `${filePath}.tmp.${GLib.random_int()}`;
-                            sliceResult.pixbuf.savev(tmpPath, 'png', [], []);
-                            const tmpFile = Gio.File.new_for_path(tmpPath);
-                            tmpFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
-                            const destFile = Gio.File.new_for_path(filePath);
-                            tmpFile.move(destFile, Gio.FileCopyFlags.OVERWRITE, null, null);
+                        const tmpPath = `${filePath}.tmp.${GLib.random_int()}`;
+                        sliceResult.pixbuf.savev(tmpPath, 'png', [], []);
+                        const tmpFile = Gio.File.new_for_path(tmpPath);
+                        tmpFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
+                        const destFile = Gio.File.new_for_path(filePath);
+                        tmpFile.move(destFile, Gio.FileCopyFlags.OVERWRITE, null, null);
 
-                            imagePath = filePath;
-                            shadowAlpha = sliceResult.shadowAlpha;
-                            sampledPrimary = sliceResult.avgColor;
-                            sampledStart = sliceResult.avgColor;
-                            sampledEnd = sliceResult.avgColor;
-                            direction = 'none';
-                            promptVisualState = sliceResult.visualState
-                                ?? resolvePromptVisualState(sliceResult.avgColor, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
+                        imagePath = filePath;
+                        shadowAlpha = sliceResult.shadowAlpha;
+                        sampledPrimary = sliceResult.avgColor;
+                        sampledStart = sliceResult.avgColor;
+                        sampledEnd = sliceResult.avgColor;
+                        direction = 'none';
+                        promptVisualState = sliceResult.visualState
+                            ?? resolvePromptVisualState(sliceResult.avgColor, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
 
-                            // Schedule asynchronous background pruning
-                            scheduleVibrancyPruning(targetDir, hash);
-                        } catch (saveErr) {
-                            _logError(`[WACK/AlphaManager] Failed to save blurred prompt slice: ${saveErr}`);
-                        }
+                        // Schedule asynchronous background pruning
+                        scheduleVibrancyPruning(targetDir, hash);
                     }
 
                     // Sample dedicated color for cancel button
@@ -515,11 +509,9 @@ export async function getWallpaperPromptColor(params) {
     })();
 
     _inFlightPromptQueries.set(cacheKey, queryPromise);
-    try {
-        return await queryPromise;
-    } finally {
+    return queryPromise.finally(() => {
         _inFlightPromptQueries.delete(cacheKey);
-    }
+    });
 }
 
 const _precachedXmls = new Set();
@@ -543,15 +535,11 @@ export async function precacheSlideshow(params) {
     _precachedXmls.add(precacheKey);
 
     let xmlText = null;
-    try {
-        const file = uri.startsWith('file://') ? Gio.File.new_for_uri(uri) : Gio.File.new_for_path(uri);
-        if (file.query_exists(null)) {
-            const [ok, contents] = await file.load_contents_async(null);
-            if (ok)
-                xmlText = new TextDecoder().decode(contents);
-        }
-    } catch (_) {
-        return;
+    const file = uri.startsWith('file://') ? Gio.File.new_for_uri(uri) : Gio.File.new_for_path(uri);
+    if (file.query_exists(null)) {
+        const [ok, contents] = await file.load_contents_async(null);
+        if (ok)
+            xmlText = new TextDecoder().decode(contents);
     }
 
     if (!xmlText)
@@ -573,23 +561,19 @@ export async function precacheSlideshow(params) {
     await initCache();
 
     for (const filePath of files) {
-        try {
-            const slideFile = Gio.File.new_for_path(filePath);
-            if (!slideFile.query_exists(null))
-                continue;
+        const slideFile = Gio.File.new_for_path(filePath);
+        if (!slideFile.query_exists(null))
+            continue;
 
-            const slideUri = slideFile.get_uri();
-            const slideParams = {
-                ...params,
-                uri: slideUri,
-            };
+        const slideUri = slideFile.get_uri();
+        const slideParams = {
+            ...params,
+            uri: slideUri,
+        };
 
-            await Promise.all([
-                getWallpaperPromptColor(slideParams),
-                getWallpaperAlpha({ ...slideParams, textLuminance: 1.0 }),
-            ]);
-        } catch (e) {
-            _logError(`[WACK/AlphaManager] Pre-cache slide error for ${filePath}: ${e}`);
-        }
+        await Promise.all([
+            getWallpaperPromptColor(slideParams),
+            getWallpaperAlpha({ ...slideParams, textLuminance: 1.0 }),
+        ]);
     }
 }

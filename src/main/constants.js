@@ -97,57 +97,33 @@ export function getPrettyDate(style = 'full', wallClock = null, explicitLocale =
     if (style === 'short') {
         const clock = wallClock ?? (_cachedWallClock ??= new GnomeDesktop.WallClock({ time_only: false }));
         if (clock) {
-            try {
-                const now = GLib.DateTime.new_now_local();
-                const full = clock.string_for_datetime(now, 0, true, true, false);
-                // In GnomeDesktop.WallClock, the date part is separated from time by an en-space (\u2002)
-                const datePart = full ? full.split('\u2002')[0].trim() : '';
-                if (datePart)
-                    return datePart;
-            } catch {
-            }
-        }
-
-        try {
             const now = GLib.DateTime.new_now_local();
-            const formatted = now.format('%a %e %b');
-            const trimmed = formatted ? formatted.trim() : '';
-            if (trimmed)
-                return trimmed;
-        } catch {
+            const full = clock.string_for_datetime(now, 0, true, true, false);
+            // In GnomeDesktop.WallClock, the date part is separated from time by an en-space (\u2002)
+            const datePart = full ? full.split('\u2002')[0].trim() : '';
+            if (datePart)
+                return datePart;
         }
 
-        try {
-            const dtf = new Intl.DateTimeFormat(targetLocale, { weekday: 'short', month: 'short', day: 'numeric' });
-            return dtf.format(new Date());
-        } catch {
-            return new Date().toLocaleDateString(targetLocale, { weekday: 'short', month: 'short', day: 'numeric' });
-        }
+        const dtf = new Intl.DateTimeFormat(targetLocale, { weekday: 'short', month: 'short', day: 'numeric' });
+        return dtf.format(new Date());
     }
 
     // Full style: verbose date presentation (e.g. "Wednesday, September 16" / "Mittwoch, 16. September")
-    try {
-        const dtf = new Intl.DateTimeFormat(targetLocale, { weekday: 'long', month: 'long', day: 'numeric' });
-        const parts = dtf.formatToParts(new Date());
-        let result = '';
-        for (let i = 0; i < parts.length; i++) {
-            const part = parts[i];
-            result += part.value;
-            if (part.type === 'weekday') {
-                const next = parts[i + 1];
-                if (next && next.type === 'literal' && !next.value.includes(',') && !next.value.includes('،') && !next.value.includes('、')) {
-                    result += ',';
-                }
+    const dtf = new Intl.DateTimeFormat(targetLocale, { weekday: 'long', month: 'long', day: 'numeric' });
+    const parts = dtf.formatToParts(new Date());
+    let result = '';
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        result += part.value;
+        if (part.type === 'weekday') {
+            const next = parts[i + 1];
+            if (next && next.type === 'literal' && !next.value.includes(',') && !next.value.includes('،') && !next.value.includes('、')) {
+                result += ',';
             }
         }
-        return result;
-    } catch {
-        try {
-            return new Date().toLocaleDateString(targetLocale, { weekday: 'long', month: 'long', day: 'numeric' });
-        } catch {
-            return new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-        }
     }
+    return result;
 }
 
 /**

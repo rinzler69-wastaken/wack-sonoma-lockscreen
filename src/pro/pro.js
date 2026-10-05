@@ -148,49 +148,41 @@ export class GdmManager {
     }
 
     _ensureStylesheetLoaded() {
-        try {
-            const themeContext = St.ThemeContext.get_for_stage(global.stage);
-            const theme = themeContext.get_theme();
-            if (!theme)
-                return;
+        const themeContext = St.ThemeContext.get_for_stage(global.stage);
+        const theme = themeContext.get_theme();
+        if (!theme)
+            return;
 
-            const baseStylesheet = this._extension.dir.get_child('stylesheet.css');
-            if (baseStylesheet.query_exists(null)) {
-                theme.load_stylesheet(baseStylesheet);
-            }
-
-            const gdmStylesheet = this._extension.dir.get_child('src').get_child('pro').get_child('gdm.css');
-            if (gdmStylesheet.query_exists(null)) {
-                theme.load_stylesheet(gdmStylesheet);
-            }
-
-            _log('[WACK/GdmManager] Stylesheets loaded successfully');
-        } catch (e) {
-            _logError('[WACK/GdmManager] Failed to load stylesheets: ' + e);
+        const baseStylesheet = this._extension.dir.get_child('stylesheet.css');
+        if (baseStylesheet.query_exists(null)) {
+            theme.load_stylesheet(baseStylesheet);
         }
+
+        const gdmStylesheet = this._extension.dir.get_child('src').get_child('pro').get_child('gdm.css');
+        if (gdmStylesheet.query_exists(null)) {
+            theme.load_stylesheet(gdmStylesheet);
+        }
+
+        _log('[WACK/GdmManager] Stylesheets loaded successfully');
     }
 
     _unloadStylesheet() {
-        try {
-            const themeContext = St.ThemeContext.get_for_stage(global.stage);
-            const theme = themeContext.get_theme();
-            if (!theme)
-                return;
+        const themeContext = St.ThemeContext.get_for_stage(global.stage);
+        const theme = themeContext.get_theme();
+        if (!theme)
+            return;
 
-            const gdmStylesheet = this._extension.dir.get_child('src').get_child('pro').get_child('gdm.css');
-            if (gdmStylesheet.query_exists(null)) {
-                theme.unload_stylesheet(gdmStylesheet);
-            }
-
-            const baseStylesheet = this._extension.dir.get_child('stylesheet.css');
-            if (baseStylesheet.query_exists(null)) {
-                theme.unload_stylesheet(baseStylesheet);
-            }
-
-            _log('[WACK/GdmManager] Stylesheets unloaded');
-        } catch (e) {
-            _logError('[WACK/GdmManager] Failed to unload stylesheets: ' + e);
+        const gdmStylesheet = this._extension.dir.get_child('src').get_child('pro').get_child('gdm.css');
+        if (gdmStylesheet.query_exists(null)) {
+            theme.unload_stylesheet(gdmStylesheet);
         }
+
+        const baseStylesheet = this._extension.dir.get_child('stylesheet.css');
+        if (baseStylesheet.query_exists(null)) {
+            theme.unload_stylesheet(baseStylesheet);
+        }
+
+        _log('[WACK/GdmManager] Stylesheets unloaded');
     }
 
     _setup() {

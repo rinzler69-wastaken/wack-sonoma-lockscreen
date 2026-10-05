@@ -74,26 +74,21 @@ export default class WackLockscreenClockExtension extends Extension {
 
     enable() {
         const PowerProfilesProxy = Gio.DBusProxy.makeProxyWrapper(PowerProfilesIface);
-        this._powerProfilesProxy = null;
-        try {
-            this._powerProfilesProxy = new PowerProfilesProxy(
-                Gio.DBus.system,
-                'net.hadess.PowerProfiles',
-                '/net/hadess/PowerProfiles',
-                (proxy, error) => {
-                    if (error) {
-                        _logError(`WACK Lockscreen: PowerProfiles proxy error: ${error.message}`);
-                        return;
-                    }
-                    this._powerProfilesProxy.connectObject('g-properties-changed', () => {
-                        this._syncCupertinoUnlockFade();
-                    }, this);
-                    this._syncCupertinoUnlockFade();
+        this._powerProfilesProxy = new PowerProfilesProxy(
+            Gio.DBus.system,
+            'net.hadess.PowerProfiles',
+            '/net/hadess/PowerProfiles',
+            (proxy, error) => {
+                if (error) {
+                    _logError(`WACK Lockscreen: PowerProfiles proxy error: ${error.message}`);
+                    return;
                 }
-            );
-        } catch (e) {
-            _logError(`WACK Lockscreen: Failed to initialize PowerProfiles DBus proxy: ${e.message}`);
-        }
+                this._powerProfilesProxy.connectObject('g-properties-changed', () => {
+                    this._syncCupertinoUnlockFade();
+                }, this);
+                this._syncCupertinoUnlockFade();
+            }
+        );
 
         this._isActive = true;
 
@@ -238,17 +233,10 @@ export default class WackLockscreenClockExtension extends Extension {
                         if (this._isSleepInhibited()) {
                             this._showInhibitHint(this.gettext('Sleep prevented by an active process'));
                         } else {
-                            if (Main.screenShield._loginManager.suspend) {
+                            if (Main.screenShield._loginManager.suspend)
                                 Main.screenShield._loginManager.suspend();
-                            } else {
-                                try {
-                                    SystemActions.getDefault().activateSuspend();
-                                } catch (e) {
-                                    const session = SystemActions.getDefault()._session;
-                                    if (session?.SuspendAsync)
-                                        session.SuspendAsync().catch(err => console.error(err));
-                                }
-                            }
+                            else
+                                SystemActions.getDefault().activateSuspend();
                         }
                         return Clutter.EVENT_STOP;
                     }
@@ -283,7 +271,12 @@ export default class WackLockscreenClockExtension extends Extension {
             // Monitor hot-plug changes the virtual desktop geometry.
             // Rebuild the custom wallpaper actors after Mutter settles so
             // each monitor gets an overlay with the correct x/y/size.
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250, () => {
+            if (this._monitorsChangedTimeoutId) {
+                GLib.source_remove(this._monitorsChangedTimeoutId);
+                this._monitorsChangedTimeoutId = 0;
+            }
+            this._monitorsChangedTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250, () => {
+                this._monitorsChangedTimeoutId = 0;
                 if (!this._isActive)
                     return GLib.SOURCE_REMOVE;
 
@@ -619,68 +612,64 @@ export default class WackLockscreenClockExtension extends Extension {
             ? { ...wallpaperParams, uri: inactiveUri }
             : null;
 
-        try {
-            const [alpha, promptColor, inactiveAlpha, inactivePromptColor] = await Promise.all([
-                getWallpaperAlpha({ ...wallpaperParams, textLuminance }),
-                getWallpaperPromptColor(wallpaperParams),
-                inactiveWallpaperParams ? getWallpaperAlpha({ ...inactiveWallpaperParams, textLuminance }) : Promise.resolve(null),
-                inactiveWallpaperParams ? getWallpaperPromptColor(inactiveWallpaperParams) : Promise.resolve(null),
-            ]);
+        const [alpha, promptColor, inactiveAlpha, inactivePromptColor] = await Promise.all([
+            getWallpaperAlpha({ ...wallpaperParams, textLuminance }),
+            getWallpaperPromptColor(wallpaperParams),
+            inactiveWallpaperParams ? getWallpaperAlpha({ ...inactiveWallpaperParams, textLuminance }) : Promise.resolve(null),
+            inactiveWallpaperParams ? getWallpaperPromptColor(inactiveWallpaperParams) : Promise.resolve(null),
+        ]);
 
-            if (seq !== this._wallpaperUpdateSeq)
-                return;
+        if (seq !== this._wallpaperUpdateSeq)
+            return;
 
-            _log(`[WACK/Extension] _updateClockAlphaAndPromptColor - uri: ${uri}, alpha: ${alpha}, yCenterFraction: ${yCenterFraction}`);
+        _log(`[WACK/Extension] _updateClockAlphaAndPromptColor - uri: ${uri}, alpha: ${alpha}, yCenterFraction: ${yCenterFraction}`);
 
-            if (dialog?._clock)
-                dialog._clock.setWallpaperAlpha(alpha, promptColor);
+        if (dialog?._clock)
+            dialog._clock.setWallpaperAlpha(alpha, promptColor);
 
-            if (this._clockLayoutManager?.updateHintStyle)
-                this._clockLayoutManager.updateHintStyle(promptColor, alpha);
+        if (this._clockLayoutManager?.updateHintStyle)
+            this._clockLayoutManager.updateHintStyle(promptColor, alpha);
 
-            // <GDM_EXCLUDE>
-            if (this._crossSessionManager)
-                this._crossSessionManager.setClockAlphaAndPromptColor(alpha, promptColor, inactiveAlpha, inactivePromptColor);
-            // </GDM_EXCLUDE>
+        // <GDM_EXCLUDE>
+        if (this._crossSessionManager)
+            this._crossSessionManager.setClockAlphaAndPromptColor(alpha, promptColor, inactiveAlpha, inactivePromptColor);
+        // </GDM_EXCLUDE>
 
-            if (this._cupertinoPromptManager?.restPrompt?.updateVisuals) {
-                this._cupertinoPromptManager.restPrompt.updateVisuals(promptColor, alpha);
-            } else if (this._cupertinoPromptManager?.restPrompt?.updateAvatarVibrancy && promptColor?.avatarColor) {
-                this._cupertinoPromptManager.restPrompt.updateAvatarVibrancy(promptColor.avatarColor);
-            }
+        if (this._cupertinoPromptManager?.restPrompt?.updateVisuals) {
+            this._cupertinoPromptManager.restPrompt.updateVisuals(promptColor, alpha);
+        } else if (this._cupertinoPromptManager?.restPrompt?.updateAvatarVibrancy && promptColor?.avatarColor) {
+            this._cupertinoPromptManager.restPrompt.updateAvatarVibrancy(promptColor.avatarColor);
+        }
 
-            if (a11yButton && promptColor)
-                this._applyA11yButtonBackground(a11yButton, promptColor);
-            if (sessionButton && promptColor)
-                this._applySessionButtonBackground(sessionButton, promptColor);
+        if (a11yButton && promptColor)
+            this._applyA11yButtonBackground(a11yButton, promptColor);
+        if (sessionButton && promptColor)
+            this._applySessionButtonBackground(sessionButton, promptColor);
 
-            this._lastPromptColor = promptColor;
-            this._lastClockAlpha = alpha;
+        this._lastPromptColor = promptColor;
+        this._lastClockAlpha = alpha;
 
-            if (promptColor?.transitionInfo?.remainingDuration != null && promptColor.transitionInfo.remainingDuration > 0) {
-                const delaySec = Math.max(1, Math.min(3600, promptColor.transitionInfo.remainingDuration + 0.5));
-                this._armSlideClock(delaySec * 1000);
-            } else {
-                this._stopSlideClock();
-            }
+        if (promptColor?.transitionInfo?.remainingDuration != null && promptColor.transitionInfo.remainingDuration > 0) {
+            const delaySec = Math.max(1, Math.min(3600, promptColor.transitionInfo.remainingDuration + 0.5));
+            this._armSlideClock(delaySec * 1000);
+        } else {
+            this._stopSlideClock();
+        }
 
-            if (this._notifManager) {
-                this._notifManager.setVibrancyInverse(promptColor);
-            }
+        if (this._notifManager) {
+            this._notifManager.setVibrancyInverse(promptColor);
+        }
 
-            const currentAuthPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
-            const isCupertino = this._lockscreenMode === 'cupertino';
-            if (promptColor) {
-                const entry = this._findPromptEntry(currentAuthPrompt);
-                if (entry)
-                    this._applyPromptEntryBackground(entry, isCupertino ? promptColor : null);
-                if (currentAuthPrompt?.cancelButton)
-                    this._applyCancelButtonBackground(currentAuthPrompt.cancelButton, isCupertino ? promptColor : null);
-                if (this._promptStyling && isCupertino)
-                    this._promptStyling.updatePromptMessageStyle(promptColor, alpha);
-            }
-        } catch (e) {
-            _logError(`[WACK/Extension] _updateClockAlphaAndPromptColor error: ${e}`);
+        const currentAuthPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
+        const isCupertino = this._lockscreenMode === 'cupertino';
+        if (promptColor) {
+            const entry = this._findPromptEntry(currentAuthPrompt);
+            if (entry)
+                this._applyPromptEntryBackground(entry, isCupertino ? promptColor : null);
+            if (currentAuthPrompt?.cancelButton)
+                this._applyCancelButtonBackground(currentAuthPrompt.cancelButton, isCupertino ? promptColor : null);
+            if (this._promptStyling && isCupertino)
+                this._promptStyling.updatePromptMessageStyle(promptColor, alpha);
         }
     }
 
@@ -951,6 +940,11 @@ export default class WackLockscreenClockExtension extends Extension {
         const mainBox = authPrompt?._mainBox;
         if (mainBox) mainBox.opacity = 255;
         if (this._dialog) this._dialog.opacity = 255;
+
+        if (this._monitorsChangedTimeoutId) {
+            GLib.source_remove(this._monitorsChangedTimeoutId);
+            this._monitorsChangedTimeoutId = 0;
+        }
 
         if (this._wackShellStateChangedId) {
             Main.extensionManager.disconnect(this._wackShellStateChangedId);

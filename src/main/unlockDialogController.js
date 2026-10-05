@@ -258,14 +258,14 @@ export class UnlockDialogController {
                 this._extension._onPromptShow();
                 const origEase = dialog._adjustment.ease;
                 dialog._adjustment.ease = () => { };
-                try { dialog._showPrompt(); }
-                finally { dialog._adjustment.ease = origEase; }
+                dialog._showPrompt();
+                dialog._adjustment.ease = origEase;
             } else if (!isNowActive && this._extension._wasPromptActive) {
                 this._extension._onPromptHide();
                 const origEase = dialog._adjustment.ease;
                 dialog._adjustment.ease = () => { };
-                try { dialog._showClock(); }
-                finally { dialog._adjustment.ease = origEase; }
+                dialog._showClock();
+                dialog._adjustment.ease = origEase;
             }
             this._extension._wasPromptActive = isNowActive;
 

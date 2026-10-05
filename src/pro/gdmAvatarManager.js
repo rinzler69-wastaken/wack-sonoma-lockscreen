@@ -194,63 +194,60 @@ export class GdmAvatarManager {
 
         const color = this._lastAvatarColor;
         this._updatingVibrancy = true;
-        try {
-            const bgRgba = color ? (color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`) : null;
-            const buttonStyle = bgRgba ? `background-color: ${bgRgba} !important; border-radius: 999px !important;` : null;
+        const bgRgba = color ? (color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`) : null;
+        const buttonStyle = bgRgba ? `background-color: ${bgRgba} !important; border-radius: 999px !important;` : null;
 
-            const applyToWell = (uw) => {
-                if (!uw) return;
-                const avatar = uw._avatar || uw._avatarButton?.get_child();
-                const avatarButton = uw._avatarButton;
-                if (!avatarButton) return;
+        const applyToWell = (uw) => {
+            if (!uw) return;
+            const avatar = uw._avatar || uw._avatarButton?.get_child();
+            const avatarButton = uw._avatarButton;
+            if (!avatarButton) return;
 
-                if (this._hasImageAvatar(avatar)) {
-                    if (avatarButton.get_style() !== null)
-                        avatarButton.set_style(null);
-                    // Never clear or overwrite avatar.style for picture avatars!
-                    delete avatar._wackHasVibrancy;
-                } else {
-                    if (avatarButton.get_style() !== buttonStyle)
-                        avatarButton.set_style(buttonStyle);
-                    // Apply to the avatar widget directly for placeholder/symbolic avatars
-                    if (avatar && avatar.get_style() !== buttonStyle) {
-                        avatar.set_style(buttonStyle);
-                        if (buttonStyle)
-                            avatar._wackHasVibrancy = true;
-                        else
-                            delete avatar._wackHasVibrancy;
-                    }
-                    if (avatar)
-                        avatar.clip_to_allocation = true;
-                    if (avatarButton)
-                        avatarButton.clip_to_allocation = true;
-                    const child = avatar?.get_child();
-                    if (child) {
-                        const iconStyle = buttonStyle ? 'background-color: transparent !important; border-radius: 999px !important;' : null;
-                        if (child.get_style() !== iconStyle)
-                            child.set_style(iconStyle);
-                    }
-                }
-            };
-
-            const authPrompt = this._dialog?._authPrompt || this._gdm._dialog?._authPrompt;
-            const authPromptWell = authPrompt?._userWell?.get_child();
-            applyToWell(authPromptWell);
-            if (authPromptWell?._label) {
-                authPromptWell._label.set_style(color ? getUserLabelStyle(color) : null);
-            }
-
-            if (this._gdm._cupertinoRestPrompt?.updateVisuals) {
-                this._gdm._cupertinoRestPrompt.updateVisuals(color);
+            if (this._hasImageAvatar(avatar)) {
+                if (avatarButton.get_style() !== null)
+                    avatarButton.set_style(null);
+                // Never clear or overwrite avatar.style for picture avatars!
+                delete avatar._wackHasVibrancy;
             } else {
-                applyToWell(this._gdm._cupertinoRestPrompt?._userWell?.get_child());
+                if (avatarButton.get_style() !== buttonStyle)
+                    avatarButton.set_style(buttonStyle);
+                // Apply to the avatar widget directly for placeholder/symbolic avatars
+                if (avatar && avatar.get_style() !== buttonStyle) {
+                    avatar.set_style(buttonStyle);
+                    if (buttonStyle)
+                        avatar._wackHasVibrancy = true;
+                    else
+                        delete avatar._wackHasVibrancy;
+                }
+                if (avatar)
+                    avatar.clip_to_allocation = true;
+                if (avatarButton)
+                    avatarButton.clip_to_allocation = true;
+                const child = avatar?.get_child();
+                if (child) {
+                    const iconStyle = buttonStyle ? 'background-color: transparent !important; border-radius: 999px !important;' : null;
+                    if (child.get_style() !== iconStyle)
+                        child.set_style(iconStyle);
+                }
             }
+        };
 
-            // Also apply to empty-avatar tiles in the user selection list.
-            this.updateUserListVibrancy();
-        } finally {
-            this._updatingVibrancy = false;
+        const authPrompt = this._dialog?._authPrompt || this._gdm._dialog?._authPrompt;
+        const authPromptWell = authPrompt?._userWell?.get_child();
+        applyToWell(authPromptWell);
+        if (authPromptWell?._label) {
+            authPromptWell._label.set_style(color ? getUserLabelStyle(color) : null);
         }
+
+        if (this._gdm._cupertinoRestPrompt?.updateVisuals) {
+            this._gdm._cupertinoRestPrompt.updateVisuals(color);
+        } else {
+            applyToWell(this._gdm._cupertinoRestPrompt?._userWell?.get_child());
+        }
+
+        // Also apply to empty-avatar tiles in the user selection list.
+        this.updateUserListVibrancy();
+        this._updatingVibrancy = false;
     }
 
     updateUserListVibrancy() {

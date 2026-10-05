@@ -182,44 +182,41 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
             if (!color || !this._avatarButton || this._updatingVibrancy) return;
 
             this._updatingVibrancy = true;
-            try {
-                const avatar = this._avatarButton.get_child();
-                if (this._hasImageAvatar(avatar)) {
-                    if (this._avatarButton.get_style() !== null)
-                        this._avatarButton.set_style(null);
-                    this._avatarButton.remove_style_class_name('wack-vibrancied');
-                } else {
-                    this._avatarButton.add_style_class_name('wack-vibrancied');
-                    const bgRgba = color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`;
-                    const btnStyle = `background-color: ${bgRgba} !important; border-radius: 999px !important;`;
-                    if (this._avatarButton.get_style() !== btnStyle)
-                        this._avatarButton.set_style(btnStyle);
-                    let overlayRgba = color.overlayRgba;
-                    if (!overlayRgba) {
-                        if (color.overlayR != null && color.overlayAlpha != null) {
-                            overlayRgba = `rgba(${color.overlayR}, ${color.overlayG}, ${color.overlayB}, ${color.overlayAlpha})`;
-                        } else {
-                            const overlay = getPromptBlendOverlay({ r: color.r, g: color.g, b: color.b });
-                            overlayRgba = `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`;
-                        }
-                    }
-                    const avOverlayStyle = `background-color: ${overlayRgba} !important; border-radius: 999px !important;`;
-                    if (avatar && avatar.get_style() !== avOverlayStyle)
-                        avatar.set_style(avOverlayStyle);
-                    if (avatar)
-                        avatar.clip_to_allocation = true;
-                    if (this._avatarButton)
-                        this._avatarButton.clip_to_allocation = true;
-                    const child = avatar?.get_child();
-                    if (child) {
-                        const iconStyle = 'background-color: transparent !important; border-radius: 999px !important;';
-                        if (child.get_style() !== iconStyle)
-                            child.set_style(iconStyle);
+            const avatar = this._avatarButton.get_child();
+            if (this._hasImageAvatar(avatar)) {
+                if (this._avatarButton.get_style() !== null)
+                    this._avatarButton.set_style(null);
+                this._avatarButton.remove_style_class_name('wack-vibrancied');
+            } else {
+                this._avatarButton.add_style_class_name('wack-vibrancied');
+                const bgRgba = color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`;
+                const btnStyle = `background-color: ${bgRgba} !important; border-radius: 999px !important;`;
+                if (this._avatarButton.get_style() !== btnStyle)
+                    this._avatarButton.set_style(btnStyle);
+                let overlayRgba = color.overlayRgba;
+                if (!overlayRgba) {
+                    if (color.overlayR != null && color.overlayAlpha != null) {
+                        overlayRgba = `rgba(${color.overlayR}, ${color.overlayG}, ${color.overlayB}, ${color.overlayAlpha})`;
+                    } else {
+                        const overlay = getPromptBlendOverlay({ r: color.r, g: color.g, b: color.b });
+                        overlayRgba = `rgba(${overlay.overlayR}, ${overlay.overlayG}, ${overlay.overlayB}, ${overlay.blendAlpha.toFixed(4)})`;
                     }
                 }
-            } finally {
-                this._updatingVibrancy = false;
+                const avOverlayStyle = `background-color: ${overlayRgba} !important; border-radius: 999px !important;`;
+                if (avatar && avatar.get_style() !== avOverlayStyle)
+                    avatar.set_style(avOverlayStyle);
+                if (avatar)
+                    avatar.clip_to_allocation = true;
+                if (this._avatarButton)
+                    this._avatarButton.clip_to_allocation = true;
+                const child = avatar?.get_child();
+                if (child) {
+                    const iconStyle = 'background-color: transparent !important; border-radius: 999px !important;';
+                    if (child.get_style() !== iconStyle)
+                        child.set_style(iconStyle);
+                }
             }
+            this._updatingVibrancy = false;
         }
 
 
