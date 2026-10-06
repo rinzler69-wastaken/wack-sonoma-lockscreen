@@ -578,6 +578,21 @@ export function getHintTextStyle(visualStateOrLightness, wallpaperAlpha = null) 
     return `color: rgba(255, 255, 255, ${colorAlpha.toFixed(3)}) !important; text-shadow: 0 1px 7px rgba(0, 0, 0, ${shadowAlpha.toFixed(3)}) !important;`;
 }
 
+/**
+ * Light, softly saturated shade of the wallpaper hue for the lockscreen clock.
+ * @param {object|null} promptColor Result of getWallpaperPromptColor()
+ * @returns {{r: number, g: number, b: number}|null}
+ */
+export function getClockTintColor(promptColor) {
+    if (!promptColor)
+        return null;
+    // Raw wallpaper sample; promptColor.r/g/b is already blended for the chip.
+    const source = promptColor.visualState?.sourceColor ?? promptColor;
+    const { h, s } = rgbToHsl(source.r ?? 255, source.g ?? 255, source.b ?? 255);
+    const tint = hslToRgb(h, Math.min(s, 0.55), 0.88);
+    return { r: Math.round(tint.r), g: Math.round(tint.g), b: Math.round(tint.b) };
+}
+
 export function getPromptMessageStyle(visualStateOrLightness, wallpaperAlpha = null) {
     return getHintTextStyle(visualStateOrLightness, wallpaperAlpha);
 }

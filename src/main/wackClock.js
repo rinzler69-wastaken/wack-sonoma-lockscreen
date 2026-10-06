@@ -7,9 +7,18 @@ import St from 'gi://St';
 import Gettext from 'gettext';
 
 import { HINT_TIMEOUT, CROSSFADE_TIME, getPrettyDate } from './constants.js';
-import { getHintTextStyle } from './colorUtils.js';
+import { getClockTintColor, getHintTextStyle } from './colorUtils.js';
 
 const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('gnome-shell'));
+
+const CLOCK_WEIGHTS = {
+    light: 300,
+    regular: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700,
+    heavy: 800,
+};
 
 /**
  * WackClock handles the custom clock widget for the lock screen.
@@ -155,10 +164,39 @@ export const WackClock = GObject.registerClass(
         }
 
         setWallpaperAlpha(alpha, promptColor = null) {
-            this._time.set_style(`color: rgba(255, 255, 255, ${alpha});`);
-            this._dateOutput.set_style(`color: rgba(255, 255, 255, ${alpha});`);
+            this._alpha = alpha;
+            this._promptColor = promptColor;
+            this._applyTextStyle();
             if (this._hint)
                 this._hint.set_style(getHintTextStyle(promptColor, alpha));
+        }
+
+        /**
+         * @param {string} weight A key of CLOCK_WEIGHTS; unknown values keep the stylesheet weight.
+         */
+        setWeight(weight) {
+            this._weight = CLOCK_WEIGHTS[weight] ?? null;
+            this._applyTextStyle();
+        }
+
+        /**
+         * Tint the time and date with a light shade of the sampled wallpaper colour.
+         * @param {boolean} enabled
+         */
+        setTint(enabled) {
+            this._tint = enabled;
+            this._applyTextStyle();
+        }
+
+        _applyTextStyle() {
+            const tint = (this._tint && getClockTintColor(this._promptColor)) || { r: 255, g: 255, b: 255 };
+            // Until the wallpaper is sampled, keep the stylesheet colours.
+            const color = this._alpha == null
+                ? ''
+                : `color: rgba(${tint.r}, ${tint.g}, ${tint.b}, ${this._alpha});`;
+            const weight = this._weight ? `font-weight: ${this._weight};` : '';
+            this._time.set_style(color + weight || null);
+            this._dateOutput.set_style(color || null);
         }
 
 

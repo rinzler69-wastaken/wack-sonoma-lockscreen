@@ -387,6 +387,23 @@ export default class WackLockscreenClockExtension extends Extension {
         };
         syncDateStyle();
 
+        const syncClockOptions = () => {
+            if (!this._clock)
+                return;
+            this._clock.setWeight(this._settings.get_string('clock-weight'));
+            const format = this._settings.get_string('clock-format');
+            this._clock.setClockFormat(format === 'system' ? null : format);
+            this._clock.setTint(this._settings.get_boolean('clock-tint'));
+        };
+        syncClockOptions();
+
+        const syncStatusCorner = () => this._syncStatusCorner();
+        syncStatusCorner();
+
+        // GNOME's ease() already honours "Reduce Animation"; the unlock
+        // crossfade is timer-driven, so it has to be gated explicitly.
+        St.Settings.get().connectObject('notify::enable-animations', syncCupertinoUnlockFade, this);
+
         this._wackShellStateChangedId = Main.extensionManager.connect('extension-state-changed', (_obj, ext) => {
             if (ext.uuid === 'wack-shell@rinzler69-wastaken.github.com') {
                 syncCupertinoUnlockFade();
@@ -396,7 +413,10 @@ export default class WackLockscreenClockExtension extends Extension {
         this._settings.connectObject(
             'changed::clock-animation', syncClockAnimation,
             'changed::prompt-animation', syncPromptAnimation,
-            'changed::lockscreen-mode', syncLockscreenMode,
+            'changed::lockscreen-mode', () => {
+                syncLockscreenMode();
+                syncStatusCorner();
+            },
             'changed::cupertino-always-show-user', syncCupertinoAlwaysShowUser,
             'changed::esc-to-sleep', syncEscToSleep,
             'changed::cupertino-unlock-fade', syncCupertinoUnlockFade,
@@ -407,7 +427,13 @@ export default class WackLockscreenClockExtension extends Extension {
             'changed::cupertino-lockscreen-message-text', () => this._updateLockscreenMessage(),
             'changed::lockscreen-wallpaper-enable', syncCustomWallpaper,
             'changed::lockscreen-wallpaper-path', syncCustomWallpaper,
+            'changed::lockscreen-wallpaper-monitors', syncCustomWallpaper,
             'changed::date-style', syncDateStyle,
+            'changed::clock-weight', syncClockOptions,
+            'changed::clock-format', syncClockOptions,
+            'changed::clock-tint', syncClockOptions,
+            'changed::status-corner', syncStatusCorner,
+            'changed::password-indicators', () => this._unlockDialogController?.syncPasswordIndicators(),
             this
         );
     }
@@ -429,11 +455,12 @@ export default class WackLockscreenClockExtension extends Extension {
         const style = this._bgSettings.get_enum('picture-options');
 
         const customWallpaperEnabled = this._settings?.get_boolean('lockscreen-wallpaper-enable') ?? false;
-        const customWallpaperPath = this._settings?.get_string('lockscreen-wallpaper-path') ?? '';
+        // The prompt sits on the primary monitor, so sample that monitor's wallpaper.
+        const customWallpaperPath = this._wallpaperManager?.getPathForMonitor(Main.layoutManager.primaryIndex) ?? '';
         let uri;
         let inactiveUri;
         if (customWallpaperEnabled && customWallpaperPath && Gio.File.new_for_path(customWallpaperPath).query_exists(null)) {
-            uri = customWallpaperPath.startsWith('file://') ? customWallpaperPath : `file://${customWallpaperPath}`;
+            uri = Gio.File.new_for_path(customWallpaperPath).get_uri();
             inactiveUri = uri; // custom wallpaper is the same for both variants
         } else {
             uri = this._bgSettings.get_string(
@@ -772,7 +799,10 @@ export default class WackLockscreenClockExtension extends Extension {
     _setupCupertinoAvatarOverride() { if (this._avatarManager) this._avatarManager.setupCupertinoAvatarOverride(); }
     _teardownCupertinoAvatarOverride() { if (this._avatarManager) this._avatarManager.teardownCupertinoAvatarOverride(); }
 
-    _updateCustomWallpaperOverlay() { if (this._wallpaperManager) this._wallpaperManager.updateCustomWallpaperOverlay(); }
+    _updateCustomWallpaperOverlay() {
+        this._wallpaperManager?.updateCustomWallpaperOverlay().catch(e =>
+            _logError(`[WACK/Extension] custom wallpaper update failed: ${e}`));
+    }
     _setCustomWallpaperBlur(radius, brightness) { if (this._wallpaperManager) this._wallpaperManager.setCustomWallpaperBlur(radius, brightness); }
 
     _positionClock() { if (this._clockLayoutManager) this._clockLayoutManager.positionClock(); }
@@ -827,7 +857,17 @@ export default class WackLockscreenClockExtension extends Extension {
         this._cupertinoUnlockFade = this._settings.get_string('lockscreen-mode') === 'cupertino' &&
             wackShellEnabled &&
             this._settings.get_boolean('cupertino-unlock-fade') &&
-            !isPowerSaver;
+            !isPowerSaver &&
+            St.Settings.get().enable_animations;
+    }
+
+    _syncStatusCorner() {
+        const enabled = this._isActive && this._lockscreenMode === 'cupertino' &&
+            (this._settings?.get_boolean('status-corner') ?? false);
+        if (enabled)
+            Main.panel.add_style_class_name('wack-status-corner');
+        else
+            Main.panel.remove_style_class_name('wack-status-corner');
     }
 
     // Guideline EGO-M-008: Documenting use of unlock-dialog.
@@ -884,10 +924,13 @@ export default class WackLockscreenClockExtension extends Extension {
 
         clearCache();
 
+        St.Settings.get().disconnectObject(this);
+
         if (Main.panel) {
             Main.panel.remove_all_transitions();
             Main.panel.translation_y = 0;
             Main.panel.opacity = 255;
+            Main.panel.remove_style_class_name('wack-status-corner');
         }
 
         if (this._unblankManager) {

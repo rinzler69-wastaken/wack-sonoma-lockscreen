@@ -108,5 +108,48 @@
       <summary>Date Style</summary>
       <description>Choose between shortened and full date names on the lockscreen.</description>
     </key>
+    <key name="lockscreen-wallpaper-monitors" type="a{ss}">
+      <default>{}</default>
+      <summary>Per-monitor lockscreen wallpapers</summary>
+      <description>Map of monitor connector name (e.g. 'DP-1') to wallpaper path. Monitors without an entry use lockscreen-wallpaper-path. Paths may be images or GNOME slideshow XML files (time-of-day wallpapers).</description>
+    </key>
+    <key name="clock-weight" type="s">
+      <choices>
+        <choice value="light"/>
+        <choice value="regular"/>
+        <choice value="medium"/>
+        <choice value="semibold"/>
+        <choice value="bold"/>
+        <choice value="heavy"/>
+      </choices>
+      <default>'semibold'</default>
+      <summary>Clock font weight</summary>
+      <description>Font weight of the lockscreen time.</description>
+    </key>
+    <key name="clock-format" type="s">
+      <choices>
+        <choice value="system"/>
+        <choice value="12h"/>
+        <choice value="24h"/>
+      </choices>
+      <default>'system'</default>
+      <summary>Clock format</summary>
+      <description>Use the system 12/24-hour setting, or override it on the lockscreen.</description>
+    </key>
+    <key name="clock-tint" type="b">
+      <default>false</default>
+      <summary>Wallpaper-tinted clock</summary>
+      <description>Tint the clock and date with a light shade of the wallpaper colour.</description>
+    </key>
+    <key name="status-corner" type="b">
+      <default>true</default>
+      <summary>Sonoma-style status corner</summary>
+      <description>Restyle the top-right status icons (battery, network, input source) on the lockscreen in Cupertino mode.</description>
+    </key>
+    <key name="password-indicators" type="b">
+      <default>true</default>
+      <summary>Password field indicators</summary>
+      <description>Show Caps Lock and keyboard layout indicators inside the password field instead of the Caps Lock text warning.</description>
+    </key>
   </schema>
 </schemalist>
