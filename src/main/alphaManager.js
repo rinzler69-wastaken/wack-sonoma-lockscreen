@@ -537,9 +537,9 @@ export async function precacheSlideshow(params) {
     let xmlText = null;
     const file = uri.startsWith('file://') ? Gio.File.new_for_uri(uri) : Gio.File.new_for_path(uri);
     if (file.query_exists(null)) {
-        const [ok, contents] = await file.load_contents_async(null);
-        if (ok)
-            xmlText = new TextDecoder().decode(contents);
+        // The promisified variant resolves to [contents, etag]; there is no ok flag.
+        const [contents] = await file.load_contents_async(null);
+        xmlText = new TextDecoder().decode(contents);
     }
 
     if (!xmlText)
