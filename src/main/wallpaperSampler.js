@@ -520,7 +520,7 @@ export function sampleSolidGradientPromptColors({
     normBounds,
     whiteBlendAlpha = CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
 }) {
-    const { prompt, cancel, a11y, session } = normBounds;
+    const { prompt, cancel, avatar, a11y, session, suspend, restart, powerOff } = normBounds;
     const c1 = parseHexColor(primaryColor);
     const c2 = parseHexColor(secondaryColor);
 
@@ -591,48 +591,46 @@ export function sampleSolidGradientPromptColors({
     let rawCancel;
     let rawA11y;
     let rawSession;
+    let rawSuspend;
+    let rawRestart;
+    let rawPowerOff;
     if (shadingType === 0) {
         rawCancel = { ...c1 };
         rawA11y = { ...c1 };
         rawSession = { ...c1 };
+        rawSuspend = { ...c1 };
+        rawRestart = { ...c1 };
+        rawPowerOff = { ...c1 };
     } else if (shadingType === 1) {
-        const ytCancel = (cancel.y1 + cancel.y2) / 2;
-        rawCancel = {
-            r: Math.round(c1.r + (c2.r - c1.r) * ytCancel),
-            g: Math.round(c1.g + (c2.g - c1.g) * ytCancel),
-            b: Math.round(c1.b + (c2.b - c1.b) * ytCancel),
+        const sampleY = (b) => {
+            const yt = b ? (b.y1 + b.y2) / 2 : 0.5;
+            return {
+                r: Math.round(c1.r + (c2.r - c1.r) * yt),
+                g: Math.round(c1.g + (c2.g - c1.g) * yt),
+                b: Math.round(c1.b + (c2.b - c1.b) * yt),
+            };
         };
-        const ytA11y = (a11y.y1 + a11y.y2) / 2;
-        rawA11y = {
-            r: Math.round(c1.r + (c2.r - c1.r) * ytA11y),
-            g: Math.round(c1.g + (c2.g - c1.g) * ytA11y),
-            b: Math.round(c1.b + (c2.b - c1.b) * ytA11y),
-        };
-        const ytSess = (session.y1 + session.y2) / 2;
-        rawSession = {
-            r: Math.round(c1.r + (c2.r - c1.r) * ytSess),
-            g: Math.round(c1.g + (c2.g - c1.g) * ytSess),
-            b: Math.round(c1.b + (c2.b - c1.b) * ytSess),
-        };
+        rawCancel = sampleY(cancel);
+        rawA11y = sampleY(a11y);
+        rawSession = sampleY(session);
+        rawSuspend = sampleY(suspend);
+        rawRestart = sampleY(restart);
+        rawPowerOff = sampleY(powerOff);
     } else {
-        const xtCancel = (cancel.x1 + cancel.x2) / 2;
-        rawCancel = {
-            r: Math.round(c1.r + (c2.r - c1.r) * xtCancel),
-            g: Math.round(c1.g + (c2.g - c1.g) * xtCancel),
-            b: Math.round(c1.b + (c2.b - c1.b) * xtCancel),
+        const sampleX = (b) => {
+            const xt = b ? (b.x1 + b.x2) / 2 : 0.5;
+            return {
+                r: Math.round(c1.r + (c2.r - c1.r) * xt),
+                g: Math.round(c1.g + (c2.g - c1.g) * xt),
+                b: Math.round(c1.b + (c2.b - c1.b) * xt),
+            };
         };
-        const xtA11y = (a11y.x1 + a11y.x2) / 2;
-        rawA11y = {
-            r: Math.round(c1.r + (c2.r - c1.r) * xtA11y),
-            g: Math.round(c1.g + (c2.g - c1.g) * xtA11y),
-            b: Math.round(c1.b + (c2.b - c1.b) * xtA11y),
-        };
-        const xtSess = (session.x1 + session.x2) / 2;
-        rawSession = {
-            r: Math.round(c1.r + (c2.r - c1.r) * xtSess),
-            g: Math.round(c1.g + (c2.g - c1.g) * xtSess),
-            b: Math.round(c1.b + (c2.b - c1.b) * xtSess),
-        };
+        rawCancel = sampleX(cancel);
+        rawA11y = sampleX(a11y);
+        rawSession = sampleX(session);
+        rawSuspend = sampleX(suspend);
+        rawRestart = sampleX(restart);
+        rawPowerOff = sampleX(powerOff);
     }
 
     const sampledCancelColor = applyPromptVisualState(
@@ -642,12 +640,27 @@ export function sampleSolidGradientPromptColors({
     );
     const sampledA11yColor = applyPromptVisualState(
         rawA11y,
-        resolvePromptVisualState(rawA11y, whiteBlendAlpha),
+        promptVisualState,
         { preblend: true }
     );
     const sampledSessionColor = applyPromptVisualState(
         rawSession,
-        resolvePromptVisualState(rawSession, whiteBlendAlpha),
+        promptVisualState,
+        { preblend: true }
+    );
+    const sampledSuspendColor = applyPromptVisualState(
+        rawSuspend,
+        promptVisualState,
+        { preblend: true }
+    );
+    const sampledRestartColor = applyPromptVisualState(
+        rawRestart,
+        promptVisualState,
+        { preblend: true }
+    );
+    const sampledPowerOffColor = applyPromptVisualState(
+        rawPowerOff,
+        promptVisualState,
         { preblend: true }
     );
 
@@ -659,6 +672,9 @@ export function sampleSolidGradientPromptColors({
         sampledAvatarColor,
         sampledA11yColor,
         sampledSessionColor,
+        sampledSuspendColor,
+        sampledRestartColor,
+        sampledPowerOffColor,
         promptVisualState,
         shadowAlpha,
         direction,
@@ -666,11 +682,11 @@ export function sampleSolidGradientPromptColors({
 }
 
 /**
- * Samples wallpaper region average colors and applies visual state for chrome buttons (Cancel, Avatar, A11y, Session).
+ * Samples wallpaper region average colors and applies visual state for chrome buttons (Cancel, Avatar, A11y, Session, CSA Power Buttons).
  *
  * @param {object} params
  * @param {GdkPixbuf.Pixbuf} params.pixbuf Loaded wallpaper pixbuf
- * @param {object} params.mappedBoundsMap Map of normalized bounds relative to pixbuf { cancel, avatar, a11y, session }
+ * @param {object} params.mappedBoundsMap Map of normalized bounds relative to pixbuf { cancel, avatar, a11y, session, suspend, restart, powerOff }
  * @param {object|null} params.promptVisualState Visual state to apply (or derive for buttons)
  * @param {object|null} [params.fallbackPrimaryColor] Fallback color if sample fails
  * @param {number} [params.whiteBlendAlpha] White overlay blend factor
@@ -679,6 +695,9 @@ export function sampleSolidGradientPromptColors({
  *   avatarColor: object,
  *   a11yColor: object,
  *   sessionColor: object,
+ *   suspendColor: object,
+ *   restartColor: object,
+ *   powerOffColor: object,
  *   effectivePromptVisualState: object
  * }}
  */
@@ -689,7 +708,15 @@ export function sampleWallpaperChromeColors({
     fallbackPrimaryColor = null,
     whiteBlendAlpha = CUPERTINO_PROMPT_WHITE_BLEND_ALPHA,
 }) {
-    const { cancel: cancelMappedBounds, avatar: avatarMappedBounds, a11y: a11yMappedBounds, session: sessionMappedBounds } = mappedBoundsMap;
+    const {
+        cancel: cancelMappedBounds,
+        avatar: avatarMappedBounds,
+        a11y: a11yMappedBounds,
+        session: sessionMappedBounds,
+        suspend: suspendMappedBounds,
+        restart: restartMappedBounds,
+        powerOff: powerOffMappedBounds,
+    } = mappedBoundsMap;
 
     const fallback = fallbackPrimaryColor || { r: 40, g: 40, b: 40 };
 
@@ -709,7 +736,7 @@ export function sampleWallpaperChromeColors({
     const rawA11y = (a11yMappedBounds ? sampleRegionAverageColor(pixbuf, a11yMappedBounds) : null) || fallback;
     const sampledA11yColor = applyPromptVisualState(
         rawA11y,
-        resolvePromptVisualState(rawA11y, whiteBlendAlpha),
+        effectivePromptVisualState,
         { preblend: true }
     );
 
@@ -717,7 +744,31 @@ export function sampleWallpaperChromeColors({
     const rawSession = (sessionMappedBounds ? sampleRegionAverageColor(pixbuf, sessionMappedBounds) : null) || fallback;
     const sampledSessionColor = applyPromptVisualState(
         rawSession,
-        resolvePromptVisualState(rawSession, whiteBlendAlpha),
+        effectivePromptVisualState,
+        { preblend: true }
+    );
+
+    // CSA Suspend
+    const rawSuspend = (suspendMappedBounds ? sampleRegionAverageColor(pixbuf, suspendMappedBounds) : null) || fallback;
+    const sampledSuspendColor = applyPromptVisualState(
+        rawSuspend,
+        effectivePromptVisualState,
+        { preblend: true }
+    );
+
+    // CSA Restart
+    const rawRestart = (restartMappedBounds ? sampleRegionAverageColor(pixbuf, restartMappedBounds) : null) || fallback;
+    const sampledRestartColor = applyPromptVisualState(
+        rawRestart,
+        effectivePromptVisualState,
+        { preblend: true }
+    );
+
+    // CSA Power Off
+    const rawPowerOff = (powerOffMappedBounds ? sampleRegionAverageColor(pixbuf, powerOffMappedBounds) : null) || fallback;
+    const sampledPowerOffColor = applyPromptVisualState(
+        rawPowerOff,
+        effectivePromptVisualState,
         { preblend: true }
     );
 
@@ -726,6 +777,9 @@ export function sampleWallpaperChromeColors({
         avatarColor: sampledAvatarColor,
         a11yColor: sampledA11yColor,
         sessionColor: sampledSessionColor,
+        suspendColor: sampledSuspendColor,
+        restartColor: sampledRestartColor,
+        powerOffColor: sampledPowerOffColor,
         effectivePromptVisualState,
     };
 }

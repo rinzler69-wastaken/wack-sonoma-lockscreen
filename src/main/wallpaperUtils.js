@@ -244,6 +244,9 @@ export function normalizePromptChromeBounds(params, monitorWidth = 1920, monitor
         avatarBounds = null,
         a11yBounds = null,
         sessionBounds = null,
+        suspendBounds = null,
+        restartBounds = null,
+        powerOffBounds = null,
         yCenterFraction = null,
         wellH = 0,
     } = params;
@@ -377,12 +380,76 @@ export function normalizePromptChromeBounds(params, monitorWidth = 1920, monitor
         normSessionY2 = Math.max(0, Math.min(1, fallbackSessionCenterY + sessionHalfH));
     }
 
+    // CSA Suspend button bounds
+    let normSuspendX1, normSuspendX2, normSuspendY1, normSuspendY2;
+    const csaHalfW = (38 / 2) / monitorWidth;
+    const csaHalfH = (38 / 2) / monitorHeight;
+    const csaFallbackY = 0.72;
+
+    if (suspendBounds &&
+        suspendBounds.x1 != null && suspendBounds.x2 != null &&
+        suspendBounds.x2 > suspendBounds.x1 &&
+        suspendBounds.y1 != null && suspendBounds.y2 != null &&
+        suspendBounds.y2 > suspendBounds.y1) {
+        normSuspendX1 = Math.max(0, Math.min(1, suspendBounds.x1));
+        normSuspendX2 = Math.max(0, Math.min(1, suspendBounds.x2));
+        normSuspendY1 = Math.max(0, Math.min(1, suspendBounds.y1));
+        normSuspendY2 = Math.max(0, Math.min(1, suspendBounds.y2));
+    } else {
+        const fallbackSuspendCenterX = 0.50 - (76 / monitorWidth);
+        normSuspendX1 = Math.max(0, Math.min(1, fallbackSuspendCenterX - csaHalfW));
+        normSuspendX2 = Math.max(0, Math.min(1, fallbackSuspendCenterX + csaHalfW));
+        normSuspendY1 = Math.max(0, Math.min(1, csaFallbackY - csaHalfH));
+        normSuspendY2 = Math.max(0, Math.min(1, csaFallbackY + csaHalfH));
+    }
+
+    // CSA Restart button bounds
+    let normRestartX1, normRestartX2, normRestartY1, normRestartY2;
+    if (restartBounds &&
+        restartBounds.x1 != null && restartBounds.x2 != null &&
+        restartBounds.x2 > restartBounds.x1 &&
+        restartBounds.y1 != null && restartBounds.y2 != null &&
+        restartBounds.y2 > restartBounds.y1) {
+        normRestartX1 = Math.max(0, Math.min(1, restartBounds.x1));
+        normRestartX2 = Math.max(0, Math.min(1, restartBounds.x2));
+        normRestartY1 = Math.max(0, Math.min(1, restartBounds.y1));
+        normRestartY2 = Math.max(0, Math.min(1, restartBounds.y2));
+    } else {
+        const fallbackRestartCenterX = 0.50;
+        normRestartX1 = Math.max(0, Math.min(1, fallbackRestartCenterX - csaHalfW));
+        normRestartX2 = Math.max(0, Math.min(1, fallbackRestartCenterX + csaHalfW));
+        normRestartY1 = Math.max(0, Math.min(1, csaFallbackY - csaHalfH));
+        normRestartY2 = Math.max(0, Math.min(1, csaFallbackY + csaHalfH));
+    }
+
+    // CSA Power Off button bounds
+    let normPowerOffX1, normPowerOffX2, normPowerOffY1, normPowerOffY2;
+    if (powerOffBounds &&
+        powerOffBounds.x1 != null && powerOffBounds.x2 != null &&
+        powerOffBounds.x2 > powerOffBounds.x1 &&
+        powerOffBounds.y1 != null && powerOffBounds.y2 != null &&
+        powerOffBounds.y2 > powerOffBounds.y1) {
+        normPowerOffX1 = Math.max(0, Math.min(1, powerOffBounds.x1));
+        normPowerOffX2 = Math.max(0, Math.min(1, powerOffBounds.x2));
+        normPowerOffY1 = Math.max(0, Math.min(1, powerOffBounds.y1));
+        normPowerOffY2 = Math.max(0, Math.min(1, powerOffBounds.y2));
+    } else {
+        const fallbackPowerOffCenterX = 0.50 + (76 / monitorWidth);
+        normPowerOffX1 = Math.max(0, Math.min(1, fallbackPowerOffCenterX - csaHalfW));
+        normPowerOffX2 = Math.max(0, Math.min(1, fallbackPowerOffCenterX + csaHalfW));
+        normPowerOffY1 = Math.max(0, Math.min(1, csaFallbackY - csaHalfH));
+        normPowerOffY2 = Math.max(0, Math.min(1, csaFallbackY + csaHalfH));
+    }
+
     return {
         prompt: { x1: normX1, x2: normX2, y1: normY1, y2: normY2 },
         cancel: { x1: normCancelX1, x2: normCancelX2, y1: normCancelY1, y2: normCancelY2 },
         avatar: { x1: normAvatarX1, x2: normAvatarX2, y1: normAvatarY1, y2: normAvatarY2 },
         a11y: { x1: normA11yX1, x2: normA11yX2, y1: normA11yY1, y2: normA11yY2 },
         session: { x1: normSessionX1, x2: normSessionX2, y1: normSessionY1, y2: normSessionY2 },
+        suspend: { x1: normSuspendX1, x2: normSuspendX2, y1: normSuspendY1, y2: normSuspendY2 },
+        restart: { x1: normRestartX1, x2: normRestartX2, y1: normRestartY1, y2: normRestartY2 },
+        powerOff: { x1: normPowerOffX1, x2: normPowerOffX2, y1: normPowerOffY1, y2: normPowerOffY2 },
     };
 }
 

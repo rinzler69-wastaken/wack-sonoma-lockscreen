@@ -1,5 +1,6 @@
 import Clutter from 'gi://Clutter';
 import Cogl from 'gi://Cogl';
+import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -22,6 +23,8 @@ const MESSAGE_PROMPT_GAP = 48;
 export class GdmManager {
     constructor(extension) {
         this._extension = extension;
+        this._settings = extension.getSettings();
+        this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
         this._active = false;
         this._dialog = null;
         this._dialogParent = null;
@@ -34,7 +37,7 @@ export class GdmManager {
         this._promptStyling = new GdmPromptStyling(this);
         this._avatarManager = new GdmAvatarManager(this);
         this._animController = new GdmAnimationController(this);
-        this._powerButtons = new GdmPowerButtons();
+        this._powerButtons = new GdmPowerButtons(this);
         this._passwordIndicators = null;
 
         this._origEnsureUnlockDialog = null;
@@ -145,6 +148,8 @@ export class GdmManager {
         }
 
         this._teardown();
+        this._settings = null;
+        this._interfaceSettings = null;
     }
 
     _findLoginDialog() {
@@ -260,6 +265,8 @@ export class GdmManager {
                     dialog._userSelectionBox.visible = true;
                 }
 
+                this._powerButtons?.syncQuickSettingsVisibility();
+
                 return res;
             };
         }
@@ -273,7 +280,10 @@ export class GdmManager {
 
         // Shift user selection list down
         if (dialog._userSelectionBox) {
-            this._connectAllocation(dialog._userSelectionBox, () => this._positionUserList());
+            this._connectAllocation(dialog._userSelectionBox, () => {
+                this._positionUserList();
+                this._positionAuthPrompt();
+            });
         }
         this._positionUserList();
 
@@ -516,6 +526,7 @@ export class GdmManager {
             dialog._setUserListExpanded = (expanded) => {
                 const wasVisible = dialog._userSelectionBox?.visible;
                 this._origSetUserListExpanded(expanded);
+                this._powerButtons?.syncQuickSettingsVisibility();
                 if (expanded && dialog._userSelectionBox && (!wasVisible || dialog._userSelectionBox.opacity === 0)) {
                     this._positionUserList();
                     dialog._userSelectionBox.remove_all_transitions();
@@ -602,7 +613,7 @@ export class GdmManager {
 
         connectFailureShake(dialog._authPrompt, this,
             () => this._selectedPromptMode === 'cupertino');
-        this._applyUserPresentation(null);
+        this._applyUserPresentation(this._currentWallpaperMetadata ?? null);
     }
 
     /**
@@ -612,16 +623,21 @@ export class GdmManager {
      * @param {object|null} meta
      */
     _applyUserPresentation(meta) {
-        this._powerButtons.setEnabled(meta?.systemActions ?? true);
+        const systemActions = meta?.systemActions ?? (
+            (this._settings && this._settings.settings_schema.has_key('cupertino-system-actions'))
+                ? this._settings.get_boolean('cupertino-system-actions')
+                : true
+        );
+        this._powerButtons.setEnabled(systemActions);
 
-        const statusCorner = meta?.lockscreenMode !== 'wack' && (meta?.statusCorner ?? true);
+        const statusCorner = meta?.lockscreenMode !== 'wack' && (meta?.statusCorner ?? (this._settings ? this._settings.get_boolean('status-corner') : true));
         if (statusCorner)
             Main.panel.add_style_class_name('wack-status-corner');
         else
             Main.panel.remove_style_class_name('wack-status-corner');
 
         const authPrompt = this._dialog?._authPrompt;
-        const indicators = meta?.passwordIndicators ?? true;
+        const indicators = meta?.passwordIndicators ?? (this._settings ? this._settings.get_boolean('password-indicators') : true);
         if (indicators && !this._passwordIndicators && authPrompt) {
             this._passwordIndicators = new PasswordIndicators(authPrompt);
         } else if (!indicators && this._passwordIndicators) {
@@ -631,8 +647,24 @@ export class GdmManager {
 
         const clock = this._clockManager?.clock;
         if (clock) {
-            clock.setWeight(meta?.clockWeight);
-            clock.setTint(meta?.clockTint ?? false);
+            const clockWeight = meta?.clockWeight ?? (this._settings ? this._settings.get_string('clock-weight') : 'semibold');
+            this._clockManager.setWeight(clockWeight);
+
+            if (meta?.clockFormat !== undefined) {
+                clock.setClockFormat(meta.clockFormat);
+            } else {
+                const override = this._settings?.get_string('clock-format') ?? 'system';
+                const ifaceFormat = this._interfaceSettings?.get_string('clock-format') ?? '24h';
+                clock.setClockFormat(override === 'system' ? ifaceFormat : override);
+            }
+
+            if (meta?.dateStyle !== undefined)
+                clock.setDateStyle(meta.dateStyle);
+            if (meta?.userLocale !== undefined)
+                clock.setLocale(meta.userLocale);
+
+            const clockTint = meta?.clockTint ?? (this._settings ? this._settings.get_boolean('clock-tint') : false);
+            clock.setTint(clockTint);
         }
     }
 
@@ -864,7 +896,7 @@ export class GdmManager {
             if (yCenterChanged) this._lastYCenterFraction = yCenterFraction;
             if (boundsChanged) this._lastPromptBounds = promptBounds;
 
-            if (this._wallpaperManager?.themeStore && promptBounds) {
+            if (this._wallpaperManager?.themeStore) {
                 const monitor = Main.layoutManager?.primaryMonitor;
                 const monitorWidth = monitor ? monitor.width : 1920;
                 const monitorHeight = monitor ? monitor.height : 1080;
@@ -874,6 +906,7 @@ export class GdmManager {
                 const sessionButton = this._promptStyling._findSessionButton();
                 const cancelButton = authPrompt.cancelButton ?? null;
                 const avatarActor = authPrompt._userWell ?? null;
+                const powerIcons = this._powerButtons?.getPowerIcons() ?? {};
 
                 const getBounds = (actor) => {
                     if (!actor || !actor.get_transformed_position) return null;
@@ -901,6 +934,9 @@ export class GdmManager {
                         avatar: getBounds(avatarActor),
                         a11y: getBounds(a11yButton),
                         session: getBounds(sessionButton),
+                        suspend: getBounds(powerIcons.suspend),
+                        restart: getBounds(powerIcons.restart),
+                        powerOff: getBounds(powerIcons.powerOff),
                     },
                 });
             }

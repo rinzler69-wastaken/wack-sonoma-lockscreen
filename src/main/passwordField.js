@@ -116,13 +116,7 @@ export class PasswordIndicators {
 
         const backend = this._entry.get_context?.()?.get_backend() ?? Clutter.get_default_backend();
         this._keymap = backend.get_default_seat().get_keymap();
-        this._keymap.connectObject('state-changed', () => this._syncCaps(), this);
-
         this._inputSources = getInputSourceManager();
-        this._inputSources.connectObject(
-            'current-source-changed', () => this._syncLayout(),
-            'sources-changed', () => this._syncLayout(),
-            this);
 
         // GNOME's warning label re-syncs itself through this._sync on map and
         // keymap changes; shadow it so the label stays collapsed.
@@ -136,72 +130,121 @@ export class PasswordIndicators {
             warning._sync();
         }
 
+        this._entry.connectObject('notify::mapped', () => {
+            if (this._entry.is_mapped()) {
+                this._keymap.connectObject('state-changed', () => this._syncCaps(true), this);
+                this._inputSources.connectObject(
+                    'current-source-changed', () => this._syncLayout(true),
+                    'sources-changed', () => this._syncLayout(true),
+                    this);
+            } else {
+                this._keymap.disconnectObject(this);
+                this._inputSources.disconnectObject(this);
+            }
+
+            this._sync(false, true);
+        }, this);
+
         // The entry (and our box inside it) dies with the prompt; only drop signals.
         authPrompt.connectObject('destroy', () => this.destroy(false), this);
 
-        this._syncCaps(false);
-        this._syncLayout(false);
+        if (this._entry.is_mapped()) {
+            this._keymap.connectObject('state-changed', () => this._syncCaps(true), this);
+            this._inputSources.connectObject(
+                'current-source-changed', () => this._syncLayout(true),
+                'sources-changed', () => this._syncLayout(true),
+                this);
+        }
+
+        this._sync(false, true);
     }
 
-    _syncCaps(animate = true) {
-        this._setShown(this._capsIcon, this._keymap.get_caps_lock_state(), animate);
+    _sync(animate = true, force = false) {
+        this._syncCaps(animate, force);
+        this._syncLayout(animate, force);
     }
 
-    _syncLayout(animate = true) {
+    _syncCaps(animate = true, force = false) {
+        if (!this._keymap || !this._capsIcon)
+            return;
+        this._setShown(this._capsIcon, this._keymap.get_caps_lock_state(), animate, force);
+    }
+
+    _syncLayout(animate = true, force = false) {
+        if (!this._inputSources || !this._layoutLabel)
+            return;
         const count = Object.keys(this._inputSources.inputSources ?? {}).length;
         const shortName = this._inputSources.currentSource?.shortName ?? '';
         this._layoutLabel.text = shortName.toUpperCase();
-        this._setShown(this._layoutLabel, count > 1 && shortName !== '', animate);
+        this._setShown(this._layoutLabel, count > 1 && shortName !== '', animate, force);
     }
 
     // `_wackShown` is the wanted state of each indicator.
-    _setShown(indicator, shown, animate) {
+    _setShown(indicator, shown, animate, force = false) {
         // Keymap state-changed also fires on unrelated modifier changes.
-        if (indicator._wackShown === shown)
+        if (!force && indicator._wackShown === shown)
             return;
         indicator._wackShown = shown;
         const indicators = [this._capsIcon, this._layoutLabel];
         const anyShown = indicators.some(i => i._wackShown);
-        const slotted = this._entry.get_primary_icon() === this._box;
+        const slotted = this._entry?.get_primary_icon?.() === this._box;
         if (!anyShown && !slotted)
             return;
 
         // Last laid-out width, so an interrupted slide continues from where it is.
         const fromWidth = slotted ? Math.max(0, this._box.get_allocation_box().get_width()) : 0;
-        if (!slotted) {
+        if (!slotted && anyShown) {
             // Opening adds StEntry's fixed gap at once; start the text shifted
             // back by it so the slide begins exactly where the text was.
             this._entry.set_primary_icon(this._box);
-            this._textActors().forEach(a => (a.translation_x = -ENTRY_ICON_GAP));
+            if (animate)
+                this._textActors().forEach(a => (a.translation_x = -ENTRY_ICON_GAP));
         }
+
+        indicators.forEach(i => (i.visible = !!i._wackShown));
 
         let targetWidth = 0;
         if (anyShown) {
             // Measured once in the stage, so the stylesheet applies.
-            indicators.forEach(i => (i.visible = i._wackShown));
             this._box.natural_width_set = false;
             targetWidth = this._box.get_preferred_width(-1)[1];
         }
 
         const duration = animate ? INDICATOR_SLIDE_MS : 0;
-        // Closing ends with the gap removed, so slide the text back by it too.
         const textShift = anyShown ? 0 : -ENTRY_ICON_GAP;
-        this._textActors().forEach(a => a.ease({
-            translation_x: textShift,
-            duration,
-            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-        }));
-        easeWidth(this._box, fromWidth, targetWidth, duration, () => {
-            if (anyShown)
-                return;
-            this._entry.set_primary_icon(null);
+
+        if (duration > 0) {
+            this._textActors().forEach(a => a.ease({
+                translation_x: textShift,
+                duration,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            }));
+            easeWidth(this._box, fromWidth, targetWidth, duration, () => {
+                if (anyShown) {
+                    this._box.width = -1;
+                    return;
+                }
+                this._entry.set_primary_icon(null);
+                this._resetText();
+                indicators.forEach(i => (i.visible = false));
+            });
+        } else {
+            this._box.remove_transition('width');
             this._resetText();
-            indicators.forEach(i => (i.visible = false));
-        });
+            if (anyShown) {
+                this._box.width = targetWidth > 0 ? -1 : 0;
+            } else {
+                this._box.width = 0;
+                this._entry.set_primary_icon(null);
+                indicators.forEach(i => (i.visible = false));
+            }
+        }
     }
 
     // The typed text and the placeholder (hint) are separate actors.
     _textActors() {
+        if (!this._entry)
+            return [];
         return [this._entry.clutter_text, this._entry.get_hint_actor()].filter(Boolean);
     }
 
@@ -216,22 +259,27 @@ export class PasswordIndicators {
         if (!this._box)
             return;
 
+        this._entry?.disconnectObject(this);
         this._keymap?.disconnectObject(this);
         this._inputSources?.disconnectObject(this);
-        this._authPrompt.disconnectObject(this);
+        this._authPrompt?.disconnectObject(this);
 
         if (restoreEntry) {
             if (this._warning) {
                 delete this._warning._sync;
                 this._warning._sync(false);
             }
-            if (this._entry.get_primary_icon() === this._box)
+            if (this._entry && this._entry.get_primary_icon() === this._box)
                 this._entry.set_primary_icon(null);
             this._resetText();
             this._box.destroy();
         }
         this._warning = null;
         this._box = null;
+        this._entry = null;
+        this._authPrompt = null;
+        this._keymap = null;
+        this._inputSources = null;
     }
 }
 

@@ -377,22 +377,24 @@ export function ensurePromptVisualState(color, whiteBlendAlpha = CUPERTINO_PROMP
  * @param {{preblend?: boolean}} [options]
  */
 export function applyPromptVisualState(sourceColor, visualState, options = {}) {
-    const overlay = visualState.overlay;
-    const isSameColor = sourceColor.r === visualState.sourceColor?.r &&
-        sourceColor.g === visualState.sourceColor?.g &&
-        sourceColor.b === visualState.sourceColor?.b;
+    const overlay = visualState?.overlay;
+    const isSameColor = sourceColor.r === visualState?.sourceColor?.r &&
+        sourceColor.g === visualState?.sourceColor?.g &&
+        sourceColor.b === visualState?.sourceColor?.b;
 
     let blended;
-    if (isSameColor && visualState.finalColor) {
+    if (isSameColor && visualState?.finalColor) {
         blended = visualState.finalColor;
-    } else if (visualState.isBrightHue) {
+    } else if (visualState?.isBrightHue) {
         blended = getPromptDarkenedHueColor(sourceColor);
-    } else {
+    } else if (overlay) {
         blended = blendOverOpaque(
             sourceColor,
             { r: overlay.r, g: overlay.g, b: overlay.b },
             overlay.alpha
         );
+    } else {
+        blended = sourceColor;
     }
     const display = options.preblend ? blended : sourceColor;
 
@@ -406,15 +408,15 @@ export function applyPromptVisualState(sourceColor, visualState, options = {}) {
         noise: visualState?.noise ?? sourceColor?.noise ?? 0.0,
         rgba: `rgba(${display.r}, ${display.g}, ${display.b}, 1.0)`,
         hex: rgbToHex(display.r, display.g, display.b),
-        overlayR: overlay.r,
-        overlayG: overlay.g,
-        overlayB: overlay.b,
-        overlayAlpha: overlay.alpha,
-        overlayRgba: overlay.rgba,
-        shadowAlpha: visualState.shadowAlpha,
-        useInverse: visualState.useInverse,
-        isBrightSample: visualState.isBrightSample,
-        isBrightHue: visualState.isBrightHue,
+        overlayR: overlay?.r ?? 255,
+        overlayG: overlay?.g ?? 255,
+        overlayB: overlay?.b ?? 255,
+        overlayAlpha: overlay?.alpha ?? 0.18,
+        overlayRgba: overlay?.rgba ?? 'rgba(255, 255, 255, 0.1800)',
+        shadowAlpha: visualState?.shadowAlpha,
+        useInverse: visualState?.useInverse ?? false,
+        isBrightSample: visualState?.isBrightSample ?? false,
+        isBrightHue: visualState?.isBrightHue ?? false,
         visualState,
     };
 }

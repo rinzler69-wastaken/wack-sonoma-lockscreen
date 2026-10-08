@@ -94,7 +94,9 @@ export class GdmAvatarManager {
                             avatar.update = avatar._wackOrigUpdate;
                             delete avatar._wackOrigUpdate;
                         }
-                        if (avatar._wackHasVibrancy && !this._hasImageAvatar(avatar)) {
+                        delete avatar._wackUpdating;
+                        delete avatar._wackSettingStyle;
+                        if (avatar._wackHasVibrancy) {
                             avatar.set_style(null);
                         }
                         delete avatar._wackHasVibrancy;
@@ -115,7 +117,12 @@ export class GdmAvatarManager {
         if (!avatar._wackOrigUpdate) {
             avatar._wackOrigUpdate = avatar.update.bind(avatar);
             avatar.update = () => {
+                if (avatar._wackSettingStyle || avatar._wackUpdating)
+                    return;
+                avatar._wackUpdating = true;
                 avatar._wackOrigUpdate();
+                avatar._wackUpdating = false;
+
                 this._applyStyleToUserListItemAvatar(avatar);
             };
 
@@ -137,9 +144,8 @@ export class GdmAvatarManager {
         this._applyStyleToUserListItemAvatar(avatar);
     }
 
-
     _applyStyleToUserListItemAvatar(avatar) {
-        if (!avatar) return;
+        if (!avatar || avatar._wackSettingStyle) return;
 
         // Never touch picture avatars! GNOME Shell sets their photo via background-image on avatar.style.
         if (this._hasImageAvatar(avatar)) {
@@ -158,7 +164,9 @@ export class GdmAvatarManager {
         const buttonStyle = bgRgba ? `background-color: ${bgRgba} !important; border-radius: 999px !important;` : null;
 
         if (avatar.get_style() !== buttonStyle) {
+            avatar._wackSettingStyle = true;
             avatar.set_style(buttonStyle);
+            avatar._wackSettingStyle = false;
             if (buttonStyle)
                 avatar._wackHasVibrancy = true;
             else
@@ -175,12 +183,12 @@ export class GdmAvatarManager {
 
     _hasImageAvatar(avatar) {
         if (!avatar) return false;
-        if (avatar.has_style_class_name('user-avatar')) return true;
-        const style = avatar.get_style() || '';
+        if (avatar.has_style_class_name?.('user-avatar')) return true;
+        const style = avatar.get_style?.() || '';
         if (style.includes('background-image')) return true;
         const user = avatar._user;
         if (user) {
-            const iconFile = user.get_icon_file();
+            const iconFile = user.get_icon_file?.();
             if (iconFile && GLib.file_test(iconFile, GLib.FileTest.EXISTS))
                 return true;
         }
@@ -212,23 +220,26 @@ export class GdmAvatarManager {
                 if (avatarButton.get_style() !== buttonStyle)
                     avatarButton.set_style(buttonStyle);
                 // Apply to the avatar widget directly for placeholder/symbolic avatars
-                if (avatar && avatar.get_style() !== buttonStyle) {
-                    avatar.set_style(buttonStyle);
-                    if (buttonStyle)
-                        avatar._wackHasVibrancy = true;
-                    else
-                        delete avatar._wackHasVibrancy;
-                }
-                if (avatar)
+                if (avatar) {
+                    if (avatar.get_style() !== buttonStyle) {
+                        avatar._wackSettingStyle = true;
+                        avatar.set_style(buttonStyle);
+                        avatar._wackSettingStyle = false;
+                        if (buttonStyle)
+                            avatar._wackHasVibrancy = true;
+                        else
+                            delete avatar._wackHasVibrancy;
+                    }
                     avatar.clip_to_allocation = true;
+                    const child = avatar.get_child();
+                    if (child) {
+                        const iconStyle = buttonStyle ? 'background-color: transparent !important; border-radius: 999px !important;' : null;
+                        if (child.get_style() !== iconStyle)
+                            child.set_style(iconStyle);
+                    }
+                }
                 if (avatarButton)
                     avatarButton.clip_to_allocation = true;
-                const child = avatar?.get_child();
-                if (child) {
-                    const iconStyle = buttonStyle ? 'background-color: transparent !important; border-radius: 999px !important;' : null;
-                    if (child.get_style() !== iconStyle)
-                        child.set_style(iconStyle);
-                }
             }
         };
 
@@ -286,7 +297,12 @@ export class GdmAvatarManager {
             if (avatar && !avatar._wackOrigUpdate) {
                 avatar._wackOrigUpdate = avatar.update.bind(avatar);
                 avatar.update = () => {
+                    if (avatar._wackSettingStyle || avatar._wackUpdating)
+                        return;
+                    avatar._wackUpdating = true;
                     avatar._wackOrigUpdate();
+                    avatar._wackUpdating = false;
+
                     this.updateAvatarVibrancy();
                 };
             }
@@ -350,7 +366,9 @@ export class GdmAvatarManager {
                     avatar.update = avatar._wackOrigUpdate;
                     delete avatar._wackOrigUpdate;
                 }
-                if (avatar._wackHasVibrancy && !this._hasImageAvatar(avatar)) {
+                delete avatar._wackUpdating;
+                delete avatar._wackSettingStyle;
+                if (avatar._wackHasVibrancy) {
                     avatar.set_style(null);
                 }
                 delete avatar._wackHasVibrancy;

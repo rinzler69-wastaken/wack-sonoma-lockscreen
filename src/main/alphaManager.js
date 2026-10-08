@@ -241,7 +241,7 @@ export async function getWallpaperPromptColor(params) {
     const monitorHeight = monitor ? monitor.height : 1080;
 
     const normBounds = normalizePromptChromeBounds(params, monitorWidth, monitorHeight);
-    const { prompt, cancel, avatar, a11y, session } = normBounds;
+    const { prompt, cancel, avatar, a11y, session, suspend, restart, powerOff } = normBounds;
 
     const { mtime, size } = await getFileMtimeAndSize(targetFilePath);
 
@@ -250,6 +250,9 @@ export async function getWallpaperPromptColor(params) {
     const avatarBoundsKey = formatBoundsKey(avatar.x1, avatar.x2, avatar.y1, avatar.y2);
     const a11yBoundsKey = formatBoundsKey(a11y.x1, a11y.x2, a11y.y1, a11y.y2);
     const sessionBoundsKey = formatBoundsKey(session.x1, session.x2, session.y1, session.y2);
+    const suspendBoundsKey = formatBoundsKey(suspend.x1, suspend.x2, suspend.y1, suspend.y2);
+    const restartBoundsKey = formatBoundsKey(restart.x1, restart.x2, restart.y1, restart.y2);
+    const powerOffBoundsKey = formatBoundsKey(powerOff.x1, powerOff.x2, powerOff.y1, powerOff.y2);
 
     const identity = createPromptVibrancyIdentity({
         targetUri,
@@ -267,6 +270,9 @@ export async function getWallpaperPromptColor(params) {
         avatarBoundsKey,
         a11yBoundsKey,
         sessionBoundsKey,
+        suspendBoundsKey,
+        restartBoundsKey,
+        powerOffBoundsKey,
         blurRadius: PROMPT_BLUR_RADIUS,
         blurBrightness: PROMPT_BLUR_BRIGHTNESS,
         cancelHoverAlpha: CANCEL_BUTTON_HOVER_OVERLAY_ALPHA,
@@ -284,12 +290,13 @@ export async function getWallpaperPromptColor(params) {
             const hasA11y = !!cached.a11yColor;
             const hasSession = !!cached.sessionColor;
             const hasCancel = !!cached.cancelColor;
+            const hasCsa = !!cached.suspendColor && !!cached.restartColor && !!cached.powerOffColor;
             if (vibrancyMode === 'tonal' || vibrancyMode === 'less') {
-                if (cached.r != null && hasAvatar && hasA11y && hasSession && hasCancel)
+                if (cached.r != null && hasAvatar && hasA11y && hasSession && hasCancel && hasCsa)
                     return { ...cached, transitionInfo: transitionInfo ?? null };
             } else {
                 const hasPromptImg = cached.imagePath && Gio.File.new_for_path(cached.imagePath).query_exists(null);
-                if (hasPromptImg && hasAvatar && hasA11y && hasSession && hasCancel)
+                if (hasPromptImg && hasAvatar && hasA11y && hasSession && hasCancel && hasCsa)
                     return { ...cached, transitionInfo: transitionInfo ?? null };
             }
         }
@@ -310,6 +317,9 @@ export async function getWallpaperPromptColor(params) {
         let sampledAvatarColor = null;
         let sampledA11yColor = null;
         let sampledSessionColor = null;
+        let sampledSuspendColor = null;
+        let sampledRestartColor = null;
+        let sampledPowerOffColor = null;
         let direction = 'vertical';
         let imagePath = null;
         let shadowAlpha = undefined;
@@ -330,6 +340,9 @@ export async function getWallpaperPromptColor(params) {
             sampledAvatarColor = solidGradientResult.sampledAvatarColor;
             sampledA11yColor = solidGradientResult.sampledA11yColor;
             sampledSessionColor = solidGradientResult.sampledSessionColor;
+            sampledSuspendColor = solidGradientResult.sampledSuspendColor;
+            sampledRestartColor = solidGradientResult.sampledRestartColor;
+            sampledPowerOffColor = solidGradientResult.sampledPowerOffColor;
             promptVisualState = solidGradientResult.promptVisualState;
             shadowAlpha = solidGradientResult.shadowAlpha;
             direction = solidGradientResult.direction;
@@ -358,6 +371,9 @@ export async function getWallpaperPromptColor(params) {
                 const avatarMappedBounds = mapNormalizedBoundsToPixbuf(avatar, pbWidth, pbHeight, visibleViewport);
                 const a11yMappedBounds = mapNormalizedBoundsToPixbuf(a11y, pbWidth, pbHeight, visibleViewport);
                 const sessionMappedBounds = mapNormalizedBoundsToPixbuf(session, pbWidth, pbHeight, visibleViewport);
+                const suspendMappedBounds = mapNormalizedBoundsToPixbuf(suspend, pbWidth, pbHeight, visibleViewport);
+                const restartMappedBounds = mapNormalizedBoundsToPixbuf(restart, pbWidth, pbHeight, visibleViewport);
+                const powerOffMappedBounds = mapNormalizedBoundsToPixbuf(powerOff, pbWidth, pbHeight, visibleViewport);
 
                 if (vibrancyMode === 'tonal' || vibrancyMode === 'less') {
                     const sampled = sampleRegionAverageColor(pixbuf, mappedBounds) || { r: 40, g: 40, b: 40 };
@@ -413,13 +429,16 @@ export async function getWallpaperPromptColor(params) {
                     sampledCancelColor = applyPromptVisualState(rawCancelColor, promptVisualState, { preblend: true });
                 }
 
-                // Decoupled chrome sampling (avatar, a11y, session)
+                // Decoupled chrome sampling (avatar, a11y, session, CSA power buttons)
                 const chromeColors = sampleWallpaperChromeColors({
                     pixbuf,
                     mappedBoundsMap: {
                         avatar: avatarMappedBounds,
                         a11y: a11yMappedBounds,
                         session: sessionMappedBounds,
+                        suspend: suspendMappedBounds,
+                        restart: restartMappedBounds,
+                        powerOff: powerOffMappedBounds,
                     },
                     promptVisualState,
                     fallbackPrimaryColor: sampledPrimary,
@@ -429,6 +448,9 @@ export async function getWallpaperPromptColor(params) {
                 sampledAvatarColor = chromeColors.avatarColor;
                 sampledA11yColor = chromeColors.a11yColor;
                 sampledSessionColor = chromeColors.sessionColor;
+                sampledSuspendColor = chromeColors.suspendColor;
+                sampledRestartColor = chromeColors.restartColor;
+                sampledPowerOffColor = chromeColors.powerOffColor;
                 if (!promptVisualState)
                     promptVisualState = chromeColors.effectivePromptVisualState;
             } catch (e) {
@@ -465,7 +487,7 @@ export async function getWallpaperPromptColor(params) {
             const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
             sampledA11yColor = applyPromptVisualState(
                 raw,
-                resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
                 { preblend: true }
             );
         }
@@ -474,7 +496,34 @@ export async function getWallpaperPromptColor(params) {
             const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
             sampledSessionColor = applyPromptVisualState(
                 raw,
-                resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                { preblend: true }
+            );
+        }
+
+        if (!sampledSuspendColor) {
+            const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
+            sampledSuspendColor = applyPromptVisualState(
+                raw,
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                { preblend: true }
+            );
+        }
+
+        if (!sampledRestartColor) {
+            const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
+            sampledRestartColor = applyPromptVisualState(
+                raw,
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                { preblend: true }
+            );
+        }
+
+        if (!sampledPowerOffColor) {
+            const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
+            sampledPowerOffColor = applyPromptVisualState(
+                raw,
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
                 { preblend: true }
             );
         }
@@ -497,6 +546,9 @@ export async function getWallpaperPromptColor(params) {
             avatarColor: sampledAvatarColor,
             a11yColor: sampledA11yColor,
             sessionColor: sampledSessionColor,
+            suspendColor: sampledSuspendColor,
+            restartColor: sampledRestartColor,
+            powerOffColor: sampledPowerOffColor,
             shadowAlpha: shadowAlpha,
             useInverse: promptVisualState?.useInverse ?? false,
             visualState: promptVisualState,

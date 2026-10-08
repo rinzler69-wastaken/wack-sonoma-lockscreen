@@ -1,5 +1,6 @@
 import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
+import Gtk from 'gi://Gtk';
 
 import { buildComboRow, getGdmStatus } from '../prefsUtils.js';
 
@@ -14,7 +15,7 @@ export function buildAppearanceGroup(extensionPreferences, settings, _) {
         title: _('Clock and Status'),
     });
 
-    group.add(buildComboRow(settings, 'clock-weight',
+    const clockWeightRow = buildComboRow(settings, 'clock-weight',
         _('Clock Weight'),
         _('Font weight of the lockscreen time.'),
         [
@@ -25,7 +26,23 @@ export function buildAppearanceGroup(extensionPreferences, settings, _) {
             ['bold', 'Bold'],
             ['heavy', 'Heavy'],
         ],
-        _));
+        _);
+    const resetClockWeightButton = new Gtk.Button({
+        icon_name: 'view-refresh-symbolic',
+        tooltip_text: _('Restore defaults'),
+        css_classes: ['flat'],
+        valign: Gtk.Align.CENTER,
+    });
+    resetClockWeightButton.connect('clicked', () => settings.reset('clock-weight'));
+    clockWeightRow.add_suffix(resetClockWeightButton);
+
+    const syncClockWeightReset = () => {
+        resetClockWeightButton.sensitive = settings.get_user_value('clock-weight') !== null;
+    };
+    syncClockWeightReset();
+    const clockWeightSignal = settings.connect('changed::clock-weight', syncClockWeightReset);
+    clockWeightRow.connect('destroy', () => settings.disconnect(clockWeightSignal));
+    group.add(clockWeightRow);
 
     group.add(buildComboRow(settings, 'clock-format',
         _('Clock Format'),
@@ -50,7 +67,7 @@ export function buildAppearanceGroup(extensionPreferences, settings, _) {
         _('Restyle the top-right battery, network and input source icons. Cupertino mode only.')));
 
     // Only meaningful on the login screen, so only offered once the GDM DLC is in place.
-    if (getGdmStatus(extensionPreferences.dir).enabled) {
+    if (getGdmStatus(extensionPreferences.dir).enabled && settings.settings_schema.has_key('cupertino-system-actions')) {
         group.add(buildSwitchRow(settings, 'cupertino-system-actions',
             _('Cupertino System Actions'),
             _('Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu.')));

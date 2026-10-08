@@ -138,6 +138,27 @@ export class CrossSessionManager {
             } else if (c1.sessionColor || c2.sessionColor) {
                 return false;
             }
+            if (c1.suspendColor && c2.suspendColor) {
+                if (c1.suspendColor.r !== c2.suspendColor.r || c1.suspendColor.g !== c2.suspendColor.g || c1.suspendColor.b !== c2.suspendColor.b) return false;
+                if (c1.suspendColor.rgba !== c2.suspendColor.rgba) return false;
+                if (c1.suspendColor.useInverse !== c2.suspendColor.useInverse) return false;
+            } else if (c1.suspendColor || c2.suspendColor) {
+                return false;
+            }
+            if (c1.restartColor && c2.restartColor) {
+                if (c1.restartColor.r !== c2.restartColor.r || c1.restartColor.g !== c2.restartColor.g || c1.restartColor.b !== c2.restartColor.b) return false;
+                if (c1.restartColor.rgba !== c2.restartColor.rgba) return false;
+                if (c1.restartColor.useInverse !== c2.restartColor.useInverse) return false;
+            } else if (c1.restartColor || c2.restartColor) {
+                return false;
+            }
+            if (c1.powerOffColor && c2.powerOffColor) {
+                if (c1.powerOffColor.r !== c2.powerOffColor.r || c1.powerOffColor.g !== c2.powerOffColor.g || c1.powerOffColor.b !== c2.powerOffColor.b) return false;
+                if (c1.powerOffColor.rgba !== c2.powerOffColor.rgba) return false;
+                if (c1.powerOffColor.useInverse !== c2.powerOffColor.useInverse) return false;
+            } else if (c1.powerOffColor || c2.powerOffColor) {
+                return false;
+            }
             return true;
         };
         const userName = GLib.get_user_name();
@@ -162,7 +183,7 @@ export class CrossSessionManager {
 
         const save = () => this._triggerSave();
 
-        this._settings.connectObject(
+        const settingsSignals = [
             'changed::prompt-vibrancy', save,
             'changed::cursor-blink', save,
             'changed::lockscreen-mode', save,
@@ -176,9 +197,12 @@ export class CrossSessionManager {
             'changed::clock-tint', save,
             'changed::status-corner', save,
             'changed::password-indicators', save,
-            'changed::cupertino-system-actions', save,
-            this
-        );
+        ];
+        if (this._settings.settings_schema.has_key('cupertino-system-actions'))
+            settingsSignals.push('changed::cupertino-system-actions', save);
+        settingsSignals.push(this);
+
+        this._settings.connectObject(...settingsSignals);
         this._bgSettings.connectObject(
             'changed::picture-uri', save,
             'changed::picture-uri-dark', save,
@@ -617,7 +641,9 @@ export class CrossSessionManager {
             clockTint: this._settings ? this._settings.get_boolean('clock-tint') : false,
             statusCorner: this._settings ? this._settings.get_boolean('status-corner') : true,
             passwordIndicators: this._settings ? this._settings.get_boolean('password-indicators') : true,
-            systemActions: this._settings ? this._settings.get_boolean('cupertino-system-actions') : true,
+            systemActions: (this._settings && this._settings.settings_schema.has_key('cupertino-system-actions'))
+                ? this._settings.get_boolean('cupertino-system-actions')
+                : true,
             dateStyle: this._settings ? (this._settings.get_string('date-style') || 'full') : 'full',
             userLocale: GLib.getenv('LC_TIME') || GLib.getenv('LANG') || Intl.DateTimeFormat().resolvedOptions().locale || null,
             clockAlpha: this._clockAlpha ?? 0.6,

@@ -619,6 +619,9 @@ export default class WackLockscreenClockExtension extends Extension {
             avatarBounds,
             a11yBounds,
             sessionBounds,
+            suspendBounds: null,
+            restartBounds: null,
+            powerOffBounds: null,
             vibrancyMode: this._settings?.get_string('prompt-vibrancy') ?? 'tonal',
         };
         const textLuminance = this._clock ? this._clock.getTextLuminance() : 1.0;

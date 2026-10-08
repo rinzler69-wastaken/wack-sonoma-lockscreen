@@ -28,6 +28,15 @@ export class GdmClockManager {
         const userLocale = dialog?._user?.get_language() || metadata?.userLocale || null;
         this.clock.setDateStyle(dateStyle);
         this.clock.setLocale(userLocale);
+        if (metadata?.clockWeight !== undefined)
+            this.clock.setWeight(metadata.clockWeight);
+        if (metadata?.clockFormat !== undefined)
+            this.clock.setClockFormat(metadata.clockFormat);
+        if (metadata?.clockTint !== undefined)
+            this.clock.setTint(metadata.clockTint);
+        if (metadata?.clockAlpha !== undefined && metadata?.clockAlpha !== null)
+            this.clock.setWallpaperAlpha(metadata.clockAlpha, metadata?.promptColor ?? null);
+
         const dateLabel = this.clock._dateOutput;
         const timeLabel = this.clock._time;
         this.timeLabel = timeLabel;
@@ -46,6 +55,7 @@ export class GdmClockManager {
             reactive: false,
             opacity: 0,
         });
+        this._syncClockGlowWeight();
 
         this.clockWrapper = new St.Widget({
             style_class: 'wack-gdm-clock-wrapper',
@@ -369,5 +379,39 @@ export class GdmClockManager {
             this.clock.setWallpaperAlpha(alpha, promptColor);
         }
     }
-}
 
+    setClockFormat(format) {
+        if (this.clock) {
+            this.clock.setClockFormat(format);
+        }
+    }
+
+    setWeight(weight) {
+        if (this.clock) {
+            this.clock.setWeight(weight);
+            this._syncClockGlowWeight();
+        }
+    }
+
+    // The glow label is shown above the real time label for the pressed and
+    // checked DateMenu states. Keep its inline weight in lockstep so it does
+    // not briefly fall back to .wack-time's default (semibold) weight.
+    _syncClockGlowWeight() {
+        if (!this.clockGlowTime)
+            return;
+        const weight = this.clock?._weight;
+        this.clockGlowTime.set_style(weight ? `font-weight: ${weight};` : null);
+    }
+
+    setTint(tint) {
+        if (this.clock) {
+            this.clock.setTint(tint);
+        }
+    }
+
+    setDateStyle(style) {
+        if (this.clock) {
+            this.clock.setDateStyle(style);
+        }
+    }
+}

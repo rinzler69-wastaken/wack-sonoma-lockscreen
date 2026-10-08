@@ -159,17 +159,21 @@
     border: none;
 }
 
-#panel.unlock-screen.wack-status-corner .panel-button:hover,
+
 #panel.unlock-screen.wack-status-corner .panel-button:active,
 #panel.unlock-screen.wack-status-corner .panel-button:checked,
 #panel.unlock-screen.wack-status-corner .panel-button:focus,
-#panel.login-screen.wack-status-corner .panel-button:hover,
 #panel.login-screen.wack-status-corner .panel-button:active,
 #panel.login-screen.wack-status-corner .panel-button:checked,
 #panel.login-screen.wack-status-corner .panel-button:focus {
     background-color: rgba(255, 255, 255, 0.12);
     box-shadow: none;
 }
+
+#panel.unlock-screen.wack-status-corner .panel-button:hover,
+#panel.login-screen.wack-status-corner .panel-button:hover {
+    background-color: transparent;
+}    
 
 #panel.unlock-screen.wack-status-corner .panel-status-indicators-box,
 #panel.login-screen.wack-status-corner .panel-status-indicators-box {
@@ -264,6 +268,13 @@
     border-radius: 9999px !important;
     border: 1px solid transparent !important;
     box-shadow: none;
+    padding: 9px !important;
+}
+
+.unlock-dialog .login-dialog-button.a11y-button StIcon,
+.unlock-dialog .login-dialog-button.login-dialog-session-list-button StIcon,
+.unlock-dialog .login-dialog-button.login-dialog-auth-menu-button StIcon {
+    icon-size: 20px;
 }
 
 .unlock-dialog .login-dialog-button.a11y-button:hover,

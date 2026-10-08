@@ -1,6 +1,11 @@
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { GDM_USER_STACK_VERTICAL_FRACTION } from './gdmUtils.js';
+import {
+    GDM_USER_STACK_VERTICAL_FRACTION_WITH_CSA,
+    GDM_USER_STACK_VERTICAL_FRACTION_NO_CSA,
+    GDM_USER_LIST_CAP_WITH_CSA,
+    GDM_USER_LIST_CAP_NO_CSA,
+} from './gdmUtils.js';
 
 export class GdmUserListManager {
     constructor(gdmManager) {
@@ -27,9 +32,13 @@ export class GdmUserListManager {
             if (w <= 0) w = Main.layoutManager.primaryMonitor.width;
             if (h <= 0) h = Main.layoutManager.primaryMonitor.height;
         }
+        const hasCsa = Boolean(this._gdm._powerButtons?.actor?.visible);
+        const fraction = hasCsa
+            ? GDM_USER_STACK_VERTICAL_FRACTION_WITH_CSA
+            : GDM_USER_STACK_VERTICAL_FRACTION_NO_CSA;
         const [, , natW, natH] = box.get_preferred_size();
         box.translation_x = Math.floor(w / 2 - natW / 2) - (box.x || 0);
-        box.translation_y = Math.floor(h * GDM_USER_STACK_VERTICAL_FRACTION - natH / 2) - (box.y || 0);
+        box.translation_y = Math.floor(h * fraction - natH) - (box.y || 0);
     }
 
     getItemTightWidth(item) {
@@ -68,12 +77,31 @@ export class GdmUserListManager {
             item.x_expand = false;
             item.set_width(maxW);
         }
+
+        const hasCsa = Boolean(this._gdm._powerButtons?.actor?.visible);
+        const cap = hasCsa ? GDM_USER_LIST_CAP_WITH_CSA : GDM_USER_LIST_CAP_NO_CSA;
+
+        const items = Array.from(userList._items.values());
+        if (items.length > cap) {
+            let capHeight = 0;
+            for (let i = 0; i < cap; i++) {
+                const [, h] = items[i].get_preferred_height(-1);
+                capHeight += h;
+            }
+            userList.set_height(capHeight);
+        } else {
+            userList.set_height(-1);
+        }
     }
 
     setupUserListWidths(dialog = null) {
         const targetDialog = dialog || this._gdm._dialog;
         const userList = targetDialog?._userList;
         if (!userList) return;
+
+        userList.vscrollbar_policy = St.PolicyType.NEVER;
+        userList.hscrollbar_policy = St.PolicyType.NEVER;
+        userList.enable_mouse_scrolling = true;
 
         this.applyUserListWidths(targetDialog);
 
@@ -91,6 +119,9 @@ export class GdmUserListManager {
             this.userListItemAddedId = null;
         }
         if (userList) {
+            userList.set_height(-1);
+            userList.vscrollbar_policy = St.PolicyType.AUTOMATIC;
+            userList.hscrollbar_policy = St.PolicyType.AUTOMATIC;
             for (const item of userList._items.values()) {
                 item.x_expand = true;
                 item.set_width(-1);

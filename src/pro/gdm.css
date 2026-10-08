@@ -94,6 +94,30 @@
 
 .login-dialog-user-list-view {
     width: auto !important;
+    -st-vfade-offset: 2em !important;
+}
+
+.login-dialog-user-list-view StScrollBar {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.login-dialog-user-list-view StScrollBar StBin#trough,
+.login-dialog-user-list-view StScrollBar .vhandle,
+.login-dialog-user-list-view StScrollBar .hhandle {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .login-dialog-user-list-item {
@@ -167,6 +191,7 @@
     box-shadow: none;
 }
 
+/* Equalised 38px footprint and 9px padding matching the CSA power buttons (.wack-gdm-power-icon: 20px icon + 9px padding) */
 .login-dialog .login-dialog-button.a11y-button,
 .login-dialog .login-dialog-button.login-dialog-session-list-button,
 .login-dialog .login-dialog-button.login-dialog-auth-menu-button {
@@ -176,22 +201,13 @@
     border-radius: 9999px !important;
     border: 1px solid transparent !important;
     box-shadow: none;
-}
-
-/* Same 38px footprint as the CSA circles (.wack-gdm-power-icon: 20px icon + 9px padding);
-   36px content + the 1px border above. */
-.login-dialog .login-dialog-button.a11y-button,
-.login-dialog .login-dialog-button.login-dialog-session-list-button,
-.login-dialog .login-dialog-button.login-dialog-auth-menu-button {
-    width: 36px !important;
-    height: 36px !important;
-    padding: 0 !important;
+    padding: 9px !important;
 }
 
 .login-dialog .login-dialog-button.a11y-button StIcon,
 .login-dialog .login-dialog-button.login-dialog-session-list-button StIcon,
 .login-dialog .login-dialog-button.login-dialog-auth-menu-button StIcon {
-    icon-size: 20px;
+    icon-size: 24px;
 }
 
 .login-dialog .login-dialog-button.a11y-button:hover,
@@ -370,36 +386,59 @@
 
 /* macOS-style Sleep / Restart / Shut Down under the user list */
 .wack-gdm-power-buttons {
-    spacing: 28px;
+    spacing: 36px;
 }
 
 .wack-gdm-power-button {
     border-radius: 12px;
     padding: 6px 8px;
-    background-color: transparent;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
     color: rgba(255, 255, 255, 0.85);
 }
 
 .wack-gdm-power-button:hover,
-.wack-gdm-power-button:focus {
-    background-color: rgba(255, 255, 255, 0.12);
+.wack-gdm-power-button:focus,
+.wack-gdm-power-button:active {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.wack-gdm-power-button:hover .wack-gdm-power-label,
+.wack-gdm-power-button:focus .wack-gdm-power-label {
     color: #ffffff;
 }
 
-.wack-gdm-power-button:active {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
 .wack-gdm-power-icon {
-    icon-size: 20px;
+    icon-size: 24px;
     padding: 9px;
     border-radius: 999px;
     background-color: rgba(236, 236, 236, 0.175);
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid transparent !important;
+    box-shadow: none;
+}
+
+.wack-gdm-power-button:hover .wack-gdm-power-icon {
+    box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.188) !important;
+    color: #ffffff !important;
+}
+
+.wack-gdm-power-button:focus .wack-gdm-power-icon {
+    box-shadow: none !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+.wack-gdm-power-button:active .wack-gdm-power-icon {
+    box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.088) !important;
 }
 
 .wack-gdm-power-label {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
-    padding-top: 6px;
+    padding-top: 10px;
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
 }

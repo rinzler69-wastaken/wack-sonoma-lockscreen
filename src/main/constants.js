@@ -36,14 +36,14 @@ export const AVATAR_BUTTON_X_OFFSET = 0; // px
 export const AVATAR_BUTTON_Y_OFFSET = 0; // px
 
 // Accessibility button sampling constants (for lockscreen)
-export const A11Y_BUTTON_WIDTH = 34; // px
-export const A11Y_BUTTON_HEIGHT = 34; // px
+export const A11Y_BUTTON_WIDTH = 38; // px
+export const A11Y_BUTTON_HEIGHT = 38; // px
 export const A11Y_BUTTON_X_OFFSET = 0; // px
 export const A11Y_BUTTON_Y_OFFSET = 0; // px
 
 // Desktop Environment / Session select button sampling constants (for lockscreen)
-export const SESSION_BUTTON_WIDTH = 34; // px
-export const SESSION_BUTTON_HEIGHT = 34; // px
+export const SESSION_BUTTON_WIDTH = 38; // px
+export const SESSION_BUTTON_HEIGHT = 38; // px
 export const SESSION_BUTTON_X_OFFSET = 0; // px
 export const SESSION_BUTTON_Y_OFFSET = 0; // px
 

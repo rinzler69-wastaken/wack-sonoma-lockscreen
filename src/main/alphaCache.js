@@ -85,6 +85,12 @@ function _validateCacheEntry(key, value) {
             return false;
         if (value.sessionColor && !_isValidRgb(value.sessionColor))
             return false;
+        if (value.suspendColor && !_isValidRgb(value.suspendColor))
+            return false;
+        if (value.restartColor && !_isValidRgb(value.restartColor))
+            return false;
+        if (value.powerOffColor && !_isValidRgb(value.powerOffColor))
+            return false;
         if (typeof value.useInverse !== 'boolean')
             return false;
         if (typeof value.shadowAlpha !== 'number' || !Number.isFinite(value.shadowAlpha))
@@ -196,13 +202,7 @@ function _flushSave() {
         entries: entriesObj,
     };
 
-    let encoded;
-    try {
-        encoded = new TextEncoder().encode(JSON.stringify(envelope));
-    } catch (e) {
-        _saving = false;
-        return;
-    }
+    const encoded = new TextEncoder().encode(JSON.stringify(envelope));
 
     ensureCacheDirectory();
     const file = Gio.File.new_for_path(CACHE_FILE);

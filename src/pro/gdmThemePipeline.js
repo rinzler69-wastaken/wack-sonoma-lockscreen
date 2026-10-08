@@ -87,7 +87,7 @@ export class GdmThemeStore {
         this._slideTimerId = 0;
         this._revision = 0;
 
-        initCache().catch(() => {});
+        initCache();
 
         this._settings = extension.getSettings();
         this._vibrancy = this._settings.get_string('prompt-vibrancy');
@@ -129,6 +129,9 @@ export class GdmThemeStore {
                 avatar: null,
                 a11y: null,
                 session: null,
+                suspend: null,
+                restart: null,
+                powerOff: null,
             },
         };
     }
@@ -136,8 +139,12 @@ export class GdmThemeStore {
     get vibrancy() { return this._vibrancy; }
 
     // ---- read side: the only thing the click path may call -----------------
+    hasUser(userName) {
+        return userName !== null && this._themes.has(userName);
+    }
+
     peek(userName) {
-        if (userName !== null && this._themes.has(userName))
+        if (this.hasUser(userName))
             return this._themes.get(userName);
         return this.defaultTheme();
     }
@@ -502,6 +509,9 @@ export class GdmThemeStore {
                     avatarBounds: layout.bounds.avatar,
                     a11yBounds: layout.bounds.a11y,
                     sessionBounds: layout.bounds.session,
+                    suspendBounds: layout.bounds.suspend,
+                    restartBounds: layout.bounds.restart,
+                    powerOffBounds: layout.bounds.powerOff,
                     vibrancyMode: userVibrancy,
                 }),
                 (snapshot.clockAlpha !== null && snapshot.slide === null)
@@ -679,6 +689,8 @@ export class GdmThemeStore {
         const dark = iface.get_enum('color-scheme') === 1;
         const style = bg.get_enum('picture-options');
         const uri = bg.get_string(dark ? 'picture-uri-dark' : 'picture-uri');
+        const clockFormatOverride = this._settings ? this._settings.get_string('clock-format') : 'system';
+        const clockFormat = clockFormatOverride === 'system' ? iface.get_string('clock-format') : clockFormatOverride;
         const meta = {
             username: 'gdm',
             source_uri: uri, uri, style,
@@ -686,10 +698,17 @@ export class GdmThemeStore {
             secondary_color: bg.get_string('secondary-color'),
             shading_type: bg.get_enum('color-shading-type'),
             is_color: style === 0,
-            clockFormat: iface.get_string('clock-format'),
-            dateStyle: 'full',
+            clockFormat,
+            clockWeight: this._settings ? this._settings.get_string('clock-weight') : 'semibold',
+            clockTint: this._settings ? this._settings.get_boolean('clock-tint') : false,
+            statusCorner: this._settings ? this._settings.get_boolean('status-corner') : true,
+            passwordIndicators: this._settings ? this._settings.get_boolean('password-indicators') : true,
+            systemActions: (this._settings && this._settings.settings_schema.has_key('cupertino-system-actions'))
+                ? this._settings.get_boolean('cupertino-system-actions')
+                : true,
+            dateStyle: this._settings ? (this._settings.get_string('date-style') || 'full') : 'full',
             clockAlpha: 0.6,
-            lockscreenMode: 'cupertino',
+            lockscreenMode: this._settings ? this._settings.get_string('lockscreen-mode') : 'cupertino',
             active_color_scheme: dark ? 1 : 0,
         };
         return this._freeze({

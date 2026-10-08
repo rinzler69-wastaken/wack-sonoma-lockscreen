@@ -309,6 +309,11 @@ export class GdmPromptStyling {
     _findMenuForButton(button) {
         if (!button)
             return null;
+        // Cancel has no menu. Do not fall through to the dialog-level session
+        // menu below, otherwise opening the session picker makes Cancel look
+        // pressed as well.
+        if (button.has_style_class_name?.('cancel-button'))
+            return null;
         if (button._menu)
             return button._menu;
         if (button.menu)
@@ -654,6 +659,9 @@ export class GdmPromptStyling {
         if (sessionButton) {
             this.applySessionButtonBackground(sessionButton, sessionColorToApply);
         }
+        if (this._gdm._powerButtons) {
+            this._gdm._powerButtons.updateVibrancy(promptColor);
+        }
 
         if (theme.clockAlpha != null) {
             this.updatePromptMessageStyle(null, theme.clockAlpha);
@@ -684,5 +692,9 @@ export class GdmPromptStyling {
         const sessionButton = this._findSessionButton();
         if (sessionButton)
             this.applySessionButtonBackground(sessionButton, null);
+
+        if (this._gdm._powerButtons) {
+            this._gdm._powerButtons.updateVibrancy(null);
+        }
     }
 }

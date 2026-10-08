@@ -101,6 +101,9 @@ export function createPromptVibrancyIdentity(params) {
         avatarBoundsKey = '0.0000_1.0000_0.0000_1.0000',
         a11yBoundsKey = '0.0000_1.0000_0.0000_1.0000',
         sessionBoundsKey = '0.0000_1.0000_0.0000_1.0000',
+        suspendBoundsKey = '0.0000_1.0000_0.0000_1.0000',
+        restartBoundsKey = '0.0000_1.0000_0.0000_1.0000',
+        powerOffBoundsKey = '0.0000_1.0000_0.0000_1.0000',
         blurRadius = DEFAULT_BLUR_RADIUS,
         blurBrightness = DEFAULT_BLUR_BRIGHTNESS,
         cancelHoverAlpha = DEFAULT_CANCEL_HOVER_ALPHA,
@@ -127,6 +130,9 @@ export function createPromptVibrancyIdentity(params) {
         avatarBoundsKey,
         a11yBoundsKey,
         sessionBoundsKey,
+        suspendBoundsKey,
+        restartBoundsKey,
+        powerOffBoundsKey,
         blurRadius: Number(blurRadius) || 50,
         blurBrightness: Number(blurBrightness) || 1.0,
         cancelHoverAlpha: Number(cancelHoverAlpha) || 0.12,
@@ -144,7 +150,12 @@ export function createPromptVibrancyIdentity(params) {
  * @returns {string}
  */
 export function serializePromptVibrancyIdentity(id) {
-    return `prompt_grad_${id.targetUri}_${id.mtime}_${id.size}_${id.isColor}_${id.primaryColor}_${id.secondaryColor}_${id.shadingType}_${id.pictureOptions}_${id.monitorWidth}x${id.monitorHeight}_${id.boundsKey}_cb${id.cancelBoundsKey}_av${id.avatarBoundsKey}_a11y${id.a11yBoundsKey}_sess${id.sessionBoundsKey}_b${id.blurRadius}_pbr${id.blurBrightness}_chov${id.cancelHoverAlpha}_cact${id.cancelActiveAlpha}_cover_vis${id.algorithmVersion}_vm${id.vibrancyMode}${id.progressKey}`;
+    const csaKey = (id.suspendBoundsKey && id.suspendBoundsKey !== '0.0000_1.0000_0.0000_1.0000') ||
+                   (id.restartBoundsKey && id.restartBoundsKey !== '0.0000_1.0000_0.0000_1.0000') ||
+                   (id.powerOffBoundsKey && id.powerOffBoundsKey !== '0.0000_1.0000_0.0000_1.0000')
+        ? `_csa${id.suspendBoundsKey}_${id.restartBoundsKey}_${id.powerOffBoundsKey}`
+        : '';
+    return `prompt_grad_${id.targetUri}_${id.mtime}_${id.size}_${id.isColor}_${id.primaryColor}_${id.secondaryColor}_${id.shadingType}_${id.pictureOptions}_${id.monitorWidth}x${id.monitorHeight}_${id.boundsKey}_cb${id.cancelBoundsKey}_av${id.avatarBoundsKey}_a11y${id.a11yBoundsKey}_sess${id.sessionBoundsKey}${csaKey}_b${id.blurRadius}_pbr${id.blurBrightness}_chov${id.cancelHoverAlpha}_cact${id.cancelActiveAlpha}_cover_vis${id.algorithmVersion}_vm${id.vibrancyMode}${id.progressKey}`;
 }
 
 /**

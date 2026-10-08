@@ -233,6 +233,7 @@ export class GdmAnimationController {
         userSelection.opacity = 0;
         userSelection.show();
         this._gdm._positionUserList();
+        this._gdm._powerButtons?.syncQuickSettingsVisibility();
         userSelection.ease({
             opacity: 255,
             duration: GDM_CROSSFADE_DURATION,
@@ -315,6 +316,7 @@ export class GdmAnimationController {
         userSelection.opacity = 0;
         userSelection.show();
         this._gdm._positionUserList();
+        this._gdm._powerButtons?.syncQuickSettingsVisibility();
         userSelection.ease({
             opacity: 255,
             duration: GDM_CROSSFADE_DURATION,
@@ -331,6 +333,7 @@ export class GdmAnimationController {
         this._gdm._skipLegacyPromptEntryAnimation = false;
         this._gdm._legacyPromptAnimationState = 'selection';
         this.animateSessionMenuButtonIn();
+        this._gdm._powerButtons?.syncQuickSettingsVisibility();
 
         const selectedUser = this._gdm._dialog._user ? this._gdm._dialog._user.get_user_name() : null;
         this._gdm._applyWallpaper(selectedUser, true, true);
