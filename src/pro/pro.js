@@ -14,6 +14,8 @@ import { GdmMessageManager } from './gdmMessageManager.js';
 import { GdmPromptStyling } from './gdmPromptStyling.js';
 import { GdmAvatarManager } from './gdmAvatarManager.js';
 import { GdmAnimationController } from './gdmAnimationController.js';
+import { GdmPowerButtons } from './gdmPowerButtons.js';
+import { PasswordIndicators, connectFailureShake } from '../main/passwordField.js';
 
 const MESSAGE_PROMPT_GAP = 48;
 
@@ -32,6 +34,8 @@ export class GdmManager {
         this._promptStyling = new GdmPromptStyling(this);
         this._avatarManager = new GdmAvatarManager(this);
         this._animController = new GdmAnimationController(this);
+        this._powerButtons = new GdmPowerButtons();
+        this._passwordIndicators = null;
 
         this._origEnsureUnlockDialog = null;
         this._findDialogTimeoutId = null;
@@ -265,6 +269,7 @@ export class GdmManager {
         this._messageManager.setup(this._dialogParent);
         this._userListManager.setup(dialog);
         this._avatarManager.setup(dialog);
+        this._powerButtons.setup(dialog);
 
         // Shift user selection list down
         if (dialog._userSelectionBox) {
@@ -587,12 +592,17 @@ export class GdmManager {
 
         if (dialog._authPrompt.setMessage) {
             this._origAuthPromptSetMessage = dialog._authPrompt.setMessage.bind(dialog._authPrompt);
-            dialog._authPrompt.setMessage = (message, type) => {
-                this._origAuthPromptSetMessage(message, type);
+            // Pass every argument through: GNOME 50 adds wiggleParameters.
+            dialog._authPrompt.setMessage = (...args) => {
+                this._origAuthPromptSetMessage(...args);
                 if (this._promptStyling)
                     this._promptStyling.updatePromptMessageStyle();
             };
         }
+
+        connectFailureShake(dialog._authPrompt, this,
+            () => this._selectedPromptMode === 'cupertino');
+        this._passwordIndicators ??= new PasswordIndicators(dialog._authPrompt);
     }
 
     _restartDialogFadeIn() {
@@ -622,6 +632,10 @@ export class GdmManager {
         this._userListManager.teardown(dialog);
         this._promptStyling.teardown();
         this._avatarManager.teardown();
+        this._powerButtons.teardown();
+        this._passwordIndicators?.destroy();
+        this._passwordIndicators = null;
+        dialog?._authPrompt?._userVerifier?.disconnectObject(this);
 
         if (this._cupertinoRestPromptContainer) {
             this._cupertinoRestPromptContainer.destroy();

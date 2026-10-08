@@ -325,8 +325,9 @@ export function scheduleVibrancyPruning(targetDir, justGeneratedHash, maxDynamic
             const manifestFile = Gio.File.new_for_path(manifestPath);
             if (manifestFile.query_exists(null)) {
                 try {
-                    const [ok, bytes] = await manifestFile.load_contents_async(null);
-                    if (ok && bytes) {
+                    // The promisified variant resolves to [contents, etag]; there is no ok flag.
+                    const [bytes] = await manifestFile.load_contents_async(null);
+                    if (bytes) {
                         const manifest = JSON.parse(new TextDecoder().decode(bytes));
                         const slots = [
                             manifest?.promptColor,

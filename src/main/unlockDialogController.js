@@ -12,6 +12,7 @@ import {
 } from './constants.js';
 import { applyClockAnimation, applyPromptAnimation } from './anims.js';
 import { _setActorVisible } from './mainUtils.js';
+import { PasswordIndicators, connectFailureShake } from './passwordField.js';
 
 export class UnlockDialogController {
     constructor(extension) {
@@ -31,12 +32,17 @@ export class UnlockDialogController {
 
         if (authPrompt.setMessage && !authPrompt._wackOrigSetMessage) {
             authPrompt._wackOrigSetMessage = authPrompt.setMessage.bind(authPrompt);
-            authPrompt.setMessage = (message, type) => {
-                authPrompt._wackOrigSetMessage(message, type);
+            // Pass every argument through: GNOME 50 adds wiggleParameters.
+            authPrompt.setMessage = (...args) => {
+                authPrompt._wackOrigSetMessage(...args);
                 if (this._extension._promptStyling)
                     this._extension._promptStyling.updatePromptMessageStyle();
             };
         }
+
+        connectFailureShake(authPrompt, this,
+            () => this._extension._lockscreenMode === 'cupertino');
+        this.syncPasswordIndicators(authPrompt);
 
         if (this._extension._lockscreenMode === 'cupertino') {
             if (authPrompt._message) {
@@ -44,6 +50,21 @@ export class UnlockDialogController {
             }
             if (this._extension._promptStyling)
                 this._extension._promptStyling.updatePromptMessageStyle();
+        }
+    }
+
+    syncPasswordIndicators(authPrompt = null) {
+        const dialog = this._extension._dialog;
+        authPrompt ??= dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+        if (!authPrompt)
+            return;
+
+        const enabled = this._extension._settings?.get_boolean('password-indicators') ?? false;
+        if (enabled && !authPrompt._wackIndicators) {
+            authPrompt._wackIndicators = new PasswordIndicators(authPrompt);
+        } else if (!enabled && authPrompt._wackIndicators) {
+            authPrompt._wackIndicators.destroy();
+            delete authPrompt._wackIndicators;
         }
     }
 
@@ -420,6 +441,11 @@ export class UnlockDialogController {
         if (authPrompt?._wackOrigSetMessage) {
             authPrompt.setMessage = authPrompt._wackOrigSetMessage;
             delete authPrompt._wackOrigSetMessage;
+        }
+        authPrompt?._userVerifier?.disconnectObject(this);
+        if (authPrompt?._wackIndicators) {
+            authPrompt._wackIndicators.destroy();
+            delete authPrompt._wackIndicators;
         }
 
         if (dialog?._notificationsBox) {

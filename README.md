@@ -40,12 +40,14 @@ A full macOS Sonoma lockscreen reconstruction. The clock stays persistent at the
 - **Custom Clock Positioning** — Date and time pinned to the upper third of the screen, separated cleanly from the auth prompt area.
 - **Locale-Aware Date Formatting** — Respects your `LC_TIME` locale for date display, with a graceful fallback chain.
 - **Centered Clock Constraints** — Clock labels use `Clutter.AlignConstraint` for reliable centering across resolutions and fractional scaling.
+- **Clock Customisation** — Pick the time's font weight (Light → Heavy), override 12/24-hour format on the lockscreen, and optionally tint the clock and date with a light shade of the sampled wallpaper colour.
 
 ### Blur & Visual Polish
 - **Focus-Aware Blur (LEGACY MODE)** — Background stays sharp at rest; blur fades in when the password prompt is active, keeping focus on authentication.
 - **Notification Card Blur** — Individual notification cards carry their own adaptive blur, crossfading with the prompt blur so text stays legible regardless of wallpaper.
 - **Notification Limit** — Caps visible cards at 3, appending a subtle "N+ more" indicator to prevent clutter.
 - **Custom Lockscreen Wallpaper** — Use any image (PNG, JPEG, WebP, JXL, SVG) as the custom lockscreen background via the preferences UI, with integrated blur behaviour that respects the active mode.
+- **Per-Monitor & Time-of-Day Wallpapers** — Give each monitor its own lockscreen wallpaper, or pick a GNOME slideshow XML (e.g. a timed day/night wallpaper) and the lockscreen follows the current slide.
 
 ### Prompt Vibrancy (Cupertino Mode)
 A perceptually calibrated colour engine that samples the wallpaper behind the prompt chip at lock time and computes an adaptive tint:
@@ -85,6 +87,10 @@ Both axes use eased cubic curves for a polished feel. Disabled in Cupertino Mode
 
 ### Other Quality-of-Life
 - **Cursor Blink Control** — Toggle password field cursor blinking on or off.
+- **Password Field Indicators** — macOS-style Caps Lock icon and keyboard-layout badge (shown when more than one input source is configured) inside the password field.
+- **Wrong-Password Shake (Cupertino Mode)** — A damped macOS-style shake replaces GNOME's small wiggle on a failed password.
+- **Sonoma Status Corner (Cupertino Mode)** — Flat, airier styling for the top-right battery, network and input source icons.
+- **Respects Reduce Animation** — The unlock crossfade is skipped when animations are turned off in GNOME settings.
 - **LiveLockScreen Compatibility** — Swipe-to-unlock gestures correctly trigger blur transitions when used alongside the [Live Lock Screen](https://github.com/nick-redwill/LiveLockScreen) extension, with no extra configuration needed.
 - **User Theme Support** — Detects and loads your active GNOME User Theme stylesheet in the unlock dialog so custom themes render correctly at the lock screen.
 - **Responsive Preferences UI** — The prefs window adapts its controls from segmented buttons to dropdowns below 450 px width, using `Adw.Breakpoint`.
@@ -109,6 +115,7 @@ By default, extensions on GNOME Extensions (EGO) cannot run on the GDM login scr
 - **GDM Avatar** — user avatar is displayed with the Cupertino-style circular crop.
 - **GDM Date Menu** - The large clock doubles as a calendar button, filling in for the top bar's date menu that's no longer there. Click it to peek at the calendar.
 - **GDM Lockscreen Message** — if you've set a lockscreen message, it appears on GDM too.
+- **Power Buttons** — macOS-style Suspend / Restart / Power Off buttons under the user list, hidden when the system (or `org.gnome.login-screen disable-restart-buttons`) disallows them.
 - **Multi-monitor aware** — all backgrounds and layouts are positioned per-monitor.
 - **Animated transitions** — GDM dialog fades in/out via `GdmAnimationController`; the clock position, user list, and auth prompt are dynamically repositioned on monitor-change events. Animations differ between modes:
   - **Cupertino mode** — the auth prompt crossfades in and out with a simple opacity transition, keeping things minimal and consistent with the rest of the Cupertino flow.

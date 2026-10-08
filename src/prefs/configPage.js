@@ -2,6 +2,7 @@ import Adw from 'gi://Adw';
 import { buildGeneralGroup } from './groups/generalGroup.js';
 import { buildModeGroup } from './groups/modeGroup.js';
 import { buildDisplayPowerGroup } from './groups/displayPowerGroup.js';
+import { buildAppearanceGroup } from './groups/appearanceGroup.js';
 import { buildExtrasGroup } from './groups/extrasGroup.js';
 
 export function buildConfigPage(extensionPreferences, window, settings, _, settingsSignalIds, cleanupCallbacks) {
@@ -17,6 +18,8 @@ export function buildConfigPage(extensionPreferences, window, settings, _, setti
         settingsSignalIds
     );
     animPage.add(generalGroup);
+
+    animPage.add(buildAppearanceGroup(settings, _, settingsSignalIds));
 
     const { group: modeGroup, linkedBox, dropdown, speedLinkedBox, speedDropdown } = buildModeGroup(
         settings,

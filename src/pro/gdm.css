@@ -351,3 +351,40 @@
     color: rgba(255, 255, 255, 0.95) !important;
     text-shadow: 0 0 16px rgba(255, 255, 255, 0.95), 0 0 32px rgba(255, 255, 255, 0.8), 0 0 48px rgba(255, 255, 255, 0.5) !important;
 }
+
+/* macOS-style Sleep / Restart / Shut Down under the user list */
+.wack-gdm-power-buttons {
+    spacing: 28px;
+    padding-top: 36px;
+}
+
+.wack-gdm-power-button {
+    border-radius: 12px;
+    padding: 6px 8px;
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.wack-gdm-power-button:hover,
+.wack-gdm-power-button:focus {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.wack-gdm-power-button:active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.wack-gdm-power-icon {
+    icon-size: 20px;
+    padding: 9px;
+    border-radius: 999px;
+    background-color: rgba(236, 236, 236, 0.175);
+}
+
+.wack-gdm-power-label {
+    font-size: 12px;
+    font-weight: 600;
+    padding-top: 6px;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+}
