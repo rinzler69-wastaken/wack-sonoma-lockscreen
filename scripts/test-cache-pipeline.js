@@ -115,6 +115,9 @@ const validVisualState = {
     avatarColor: { r: 55, g: 65, b: 75 },
     a11yColor: { r: 50, g: 60, b: 70 },
     sessionColor: { r: 50, g: 60, b: 70 },
+    suspendColor: { r: 50, g: 60, b: 70 },
+    restartColor: { r: 50, g: 60, b: 70 },
+    powerOffColor: { r: 50, g: 60, b: 70 },
     useInverse: false,
     shadowAlpha: 0.15,
 };

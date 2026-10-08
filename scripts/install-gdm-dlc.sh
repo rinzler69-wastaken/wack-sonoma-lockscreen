@@ -130,6 +130,7 @@ PRO_FILES=(
     "gdmPromptStyling.js"
     "gdmAvatarManager.js"
     "gdmAnimationController.js"
+    "gdmPowerButtons.js"
     "gdm.css"
     "gdmThemePipeline.js"
 )
