@@ -248,7 +248,7 @@ export function normalizePromptChromeBounds(params, monitorWidth = 1920, monitor
         wellH = 0,
     } = params;
 
-    // 1. Prompt bounds
+    // Prompt bounds
     let normX1, normX2, normY1, normY2;
     if (promptBounds &&
         promptBounds.x1 != null &&
@@ -279,7 +279,7 @@ export function normalizePromptChromeBounds(params, monitorWidth = 1920, monitor
         normY2 = Math.min(1, targetY + halfH);
     }
 
-    // 2. Cancel button bounds
+    // Cancel button bounds
     let normCancelX1, normCancelX2, normCancelY1, normCancelY2;
     const offsetX = CANCEL_BUTTON_X_OFFSET / monitorWidth;
     const offsetY = CANCEL_BUTTON_Y_OFFSET / monitorHeight;
@@ -304,7 +304,7 @@ export function normalizePromptChromeBounds(params, monitorWidth = 1920, monitor
         normCancelY2 = Math.max(0, Math.min(1, centerY + btnHalfH));
     }
 
-    // 3. Avatar bounds
+    // Avatar bounds
     let normAvatarX1, normAvatarX2, normAvatarY1, normAvatarY2;
     const avOffsetX = AVATAR_BUTTON_X_OFFSET / monitorWidth;
     const avOffsetY = AVATAR_BUTTON_Y_OFFSET / monitorHeight;
@@ -327,7 +327,7 @@ export function normalizePromptChromeBounds(params, monitorWidth = 1920, monitor
         normAvatarY2 = Math.min(1, ((targetStackY + AVATAR_BUTTON_HEIGHT) / monitorHeight) + avOffsetY);
     }
 
-    // 4. A11y button bounds
+    // A11y button bounds
     let normA11yX1, normA11yX2, normA11yY1, normA11yY2;
     const a11yHalfW = (A11Y_BUTTON_WIDTH / 2) / monitorWidth;
     const a11yHalfH = (A11Y_BUTTON_HEIGHT / 2) / monitorHeight;
@@ -352,7 +352,7 @@ export function normalizePromptChromeBounds(params, monitorWidth = 1920, monitor
         normA11yY2 = Math.max(0, Math.min(1, fallbackA11yCenterY + a11yHalfH));
     }
 
-    // 5. Session button bounds
+    // Session button bounds
     let normSessionX1, normSessionX2, normSessionY1, normSessionY2;
     const sessionHalfW = (SESSION_BUTTON_WIDTH / 2) / monitorWidth;
     const sessionHalfH = (SESSION_BUTTON_HEIGHT / 2) / monitorHeight;

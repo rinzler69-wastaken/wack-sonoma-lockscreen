@@ -19,7 +19,6 @@ export function buildExtrasGroup(extensionPreferences, window, _) {
 
     if (gdmStatus.enabled) {
         showDocs = false;
-        // 1. GDM Expansion Expander Row (Enabled)
         const gdmExpander = new Adw.ExpanderRow({
             title: _('[PRO] GDM Expansion'),
             subtitle: _('Status: Enabled. Custom layout is active on GDM.'),
@@ -115,7 +114,6 @@ export function buildExtrasGroup(extensionPreferences, window, _) {
         extrasGroup.add(docsRow);
     }
 
-    // 2. WACK Shell Integration Expander Row
     const wackShellExpander = new Adw.ExpanderRow({
         title: _('[BETA] WACK Shell Integration'),
     });
@@ -174,7 +172,6 @@ export function buildExtrasGroup(extensionPreferences, window, _) {
 
     extrasGroup.add(wackShellExpander);
 
-    // 3. Flush Cache Action Row
     const flushCacheRow = new Adw.ActionRow({
         title: _('Clear Visual Cache'),
         subtitle: _('Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically.'),

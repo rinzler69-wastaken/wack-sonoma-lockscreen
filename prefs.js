@@ -12,11 +12,9 @@ export default class WackLockscreenClockPreferences extends ExtensionPreferences
         // Set default window size (width, height)
         window.set_default_size(700, 800);
 
-        // 1. Home Page
         const homePage = buildHomePage(this, window, _);
         window.add(homePage);
 
-        // 2. Configuration Page
         const configPage = buildConfigPage(
             this,
             window,

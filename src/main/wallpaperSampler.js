@@ -693,19 +693,19 @@ export function sampleWallpaperChromeColors({
 
     const fallback = fallbackPrimaryColor || { r: 40, g: 40, b: 40 };
 
-    // 1. Cancel
+    // Cancel
     let sampledCancelColor = null;
     if (cancelMappedBounds) {
         const rawCancel = sampleRegionAverageColor(pixbuf, cancelMappedBounds) || fallback;
         sampledCancelColor = applyPromptVisualState(rawCancel, promptVisualState, { preblend: true });
     }
 
-    // 2. Avatar
+    // Avatar
     const rawAvatar = (avatarMappedBounds ? sampleRegionAverageColor(pixbuf, avatarMappedBounds) : null) || fallback;
     const effectivePromptVisualState = promptVisualState ?? resolvePromptVisualState(rawAvatar, whiteBlendAlpha);
     const sampledAvatarColor = applyPromptVisualState(rawAvatar, effectivePromptVisualState, { preblend: true });
 
-    // 3. A11y
+    // A11y
     const rawA11y = (a11yMappedBounds ? sampleRegionAverageColor(pixbuf, a11yMappedBounds) : null) || fallback;
     const sampledA11yColor = applyPromptVisualState(
         rawA11y,
@@ -713,7 +713,7 @@ export function sampleWallpaperChromeColors({
         { preblend: true }
     );
 
-    // 4. Session
+    // Session
     const rawSession = (sessionMappedBounds ? sampleRegionAverageColor(pixbuf, sessionMappedBounds) : null) || fallback;
     const sampledSessionColor = applyPromptVisualState(
         rawSession,
