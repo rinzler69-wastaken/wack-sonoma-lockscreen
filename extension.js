@@ -851,11 +851,11 @@ export default class WackLockscreenClockExtension extends Extension {
     // custom UI elements, ensuring no resource leaks or state contamination in the
     // GNOME Shell session.
     disable() {
-        if (Main.screenShield) {
+        if (Main.screenShield)
             Main.screenShield.disconnectObject(this);
-            if (Main.screenShield._loginManager)
-                Main.screenShield._loginManager.disconnectObject(this);
-        }
+
+        if (Main.screenShield?._loginManager)
+            Main.screenShield._loginManager.disconnectObject(this);
         this._stopSlideClock();
 
         this._isActive = false;

@@ -6,7 +6,6 @@ export function buildGeneralGroup(settings, window, _, settingsSignalIds) {
         title: _('General'),
     });
 
-    // 1. Date Style
     const dateStyleRow = new Adw.ActionRow({
         title: _('Date Style'),
         subtitle: _('Choose between shortened and full date names.'),
@@ -75,7 +74,6 @@ export function buildGeneralGroup(settings, window, _, settingsSignalIds) {
 
     generalGroup.add(dateStyleRow);
 
-    // 2. Cursor Blinking
     const cursorBlinkRow = new Adw.ActionRow({
         title: _('Cursor Blinking'),
         subtitle: _('Enable or disable text cursor blinking in the password field.'),
@@ -94,7 +92,6 @@ export function buildGeneralGroup(settings, window, _, settingsSignalIds) {
     cursorBlinkRow.activatable_widget = cursorBlinkSwitch;
     generalGroup.add(cursorBlinkRow);
 
-    // 3. Custom Lockscreen Wallpaper
     const wallpaperEnableRow = new Adw.ActionRow({
         title: _('Custom Lockscreen Wallpaper'),
         subtitle: _('Use a custom image overlay for the lockscreen background.'),
@@ -115,7 +112,6 @@ export function buildGeneralGroup(settings, window, _, settingsSignalIds) {
     wallpaperEnableRow.activatable_widget = wallpaperEnableSwitch;
     generalGroup.add(wallpaperEnableRow);
 
-    // 4. Wallpaper Image Path
     const wallpaperPathRow = new Adw.ActionRow({
         title: _('Wallpaper Image Path'),
         subtitle: settings.get_string('lockscreen-wallpaper-path') || _('No image selected'),

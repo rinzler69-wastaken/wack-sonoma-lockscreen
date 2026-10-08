@@ -348,8 +348,8 @@ export function scheduleVibrancyPruning(targetDir, justGeneratedHash, maxDynamic
                 }
             }
 
-            // 1. Clean older slice PNGs in targetDir for this user,
-            //    keeping any file whose hash suffix is in keepHashes.
+            // Clean older slice PNGs in targetDir for this user,
+            // keeping any file whose hash suffix is in keepHashes.
             if (targetDir) {
                 const tDir = Gio.File.new_for_path(targetDir);
                 if (tDir.query_exists(null)) {
@@ -372,7 +372,7 @@ export function scheduleVibrancyPruning(targetDir, justGeneratedHash, maxDynamic
                 }
             }
 
-            // 2. Clean stray root files in BASE_VIBRANCY_DIR and prune older dynamic slideshow folders
+            // Clean stray root files in BASE_VIBRANCY_DIR and prune older dynamic slideshow folders
             const baseDir = Gio.File.new_for_path(BASE_VIBRANCY_DIR);
             if (baseDir.query_exists(null)) {
                 const enumerator = baseDir.enumerate_children('standard::name,standard::type,time::modified', Gio.FileQueryInfoFlags.NONE, null);
@@ -417,7 +417,7 @@ export function scheduleVibrancyPruning(targetDir, justGeneratedHash, maxDynamic
                 }
             }
 
-            // 3. Clean legacy slice PNGs in /var/tmp
+            // Clean legacy slice PNGs in /var/tmp
             const legacyTmpDir = Gio.File.new_for_path('/var/tmp');
             if (legacyTmpDir.query_exists(null)) {
                 const enumerator = legacyTmpDir.enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
@@ -446,7 +446,7 @@ export function scheduleVibrancyPruning(targetDir, justGeneratedHash, maxDynamic
 export function flushAllCache() {
     clearCache();
 
-    // 1. Clean cache directory
+    // Clean cache directory
     const cacheDir = Gio.File.new_for_path(CACHE_DIR);
     if (cacheDir.query_exists(null)) {
         const enumerator = cacheDir.enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
@@ -456,7 +456,7 @@ export function flushAllCache() {
         enumerator.close(null);
     }
 
-    // 2. Clean vibrancy directory (preserve 'general' folder)
+    // Clean vibrancy directory (preserve 'general' folder)
     const baseVibrancy = Gio.File.new_for_path('/var/tmp/wack/vibrancy');
     if (baseVibrancy.query_exists(null)) {
         const enumerator = baseVibrancy.enumerate_children('standard::name,standard::type', Gio.FileQueryInfoFlags.NONE, null);
@@ -483,7 +483,7 @@ export function flushAllCache() {
         enumerator.close(null);
     }
 
-    // 3. Clean shared directory
+    // Clean shared directory
     const sharedDir = Gio.File.new_for_path('/var/tmp/wack/shared');
     if (sharedDir.query_exists(null)) {
         const enumerator = sharedDir.enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
@@ -493,7 +493,7 @@ export function flushAllCache() {
         enumerator.close(null);
     }
 
-    // 4. Clean legacy files in /var/tmp
+    // Clean legacy files in /var/tmp
     const tmpDir = Gio.File.new_for_path('/var/tmp');
     if (tmpDir.query_exists(null)) {
         const enumerator = tmpDir.enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
@@ -508,7 +508,7 @@ export function flushAllCache() {
         enumerator.close(null);
     }
 
-    // 5. Re-ensure base directories and general directory exist with 0o1777 permissions
+    // Ensure base directories and general directory exist with 0o1777 permissions
     for (const p of ['/var/tmp/wack', CACHE_DIR, '/var/tmp/wack/shared', '/var/tmp/wack/vibrancy', '/var/tmp/wack/vibrancy/general']) {
         const dir = Gio.File.new_for_path(p);
         if (!dir.query_exists(null)) {
