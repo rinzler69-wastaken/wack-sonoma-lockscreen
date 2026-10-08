@@ -183,6 +183,8 @@ export class GdmWallpaperManager {
             }
         }
 
+        this._gdm._applyUserPresentation(theme.meta);
+
         // Update lockscreen message
         this._gdm._updateLockscreenMessage(theme.meta);
     }

@@ -602,7 +602,38 @@ export class GdmManager {
 
         connectFailureShake(dialog._authPrompt, this,
             () => this._selectedPromptMode === 'cupertino');
-        this._passwordIndicators ??= new PasswordIndicators(dialog._authPrompt);
+        this._applyUserPresentation(null);
+    }
+
+    /**
+     * Per-user presentation published by the user session in the cross-session
+     * manifest, so GDM matches that user's lockscreen. Missing fields (older
+     * manifests, or no user yet) fall back to the schema defaults.
+     * @param {object|null} meta
+     */
+    _applyUserPresentation(meta) {
+        this._powerButtons.setEnabled(meta?.systemActions ?? true);
+
+        const statusCorner = meta?.lockscreenMode !== 'wack' && (meta?.statusCorner ?? true);
+        if (statusCorner)
+            Main.panel.add_style_class_name('wack-status-corner');
+        else
+            Main.panel.remove_style_class_name('wack-status-corner');
+
+        const authPrompt = this._dialog?._authPrompt;
+        const indicators = meta?.passwordIndicators ?? true;
+        if (indicators && !this._passwordIndicators && authPrompt) {
+            this._passwordIndicators = new PasswordIndicators(authPrompt);
+        } else if (!indicators && this._passwordIndicators) {
+            this._passwordIndicators.destroy();
+            this._passwordIndicators = null;
+        }
+
+        const clock = this._clockManager?.clock;
+        if (clock) {
+            clock.setWeight(meta?.clockWeight);
+            clock.setTint(meta?.clockTint ?? false);
+        }
     }
 
     _restartDialogFadeIn() {
@@ -635,6 +666,7 @@ export class GdmManager {
         this._powerButtons.teardown();
         this._passwordIndicators?.destroy();
         this._passwordIndicators = null;
+        Main.panel.remove_style_class_name('wack-status-corner');
         dialog?._authPrompt?._userVerifier?.disconnectObject(this);
 
         if (this._cupertinoRestPromptContainer) {

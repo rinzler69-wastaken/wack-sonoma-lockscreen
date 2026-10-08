@@ -171,6 +171,12 @@ export class CrossSessionManager {
             'changed::lockscreen-wallpaper-enable', save,
             'changed::lockscreen-wallpaper-path', save,
             'changed::date-style', save,
+            'changed::clock-format', save,
+            'changed::clock-weight', save,
+            'changed::clock-tint', save,
+            'changed::status-corner', save,
+            'changed::password-indicators', save,
+            'changed::cupertino-system-actions', save,
             this
         );
         this._bgSettings.connectObject(
@@ -212,6 +218,12 @@ export class CrossSessionManager {
         this._saving = false;
         this._saveRequested = false;
         this._dirty = false;
+    }
+
+    // The lockscreen's 12/24h override wins over the system format, so GDM matches it.
+    _getClockFormat() {
+        const override = this._settings?.get_string('clock-format') ?? 'system';
+        return override === 'system' ? this._interfaceSettings.get_string('clock-format') : override;
     }
 
     _triggerSave() {
@@ -600,7 +612,12 @@ export class CrossSessionManager {
             secondary_color: this._bgSettings.get_string('secondary-color'),
             shading_type: this._bgSettings.get_enum('color-shading-type'),
             is_color: isColor,
-            clockFormat: this._interfaceSettings.get_string('clock-format'),
+            clockFormat: this._getClockFormat(),
+            clockWeight: this._settings ? this._settings.get_string('clock-weight') : 'semibold',
+            clockTint: this._settings ? this._settings.get_boolean('clock-tint') : false,
+            statusCorner: this._settings ? this._settings.get_boolean('status-corner') : true,
+            passwordIndicators: this._settings ? this._settings.get_boolean('password-indicators') : true,
+            systemActions: this._settings ? this._settings.get_boolean('cupertino-system-actions') : true,
             dateStyle: this._settings ? (this._settings.get_string('date-style') || 'full') : 'full',
             userLocale: GLib.getenv('LC_TIME') || GLib.getenv('LANG') || Intl.DateTimeFormat().resolvedOptions().locale || null,
             clockAlpha: this._clockAlpha ?? 0.6,

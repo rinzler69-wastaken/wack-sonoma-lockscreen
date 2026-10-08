@@ -151,5 +151,10 @@
       <summary>Password field indicators</summary>
       <description>Show Caps Lock and keyboard layout indicators inside the password field instead of the Caps Lock text warning.</description>
     </key>
+    <key name="cupertino-system-actions" type="b">
+      <default>true</default>
+      <summary>Cupertino System Actions</summary>
+      <description>GDM DLC: show Suspend / Restart / Power Off buttons under the login user list and hide the Quick Settings power menu.</description>
+    </key>
   </schema>
 </schemalist>

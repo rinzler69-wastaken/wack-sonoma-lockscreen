@@ -178,6 +178,22 @@
     box-shadow: none;
 }
 
+/* Same 38px footprint as the CSA circles (.wack-gdm-power-icon: 20px icon + 9px padding);
+   36px content + the 1px border above. */
+.login-dialog .login-dialog-button.a11y-button,
+.login-dialog .login-dialog-button.login-dialog-session-list-button,
+.login-dialog .login-dialog-button.login-dialog-auth-menu-button {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+}
+
+.login-dialog .login-dialog-button.a11y-button StIcon,
+.login-dialog .login-dialog-button.login-dialog-session-list-button StIcon,
+.login-dialog .login-dialog-button.login-dialog-auth-menu-button StIcon {
+    icon-size: 20px;
+}
+
 .login-dialog .login-dialog-button.a11y-button:hover,
 .login-dialog .login-dialog-button.login-dialog-session-list-button:hover,
 .login-dialog .login-dialog-button.login-dialog-auth-menu-button:hover,
@@ -355,7 +371,6 @@
 /* macOS-style Sleep / Restart / Shut Down under the user list */
 .wack-gdm-power-buttons {
     spacing: 28px;
-    padding-top: 36px;
 }
 
 .wack-gdm-power-button {

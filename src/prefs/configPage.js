@@ -19,7 +19,7 @@ export function buildConfigPage(extensionPreferences, window, settings, _, setti
     );
     animPage.add(generalGroup);
 
-    animPage.add(buildAppearanceGroup(settings, _, settingsSignalIds));
+    animPage.add(buildAppearanceGroup(extensionPreferences, settings, _));
 
     const { group: modeGroup, linkedBox, dropdown, speedLinkedBox, speedDropdown } = buildModeGroup(
         settings,

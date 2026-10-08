@@ -1,27 +1,7 @@
 import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
 
-// Combo row bound to a string key; `options` is [[value, label], ...].
-function buildStringComboRow(settings, key, title, subtitle, options, settingsSignalIds) {
-    const row = new Adw.ComboRow({
-        title,
-        subtitle,
-        model: Gtk.StringList.new(options.map(([, label]) => label)),
-    });
-    const sync = () => {
-        const index = options.findIndex(([value]) => value === settings.get_string(key));
-        row.selected = Math.max(0, index);
-    };
-    sync();
-    row.connect('notify::selected', () => {
-        const value = options[row.selected]?.[0];
-        if (value && value !== settings.get_string(key))
-            settings.set_string(key, value);
-    });
-    settingsSignalIds.push(settings.connect(`changed::${key}`, sync));
-    return row;
-}
+import { buildComboRow, getGdmStatus } from '../prefsUtils.js';
 
 function buildSwitchRow(settings, key, title, subtitle) {
     const row = new Adw.SwitchRow({ title, subtitle });
@@ -29,33 +9,33 @@ function buildSwitchRow(settings, key, title, subtitle) {
     return row;
 }
 
-export function buildAppearanceGroup(settings, _, settingsSignalIds) {
+export function buildAppearanceGroup(extensionPreferences, settings, _) {
     const group = new Adw.PreferencesGroup({
         title: _('Clock and Status'),
     });
 
-    group.add(buildStringComboRow(settings, 'clock-weight',
+    group.add(buildComboRow(settings, 'clock-weight',
         _('Clock Weight'),
         _('Font weight of the lockscreen time.'),
         [
-            ['light', _('Light')],
-            ['regular', _('Regular')],
-            ['medium', _('Medium')],
-            ['semibold', _('Semibold')],
-            ['bold', _('Bold')],
-            ['heavy', _('Heavy')],
+            ['light', 'Light'],
+            ['regular', 'Regular'],
+            ['medium', 'Medium'],
+            ['semibold', 'Semibold'],
+            ['bold', 'Bold'],
+            ['heavy', 'Heavy'],
         ],
-        settingsSignalIds));
+        _));
 
-    group.add(buildStringComboRow(settings, 'clock-format',
+    group.add(buildComboRow(settings, 'clock-format',
         _('Clock Format'),
         _('Override the system 12/24-hour setting on the lockscreen.'),
         [
-            ['system', _('System')],
-            ['12h', _('12-hour')],
-            ['24h', _('24-hour')],
+            ['system', 'System'],
+            ['12h', '12-hour'],
+            ['24h', '24-hour'],
         ],
-        settingsSignalIds));
+        _));
 
     group.add(buildSwitchRow(settings, 'clock-tint',
         _('Wallpaper-Tinted Clock'),
@@ -68,6 +48,13 @@ export function buildAppearanceGroup(settings, _, settingsSignalIds) {
     group.add(buildSwitchRow(settings, 'status-corner',
         _('Sonoma Status Corner'),
         _('Restyle the top-right battery, network and input source icons. Cupertino mode only.')));
+
+    // Only meaningful on the login screen, so only offered once the GDM DLC is in place.
+    if (getGdmStatus(extensionPreferences.dir).enabled) {
+        group.add(buildSwitchRow(settings, 'cupertino-system-actions',
+            _('Cupertino System Actions'),
+            _('Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu.')));
+    }
 
     return group;
 }
