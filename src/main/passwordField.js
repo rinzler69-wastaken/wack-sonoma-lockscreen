@@ -3,9 +3,45 @@ import St from 'gi://St';
 import Gettext from 'gettext';
 import { getInputSourceManager } from 'resource:///org/gnome/shell/ui/status/keyboard.js';
 
+// Indicator slot grows/shrinks so the placeholder slides instead of jumping.
+const INDICATOR_SLIDE_MS = 180;
+// StEntry always puts this fixed gap between a primary icon and the text,
+// even when the icon is hidden or zero-width (measured on GNOME 50).
+const ENTRY_ICON_GAP = 6;
+
 // Damped macOS-style shake, in px. Each step is one ease of SHAKE_STEP_MS.
 const SHAKE_OFFSETS = [-12, 10, -7, 4, -2, 0];
 const SHAKE_STEP_MS = 55;
+
+/**
+ * Eases an actor's width from an explicit start value. actor.ease() takes its
+ * start from the current allocation, which a freshly slotted actor lacks.
+ * Honours "Reduce Animation" and the shell slow-down factor like ease().
+ */
+function easeWidth(actor, from, to, duration, onComplete) {
+    actor.remove_transition('width');
+    const settings = St.Settings.get();
+    duration = settings.enable_animations ? duration * settings.slow_down_factor : 0;
+    if (duration === 0) {
+        actor.width = to;
+        onComplete();
+        return;
+    }
+    const transition = new Clutter.PropertyTransition({
+        property_name: 'width',
+        interval: new Clutter.Interval({ value_type: actor.find_property('width').value_type }),
+        duration,
+        progress_mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+        remove_on_complete: true,
+    });
+    transition.set_from(from);
+    transition.set_to(to);
+    transition.connect('stopped', (_t, finished) => {
+        if (finished)
+            onComplete();
+    });
+    actor.add_transition('width', transition);
+}
 
 /**
  * Replaces GNOME's wrong-password wiggle with a damped macOS-style shake.
@@ -58,9 +94,13 @@ export class PasswordIndicators {
         if (!this._entry)
             return;
 
+        // Only placed in the entry's primary-icon slot while an indicator is
+        // shown, so the text and placeholder sit flush left otherwise. Clipped
+        // so its width can ease from 0 and the text slides instead of jumping.
         this._box = new St.BoxLayout({
             style_class: 'wack-password-indicators',
             y_align: Clutter.ActorAlign.CENTER,
+            clip_to_allocation: true,
         });
         this._capsIcon = new St.Icon({
             style_class: 'wack-caps-lock-icon',
@@ -73,7 +113,6 @@ export class PasswordIndicators {
         });
         this._box.add_child(this._capsIcon);
         this._box.add_child(this._layoutLabel);
-        this._entry.set_primary_icon(this._box);
 
         const backend = this._entry.get_context?.()?.get_backend() ?? Clutter.get_default_backend();
         this._keymap = backend.get_default_seat().get_keymap();
@@ -100,19 +139,77 @@ export class PasswordIndicators {
         // The entry (and our box inside it) dies with the prompt; only drop signals.
         authPrompt.connectObject('destroy', () => this.destroy(false), this);
 
-        this._syncCaps();
-        this._syncLayout();
+        this._syncCaps(false);
+        this._syncLayout(false);
     }
 
-    _syncCaps() {
-        this._capsIcon.visible = this._keymap.get_caps_lock_state();
+    _syncCaps(animate = true) {
+        this._setShown(this._capsIcon, this._keymap.get_caps_lock_state(), animate);
     }
 
-    _syncLayout() {
+    _syncLayout(animate = true) {
         const count = Object.keys(this._inputSources.inputSources ?? {}).length;
         const shortName = this._inputSources.currentSource?.shortName ?? '';
         this._layoutLabel.text = shortName.toUpperCase();
-        this._layoutLabel.visible = count > 1 && shortName !== '';
+        this._setShown(this._layoutLabel, count > 1 && shortName !== '', animate);
+    }
+
+    // `_wackShown` is the wanted state of each indicator.
+    _setShown(indicator, shown, animate) {
+        // Keymap state-changed also fires on unrelated modifier changes.
+        if (indicator._wackShown === shown)
+            return;
+        indicator._wackShown = shown;
+        const indicators = [this._capsIcon, this._layoutLabel];
+        const anyShown = indicators.some(i => i._wackShown);
+        const slotted = this._entry.get_primary_icon() === this._box;
+        if (!anyShown && !slotted)
+            return;
+
+        // Last laid-out width, so an interrupted slide continues from where it is.
+        const fromWidth = slotted ? Math.max(0, this._box.get_allocation_box().get_width()) : 0;
+        if (!slotted) {
+            // Opening adds StEntry's fixed gap at once; start the text shifted
+            // back by it so the slide begins exactly where the text was.
+            this._entry.set_primary_icon(this._box);
+            this._textActors().forEach(a => (a.translation_x = -ENTRY_ICON_GAP));
+        }
+
+        let targetWidth = 0;
+        if (anyShown) {
+            // Measured once in the stage, so the stylesheet applies.
+            indicators.forEach(i => (i.visible = i._wackShown));
+            this._box.natural_width_set = false;
+            targetWidth = this._box.get_preferred_width(-1)[1];
+        }
+
+        const duration = animate ? INDICATOR_SLIDE_MS : 0;
+        // Closing ends with the gap removed, so slide the text back by it too.
+        const textShift = anyShown ? 0 : -ENTRY_ICON_GAP;
+        this._textActors().forEach(a => a.ease({
+            translation_x: textShift,
+            duration,
+            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+        }));
+        easeWidth(this._box, fromWidth, targetWidth, duration, () => {
+            if (anyShown)
+                return;
+            this._entry.set_primary_icon(null);
+            this._resetText();
+            indicators.forEach(i => (i.visible = false));
+        });
+    }
+
+    // The typed text and the placeholder (hint) are separate actors.
+    _textActors() {
+        return [this._entry.clutter_text, this._entry.get_hint_actor()].filter(Boolean);
+    }
+
+    _resetText() {
+        this._textActors().forEach(a => {
+            a.remove_transition('translation-x');
+            a.translation_x = 0;
+        });
     }
 
     destroy(restoreEntry = true) {
@@ -130,6 +227,7 @@ export class PasswordIndicators {
             }
             if (this._entry.get_primary_icon() === this._box)
                 this._entry.set_primary_icon(null);
+            this._resetText();
             this._box.destroy();
         }
         this._warning = null;

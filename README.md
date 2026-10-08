@@ -87,7 +87,7 @@ Both axes use eased cubic curves for a polished feel. Disabled in Cupertino Mode
 
 ### Other Quality-of-Life
 - **Cursor Blink Control** — Toggle password field cursor blinking on or off.
-- **Password Field Indicators** — macOS-style Caps Lock icon and keyboard-layout badge (shown when more than one input source is configured) inside the password field.
+- **Password Field Indicators** — macOS-style Caps Lock icon and keyboard-layout badge (shown when more than one input source is configured) inside the password field. The placeholder sits flush left and slides over when an indicator appears.
 - **Wrong-Password Shake (Cupertino Mode)** — A damped macOS-style shake replaces GNOME's small wiggle on a failed password.
 - **Sonoma Status Corner (Cupertino Mode)** — Flat, airier styling for the top-right battery, network and input source icons.
 - **Respects Reduce Animation** — The unlock crossfade is skipped when animations are turned off in GNOME settings.
@@ -115,7 +115,8 @@ By default, extensions on GNOME Extensions (EGO) cannot run on the GDM login scr
 - **GDM Avatar** — user avatar is displayed with the Cupertino-style circular crop.
 - **GDM Date Menu** - The large clock doubles as a calendar button, filling in for the top bar's date menu that's no longer there. Click it to peek at the calendar.
 - **GDM Lockscreen Message** — if you've set a lockscreen message, it appears on GDM too.
-- **Power Buttons** — macOS-style Suspend / Restart / Power Off buttons under the user list, hidden when the system (or `org.gnome.login-screen disable-restart-buttons`) disallows them.
+- **Cupertino System Actions** — macOS-style Suspend / Restart / Power Off buttons under the user list, replacing the Quick Settings power menu. Toggleable in Preferences once the DLC is installed; each button hides when the system (or `org.gnome.login-screen disable-restart-buttons`) disallows it.
+- **Per-account visual continuity** — clock weight, 12/24-hour format, clock tint, Sonoma Status Corner, password field indicators and Cupertino System Actions are published with the shared wallpaper metadata, so GDM matches each user's lockscreen.
 - **Multi-monitor aware** — all backgrounds and layouts are positioned per-monitor.
 - **Animated transitions** — GDM dialog fades in/out via `GdmAnimationController`; the clock position, user list, and auth prompt are dynamically repositioned on monitor-change events. Animations differ between modes:
   - **Cupertino mode** — the auth prompt crossfades in and out with a simple opacity transition, keeping things minimal and consistent with the rest of the Cupertino flow.
