@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: sv\n"
@@ -34,7 +34,7 @@ msgid "Open on GitHub"
 msgstr "Öppna på GitHub"
 
 msgid "Enjoying this extension?"
-msgstr "Gillar du detta tillägg?"
+msgstr "Gillar du det här tillägget?"
 
 msgid "Consider supporting its development!"
 msgstr "Överväg att stödja utvecklingen!"
@@ -51,11 +51,116 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "Öppna Saweria"
 
+msgid "Upgrade to [PRO]"
+msgstr "Uppgradera till [PRO]"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Kolla in PRO-funktionerna på tilläggets GitHub-sida."
+
+msgid "Visit documentation on GitHub"
+msgstr "Besök dokumentationen på GitHub"
+
 msgid "Configuration"
 msgstr "Konfiguration"
 
 msgid "General"
 msgstr "Allmänt"
+
+msgid "Password Field Indicators"
+msgstr "Indikatorer i lösenordsfältet"
+
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "Visa Caps Lock- och tangentbordslayoutikoner i lösenordsfältet."
+
+msgid "Cursor Blinking"
+msgstr "Blinkande markör"
+
+msgid "Enable or disable text cursor blinking in the password field."
+msgstr "Aktivera eller inaktivera blinkande textmarkör i lösenordsfältet."
+
+msgid "Custom Lockscreen Wallpaper"
+msgstr "Anpassad bakgrundsbild för låsskärm"
+
+msgid "Use a custom image overlay for the lockscreen background."
+msgstr "Använd en egen bild som bakgrund på låsskärmen."
+
+msgid "Wallpaper Image Path"
+msgstr "Sökväg till bakgrundsbild"
+
+msgid "No image selected"
+msgstr "Ingen bild vald"
+
+msgid "Select Lockscreen Wallpaper"
+msgstr "Välj bakgrundsbild för låsskärm"
+
+msgid "Images and Slideshows"
+msgstr "Bilder och bildspel"
+
+msgid "Select Image File"
+msgstr "Välj bildfil"
+
+msgid "Select"
+msgstr "Välj"
+
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgid "Per-Monitor Wallpapers"
+msgstr "Bakgrunder per skärm"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "Skärmar utan egen bakgrund använder den ovanstående."
+
+msgid "Default"
+msgstr "Standard"
+
+msgid "Use the Default Wallpaper"
+msgstr "Använd standardbakgrunden"
+
+msgid "Clock and Date"
+msgstr "Klocka och datum"
+
+msgid "Clock Weight"
+msgstr "Klockans tjocklek"
+
+msgid "Font weight of the lockscreen time."
+msgstr "Teckensnittstjocklek för tiden på låsskärmen."
+
+msgid "Restore defaults"
+msgstr "Återställ standardvärden"
+
+msgid "Light"
+msgstr "Tunn"
+
+msgid "Regular"
+msgstr "Normal"
+
+msgid "Medium"
+msgstr "Medium"
+
+msgid "Semibold"
+msgstr "Halvfet"
+
+msgid "Bold"
+msgstr "Fet"
+
+msgid "Heavy"
+msgstr "Extra fet"
+
+msgid "Clock Format"
+msgstr "Klockformat"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "Åsidosätt systemets 12/24-timmarsinställning på låsskärmen."
+
+msgid "System"
+msgstr "System"
+
+msgid "12-hour"
+msgstr "12-timmars"
+
+msgid "24-hour"
+msgstr "24-timmars"
 
 msgid "Date Style"
 msgstr "Datumstil"
@@ -69,38 +174,11 @@ msgstr "Kort"
 msgid "Full"
 msgstr "Fullständig"
 
-msgid "Cursor Blinking"
-msgstr "Blinkande markör"
+msgid "Wallpaper-Tinted Clock"
+msgstr "Bakgrundstonad klocka"
 
-msgid "Enable or disable text cursor blinking in the password field."
-msgstr "Aktivera eller inaktivera blinkande markör i lösenordsfältet."
-
-msgid "Custom Lockscreen Wallpaper"
-msgstr "Anpassad bakgrundsbild för låsskärm"
-
-msgid "Use a custom image overlay for the lockscreen background."
-msgstr "Använd en anpassad bildöverlagring för låsskärmens bakgrund."
-
-msgid "Wallpaper Image Path"
-msgstr "Sökväg till bakgrundsbild"
-
-msgid "No image selected"
-msgstr "Ingen bild vald"
-
-msgid "Select Image File"
-msgstr "Välj bildfil"
-
-msgid "Select Lockscreen Wallpaper"
-msgstr "Välj bakgrundsbild för låsskärm"
-
-msgid "Select"
-msgstr "Välj"
-
-msgid "Cancel"
-msgstr "Avbryt"
-
-msgid "Image Files"
-msgstr "Bildfiler"
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "Tona klockan och datumet med en ljus nyans av bakgrundsfärgen."
 
 msgid "Lockscreen Mode"
 msgstr "Låsskärmsläge"
@@ -115,22 +193,34 @@ msgid "Cupertino"
 msgstr "Cupertino"
 
 msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
-msgstr "En komplett macOS Sonoma-inspirerad låsskärmslayout (klicka på användarikonen för att byta användare)."
+msgstr "En fullständig macOS Sonoma-inspirerad låsskärmslayout (klicka på användarikonen för att byta användare)."
 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
-msgstr "Klocka i macOS Sonoma-stil över klassisk, GNOME-kompatibel layout."
+msgstr "Klocka i macOS Sonoma-stil över den klassiska GNOME-layouten."
+
+msgid "Sonoma Status Corner"
+msgstr "Sonoma-statushörn"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "Ändra stil på batteri-, nätverks- och inmatningskällans ikoner i övre högra hörnet."
 
 msgid "Always Show User Widget"
-msgstr "Visa alltid användarwidgeten"
+msgstr "Visa alltid användarwidget"
 
 msgid "Hides notifications by default. Press Shift+N to show notifications."
-msgstr "Döljer aviseringar som standard. Tryck på Shift+N för att visa dem."
+msgstr "Döljer aviseringar som standard. Tryck på Shift+N för att visa aviseringar."
 
 msgid "Prompt Vibrancy"
-msgstr "Lösenordsfältets visuella effekt"
+msgstr "Fältets lyster"
 
 msgid "Adaptive color and depth enhancements for the password field."
 msgstr "Adaptiva färg- och djupförbättringar för lösenordsfältet."
+
+msgid "Lightweight, color-based mode."
+msgstr "Lättviktigt färgläge."
+
+msgid "Advanced, blur-based mode."
+msgstr "Avancerat läge med oskärpa."
 
 msgid "Tonal"
 msgstr "Tonal"
@@ -138,29 +228,23 @@ msgstr "Tonal"
 msgid "Acrylic"
 msgstr "Akryl"
 
-msgid "Lightweight, color-based mode."
-msgstr "Lättviktigt, färgbaserat läge."
-
-msgid "Advanced, blur-based mode."
-msgstr "Avancerat, oskärpebaserat läge."
-
 msgid "Show message when locked"
-msgstr "Visa meddelande vid låsning"
+msgstr "Visa meddelande vid låst skärm"
 
 msgid "Set..."
-msgstr "Ange…"
+msgstr "Ställ in..."
 
 msgid "Set a message to appear on the lockscreen"
-msgstr "Ange ett meddelande som ska visas på låsskärmen"
+msgstr "Ställ in ett meddelande som ska visas på låsskärmen"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Unlock Crossfade"
-msgstr "Mjuk övergång vid upplåsning"
+msgstr "Tona över vid upplåsning"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "Tona över låsskärmen mjukt till skrivbordet vid upplåsning (inaktiveras automatiskt i strömsparläge)."
+msgstr "Tona över låsskärmen till skrivbordet vid upplåsning (inaktiveras automatiskt i strömsparläge)."
 
 msgid "Requires WACK Shell to be installed and enabled."
 msgstr "Kräver att WACK Shell är installerat och aktiverat."
@@ -181,28 +265,13 @@ msgid "Clock Animation"
 msgstr "Klockanimation"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "Tillämpas på datum och tid när lösenordsfältet öppnas"
-
-msgid "Prompt Animation"
-msgstr "Autentiseringsanimation"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "Tillämpas på autentiseringsfältet när det visas"
-
-msgid "Reset Animations"
-msgstr "Återställ animationer"
-
-msgid "Restore defaults"
-msgstr "Återställ standardvärden"
-
-msgid "Reset animations"
-msgstr "Återställ animationer"
+msgstr "Tillämpas på datum och tid när lösenordsprompten öppnas"
 
 msgid "Scale Down"
 msgstr "Förminska"
 
 msgid "Zoom Up"
-msgstr "Förstora"
+msgstr "Zooma uppåt"
 
 msgid "Slide Up"
 msgstr "Glid uppåt"
@@ -210,35 +279,44 @@ msgstr "Glid uppåt"
 msgid "Fade"
 msgstr "Tona"
 
+msgid "Prompt Animation"
+msgstr "Promptanimation"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Tillämpas på autentiseringsprompten när den visas"
+
 msgid "GNOME Default"
-msgstr "GNOME standard"
+msgstr "GNOME-standard"
 
 msgid "Rise"
-msgstr "Höj"
+msgstr "Höjning"
 
 msgid "Zoom"
-msgstr "Zoom"
+msgstr "Zooma"
 
-msgid "Screen Timeout"
-msgstr "Skärmavstängning"
+msgid "Reset Animations"
+msgstr "Återställ animationer"
+
+msgid "Reset animations"
+msgstr "Återställ animationer"
 
 msgid "Display and Power"
 msgstr "Skärm och ström"
 
 msgid "Keep Screen On"
-msgstr "Håll skärmen igång"
+msgstr "Håll skärmen vaken"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "Förhindrar att skärmen släcks omedelbart vid låsning. Skärmen släcks fortfarande efter den normala tidsgräns som angetts i systeminställningarna."
+msgstr "Förhindrar att skärmen stängs av direkt vid låsning. Skärmen stängs fortfarande av efter tidsgränsen i systeminställningarna."
 
 msgid "Only on AC Power"
-msgstr "Endast vid nätström"
+msgstr "Endast vid nätdrift"
 
 msgid "Only keep the screen on if the system is plugged in"
-msgstr "Håll endast skärmen igång om datorn är ansluten till nätström"
+msgstr "Håll bara skärmen vaken om datorn är ansluten till ström"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Escape för att släcka skärm / vänteläge"
+msgstr "Escape för vänteläge"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Tryck på Escape på låsskärmen för att släcka skärmen (eller gå i vänteläge)"
@@ -246,29 +324,35 @@ msgstr "Tryck på Escape på låsskärmen för att släcka skärmen (eller gå i
 msgid "Extras"
 msgstr "Extra"
 
-msgid "Integrations"
-msgstr "Integrationer"
-
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] GDM-tillägg"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
 msgstr "Status: Aktiverad. Anpassad layout är aktiv på GDM."
 
+msgid "Status: Disabled."
+msgstr "Status: Inaktiverad."
+
 msgid "Enabled"
 msgstr "Aktiverad"
 
-msgid "GDM Expansion - Remove"
-msgstr "GDM-tillägg - Ta bort"
+msgid "Disabled"
+msgstr "Inaktiverad"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "Återställ inloggningsskärmen i GDM till GNOME-standard. Kör det kopierade kommandot i en terminal för att avinstallera."
+msgid "Cupertino System Actions"
+msgstr "Cupertino-systemåtgärder"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "Kopiera avinstallationskommando till urklipp"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "Visa Vänteläge, Starta om och Stäng av under användarlistan istället för strömmenyn i Snabbinställningar."
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "Avinstallationskommandot har kopierats till urklipp!"
+msgid "GDM Expansion Documentation"
+msgstr "Dokumentation för GDM-tillägg"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "Återställ GDM-inloggningsskärmen till GNOME-standard. Se instruktioner i arkivet."
+
+msgid "Open repository documentation"
+msgstr "Öppna arkivets dokumentation"
 
 msgid "Extension is not installed system-wide in /usr/share."
 msgstr "Tillägget är inte installerat systemomfattande i /usr/share."
@@ -277,91 +361,58 @@ msgid "GDM expansion modules (src/pro) are missing system-wide."
 msgstr "GDM-tilläggsmoduler (src/pro) saknas i systemet."
 
 msgid "GDM session mode is not enabled in system-wide metadata."
-msgstr "GDM-sessionsläget är inte aktiverat i systemomfattande metadata."
+msgstr "GDM-sessionsläge är inte aktiverat i systemmetadata."
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
-msgstr "GDM dconf-åsidosättningskonfiguration (/etc/dconf/db/gdm.d) saknas."
+msgstr "GDM dconf-konfiguration (/etc/dconf/db/gdm.d) saknas."
 
 msgid "GDM integration is not configured."
-msgstr "GDM-integrering är inte konfigurerad."
+msgstr "GDM-integration är inte konfigurerad."
 
-msgid "Status: Disabled."
-msgstr "Status: Inaktiverad."
+msgid "GDM DLC Documentation"
+msgstr "Dokumentation för GDM-DLC"
 
-msgid "Disabled"
-msgstr "Inaktiverad"
-
-msgid "Enable GDM DLC Support"
-msgstr "Aktivera GDM DLC-stöd"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "Klicka på ikonen för att kopiera installationskommandot och kör det sedan i en terminal."
-
-msgid "Copy install command to clipboard"
-msgstr "Kopiera installationskommando till urklipp"
-
-msgid "Copied install command to clipboard!"
-msgstr "Installationskommandot har kopierats till urklipp!"
-
-msgid "Upgrade to [PRO]"
-msgstr "Uppgradera till [PRO]"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "Utforska PRO-funktionerna för detta tillägg i dess GitHub-arkiv."
-
-msgid "Visit documentation on GitHub"
-msgstr "Visa dokumentation på GitHub"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "Besök arkivet för att se installations- och konfigurationsdokumentation."
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] WACK Shell-integrering"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "Installerat. Aktiverar mjuka övergångar och Cupertino-inspirerade skalanpassningar."
-
 msgid "Installed"
-msgstr "Installerat"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - Sök efter uppdateringar"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "Kopiera kommandot för att kontrollera om en nyare version av WACK Shell finns tillgänglig."
-
-msgid "Copy update-check command to clipboard"
-msgstr "Kopiera uppdateringskontroll-kommando"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "Kommandot för att söka efter WACK Shell-uppdateringar har kopierats!"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "Inte installerat. Installera WACK Shell för att låsa upp övergångseffekter."
+msgstr "Installerad"
 
 msgid "Not Installed"
-msgstr "Inte installerat"
+msgstr "Inte installerad"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - Installera"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Installerad. Aktiverar övergångar och Cupertino-inspirerade skalanpassningar."
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "Få avancerade mjuka skrivbordsövergångar och Cupertino-inspirerade skaljusteringar. Kan innehålla fel; rapportera om du hittar några."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Inte installerad. Installera WACK Shell för att låsa upp övergångseffekter."
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "WACK Shell-installationskommandot har kopierats till urklipp!"
+msgid "WACK Shell Repository"
+msgstr "WACK Shell-arkiv"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "Öppna WACK Shell-arkivet för dokumentation och uppdateringar."
 
 msgid "Open WACK Shell repository"
-msgstr "Öppna WACK Shell-arkiv"
+msgstr "Öppna WACK Shell-arkivet"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "Besök arkivet för installationsinstruktioner och utgivningspaket."
 
 msgid "Clear Visual Cache"
 msgstr "Rensa visuell cache"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "Rensar tillfälliga visuella data som används för bakgrundsbilder och visuella effekter. De återskapas automatiskt."
+msgstr "Rensar tillfälliga visuella data som används för bakgrunder och effekter. De återskapas automatiskt."
 
 msgid "Clear"
 msgstr "Rensa"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "Rensar den visuella cachen som används för bakgrundsbilder och visuella effekter"
+msgstr "Rensar den visuella cachen för bakgrunder och effekter"
 
 msgid "Visual cache cleared successfully!"
 msgstr "Visuell cache har rensats!"

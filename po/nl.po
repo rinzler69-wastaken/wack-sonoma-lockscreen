@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: nl\n"
@@ -22,7 +22,7 @@ msgid "Sleep prevented by an active process"
 msgstr "Pauzestand verhinderd door een actief proces"
 
 msgid "Home"
-msgstr "Home"
+msgstr "Startpagina"
 
 msgid "Resources"
 msgstr "Bronnen"
@@ -43,19 +43,124 @@ msgid "Ko-fi"
 msgstr "Ko-fi"
 
 msgid "Open Ko-fi"
-msgstr "Openen op Ko-fi"
+msgstr "Open Ko-fi"
 
 msgid "Saweria"
 msgstr "Saweria"
 
 msgid "Open Saweria"
-msgstr "Openen op Saweria"
+msgstr "Open Saweria"
+
+msgid "Upgrade to [PRO]"
+msgstr "Upgraden naar [PRO]"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Bekijk de PRO-functies van deze extensie op GitHub."
+
+msgid "Visit documentation on GitHub"
+msgstr "Documentatie op GitHub bekijken"
 
 msgid "Configuration"
 msgstr "Configuratie"
 
 msgid "General"
 msgstr "Algemeen"
+
+msgid "Password Field Indicators"
+msgstr "Wachtwoordveldpictogrammen"
+
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "Toon Caps Lock- en toetsenbordindelingspictogrammen in het wachtwoordveld."
+
+msgid "Cursor Blinking"
+msgstr "Knipperende cursor"
+
+msgid "Enable or disable text cursor blinking in the password field."
+msgstr "Schakel het knipperen van de tekstcursor in het wachtwoordveld in of uit."
+
+msgid "Custom Lockscreen Wallpaper"
+msgstr "Aangepaste achtergrond voor vergrendelingsscherm"
+
+msgid "Use a custom image overlay for the lockscreen background."
+msgstr "Gebruik een aangepaste afbeelding voor de achtergrond van het vergrendelingsscherm."
+
+msgid "Wallpaper Image Path"
+msgstr "Pad naar achtergrondafbeelding"
+
+msgid "No image selected"
+msgstr "Geen afbeelding geselecteerd"
+
+msgid "Select Lockscreen Wallpaper"
+msgstr "Achtergrond voor vergrendelingsscherm selecteren"
+
+msgid "Images and Slideshows"
+msgstr "Afbeeldingen en diavoorstellingen"
+
+msgid "Select Image File"
+msgstr "Afbeeldingsbestand selecteren"
+
+msgid "Select"
+msgstr "Selecteren"
+
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgid "Per-Monitor Wallpapers"
+msgstr "Achtergronden per beeldscherm"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "Schermen zonder eigen achtergrond gebruiken de bovenstaande afbeelding."
+
+msgid "Default"
+msgstr "Standaard"
+
+msgid "Use the Default Wallpaper"
+msgstr "Standaardachtergrond gebruiken"
+
+msgid "Clock and Date"
+msgstr "Klok en datum"
+
+msgid "Clock Weight"
+msgstr "Klokdikte"
+
+msgid "Font weight of the lockscreen time."
+msgstr "Lettertypedikte van de tijd op het vergrendelingsscherm."
+
+msgid "Restore defaults"
+msgstr "Standaardwaarden herstellen"
+
+msgid "Light"
+msgstr "Licht"
+
+msgid "Regular"
+msgstr "Normaal"
+
+msgid "Medium"
+msgstr "Medium"
+
+msgid "Semibold"
+msgstr "Halfvet"
+
+msgid "Bold"
+msgstr "Vet"
+
+msgid "Heavy"
+msgstr "Zwaar"
+
+msgid "Clock Format"
+msgstr "Klokweergave"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "Overschrijf de 12/24-uursinstelling van het systeem op het vergrendelingsscherm."
+
+msgid "System"
+msgstr "Systeem"
+
+msgid "12-hour"
+msgstr "12 uur"
+
+msgid "24-hour"
+msgstr "24 uur"
 
 msgid "Date Style"
 msgstr "Datumstijl"
@@ -69,38 +174,11 @@ msgstr "Kort"
 msgid "Full"
 msgstr "Volledig"
 
-msgid "Cursor Blinking"
-msgstr "Knipperende cursor"
+msgid "Wallpaper-Tinted Clock"
+msgstr "Met achtergrond getinte klok"
 
-msgid "Enable or disable text cursor blinking in the password field."
-msgstr "Schakel het knipperen van de tekstcursor in het wachtwoordveld in of uit."
-
-msgid "Custom Lockscreen Wallpaper"
-msgstr "Aangepaste vergrendelingsschermachtergrond"
-
-msgid "Use a custom image overlay for the lockscreen background."
-msgstr "Gebruik een aangepaste afbeelding als achtergrond voor het vergrendelingsscherm."
-
-msgid "Wallpaper Image Path"
-msgstr "Pad naar achtergrondafbeelding"
-
-msgid "No image selected"
-msgstr "Geen afbeelding geselecteerd"
-
-msgid "Select Image File"
-msgstr "Afbeeldingsbestand selecteren"
-
-msgid "Select Lockscreen Wallpaper"
-msgstr "Vergrendelingsschermachtergrond selecteren"
-
-msgid "Select"
-msgstr "Selecteren"
-
-msgid "Cancel"
-msgstr "Annuleren"
-
-msgid "Image Files"
-msgstr "Afbeeldingsbestanden"
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "Tint de klok en datum met een lichte tint van de achtergrondkleur."
 
 msgid "Lockscreen Mode"
 msgstr "Vergrendelingsschermmodus"
@@ -115,22 +193,34 @@ msgid "Cupertino"
 msgstr "Cupertino"
 
 msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
-msgstr "Een complete lay-out voor het vergrendelingsscherm geïnspireerd op macOS Sonoma (klik op het gebruikerspictogram om van gebruiker te wisselen)."
+msgstr "Een complete lay-out geïnspireerd op macOS Sonoma (klik op het gebruikerspictogram om van gebruiker te wisselen)."
 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "macOS Sonoma-achtige klok over de klassieke, GNOME-conforme lay-out."
 
+msgid "Sonoma Status Corner"
+msgstr "Sonoma-statushoek"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "Pas de stijl van de batterij-, netwerk- en invoerbronpictogrammen rechtsboven aan."
+
 msgid "Always Show User Widget"
-msgstr "Gebruikerswidget altijd weergeven"
+msgstr "Gebruikerswidget altijd tonen"
 
 msgid "Hides notifications by default. Press Shift+N to show notifications."
 msgstr "Verbergt meldingen standaard. Druk op Shift+N om meldingen te tonen."
 
 msgid "Prompt Vibrancy"
-msgstr "Visueel effect van wachtwoordveld"
+msgstr "Wachtwoordveld-levendigheid"
 
 msgid "Adaptive color and depth enhancements for the password field."
 msgstr "Adaptieve kleur- en diepteverbeteringen voor het wachtwoordveld."
+
+msgid "Lightweight, color-based mode."
+msgstr "Lichtgewicht, op kleur gebaseerde modus."
+
+msgid "Advanced, blur-based mode."
+msgstr "Geavanceerde modus op basis van vervaging."
 
 msgid "Tonal"
 msgstr "Tonaal"
@@ -138,29 +228,23 @@ msgstr "Tonaal"
 msgid "Acrylic"
 msgstr "Acryl"
 
-msgid "Lightweight, color-based mode."
-msgstr "Lichtgewicht, op kleur gebaseerde modus."
-
-msgid "Advanced, blur-based mode."
-msgstr "Geavanceerde, op vervaging gebaseerde modus."
-
 msgid "Show message when locked"
-msgstr "Bericht weergeven bij vergrendeling"
+msgstr "Bericht tonen bij vergrendeling"
 
 msgid "Set..."
-msgstr "Instellen…"
+msgstr "Instellen..."
 
 msgid "Set a message to appear on the lockscreen"
-msgstr "Stel een bericht in voor op het vergrendelingsscherm"
+msgstr "Stel een bericht in voor het vergrendelingsscherm"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Unlock Crossfade"
-msgstr "Vervaging bij ontgrendelen"
+msgstr "Overvloeien bij ontgrendelen"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "Vloeiende overgang tussen vergrendelingsscherm en bureaublad bij ontgrendelen (automatisch uitgeschakeld in energiebesparingsmodus)."
+msgstr "Laat het vergrendelingsscherm vloeiend overgaan in het bureaublad bij ontgrendelen (automatisch uitgeschakeld in Energiebesparingsmodus)."
 
 msgid "Requires WACK Shell to be installed and enabled."
 msgstr "Vereist dat WACK Shell is geïnstalleerd en ingeschakeld."
@@ -169,7 +253,7 @@ msgid "Requires WACK Shell to be enabled."
 msgstr "Vereist dat WACK Shell is ingeschakeld."
 
 msgid "Crossfade Speed"
-msgstr "Overgangssnelheid"
+msgstr "Overvloeisnelheid"
 
 msgid "Slower"
 msgstr "Langzamer"
@@ -181,34 +265,25 @@ msgid "Clock Animation"
 msgstr "Klokanimatie"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "Toegepast op datum en tijd bij het openen van het wachtwoordveld"
-
-msgid "Prompt Animation"
-msgstr "Authenticatieveld-animatie"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "Toegepast op het authenticatieveld tijdens het verschijnen"
-
-msgid "Reset Animations"
-msgstr "Animaties herstellen"
-
-msgid "Restore defaults"
-msgstr "Standaardwaarden herstellen"
-
-msgid "Reset animations"
-msgstr "Animaties herstellen"
+msgstr "Toegepast op datum en tijd bij het openen van het wachtwoordvenster"
 
 msgid "Scale Down"
 msgstr "Verkleinen"
 
 msgid "Zoom Up"
-msgstr "Vergroten"
+msgstr "Omhoog zoomen"
 
 msgid "Slide Up"
-msgstr "Naar boven schuiven"
+msgstr "Omhoog schuiven"
 
 msgid "Fade"
 msgstr "Vervagen"
+
+msgid "Prompt Animation"
+msgstr "Promptanimatie"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Toegepast op het authenticatievenster wanneer dit verschijnt"
 
 msgid "GNOME Default"
 msgstr "GNOME-standaard"
@@ -217,58 +292,67 @@ msgid "Rise"
 msgstr "Opstijgen"
 
 msgid "Zoom"
-msgstr "Zoom"
+msgstr "Zoomen"
 
-msgid "Screen Timeout"
-msgstr "Schermtime-out"
+msgid "Reset Animations"
+msgstr "Animaties herstellen"
+
+msgid "Reset animations"
+msgstr "Animaties herstellen"
 
 msgid "Display and Power"
 msgstr "Scherm en energie"
 
 msgid "Keep Screen On"
-msgstr "Scherm aan laten"
+msgstr "Scherm ingeschakeld laten"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "Voorkomt dat het scherm direct uitschakelt bij vergrendeling. Het scherm schakelt pas uit na de normale time-out uit de systeeminstellingen."
+msgstr "Voorkomt dat het scherm direct uitschakelt bij vergrendeling. Het scherm schakelt uit na de normale time-out van de systeeminstellingen."
 
 msgid "Only on AC Power"
 msgstr "Alleen op netstroom"
 
 msgid "Only keep the screen on if the system is plugged in"
-msgstr "Laat het scherm alleen aan als het apparaat is aangesloten op het stopcontact"
+msgstr "Houd het scherm alleen aan als het systeem is aangesloten op netstroom"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Escape voor scherm uit / pauzestand"
+msgstr "Escape voor pauzestand / slaapstand"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
-msgstr "Druk op Escape op het vergrendelingsscherm om het scherm uit te schakelen (of naar pauzestand te gaan)"
+msgstr "Druk op Escape op het vergrendelingsscherm om het scherm uit te schakelen (of de pauzestand in te schakelen)"
 
 msgid "Extras"
 msgstr "Extra's"
 
-msgid "Integrations"
-msgstr "Integraties"
-
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] GDM-uitbreiding"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
 msgstr "Status: Ingeschakeld. Aangepaste lay-out is actief op GDM."
 
+msgid "Status: Disabled."
+msgstr "Status: Uitgeschakeld."
+
 msgid "Enabled"
 msgstr "Ingeschakeld"
 
-msgid "GDM Expansion - Remove"
-msgstr "GDM-uitbreiding - Verwijderen"
+msgid "Disabled"
+msgstr "Uitgeschakeld"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "Zet het GDM-inlogscherm terug naar de GNOME-standaard. Voer de gekopieerde opdracht uit in een terminal om te verwijderen."
+msgid "Cupertino System Actions"
+msgstr "Cupertino-systeemacties"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "Verwijderopdracht naar klembord kopiëren"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "Toon Pauzestand, Herstarten en Uitschakelen onder de gebruikerslijst in plaats van het energiemenu in Snelle instellingen."
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "Verwijderopdracht gekopieerd naar klembord!"
+msgid "GDM Expansion Documentation"
+msgstr "Documentatie voor GDM-uitbreiding"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "Zet de lay-out van het GDM-inlogscherm terug naar de GNOME-standaard. Zie de instructies in de repository."
+
+msgid "Open repository documentation"
+msgstr "Repository-documentatie openen"
 
 msgid "Extension is not installed system-wide in /usr/share."
 msgstr "De extensie is niet systeembreed geïnstalleerd in /usr/share."
@@ -280,88 +364,55 @@ msgid "GDM session mode is not enabled in system-wide metadata."
 msgstr "GDM-sessiemodus is niet ingeschakeld in de systeembrede metadata."
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
-msgstr "GDM dconf-override-configuratie (/etc/dconf/db/gdm.d) ontbreekt."
+msgstr "GDM dconf-configuratie (/etc/dconf/db/gdm.d) ontbreekt."
 
 msgid "GDM integration is not configured."
 msgstr "GDM-integratie is niet geconfigureerd."
 
-msgid "Status: Disabled."
-msgstr "Status: Uitgeschakeld."
+msgid "GDM DLC Documentation"
+msgstr "Documentatie voor GDM-DLC"
 
-msgid "Disabled"
-msgstr "Uitgeschakeld"
-
-msgid "Enable GDM DLC Support"
-msgstr "GDM DLC-ondersteuning inschakelen"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "Klik op het pictogram om de installatieopdracht te kopiëren en voer deze uit in een terminal."
-
-msgid "Copy install command to clipboard"
-msgstr "Installatieopdracht naar klembord kopiëren"
-
-msgid "Copied install command to clipboard!"
-msgstr "Installatieopdracht gekopieerd naar klembord!"
-
-msgid "Upgrade to [PRO]"
-msgstr "Upgraden naar [PRO]"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "Bekijk de PRO-functies van deze extensie in de GitHub-repository."
-
-msgid "Visit documentation on GitHub"
-msgstr "Documentatie op GitHub bekijken"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "Bezoek de repository om de installatie- en configuratiedocumentatie te bekijken."
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] WACK Shell-integratie"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "Geïnstalleerd. Maakt overgangseffecten en op Cupertino geïnspireerde Shell-aanpassingen mogelijk."
-
 msgid "Installed"
 msgstr "Geïnstalleerd"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - Controleren op updates"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "Kopieer de opdracht om te controleren of er een nieuwere versie van WACK Shell beschikbaar is."
-
-msgid "Copy update-check command to clipboard"
-msgstr "Opdracht voor update-controle kopiëren"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "WACK Shell update-controleopdracht gekopieerd naar klembord!"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "Niet geïnstalleerd. Installeer WACK Shell om overgangseffecten te ontgrendelen."
 
 msgid "Not Installed"
 msgstr "Niet geïnstalleerd"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - Installeren"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Geïnstalleerd. Maakt vloeiende overgangen en door Cupertino geïnspireerde schilaanpassingen mogelijk."
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "Krijg geavanceerde bureaubladovergangen en op Cupertino geïnspireerde Shell-aanpassingen. Kan bugs bevatten; meld ze gerust."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Niet geïnstalleerd. Installeer WACK Shell om overgangseffecten te ontgrendelen."
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "WACK Shell-installatieopdracht gekopieerd naar klembord!"
+msgid "WACK Shell Repository"
+msgstr "WACK Shell-repository"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "Open de WACK Shell-repository voor documentatie en updates."
 
 msgid "Open WACK Shell repository"
 msgstr "WACK Shell-repository openen"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "Bezoek de repository voor installatie-instructies en releasepakketten."
 
 msgid "Clear Visual Cache"
 msgstr "Visuele cache wissen"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "Verwijdert tijdelijke visuele gegevens die worden gebruikt voor achtergronden en effecten. Deze worden automatisch opnieuw gegenereerd."
+msgstr "Wist tijdelijke visuele gegevens voor achtergronden en effecten. Deze worden automatisch opnieuw gegenereerd."
 
 msgid "Clear"
 msgstr "Wissen"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "Wist de visuele cache die wordt gebruikt voor achtergronden en visuele effecten"
+msgstr "Wist de visuele cache voor achtergronden en effecten"
 
 msgid "Visual cache cleared successfully!"
 msgstr "Visuele cache succesvol gewist!"

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: ru\n"
@@ -34,7 +34,7 @@ msgid "Open on GitHub"
 msgstr "Открыть на GitHub"
 
 msgid "Enjoying this extension?"
-msgstr "Нравится расширение?"
+msgstr "Нравится это расширение?"
 
 msgid "Consider supporting its development!"
 msgstr "Поддержите разработку!"
@@ -51,32 +51,35 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "Открыть Saweria"
 
+msgid "Upgrade to [PRO]"
+msgstr "Обновить до [PRO]"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Узнайте о возможностях версии PRO в репозитории на GitHub."
+
+msgid "Visit documentation on GitHub"
+msgstr "Перейти к документации на GitHub"
+
 msgid "Configuration"
-msgstr "Конфигурация"
+msgstr "Настройка"
 
 msgid "General"
 msgstr "Общие"
 
-msgid "Date Style"
-msgstr "Формат даты"
+msgid "Password Field Indicators"
+msgstr "Индикаторы в поле ввода пароля"
 
-msgid "Choose between shortened and full date names."
-msgstr "Выберите между сокращенным и полным форматом даты."
-
-msgid "Short"
-msgstr "Краткий"
-
-msgid "Full"
-msgstr "Полный"
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "Отображать значки Caps Lock и раскладки клавиатуры внутри поля ввода пароля."
 
 msgid "Cursor Blinking"
 msgstr "Мигание курсора"
 
 msgid "Enable or disable text cursor blinking in the password field."
-msgstr "Включает или отключает мигание курсора в поле ввода пароля."
+msgstr "Включить или отключить мигание текстового курсора в поле ввода пароля."
 
 msgid "Custom Lockscreen Wallpaper"
-msgstr "Пользовательские обои экрана блокировки"
+msgstr "Собственные обои экрана блокировки"
 
 msgid "Use a custom image overlay for the lockscreen background."
 msgstr "Использовать собственное изображение в качестве фона экрана блокировки."
@@ -87,11 +90,14 @@ msgstr "Путь к изображению обоев"
 msgid "No image selected"
 msgstr "Изображение не выбрано"
 
+msgid "Select Lockscreen Wallpaper"
+msgstr "Выберите обои экрана блокировки"
+
+msgid "Images and Slideshows"
+msgstr "Изображения и слайд-шоу"
+
 msgid "Select Image File"
 msgstr "Выбрать файл изображения"
-
-msgid "Select Lockscreen Wallpaper"
-msgstr "Выбрать обои экрана блокировки"
 
 msgid "Select"
 msgstr "Выбрать"
@@ -99,8 +105,80 @@ msgstr "Выбрать"
 msgid "Cancel"
 msgstr "Отмена"
 
-msgid "Image Files"
-msgstr "Файлы изображений"
+msgid "Per-Monitor Wallpapers"
+msgstr "Обои для каждого монитора"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "Мониторы без собственных обоев используют изображение выше."
+
+msgid "Default"
+msgstr "По умолчанию"
+
+msgid "Use the Default Wallpaper"
+msgstr "Использовать обои по умолчанию"
+
+msgid "Clock and Date"
+msgstr "Часы и дата"
+
+msgid "Clock Weight"
+msgstr "Толщина шрифта часов"
+
+msgid "Font weight of the lockscreen time."
+msgstr "Толщина шрифта времени на экране блокировки."
+
+msgid "Restore defaults"
+msgstr "Сбросить по умолчанию"
+
+msgid "Light"
+msgstr "Тонкий"
+
+msgid "Regular"
+msgstr "Обычный"
+
+msgid "Medium"
+msgstr "Средний"
+
+msgid "Semibold"
+msgstr "Полужирный"
+
+msgid "Bold"
+msgstr "Жирный"
+
+msgid "Heavy"
+msgstr "Тяжёлый"
+
+msgid "Clock Format"
+msgstr "Формат часов"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "Переопределить системный 12/24-часовой формат на экране блокировки."
+
+msgid "System"
+msgstr "Системный"
+
+msgid "12-hour"
+msgstr "12-часовой"
+
+msgid "24-hour"
+msgstr "24-часовой"
+
+msgid "Date Style"
+msgstr "Формат даты"
+
+msgid "Choose between shortened and full date names."
+msgstr "Выберите между сокращённым и полным отображением даты."
+
+msgid "Short"
+msgstr "Краткий"
+
+msgid "Full"
+msgstr "Полный"
+
+msgid "Wallpaper-Tinted Clock"
+msgstr "Оттенок часов под обои"
+
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "Окрашивать часы и дату в мягкий оттенок преобладающего цвета обоев."
 
 msgid "Lockscreen Mode"
 msgstr "Режим экрана блокировки"
@@ -112,13 +190,19 @@ msgid "Legacy"
 msgstr "Классический"
 
 msgid "Cupertino"
-msgstr "Купертино"
+msgstr "Cupertino"
 
 msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
-msgstr "Полноценный интерфейс экрана блокировки в стиле macOS Sonoma (нажмите на значок пользователя для смены пользователя)."
+msgstr "Полноценный интерфейс в стиле macOS Sonoma (нажмите значок пользователя для смены учётной записи)."
 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Часы в стиле macOS Sonoma поверх классического интерфейса GNOME."
+
+msgid "Sonoma Status Corner"
+msgstr "Значки статуса Sonoma"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "Изменяет стиль значков батареи, сети и раскладки в правом верхнем углу."
 
 msgid "Always Show User Widget"
 msgstr "Всегда показывать виджет пользователя"
@@ -127,10 +211,16 @@ msgid "Hides notifications by default. Press Shift+N to show notifications."
 msgstr "Скрывает уведомления по умолчанию. Нажмите Shift+N для их отображения."
 
 msgid "Prompt Vibrancy"
-msgstr "Оформление поля ввода пароля"
+msgstr "Эффект глубины поля пароля"
 
 msgid "Adaptive color and depth enhancements for the password field."
-msgstr "Адаптивное улучшение цвета и глубины для поля ввода пароля."
+msgstr "Адаптивные цвета и эффект размытия для поля ввода пароля."
+
+msgid "Lightweight, color-based mode."
+msgstr "Легковесный режим на основе цвета."
+
+msgid "Advanced, blur-based mode."
+msgstr "Продвинутый режим с эффектом размытия."
 
 msgid "Tonal"
 msgstr "Тональный"
@@ -138,38 +228,32 @@ msgstr "Тональный"
 msgid "Acrylic"
 msgstr "Акриловый"
 
-msgid "Lightweight, color-based mode."
-msgstr "Легковесный режим на основе цвета."
-
-msgid "Advanced, blur-based mode."
-msgstr "Продвинутый режим на основе размытия."
-
 msgid "Show message when locked"
-msgstr "Показывать сообщение при блокировке"
+msgstr "Показывать сообщение на экране блокировки"
 
 msgid "Set..."
-msgstr "Задать…"
+msgstr "Задать..."
 
 msgid "Set a message to appear on the lockscreen"
-msgstr "Задать сообщение для отображения на экране блокировки"
+msgstr "Введите сообщение для экрана блокировки"
 
 msgid "OK"
-msgstr "ОК"
+msgstr "OK"
 
 msgid "Unlock Crossfade"
 msgstr "Плавный переход при разблокировке"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "Плавный переход от экрана блокировки к рабочему столу при разблокировке (автоматически отключается в режиме энергосбережения)."
+msgstr "Плавный переход от экрана блокировки к рабочему столу (отключается в режиме энергосбережения)."
 
 msgid "Requires WACK Shell to be installed and enabled."
-msgstr "Требуется установленное и включенное расширение WACK Shell."
+msgstr "Требуется установленное и включённое расширение WACK Shell."
 
 msgid "Requires WACK Shell to be enabled."
-msgstr "Требуется включение WACK Shell."
+msgstr "Требуется включить расширение WACK Shell."
 
 msgid "Crossfade Speed"
-msgstr "Скорость плавного перехода"
+msgstr "Скорость перехода"
 
 msgid "Slower"
 msgstr "Медленнее"
@@ -181,28 +265,13 @@ msgid "Clock Animation"
 msgstr "Анимация часов"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "Применяется к дате и времени при открытии поля ввода пароля"
-
-msgid "Prompt Animation"
-msgstr "Анимация поля ввода пароля"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "Применяется к полю ввода пароля при его появлении"
-
-msgid "Reset Animations"
-msgstr "Сбросить анимации"
-
-msgid "Restore defaults"
-msgstr "Восстановить настройки по умолчанию"
-
-msgid "Reset animations"
-msgstr "Сбросить анимации"
+msgstr "Применяется к дате и времени при открытии запроса пароля"
 
 msgid "Scale Down"
 msgstr "Уменьшение"
 
 msgid "Zoom Up"
-msgstr "Увеличение"
+msgstr "Увеличение вверх"
 
 msgid "Slide Up"
 msgstr "Сдвиг вверх"
@@ -210,17 +279,26 @@ msgstr "Сдвиг вверх"
 msgid "Fade"
 msgstr "Затухание"
 
+msgid "Prompt Animation"
+msgstr "Анимация окна пароля"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Применяется к окну аутентификации при его появлении"
+
 msgid "GNOME Default"
-msgstr "По умолчанию в GNOME"
+msgstr "Стандартный GNOME"
 
 msgid "Rise"
-msgstr "Всплытие"
+msgstr "Подъём"
 
 msgid "Zoom"
 msgstr "Масштабирование"
 
-msgid "Screen Timeout"
-msgstr "Выключение экрана"
+msgid "Reset Animations"
+msgstr "Сбросить анимации"
+
+msgid "Reset animations"
+msgstr "Сбросить анимации"
 
 msgid "Display and Power"
 msgstr "Экран и питание"
@@ -229,139 +307,112 @@ msgid "Keep Screen On"
 msgstr "Не выключать экран"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "Предотвращает немедленное отключение экрана при блокировке. Экран выключится после обычного времени ожидания, заданного в настройках системы."
+msgstr "Предотвращает немедленное отключение экрана при блокировке. Экран погаснет после обычного системного таймаута."
 
 msgid "Only on AC Power"
 msgstr "Только при питании от сети"
 
 msgid "Only keep the screen on if the system is plugged in"
-msgstr "Не выключать экран только при подключении к зарядному устройству"
+msgstr "Оставлять экран включённым только при работе от электросети"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Escape для отключения экрана / ждущего режима"
+msgstr "Клавиша Escape для сна"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
-msgstr "Нажмите Escape на экране блокировки, чтобы погасить экран (или перейти в ждущий режим)"
+msgstr "Нажмите Escape на экране блокировки для отключения экрана (или сна)"
 
 msgid "Extras"
 msgstr "Дополнительно"
 
-msgid "Integrations"
-msgstr "Интеграции"
-
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] Расширение для GDM"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
-msgstr "Статус: Включено. Пользовательский интерфейс активен в GDM."
+msgstr "Статус: Включено. Пользовательский интерфейс активен на экране входа GDM."
+
+msgid "Status: Disabled."
+msgstr "Статус: Отключено."
 
 msgid "Enabled"
 msgstr "Включено"
 
-msgid "GDM Expansion - Remove"
-msgstr "Модуль GDM - Удаление"
+msgid "Disabled"
+msgstr "Отключено"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "Возвращает стандартный экран входа GDM GNOME. Для удаления выполните скопированную команду в терминале."
+msgid "Cupertino System Actions"
+msgstr "Системные кнопки Cupertino"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "Скопировать команду удаления в буфер обмена"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "Показывает кнопки «Ждущий режим», «Перезагрузка» и «Выключение» под списком пользователей вместо меню быстрых настроек."
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "Команда удаления скопирована в буфер обмена!"
+msgid "GDM Expansion Documentation"
+msgstr "Документация расширения GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "Возврат экрана входа GDM к стандартному виду GNOME. См. инструкции в репозитории."
+
+msgid "Open repository documentation"
+msgstr "Открыть документацию репозитория"
 
 msgid "Extension is not installed system-wide in /usr/share."
-msgstr "Расширение не установлено системно в /usr/share."
+msgstr "Расширение не установлено общесистемно в /usr/share."
 
 msgid "GDM expansion modules (src/pro) are missing system-wide."
 msgstr "Модули расширения GDM (src/pro) отсутствуют в системе."
 
 msgid "GDM session mode is not enabled in system-wide metadata."
-msgstr "Сессионный режим GDM не включен в системных метаданных."
+msgstr "Режим сеанса GDM не включён в общесистемных метаданных."
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
-msgstr "Конфигурация переопределения dconf для GDM (/etc/dconf/db/gdm.d) отсутствует."
+msgstr "Конфигурация dconf для GDM (/etc/dconf/db/gdm.d) отсутствует."
 
 msgid "GDM integration is not configured."
 msgstr "Интеграция с GDM не настроена."
 
-msgid "Status: Disabled."
-msgstr "Статус: Отключено."
+msgid "GDM DLC Documentation"
+msgstr "Документация модуля GDM"
 
-msgid "Disabled"
-msgstr "Отключено"
-
-msgid "Enable GDM DLC Support"
-msgstr "Включить поддержку DLC для GDM"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "Нажмите на значок, чтобы скопировать команду установки, затем выполните её в терминале."
-
-msgid "Copy install command to clipboard"
-msgstr "Скопировать команду установки в буфер обмена"
-
-msgid "Copied install command to clipboard!"
-msgstr "Команда установки скопирована в буфер обмена!"
-
-msgid "Upgrade to [PRO]"
-msgstr "Обновиться до [PRO]"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "Ознакомьтесь с возможностями PRO-версии расширения в репозитории на GitHub."
-
-msgid "Visit documentation on GitHub"
-msgstr "Открыть документацию на GitHub"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "Перейдите в репозиторий для просмотра инструкций по установке и настройке."
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] Интеграция с WACK Shell"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "Установлено. Включает плавные переходы и улучшения оболочки в стиле Cupertino."
-
 msgid "Installed"
 msgstr "Установлено"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - Проверить обновления"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "Скопируйте команду, чтобы проверить наличие новой версии WACK Shell."
-
-msgid "Copy update-check command to clipboard"
-msgstr "Скопировать команду проверки обновлений"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "Команда проверки обновлений WACK Shell скопирована в буфер обмена!"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "Не установлено. Установите WACK Shell для доступа к эффектам перехода."
 
 msgid "Not Installed"
 msgstr "Не установлено"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - Установка"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Установлено. Включает эффекты плавного перехода и оформление оболочки в стиле Cupertino."
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "Получите улучшенные плавные переходы рабочего стола и настройки оболочки в стиле Cupertino. Может содержать ошибки; сообщайте при обнаружении."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Не установлено. Установите WACK Shell для включения эффектов перехода."
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "Команда установки WACK Shell скопирована в буфер обмена!"
+msgid "WACK Shell Repository"
+msgstr "Репозиторий WACK Shell"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "Открыть репозиторий WACK Shell для ознакомления с документацией и обновлениями."
 
 msgid "Open WACK Shell repository"
 msgstr "Открыть репозиторий WACK Shell"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "Перейдите в репозиторий для просмотра инструкций по установке и релизов."
 
 msgid "Clear Visual Cache"
 msgstr "Очистить визуальный кэш"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "Удаляет временные графические данные, используемые для обоев и визуальных эффектов. Они будут созданы заново автоматически."
+msgstr "Удаляет временные визуальные данные для обоев и эффектов размытия. Они создадутся заново автоматически."
 
 msgid "Clear"
 msgstr "Очистить"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "Очищает визуальный кэш, используемый для обоев и визуальных эффектов"
+msgstr "Очищает визуальный кэш, используемый для обоев и эффектов"
 
 msgid "Visual cache cleared successfully!"
 msgstr "Визуальный кэш успешно очищен!"

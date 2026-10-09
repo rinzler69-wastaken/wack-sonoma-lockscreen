@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: vi\n"
@@ -28,13 +28,13 @@ msgid "Resources"
 msgstr "Tài nguyên"
 
 msgid "Extension Repo"
-msgstr "Kho lưu trữ tiện ích mở rộng"
+msgstr "Kho lưu trữ tiện ích"
 
 msgid "Open on GitHub"
 msgstr "Mở trên GitHub"
 
 msgid "Enjoying this extension?"
-msgstr "Bạn thích tiện ích mở rộng này chứ?"
+msgstr "Bạn thích tiện ích này chứ?"
 
 msgid "Consider supporting its development!"
 msgstr "Hãy cân nhắc ủng hộ sự phát triển của tiện ích!"
@@ -51,29 +51,32 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "Mở Saweria"
 
+msgid "Upgrade to [PRO]"
+msgstr "Nâng cấp lên [PRO]"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Xem các tính năng PRO của tiện ích này trên kho lưu trữ GitHub."
+
+msgid "Visit documentation on GitHub"
+msgstr "Xem tài liệu trên GitHub"
+
 msgid "Configuration"
 msgstr "Cấu hình"
 
 msgid "General"
 msgstr "Chung"
 
-msgid "Date Style"
-msgstr "Kiểu ngày"
+msgid "Password Field Indicators"
+msgstr "Chỉ báo trường mật khẩu"
 
-msgid "Choose between shortened and full date names."
-msgstr "Chọn giữa tên ngày viết tắt và đầy đủ."
-
-msgid "Short"
-msgstr "Ngắn"
-
-msgid "Full"
-msgstr "Đầy đủ"
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "Hiển thị biểu tượng Caps Lock và bố cục bàn phím bên trong trường mật khẩu."
 
 msgid "Cursor Blinking"
-msgstr "Con trỏ nhấp nháy"
+msgstr "Nhấp nháy con trỏ"
 
 msgid "Enable or disable text cursor blinking in the password field."
-msgstr "Bật hoặc tắt con trỏ nhấp nháy trong ô nhập mật khẩu."
+msgstr "Bật hoặc tắt nhấp nháy con trỏ văn bản trong trường mật khẩu."
 
 msgid "Custom Lockscreen Wallpaper"
 msgstr "Hình nền màn hình khóa tùy chỉnh"
@@ -87,11 +90,14 @@ msgstr "Đường dẫn hình nền"
 msgid "No image selected"
 msgstr "Chưa chọn hình ảnh"
 
-msgid "Select Image File"
-msgstr "Chọn tệp hình ảnh"
-
 msgid "Select Lockscreen Wallpaper"
 msgstr "Chọn hình nền màn hình khóa"
+
+msgid "Images and Slideshows"
+msgstr "Hình ảnh và trình chiếu"
+
+msgid "Select Image File"
+msgstr "Chọn tệp hình ảnh"
 
 msgid "Select"
 msgstr "Chọn"
@@ -99,8 +105,80 @@ msgstr "Chọn"
 msgid "Cancel"
 msgstr "Hủy"
 
-msgid "Image Files"
-msgstr "Tệp hình ảnh"
+msgid "Per-Monitor Wallpapers"
+msgstr "Hình nền theo từng màn hình"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "Các màn hình không có hình nền riêng sẽ dùng hình nền ở trên."
+
+msgid "Default"
+msgstr "Mặc định"
+
+msgid "Use the Default Wallpaper"
+msgstr "Dùng hình nền mặc định"
+
+msgid "Clock and Date"
+msgstr "Đồng hồ và ngày"
+
+msgid "Clock Weight"
+msgstr "Độ đậm của đồng hồ"
+
+msgid "Font weight of the lockscreen time."
+msgstr "Độ đậm của phông chữ thời gian trên màn hình khóa."
+
+msgid "Restore defaults"
+msgstr "Khôi phục mặc định"
+
+msgid "Light"
+msgstr "Mảnh"
+
+msgid "Regular"
+msgstr "Thường"
+
+msgid "Medium"
+msgstr "Trung bình"
+
+msgid "Semibold"
+msgstr "Bán đậm"
+
+msgid "Bold"
+msgstr "Đậm"
+
+msgid "Heavy"
+msgstr "Rất đậm"
+
+msgid "Clock Format"
+msgstr "Định dạng đồng hồ"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "Ghi đè cài đặt 12/24 giờ của hệ thống trên màn hình khóa."
+
+msgid "System"
+msgstr "Hệ thống"
+
+msgid "12-hour"
+msgstr "12 giờ"
+
+msgid "24-hour"
+msgstr "24 giờ"
+
+msgid "Date Style"
+msgstr "Kiểu ngày"
+
+msgid "Choose between shortened and full date names."
+msgstr "Chọn giữa tên ngày viết tắt hoặc đầy đủ."
+
+msgid "Short"
+msgstr "Ngắn"
+
+msgid "Full"
+msgstr "Đầy đủ"
+
+msgid "Wallpaper-Tinted Clock"
+msgstr "Đồng hồ ánh màu hình nền"
+
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "Phủ nhẹ màu sắc hình nền lên đồng hồ và ngày tháng."
 
 msgid "Lockscreen Mode"
 msgstr "Chế độ màn hình khóa"
@@ -115,10 +193,16 @@ msgid "Cupertino"
 msgstr "Cupertino"
 
 msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
-msgstr "Bố cục màn hình khóa hoàn chỉnh lấy cảm hứng từ macOS Sonoma (nhấp vào biểu tượng người dùng để chuyển đổi người dùng)."
+msgstr "Giao diện màn hình khóa hoàn chỉnh lấy cảm hứng từ macOS Sonoma (nhấp vào biểu tượng người dùng để chuyển đổi người dùng)."
 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
-msgstr "Đồng hồ phong cách macOS Sonoma trên bố cục chuẩn truyền thống của GNOME."
+msgstr "Đồng hồ phong cách macOS Sonoma trên bố cục GNOME cổ điển."
+
+msgid "Sonoma Status Corner"
+msgstr "Góc trạng thái Sonoma"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "Đổi kiểu các biểu tượng pin, mạng và nguồn nhập ở góc trên bên phải."
 
 msgid "Always Show User Widget"
 msgstr "Luôn hiển thị tiện ích người dùng"
@@ -127,10 +211,16 @@ msgid "Hides notifications by default. Press Shift+N to show notifications."
 msgstr "Ẩn thông báo theo mặc định. Nhấn Shift+N để hiển thị thông báo."
 
 msgid "Prompt Vibrancy"
-msgstr "Hiệu ứng thị giác cho ô nhập mật khẩu"
+msgstr "Hiệu ứng chiều sâu trường mật khẩu"
 
 msgid "Adaptive color and depth enhancements for the password field."
-msgstr "Cải thiện màu sắc và chiều sâu thích ứng cho ô nhập mật khẩu."
+msgstr "Cải tiến màu sắc và độ sâu thích ứng cho trường mật khẩu."
+
+msgid "Lightweight, color-based mode."
+msgstr "Chế độ nhẹ dựa trên màu sắc."
+
+msgid "Advanced, blur-based mode."
+msgstr "Chế độ nâng cao dựa trên hiệu ứng làm mờ."
 
 msgid "Tonal"
 msgstr "Tông màu"
@@ -138,29 +228,23 @@ msgstr "Tông màu"
 msgid "Acrylic"
 msgstr "Acrylic"
 
-msgid "Lightweight, color-based mode."
-msgstr "Chế độ nhẹ dựa trên màu sắc."
-
-msgid "Advanced, blur-based mode."
-msgstr "Chế độ nâng cao dựa trên làm mờ."
-
 msgid "Show message when locked"
-msgstr "Hiển thị tin nhắn khi khóa"
+msgstr "Hiển thị thông điệp khi khóa"
 
 msgid "Set..."
-msgstr "Đặt…"
+msgstr "Thiết lập..."
 
 msgid "Set a message to appear on the lockscreen"
-msgstr "Đặt tin nhắn xuất hiện trên màn hình khóa"
+msgstr "Thiết lập thông điệp hiển thị trên màn hình khóa"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Unlock Crossfade"
-msgstr "Làm mờ chuyển tiếp khi mở khóa"
+msgstr "Chuyển cảnh mờ dần khi mở khóa"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "Làm mờ chuyển tiếp màn hình khóa với màn hình nền khi mở khóa (tự động tắt ở chế độ tiết kiệm pin)."
+msgstr "Chuyển cảnh mượt mà giữa màn hình khóa và màn hình chính khi mở khóa (tự động tắt ở chế độ Tiết kiệm pin)."
 
 msgid "Requires WACK Shell to be installed and enabled."
 msgstr "Yêu cầu cài đặt và bật WACK Shell."
@@ -169,7 +253,7 @@ msgid "Requires WACK Shell to be enabled."
 msgstr "Yêu cầu bật WACK Shell."
 
 msgid "Crossfade Speed"
-msgstr "Tốc độ làm mờ"
+msgstr "Tốc độ mờ dần"
 
 msgid "Slower"
 msgstr "Chậm hơn"
@@ -178,97 +262,97 @@ msgid "Faster"
 msgstr "Nhanh hơn"
 
 msgid "Clock Animation"
-msgstr "Hiệu ứng chuyển động đồng hồ"
+msgstr "Hiệu ứng đồng hồ"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "Áp dụng cho ngày và giờ trong khi mở khung nhập mật khẩu"
-
-msgid "Prompt Animation"
-msgstr "Hiệu ứng khung xác thực"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "Áp dụng cho khung xác thực khi xuất hiện"
-
-msgid "Reset Animations"
-msgstr "Đặt lại hiệu ứng chuyển động"
-
-msgid "Restore defaults"
-msgstr "Khôi phục mặc định"
-
-msgid "Reset animations"
-msgstr "Đặt lại hiệu ứng"
+msgstr "Áp dụng cho ngày và giờ khi mở hộp nhập mật khẩu"
 
 msgid "Scale Down"
 msgstr "Thu nhỏ"
 
 msgid "Zoom Up"
-msgstr "Phóng to"
+msgstr "Phóng to lên"
 
 msgid "Slide Up"
 msgstr "Trượt lên"
 
 msgid "Fade"
-msgstr "Làm mờ dần"
+msgstr "Mờ dần"
+
+msgid "Prompt Animation"
+msgstr "Hiệu ứng lời nhắc"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Áp dụng cho hộp thoại xác thực khi xuất hiện"
 
 msgid "GNOME Default"
 msgstr "Mặc định của GNOME"
 
 msgid "Rise"
-msgstr "Nổi lên"
+msgstr "Nâng lên"
 
 msgid "Zoom"
 msgstr "Thu phóng"
 
-msgid "Screen Timeout"
-msgstr "Thời gian chờ màn hình"
+msgid "Reset Animations"
+msgstr "Đặt lại hiệu ứng"
+
+msgid "Reset animations"
+msgstr "Đặt lại hiệu ứng"
 
 msgid "Display and Power"
 msgstr "Màn hình và nguồn điện"
 
 msgid "Keep Screen On"
-msgstr "Giữ màn hình luôn bật"
+msgstr "Giữ màn hình luôn sáng"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "Ngăn màn hình tắt ngay khi khóa. Màn hình vẫn sẽ tắt sau khoảng thời gian chờ thông thường được cài đặt trong cài đặt hệ thống."
+msgstr "Ngăn màn hình tắt ngay khi khóa. Màn hình vẫn sẽ tắt sau khoảng thời gian chờ được đặt trong cài đặt hệ thống."
 
 msgid "Only on AC Power"
-msgstr "Chỉ khi cắm nguồn điện AC"
+msgstr "Chỉ khi dùng nguồn AC"
 
 msgid "Only keep the screen on if the system is plugged in"
-msgstr "Chỉ giữ màn hình luôn bật nếu thiết bị đang cắm sạc"
+msgstr "Chỉ giữ màn hình sáng khi thiết bị được cắm sạc"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Nhấn Escape để tắt màn hình / tạm dừng"
+msgstr "Phím Escape để tạm dừng"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
-msgstr "Nhấn Escape trên màn hình khóa để tắt hiển thị (hoặc tạm dừng hệ thống)"
+msgstr "Nhấn Escape trên màn hình khóa để tắt màn hình (hoặc tạm dừng)"
 
 msgid "Extras"
-msgstr "Tính năng bổ sung"
-
-msgid "Integrations"
-msgstr "Tích hợp"
+msgstr "Mở rộng"
 
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] Tiện ích mở rộng GDM"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
-msgstr "Trạng thái: Đã bật. Bố cục tùy chỉnh đang hoạt động trên GDM."
+msgstr "Trạng thái: Đã bật. Giao diện tùy chỉnh đang hoạt động trên GDM."
+
+msgid "Status: Disabled."
+msgstr "Trạng thái: Đã tắt."
 
 msgid "Enabled"
 msgstr "Đã bật"
 
-msgid "GDM Expansion - Remove"
-msgstr "Mở rộng GDM - Gỡ cài đặt"
+msgid "Disabled"
+msgstr "Đã tắt"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "Khôi phục bố cục màn hình đăng nhập GDM về mặc định của GNOME. Để gỡ cài đặt, hãy chạy lệnh đã sao chép trong cửa sổ dòng lệnh (terminal)."
+msgid "Cupertino System Actions"
+msgstr "Thao tác hệ thống Cupertino"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "Sao chép lệnh gỡ cài đặt vào bộ nhớ tạm"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "Hiển thị Tạm dừng, Khởi động lại và Tắt nguồn dưới danh sách người dùng, thay thế menu nguồn Cài đặt nhanh."
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "Đã sao chép lệnh gỡ cài đặt vào bộ nhớ tạm!"
+msgid "GDM Expansion Documentation"
+msgstr "Tài liệu tiện ích mở rộng GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "Khôi phục giao diện đăng nhập GDM về mặc định của GNOME. Xem hướng dẫn trong kho lưu trữ."
+
+msgid "Open repository documentation"
+msgstr "Mở tài liệu kho lưu trữ"
 
 msgid "Extension is not installed system-wide in /usr/share."
 msgstr "Tiện ích mở rộng chưa được cài đặt trên toàn hệ thống trong /usr/share."
@@ -280,88 +364,55 @@ msgid "GDM session mode is not enabled in system-wide metadata."
 msgstr "Chế độ phiên GDM chưa được bật trong siêu dữ liệu toàn hệ thống."
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
-msgstr "Thiếu cấu hình ghi đè dconf của GDM (/etc/dconf/db/gdm.d)."
+msgstr "Thiếu cấu hình dconf cho GDM (/etc/dconf/db/gdm.d)."
 
 msgid "GDM integration is not configured."
 msgstr "Tích hợp GDM chưa được cấu hình."
 
-msgid "Status: Disabled."
-msgstr "Trạng thái: Đã tắt."
+msgid "GDM DLC Documentation"
+msgstr "Tài liệu GDM DLC"
 
-msgid "Disabled"
-msgstr "Đã tắt"
-
-msgid "Enable GDM DLC Support"
-msgstr "Bật hỗ trợ DLC GDM"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "Nhấp vào biểu tượng để sao chép lệnh cài đặt, sau đó chạy lệnh đó trong terminal."
-
-msgid "Copy install command to clipboard"
-msgstr "Sao chép lệnh cài đặt vào bộ nhớ tạm"
-
-msgid "Copied install command to clipboard!"
-msgstr "Đã sao chép lệnh cài đặt vào bộ nhớ tạm!"
-
-msgid "Upgrade to [PRO]"
-msgstr "Nâng cấp lên [PRO]"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "Xem các tính năng PRO của tiện ích mở rộng này trên kho lưu trữ GitHub."
-
-msgid "Visit documentation on GitHub"
-msgstr "Xem tài liệu trên GitHub"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "Truy cập kho lưu trữ để xem tài liệu thiết lập và cài đặt."
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] Tích hợp WACK Shell"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "Đã cài đặt. Kích hoạt hiệu ứng làm mờ chuyển tiếp và tùy biến Shell phong cách Cupertino."
-
 msgid "Installed"
 msgstr "Đã cài đặt"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - Kiểm tra cập nhật"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "Sao chép lệnh để kiểm tra xem có phiên bản WACK Shell mới hơn hay không."
-
-msgid "Copy update-check command to clipboard"
-msgstr "Sao chép lệnh kiểm tra cập nhật"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "Đã sao chép lệnh kiểm tra cập nhật WACK Shell vào bộ nhớ tạm!"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "Chưa cài đặt. Hãy cài đặt WACK Shell để mở khóa các hiệu ứng chuyển tiếp."
 
 msgid "Not Installed"
 msgstr "Chưa cài đặt"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - Cài đặt"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Đã cài đặt. Cho phép hiệu ứng chuyển cảnh mờ dần và các tùy chỉnh hệ thống lấy cảm hứng từ Cupertino."
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "Nhận các hiệu ứng làm mờ chuyển tiếp nâng cao và tùy biến Shell phong cách Cupertino. Có thể có lỗi, vui lòng báo cáo nếu gặp."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Chưa cài đặt. Hãy cài đặt WACK Shell để mở khóa các hiệu ứng chuyển cảnh."
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "Đã sao chép lệnh cài đặt WACK Shell vào bộ nhớ tạm!"
+msgid "WACK Shell Repository"
+msgstr "Kho lưu trữ WACK Shell"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "Mở kho lưu trữ WACK Shell để xem tài liệu và các bản cập nhật."
 
 msgid "Open WACK Shell repository"
 msgstr "Mở kho lưu trữ WACK Shell"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "Truy cập kho lưu trữ để xem hướng dẫn cài đặt và các gói phát hành."
 
 msgid "Clear Visual Cache"
 msgstr "Xóa bộ nhớ đệm hình ảnh"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "Xóa dữ liệu hình ảnh tạm thời dùng cho hình nền và hiệu ứng thị giác. Dữ liệu sẽ được tự động tạo lại khi cần."
+msgstr "Xóa dữ liệu hình ảnh tạm thời dùng cho hình nền và hiệu ứng. Dữ liệu sẽ được tạo lại tự động."
 
 msgid "Clear"
 msgstr "Xóa"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "Xóa bộ nhớ đệm hình ảnh được sử dụng cho hình nền và hiệu ứng thị giác"
+msgstr "Xóa bộ nhớ đệm hình ảnh dùng cho hình nền và hiệu ứng"
 
 msgid "Visual cache cleared successfully!"
 msgstr "Đã xóa bộ nhớ đệm hình ảnh thành công!"

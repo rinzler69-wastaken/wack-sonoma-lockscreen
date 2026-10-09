@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: \n"
@@ -51,22 +51,25 @@ msgstr ""
 msgid "Open Saweria"
 msgstr ""
 
+msgid "Upgrade to [PRO]"
+msgstr ""
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr ""
+
+msgid "Visit documentation on GitHub"
+msgstr ""
+
 msgid "Configuration"
 msgstr ""
 
 msgid "General"
 msgstr ""
 
-msgid "Date Style"
+msgid "Password Field Indicators"
 msgstr ""
 
-msgid "Choose between shortened and full date names."
-msgstr ""
-
-msgid "Short"
-msgstr ""
-
-msgid "Full"
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
 msgstr ""
 
 msgid "Cursor Blinking"
@@ -87,10 +90,13 @@ msgstr ""
 msgid "No image selected"
 msgstr ""
 
-msgid "Select Image File"
+msgid "Select Lockscreen Wallpaper"
 msgstr ""
 
-msgid "Select Lockscreen Wallpaper"
+msgid "Images and Slideshows"
+msgstr ""
+
+msgid "Select Image File"
 msgstr ""
 
 msgid "Select"
@@ -99,7 +105,79 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-msgid "Image Files"
+msgid "Per-Monitor Wallpapers"
+msgstr ""
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr ""
+
+msgid "Default"
+msgstr ""
+
+msgid "Use the Default Wallpaper"
+msgstr ""
+
+msgid "Clock and Date"
+msgstr ""
+
+msgid "Clock Weight"
+msgstr ""
+
+msgid "Font weight of the lockscreen time."
+msgstr ""
+
+msgid "Restore defaults"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+msgid "Regular"
+msgstr ""
+
+msgid "Medium"
+msgstr ""
+
+msgid "Semibold"
+msgstr ""
+
+msgid "Bold"
+msgstr ""
+
+msgid "Heavy"
+msgstr ""
+
+msgid "Clock Format"
+msgstr ""
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr ""
+
+msgid "System"
+msgstr ""
+
+msgid "12-hour"
+msgstr ""
+
+msgid "24-hour"
+msgstr ""
+
+msgid "Date Style"
+msgstr ""
+
+msgid "Choose between shortened and full date names."
+msgstr ""
+
+msgid "Short"
+msgstr ""
+
+msgid "Full"
+msgstr ""
+
+msgid "Wallpaper-Tinted Clock"
+msgstr ""
+
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
 msgstr ""
 
 msgid "Lockscreen Mode"
@@ -120,6 +198,12 @@ msgstr ""
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr ""
 
+msgid "Sonoma Status Corner"
+msgstr ""
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr ""
+
 msgid "Always Show User Widget"
 msgstr ""
 
@@ -132,16 +216,16 @@ msgstr ""
 msgid "Adaptive color and depth enhancements for the password field."
 msgstr ""
 
-msgid "Tonal"
-msgstr ""
-
-msgid "Acrylic"
-msgstr ""
-
 msgid "Lightweight, color-based mode."
 msgstr ""
 
 msgid "Advanced, blur-based mode."
+msgstr ""
+
+msgid "Tonal"
+msgstr ""
+
+msgid "Acrylic"
 msgstr ""
 
 msgid "Show message when locked"
@@ -183,21 +267,6 @@ msgstr ""
 msgid "Applied to the date and time while opening the password prompt"
 msgstr ""
 
-msgid "Prompt Animation"
-msgstr ""
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr ""
-
-msgid "Reset Animations"
-msgstr ""
-
-msgid "Restore defaults"
-msgstr ""
-
-msgid "Reset animations"
-msgstr ""
-
 msgid "Scale Down"
 msgstr ""
 
@@ -210,6 +279,12 @@ msgstr ""
 msgid "Fade"
 msgstr ""
 
+msgid "Prompt Animation"
+msgstr ""
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr ""
+
 msgid "GNOME Default"
 msgstr ""
 
@@ -219,7 +294,10 @@ msgstr ""
 msgid "Zoom"
 msgstr ""
 
-msgid "Screen Timeout"
+msgid "Reset Animations"
+msgstr ""
+
+msgid "Reset animations"
 msgstr ""
 
 msgid "Display and Power"
@@ -246,28 +324,34 @@ msgstr ""
 msgid "Extras"
 msgstr ""
 
-msgid "Integrations"
-msgstr ""
-
 msgid "[PRO] GDM Expansion"
 msgstr ""
 
 msgid "Status: Enabled. Custom layout is active on GDM."
 msgstr ""
 
+msgid "Status: Disabled."
+msgstr ""
+
 msgid "Enabled"
 msgstr ""
 
-msgid "GDM Expansion - Remove"
+msgid "Disabled"
 msgstr ""
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
+msgid "Cupertino System Actions"
 msgstr ""
 
-msgid "Copy uninstall command to clipboard"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
 msgstr ""
 
-msgid "Copied uninstall command to clipboard!"
+msgid "GDM Expansion Documentation"
+msgstr ""
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr ""
+
+msgid "Open repository documentation"
 msgstr ""
 
 msgid "Extension is not installed system-wide in /usr/share."
@@ -285,70 +369,37 @@ msgstr ""
 msgid "GDM integration is not configured."
 msgstr ""
 
-msgid "Status: Disabled."
+msgid "GDM DLC Documentation"
 msgstr ""
 
-msgid "Disabled"
-msgstr ""
-
-msgid "Enable GDM DLC Support"
-msgstr ""
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr ""
-
-msgid "Copy install command to clipboard"
-msgstr ""
-
-msgid "Copied install command to clipboard!"
-msgstr ""
-
-msgid "Upgrade to [PRO]"
-msgstr ""
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr ""
-
-msgid "Visit documentation on GitHub"
+msgid "Visit the repository to view setup and installation documentation."
 msgstr ""
 
 msgid "[BETA] WACK Shell Integration"
 msgstr ""
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr ""
-
 msgid "Installed"
-msgstr ""
-
-msgid "WACK Shell - Check for Updates"
-msgstr ""
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr ""
-
-msgid "Copy update-check command to clipboard"
-msgstr ""
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr ""
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
 msgstr ""
 
 msgid "Not Installed"
 msgstr ""
 
-msgid "WACK Shell - Install"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
 msgstr ""
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
 msgstr ""
 
-msgid "Copied WACK Shell install command to clipboard!"
+msgid "WACK Shell Repository"
+msgstr ""
+
+msgid "Open the WACK Shell repository for documentation and updates."
 msgstr ""
 
 msgid "Open WACK Shell repository"
+msgstr ""
+
+msgid "Visit the repository to view installation instructions and release packages."
 msgstr ""
 
 msgid "Clear Visual Cache"

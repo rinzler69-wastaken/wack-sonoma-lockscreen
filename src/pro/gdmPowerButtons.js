@@ -111,6 +111,7 @@ export class GdmPowerButtons {
         }
 
         this.actor = new OverflowBin({ child: row });
+        this.actor.visible = this._userEnabled;
         userSelectionBox.add_child(this.actor);
 
         // The shell changes this actor asynchronously as it moves between the

@@ -691,6 +691,13 @@ export class GdmThemeStore {
         const uri = bg.get_string(dark ? 'picture-uri-dark' : 'picture-uri');
         const clockFormatOverride = this._settings ? this._settings.get_string('clock-format') : 'system';
         const clockFormat = clockFormatOverride === 'system' ? iface.get_string('clock-format') : clockFormatOverride;
+        const canonicalUser = this._defaultUser;
+        const canonicalMeta = canonicalUser ? this._themes.get(canonicalUser)?.meta : null;
+        const defaultActions = canonicalMeta?.systemActions ?? (
+            (this._settings && this._settings.settings_schema.has_key('cupertino-system-actions'))
+                ? this._settings.get_boolean('cupertino-system-actions')
+                : true
+        );
         const meta = {
             username: 'gdm',
             source_uri: uri, uri, style,
@@ -703,9 +710,7 @@ export class GdmThemeStore {
             clockTint: this._settings ? this._settings.get_boolean('clock-tint') : false,
             statusCorner: this._settings ? this._settings.get_boolean('status-corner') : true,
             passwordIndicators: this._settings ? this._settings.get_boolean('password-indicators') : true,
-            systemActions: (this._settings && this._settings.settings_schema.has_key('cupertino-system-actions'))
-                ? this._settings.get_boolean('cupertino-system-actions')
-                : true,
+            systemActions: defaultActions,
             dateStyle: this._settings ? (this._settings.get_string('date-style') || 'full') : 'full',
             clockAlpha: 0.6,
             lockscreenMode: this._settings ? this._settings.get_string('lockscreen-mode') : 'cupertino',

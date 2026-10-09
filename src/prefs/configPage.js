@@ -11,7 +11,7 @@ export function buildConfigPage(extensionPreferences, window, settings, _, setti
         icon_name: 'system-lock-screen-symbolic',
     });
 
-    const { group: generalGroup, dateStyleLinkedBox, dateStyleDropdown } = buildGeneralGroup(
+    const { group: generalGroup } = buildGeneralGroup(
         settings,
         window,
         _,
@@ -19,7 +19,12 @@ export function buildConfigPage(extensionPreferences, window, settings, _, setti
     );
     animPage.add(generalGroup);
 
-    animPage.add(buildAppearanceGroup(extensionPreferences, settings, _));
+    const { group: clockDateGroup, dateStyleLinkedBox, dateStyleDropdown } = buildAppearanceGroup(
+        settings,
+        _,
+        settingsSignalIds
+    );
+    animPage.add(clockDateGroup);
 
     const { group: modeGroup, linkedBox, dropdown, speedLinkedBox, speedDropdown } = buildModeGroup(
         settings,
@@ -40,6 +45,7 @@ export function buildConfigPage(extensionPreferences, window, settings, _, setti
     const extrasGroup = buildExtrasGroup(
         extensionPreferences,
         window,
+        settings,
         _
     );
     animPage.add(extrasGroup);

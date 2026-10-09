@@ -2,7 +2,7 @@ import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 
-import { buildComboRow, getGdmStatus } from '../prefsUtils.js';
+import { buildComboRow } from '../prefsUtils.js';
 
 function buildSwitchRow(settings, key, title, subtitle) {
     const row = new Adw.SwitchRow({ title, subtitle });
@@ -10,9 +10,9 @@ function buildSwitchRow(settings, key, title, subtitle) {
     return row;
 }
 
-export function buildAppearanceGroup(extensionPreferences, settings, _) {
+export function buildAppearanceGroup(settings, _, settingsSignalIds) {
     const group = new Adw.PreferencesGroup({
-        title: _('Clock and Status'),
+        title: _('Clock and Date'),
     });
 
     const clockWeightRow = buildComboRow(settings, 'clock-weight',
@@ -54,24 +54,81 @@ export function buildAppearanceGroup(extensionPreferences, settings, _) {
         ],
         _));
 
+    const dateStyleRow = new Adw.ActionRow({
+        title: _('Date Style'),
+        subtitle: _('Choose between shortened and full date names.'),
+    });
+
+    const dateStyleBox = new Gtk.Box({ valign: Gtk.Align.CENTER });
+
+    // Linked buttons (wide layout)
+    const dateStyleLinkedBox = new Gtk.Box({ css_classes: ['linked'] });
+    const btnDateShort = new Gtk.ToggleButton({ label: _('Short') });
+    const btnDateFull = new Gtk.ToggleButton({ label: _('Full'), group: btnDateShort });
+    dateStyleLinkedBox.append(btnDateShort);
+    dateStyleLinkedBox.append(btnDateFull);
+
+    // Dropdown fallback (narrow layout)
+    const dateStyleDropdown = new Gtk.DropDown({
+        valign: Gtk.Align.CENTER,
+        model: Gtk.StringList.new([_('Short'), _('Full')]),
+    });
+
+    dateStyleBox.append(dateStyleLinkedBox);
+    dateStyleBox.append(dateStyleDropdown);
+    dateStyleRow.add_suffix(dateStyleBox);
+
+    let selfChangeDateStyle = false;
+
+    const syncDateStyleButtons = () => {
+        const v = settings.get_string('date-style') || 'full';
+        selfChangeDateStyle = true;
+        btnDateShort.active = (v === 'short');
+        btnDateFull.active = (v !== 'short');
+        dateStyleDropdown.selected = (v === 'short') ? 0 : 1;
+        selfChangeDateStyle = false;
+    };
+    syncDateStyleButtons();
+
+    btnDateShort.connect('toggled', () => {
+        if (selfChangeDateStyle || !btnDateShort.active) return;
+        selfChangeDateStyle = true;
+        settings.set_string('date-style', 'short');
+        dateStyleDropdown.selected = 0;
+        selfChangeDateStyle = false;
+    });
+    btnDateFull.connect('toggled', () => {
+        if (selfChangeDateStyle || !btnDateFull.active) return;
+        selfChangeDateStyle = true;
+        settings.set_string('date-style', 'full');
+        dateStyleDropdown.selected = 1;
+        selfChangeDateStyle = false;
+    });
+    dateStyleDropdown.connect('notify::selected', () => {
+        if (selfChangeDateStyle) return;
+        selfChangeDateStyle = true;
+        const val = dateStyleDropdown.selected === 0 ? 'short' : 'full';
+        settings.set_string('date-style', val);
+        btnDateShort.active = (val === 'short');
+        btnDateFull.active = (val !== 'short');
+        selfChangeDateStyle = false;
+    });
+    settingsSignalIds.push(settings.connect('changed::date-style', () => {
+        if (!selfChangeDateStyle) syncDateStyleButtons();
+    }));
+
+    dateStyleDropdown.visible = false;
+    dateStyleLinkedBox.visible = true;
+
+    group.add(dateStyleRow);
+
     group.add(buildSwitchRow(settings, 'clock-tint',
         _('Wallpaper-Tinted Clock'),
         _('Tint the clock and date with a light shade of the wallpaper colour.')));
 
-    group.add(buildSwitchRow(settings, 'password-indicators',
-        _('Password Field Indicators'),
-        _('Show Caps Lock and keyboard layout icons inside the password field.')));
-
-    group.add(buildSwitchRow(settings, 'status-corner',
-        _('Sonoma Status Corner'),
-        _('Restyle the top-right battery, network and input source icons. Cupertino mode only.')));
-
-    // Only meaningful on the login screen, so only offered once the GDM DLC is in place.
-    if (getGdmStatus(extensionPreferences.dir).enabled && settings.settings_schema.has_key('cupertino-system-actions')) {
-        group.add(buildSwitchRow(settings, 'cupertino-system-actions',
-            _('Cupertino System Actions'),
-            _('Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu.')));
-    }
-
-    return group;
+    return {
+        group,
+        dateStyleLinkedBox,
+        dateStyleDropdown,
+    };
 }

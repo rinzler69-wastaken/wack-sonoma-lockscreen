@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: ja\n"
@@ -51,35 +51,38 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "Saweria を開く"
 
+msgid "Upgrade to [PRO]"
+msgstr "[PRO] にアップグレード"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "この拡張機能の GitHub リポジトリで PRO 機能を確認してください。"
+
+msgid "Visit documentation on GitHub"
+msgstr "GitHub のドキュメントを表示"
+
 msgid "Configuration"
 msgstr "設定"
 
 msgid "General"
 msgstr "一般"
 
-msgid "Date Style"
-msgstr "日付の形式"
+msgid "Password Field Indicators"
+msgstr "パスワード入力欄のインジケーター"
 
-msgid "Choose between shortened and full date names."
-msgstr "省略形の日付表記と完全な日付表記を選択します。"
-
-msgid "Short"
-msgstr "短縮"
-
-msgid "Full"
-msgstr "完全"
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "パスワード入力欄内に Caps Lock とキーボードレイアウトのアイコンを表示します。"
 
 msgid "Cursor Blinking"
 msgstr "カーソルの点滅"
 
 msgid "Enable or disable text cursor blinking in the password field."
-msgstr "パスワード入力欄のカーソル点滅を有効または無効にします。"
+msgstr "パスワード入力欄でのテキストカーソルの点滅を有効または無効にします。"
 
 msgid "Custom Lockscreen Wallpaper"
 msgstr "カスタムロック画面の壁紙"
 
 msgid "Use a custom image overlay for the lockscreen background."
-msgstr "ロック画面の背景にカスタム画像オーバーレイを使用します。"
+msgstr "ロック画面の背景にカスタム画像を使用します。"
 
 msgid "Wallpaper Image Path"
 msgstr "壁紙画像のパス"
@@ -87,11 +90,14 @@ msgstr "壁紙画像のパス"
 msgid "No image selected"
 msgstr "画像が選択されていません"
 
-msgid "Select Image File"
-msgstr "画像ファイルを選択"
-
 msgid "Select Lockscreen Wallpaper"
 msgstr "ロック画面の壁紙を選択"
+
+msgid "Images and Slideshows"
+msgstr "画像とスライドショー"
+
+msgid "Select Image File"
+msgstr "画像ファイルを選択"
 
 msgid "Select"
 msgstr "選択"
@@ -99,8 +105,80 @@ msgstr "選択"
 msgid "Cancel"
 msgstr "キャンセル"
 
-msgid "Image Files"
-msgstr "画像ファイル"
+msgid "Per-Monitor Wallpapers"
+msgstr "モニターごとの壁紙"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "個別の壁紙が設定されていないモニターには、上の壁紙が使用されます。"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid "Use the Default Wallpaper"
+msgstr "デフォルトの壁紙を使用"
+
+msgid "Clock and Date"
+msgstr "時計と日付"
+
+msgid "Clock Weight"
+msgstr "時計の太さ"
+
+msgid "Font weight of the lockscreen time."
+msgstr "ロック画面の時刻のフォントの太さ。"
+
+msgid "Restore defaults"
+msgstr "デフォルトに戻す"
+
+msgid "Light"
+msgstr "ライト"
+
+msgid "Regular"
+msgstr "レギュラー"
+
+msgid "Medium"
+msgstr "ミディアム"
+
+msgid "Semibold"
+msgstr "セミボールド"
+
+msgid "Bold"
+msgstr "ボールド"
+
+msgid "Heavy"
+msgstr "ヘビー"
+
+msgid "Clock Format"
+msgstr "時刻の表示形式"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "ロック画面でシステムの 12/24 時間表示設定を上書きします。"
+
+msgid "System"
+msgstr "システム"
+
+msgid "12-hour"
+msgstr "12時間"
+
+msgid "24-hour"
+msgstr "24時間"
+
+msgid "Date Style"
+msgstr "日付のスタイル"
+
+msgid "Choose between shortened and full date names."
+msgstr "短縮された日付表示と完全な日付表示を切り替えます。"
+
+msgid "Short"
+msgstr "短縮"
+
+msgid "Full"
+msgstr "完全"
+
+msgid "Wallpaper-Tinted Clock"
+msgstr "壁紙カラー適応時計"
+
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "時計と日付を壁紙の色の薄い色合いで着色します。"
 
 msgid "Lockscreen Mode"
 msgstr "ロック画面モード"
@@ -109,259 +187,232 @@ msgid "Mode"
 msgstr "モード"
 
 msgid "Legacy"
-msgstr "クラシック"
+msgstr "レガシー"
 
 msgid "Cupertino"
-msgstr "クパティーノ"
+msgstr "Cupertino"
 
 msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
-msgstr "macOS Sonoma 風の完全なロック画面レイアウト（ユーザーアイコンをクリックしてユーザーを切り替え）。"
+msgstr "macOS Sonoma に着想を得た完全なロック画面レイアウト（ユーザーアイコンをクリックしてユーザーを切り替えます）。"
 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
-msgstr "クラシックな GNOME 準拠のレイアウトと操作フローの上に macOS Sonoma 風の時計を配置。"
+msgstr "従来の GNOME 準拠レイアウトの上に macOS Sonoma スタイルの時計を表示します。"
+
+msgid "Sonoma Status Corner"
+msgstr "Sonoma ステータスコーナー"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "右上のバッテリー、ネットワーク、入力ソースアイコンのスタイルを変更します。"
 
 msgid "Always Show User Widget"
-msgstr "ユーザーウィジェットを常に表示"
+msgstr "常にユーザーウィジェットを表示"
 
 msgid "Hides notifications by default. Press Shift+N to show notifications."
-msgstr "デフォルトで通知を非表示にします。Shift+N で通知を表示できます。"
+msgstr "デフォルトで通知を非表示にします。Shift+N を押すと通知が表示されます。"
 
 msgid "Prompt Vibrancy"
-msgstr "パスワード欄の視覚効果"
+msgstr "入力欄のバイブランシー"
 
 msgid "Adaptive color and depth enhancements for the password field."
-msgstr "パスワード入力欄に適応型のカラーと深度エフェクトを適用します。"
-
-msgid "Tonal"
-msgstr "トーン"
-
-msgid "Acrylic"
-msgstr "アクリル"
+msgstr "パスワード入力欄に適応型の色と奥行きのエフェクトを適用します。"
 
 msgid "Lightweight, color-based mode."
 msgstr "軽量なカラーベースのモード。"
 
 msgid "Advanced, blur-based mode."
-msgstr "高度なブラー（ぼかし）ベースのモード。"
+msgstr "ぼかし効果を使用した高度なモード。"
+
+msgid "Tonal"
+msgstr "トーナル"
+
+msgid "Acrylic"
+msgstr "アクリル"
 
 msgid "Show message when locked"
-msgstr "画面ロック時にメッセージを表示"
+msgstr "ロック時にメッセージを表示"
 
 msgid "Set..."
-msgstr "設定…"
+msgstr "設定..."
 
 msgid "Set a message to appear on the lockscreen"
-msgstr "ロック画面に表示するメッセージを設定"
+msgstr "ロック画面に表示するメッセージを設定します"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Unlock Crossfade"
-msgstr "アンロック時のクロスフェード"
+msgstr "ロック解除のクロスフェード"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "ロック解除時にロック画面とデスクトップをクロスフェードさせます（省電力モード時は自動的に無効化）。"
+msgstr "ロック解除時にロック画面とデスクトップをスムーズにクロスフェードします（省電力モードでは自動的に無効になります）。"
 
 msgid "Requires WACK Shell to be installed and enabled."
-msgstr "WACK Shell がインストールされ有効化されている必要があります。"
+msgstr "WACK Shell がインストールされ、有効になっている必要があります。"
 
 msgid "Requires WACK Shell to be enabled."
-msgstr "WACK Shell が有効化されている必要があります。"
+msgstr "WACK Shell を有効にする必要があります。"
 
 msgid "Crossfade Speed"
 msgstr "クロスフェード速度"
 
 msgid "Slower"
-msgstr "遅め"
+msgstr "遅い"
 
 msgid "Faster"
-msgstr "速め"
+msgstr "速い"
 
 msgid "Clock Animation"
 msgstr "時計のアニメーション"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "パスワード入力欄を開く際の日時表示に適用されます"
-
-msgid "Prompt Animation"
-msgstr "認証プロンプトのアニメーション"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "認証プロンプトが表示される際に適用されます"
-
-msgid "Reset Animations"
-msgstr "アニメーションをリセット"
-
-msgid "Restore defaults"
-msgstr "デフォルトに戻す"
-
-msgid "Reset animations"
-msgstr "アニメーションをリセット"
+msgstr "パスワードプロンプトを開く際に日時へ適用されます"
 
 msgid "Scale Down"
 msgstr "縮小"
 
 msgid "Zoom Up"
-msgstr "拡大"
+msgstr "ズームアップ"
 
 msgid "Slide Up"
-msgstr "上にスライド"
+msgstr "上へスライド"
 
 msgid "Fade"
 msgstr "フェード"
+
+msgid "Prompt Animation"
+msgstr "プロンプトのアニメーション"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "認証プロンプトが表示される際に適用されます"
 
 msgid "GNOME Default"
 msgstr "GNOME デフォルト"
 
 msgid "Rise"
-msgstr "浮き上がり"
+msgstr "ライズ"
 
 msgid "Zoom"
 msgstr "ズーム"
 
-msgid "Screen Timeout"
-msgstr "画面のタイムアウト"
+msgid "Reset Animations"
+msgstr "アニメーションをリセット"
+
+msgid "Reset animations"
+msgstr "アニメーションをリセット"
 
 msgid "Display and Power"
-msgstr "画面と電源"
+msgstr "ディスプレイと電源"
 
 msgid "Keep Screen On"
-msgstr "画面をオンのままにする"
+msgstr "画面を点灯したままにする"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "ロック時に画面がすぐにオフになるのを防ぎます。システム設定で指定された待機時間の経過後にオフになります。"
+msgstr "ロック時に画面がすぐにオフになるのを防ぎます。システム設定で設定された通常のタイムアウト時間が経過するとオフになります。"
 
 msgid "Only on AC Power"
-msgstr "電源（AC）接続時のみ"
+msgstr "AC 電源接続時のみ"
 
 msgid "Only keep the screen on if the system is plugged in"
-msgstr "デバイスが電源に接続されている場合のみ画面をオンのままにします"
+msgstr "システムが電源に接続されている場合のみ画面を点灯したままにします"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Esc で画面オフ / サスペンド"
+msgstr "Escape でスリープ / サスペンド"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
-msgstr "ロック画面で Esc キーを押して画面をオフ（またはサスペンド）にします"
+msgstr "ロック画面で Escape を押してディスプレイをスリープ（またはサスペンド）します"
 
 msgid "Extras"
-msgstr "追加機能"
-
-msgid "Integrations"
-msgstr "統合"
+msgstr "その他"
 
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] GDM 拡張機能"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
-msgstr "ステータス: 有効。GDM でカスタムレイアウトが適用されています。"
+msgstr "状態: 有効。カスタムレイアウトが GDM で動作しています。"
+
+msgid "Status: Disabled."
+msgstr "状態: 無効。"
 
 msgid "Enabled"
 msgstr "有効"
 
-msgid "GDM Expansion - Remove"
-msgstr "GDM 拡張機能 - 削除"
+msgid "Disabled"
+msgstr "無効"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "GDM ログイン画面を GNOME デフォルトのレイアウトに戻します。アンインストールするには、コピーしたコマンドを端末で実行してください。"
+msgid "Cupertino System Actions"
+msgstr "Cupertino システムアクション"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "アンインストールコマンドをクリップボードにコピー"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "ユーザーリストの下にサスペンド、再起動、電源オフを表示し、クイック設定の電源メニューを置き換えます。"
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "アンインストールコマンドをクリップボードにコピーしました！"
+msgid "GDM Expansion Documentation"
+msgstr "GDM 拡張機能のドキュメント"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "GDM ログイン画面のレイアウトを GNOME のデフォルトに戻します。リポジトリの手順を参照してください。"
+
+msgid "Open repository documentation"
+msgstr "リポジトリのドキュメントを開く"
 
 msgid "Extension is not installed system-wide in /usr/share."
 msgstr "拡張機能が /usr/share にシステム全体としてインストールされていません。"
 
 msgid "GDM expansion modules (src/pro) are missing system-wide."
-msgstr "GDM 拡張モジュール (src/pro) がシステム全体に見つかりません。"
+msgstr "GDM 拡張モジュール（src/pro）がシステム全体に見つかりません。"
 
 msgid "GDM session mode is not enabled in system-wide metadata."
-msgstr "システムメタデータで GDM セッションモードが有効になっていません。"
+msgstr "システム全体のメタデータで GDM セッションモードが有効になっていません。"
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
-msgstr "GDM dconf オーバーライド設定 (/etc/dconf/db/gdm.d) が見つかりません。"
+msgstr "GDM の dconf オーバーライド設定（/etc/dconf/db/gdm.d）が見つかりません。"
 
 msgid "GDM integration is not configured."
-msgstr "GDM 統合が構成されていません。"
+msgstr "GDM 統合が設定されていません。"
 
-msgid "Status: Disabled."
-msgstr "ステータス: 無効。"
+msgid "GDM DLC Documentation"
+msgstr "GDM DLC のドキュメント"
 
-msgid "Disabled"
-msgstr "無効"
-
-msgid "Enable GDM DLC Support"
-msgstr "GDM DLC サポートを有効化"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "アイコンをクリックしてインストールコマンドをコピーし、端末で実行してください。"
-
-msgid "Copy install command to clipboard"
-msgstr "インストールコマンドをクリップボードにコピー"
-
-msgid "Copied install command to clipboard!"
-msgstr "インストールコマンドをクリップボードにコピーしました！"
-
-msgid "Upgrade to [PRO]"
-msgstr "[PRO] 版にアップグレード"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "この拡張機能の GitHub リポジトリで PRO 機能をご確認ください。"
-
-msgid "Visit documentation on GitHub"
-msgstr "GitHub でドキュメントを表示"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "セットアップとインストールのドキュメントについてはリポジトリをご覧ください。"
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] WACK Shell 統合"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "インストール済み。クロスフェード効果と Cupertino 風のシェルカスタマイズを有効化します。"
-
 msgid "Installed"
 msgstr "インストール済み"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - アップデートを確認"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "コマンドをコピーして、WACK Shell の最新版が利用可能か確認します。"
-
-msgid "Copy update-check command to clipboard"
-msgstr "更新確認コマンドをコピー"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "WACK Shell 更新確認コマンドをクリップボードにコピーしました！"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "未インストール。画面効果を有効にするには WACK Shell をインストールしてください。"
 
 msgid "Not Installed"
 msgstr "未インストール"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - インストール"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "インストール済み。クロスフェード遷移と Cupertino スタイルのシェルカスタマイズを有効にします。"
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "高度なデスクトップクロスフェード効果と Cupertino 風のシェルカスタマイズを取得します。不具合があればご報告ください。"
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "未インストール。トランジション効果を使用するには WACK Shell をインストールしてください。"
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "WACK Shell インストールコマンドをクリップボードにコピーしました！"
+msgid "WACK Shell Repository"
+msgstr "WACK Shell リポジトリ"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "ドキュメントとアップデートについては WACK Shell リポジトリを開きます。"
 
 msgid "Open WACK Shell repository"
 msgstr "WACK Shell リポジトリを開く"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "インストール手順とリリースパッケージについてはリポジトリをご覧ください。"
 
 msgid "Clear Visual Cache"
 msgstr "ビジュアルキャッシュを消去"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "壁紙や視覚効果に使用される一時的な画像データを削除します。必要に応じて自動的に再生成されます。"
+msgstr "壁紙やバイブランシー効果に使用される一時的なビジュアルデータを消去します。必要に応じて自動的に再生成されます。"
 
 msgid "Clear"
 msgstr "消去"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "壁紙や視覚効果に使用されているビジュアルキャッシュを消去します"
+msgstr "壁紙やエフェクトに使用されるビジュアルキャッシュを消去します"
 
 msgid "Visual cache cleared successfully!"
 msgstr "ビジュアルキャッシュを正常に消去しました！"

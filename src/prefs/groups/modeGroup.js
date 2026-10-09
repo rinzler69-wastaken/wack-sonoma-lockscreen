@@ -36,6 +36,13 @@ export function buildModeGroup(settings, window, _, settingsSignalIds, cleanupCa
     modeRow.add_suffix(modeBox);
 
     // -- Cupertino options ----------------------------------------------
+    const statusCornerRow = new Adw.SwitchRow({
+        title: _('Sonoma Status Corner'),
+        subtitle: _('Restyle the top-right battery, network and input source icons.'),
+    });
+    settings.bind('status-corner', statusCornerRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+    modeRow.add_row(statusCornerRow);
+
     const alwaysShowUserRow = new Adw.ActionRow({
         title: _('Always Show User Widget'),
         subtitle: _('Hides notifications by default. Press Shift+N to show notifications.'),
@@ -424,6 +431,8 @@ export function buildModeGroup(settings, window, _, settingsSignalIds, cleanupCa
         modeRow.enable_expansion = true;
 
         // Cupertino visibility/sensitivity
+        statusCornerRow.visible = isCup;
+        statusCornerRow.sensitive = isCup;
         alwaysShowUserRow.visible = isCup;
         alwaysShowUserRow.sensitive = isCup;
         promptVibrancyRow.visible = isCup;

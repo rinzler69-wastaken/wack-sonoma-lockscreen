@@ -1,5 +1,6 @@
 import Adw from 'gi://Adw';
 import Gdk from 'gi://Gdk';
+import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 
@@ -38,73 +39,12 @@ export function buildGeneralGroup(settings, window, _, settingsSignalIds) {
         title: _('General'),
     });
 
-    const dateStyleRow = new Adw.ActionRow({
-        title: _('Date Style'),
-        subtitle: _('Choose between shortened and full date names.'),
+    const passwordIndicatorsRow = new Adw.SwitchRow({
+        title: _('Password Field Indicators'),
+        subtitle: _('Show Caps Lock and keyboard layout icons inside the password field.'),
     });
-
-    const dateStyleBox = new Gtk.Box({ valign: Gtk.Align.CENTER });
-
-    // Linked buttons (wide layout)
-    const dateStyleLinkedBox = new Gtk.Box({ css_classes: ['linked'] });
-    const btnDateShort = new Gtk.ToggleButton({ label: _('Short') });
-    const btnDateFull = new Gtk.ToggleButton({ label: _('Full'), group: btnDateShort });
-    dateStyleLinkedBox.append(btnDateShort);
-    dateStyleLinkedBox.append(btnDateFull);
-
-    // Dropdown fallback (narrow layout)
-    const dateStyleDropdown = new Gtk.DropDown({
-        valign: Gtk.Align.CENTER,
-        model: Gtk.StringList.new([_('Short'), _('Full')]),
-    });
-
-    dateStyleBox.append(dateStyleLinkedBox);
-    dateStyleBox.append(dateStyleDropdown);
-    dateStyleRow.add_suffix(dateStyleBox);
-
-    let selfChangeDateStyle = false;
-
-    const syncDateStyleButtons = () => {
-        const v = settings.get_string('date-style') || 'full';
-        selfChangeDateStyle = true;
-        btnDateShort.active = (v === 'short');
-        btnDateFull.active = (v !== 'short');
-        dateStyleDropdown.selected = (v === 'short') ? 0 : 1;
-        selfChangeDateStyle = false;
-    };
-    syncDateStyleButtons();
-
-    btnDateShort.connect('toggled', () => {
-        if (selfChangeDateStyle || !btnDateShort.active) return;
-        selfChangeDateStyle = true;
-        settings.set_string('date-style', 'short');
-        dateStyleDropdown.selected = 0;
-        selfChangeDateStyle = false;
-    });
-    btnDateFull.connect('toggled', () => {
-        if (selfChangeDateStyle || !btnDateFull.active) return;
-        selfChangeDateStyle = true;
-        settings.set_string('date-style', 'full');
-        dateStyleDropdown.selected = 1;
-        selfChangeDateStyle = false;
-    });
-    dateStyleDropdown.connect('notify::selected', () => {
-        if (selfChangeDateStyle) return;
-        selfChangeDateStyle = true;
-        const val = dateStyleDropdown.selected === 0 ? 'short' : 'full';
-        settings.set_string('date-style', val);
-        btnDateShort.active = (val === 'short');
-        btnDateFull.active = (val !== 'short');
-        selfChangeDateStyle = false;
-    });
-    settingsSignalIds.push(settings.connect('changed::date-style', () => {
-        if (!selfChangeDateStyle) syncDateStyleButtons();
-    }));
-
-    dateStyleDropdown.visible = false;
-    dateStyleLinkedBox.visible = true;
-
-    generalGroup.add(dateStyleRow);
+    settings.bind('password-indicators', passwordIndicatorsRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+    generalGroup.add(passwordIndicatorsRow);
 
     const cursorBlinkRow = new Adw.ActionRow({
         title: _('Cursor Blinking'),
@@ -238,7 +178,5 @@ export function buildGeneralGroup(settings, window, _, settingsSignalIds) {
 
     return {
         group: generalGroup,
-        dateStyleLinkedBox,
-        dateStyleDropdown,
     };
 }

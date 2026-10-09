@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: id\n"
@@ -51,23 +51,26 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "Buka Saweria"
 
+msgid "Upgrade to [PRO]"
+msgstr "Tingkatkan ke [PRO]"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Lihat fitur PRO ekstensi ini di repositori GitHub."
+
+msgid "Visit documentation on GitHub"
+msgstr "Kunjungi dokumentasi di GitHub"
+
 msgid "Configuration"
 msgstr "Konfigurasi"
 
 msgid "General"
 msgstr "Umum"
 
-msgid "Date Style"
-msgstr "Gaya Tanggal"
+msgid "Password Field Indicators"
+msgstr "Indikator Kolom Kata Sandi"
 
-msgid "Choose between shortened and full date names."
-msgstr "Pilih antara nama tanggal yang dipersingkat atau lengkap."
-
-msgid "Short"
-msgstr "Singkat"
-
-msgid "Full"
-msgstr "Lengkap"
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "Tampilkan ikon Caps Lock dan tata letak keyboard di dalam kolom kata sandi."
 
 msgid "Cursor Blinking"
 msgstr "Kedipan Kursor"
@@ -87,11 +90,14 @@ msgstr "Jalur Gambar Latar"
 msgid "No image selected"
 msgstr "Tidak ada gambar yang dipilih"
 
-msgid "Select Image File"
-msgstr "Pilih Berkas Gambar"
-
 msgid "Select Lockscreen Wallpaper"
 msgstr "Pilih Gambar Latar Layar Kunci"
+
+msgid "Images and Slideshows"
+msgstr "Gambar dan Tayangan Slide"
+
+msgid "Select Image File"
+msgstr "Pilih Berkas Gambar"
 
 msgid "Select"
 msgstr "Pilih"
@@ -99,8 +105,80 @@ msgstr "Pilih"
 msgid "Cancel"
 msgstr "Batal"
 
-msgid "Image Files"
-msgstr "Berkas Gambar"
+msgid "Per-Monitor Wallpapers"
+msgstr "Gambar Latar Per Monitor"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "Monitor tanpa gambar latar khusus akan menggunakan gambar di atas."
+
+msgid "Default"
+msgstr "Bawaan"
+
+msgid "Use the Default Wallpaper"
+msgstr "Gunakan Gambar Latar Bawaan"
+
+msgid "Clock and Date"
+msgstr "Jam dan Tanggal"
+
+msgid "Clock Weight"
+msgstr "Ketebalan Font Jam"
+
+msgid "Font weight of the lockscreen time."
+msgstr "Ketebalan font waktu di layar kunci."
+
+msgid "Restore defaults"
+msgstr "Kembalikan ke Default"
+
+msgid "Light"
+msgstr "Tipis"
+
+msgid "Regular"
+msgstr "Reguler"
+
+msgid "Medium"
+msgstr "Sedang"
+
+msgid "Semibold"
+msgstr "Semi Tebal"
+
+msgid "Bold"
+msgstr "Tebal"
+
+msgid "Heavy"
+msgstr "Sangat Tebal"
+
+msgid "Clock Format"
+msgstr "Format Jam"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "Ganti pengaturan sistem 12/24 jam pada layar kunci."
+
+msgid "System"
+msgstr "Sistem"
+
+msgid "12-hour"
+msgstr "12 jam"
+
+msgid "24-hour"
+msgstr "24 jam"
+
+msgid "Date Style"
+msgstr "Format Tanggal"
+
+msgid "Choose between shortened and full date names."
+msgstr "Pilih antara nama tanggal yang disingkat atau lengkap."
+
+msgid "Short"
+msgstr "Pendek"
+
+msgid "Full"
+msgstr "Lengkap"
+
+msgid "Wallpaper-Tinted Clock"
+msgstr "Jam Beraksen Warna Gambar Latar"
+
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "Beri nuansa warna jam dan tanggal dengan aksen lembut dari gambar latar."
 
 msgid "Lockscreen Mode"
 msgstr "Mode Layar Kunci"
@@ -118,19 +196,31 @@ msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to sw
 msgstr "Tata letak layar kunci lengkap yang terinspirasi macOS Sonoma (klik ikon pengguna untuk beralih pengguna)."
 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
-msgstr "Jam bergaya macOS Sonoma di atas tata letak dan alur klasik GNOME."
+msgstr "Jam bergaya macOS Sonoma di atas tata letak klasik standar GNOME."
+
+msgid "Sonoma Status Corner"
+msgstr "Sudut Status Sonoma"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "Mengubah gaya ikon baterai, jaringan, dan sumber masukan di sudut kanan atas."
 
 msgid "Always Show User Widget"
 msgstr "Selalu Tampilkan Widget Pengguna"
 
 msgid "Hides notifications by default. Press Shift+N to show notifications."
-msgstr "Sembunyikan notifikasi secara default. Tekan Shift+N untuk menampilkannya."
+msgstr "Sembunyikan notifikasi secara default. Tekan Shift+N untuk menampilkan notifikasi."
 
 msgid "Prompt Vibrancy"
-msgstr "Efek Visual Kolom Kata Sandi"
+msgstr "Efek Kedalaman Kolom Kata Sandi"
 
 msgid "Adaptive color and depth enhancements for the password field."
 msgstr "Peningkatan warna dan kedalaman adaptif untuk kolom kata sandi."
+
+msgid "Lightweight, color-based mode."
+msgstr "Mode ringan berbasis warna."
+
+msgid "Advanced, blur-based mode."
+msgstr "Mode canggih berbasis efek buram."
 
 msgid "Tonal"
 msgstr "Tonal"
@@ -138,17 +228,11 @@ msgstr "Tonal"
 msgid "Acrylic"
 msgstr "Akrilik"
 
-msgid "Lightweight, color-based mode."
-msgstr "Mode ringan berbasis warna."
-
-msgid "Advanced, blur-based mode."
-msgstr "Mode lanjutan berbasis keburaman."
-
 msgid "Show message when locked"
 msgstr "Tampilkan pesan saat terkunci"
 
 msgid "Set..."
-msgstr "Atur…"
+msgstr "Atur..."
 
 msgid "Set a message to appear on the lockscreen"
 msgstr "Atur pesan yang akan ditampilkan di layar kunci"
@@ -157,10 +241,10 @@ msgid "OK"
 msgstr "OK"
 
 msgid "Unlock Crossfade"
-msgstr "Transisi Memudar saat Buka Kunci"
+msgstr "Transisi Mulus Saat Membuka Kunci"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "Transisi memudar antara layar kunci dan desktop saat membuka kunci (dinonaktifkan otomatis dalam mode Hemat Daya)."
+msgstr "Transisi halus dari layar kunci ke desktop saat membuka kunci (otomatis dinonaktifkan dalam mode Hemat Daya)."
 
 msgid "Requires WACK Shell to be installed and enabled."
 msgstr "Memerlukan WACK Shell untuk dipasang dan diaktifkan."
@@ -181,46 +265,40 @@ msgid "Clock Animation"
 msgstr "Animasi Jam"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "Diterapkan ke tanggal dan waktu saat membuka permintaan kata sandi"
-
-msgid "Prompt Animation"
-msgstr "Animasi Autentikasi"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "Diterapkan ke kolom autentikasi saat muncul"
-
-msgid "Reset Animations"
-msgstr "Reset Animasi"
-
-msgid "Restore defaults"
-msgstr "Pulihkan pengaturan awal"
-
-msgid "Reset animations"
-msgstr "Reset animasi"
+msgstr "Diterapkan pada tanggal dan waktu saat membuka kolom kata sandi"
 
 msgid "Scale Down"
-msgstr "Perkecil Skala"
+msgstr "Perkecil"
 
 msgid "Zoom Up"
-msgstr "Perbesar Skala"
+msgstr "Perbesar ke Atas"
 
 msgid "Slide Up"
 msgstr "Geser ke Atas"
 
 msgid "Fade"
-msgstr "Memudar"
+msgstr "Pudar"
+
+msgid "Prompt Animation"
+msgstr "Animasi Kolom Input"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Diterapkan pada kolom autentikasi saat muncul"
 
 msgid "GNOME Default"
-msgstr "Default GNOME"
+msgstr "Bawaan GNOME"
 
 msgid "Rise"
-msgstr "Terbit"
+msgstr "Terangkat"
 
 msgid "Zoom"
-msgstr "Zoom"
+msgstr "Perbesar"
 
-msgid "Screen Timeout"
-msgstr "Batas Waktu Layar"
+msgid "Reset Animations"
+msgstr "Reset Animasi"
+
+msgid "Reset animations"
+msgstr "Reset animasi"
 
 msgid "Display and Power"
 msgstr "Layar dan Daya"
@@ -229,139 +307,112 @@ msgid "Keep Screen On"
 msgstr "Biarkan Layar Tetap Menyala"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "Mencegah layar langsung mati saat terkunci. Layar tetap akan mati setelah durasi batas waktu normal yang diatur di pengaturan sistem."
+msgstr "Mencegah layar langsung mati saat terkunci. Layar tetap akan mati setelah batas waktu normal di pengaturan sistem."
 
 msgid "Only on AC Power"
-msgstr "Hanya saat Terhubung ke Daya AC"
+msgstr "Hanya Saat Menggunakan Daya AC"
 
 msgid "Only keep the screen on if the system is plugged in"
-msgstr "Biarkan layar tetap menyala hanya jika sistem terhubung ke daya listrik"
+msgstr "Hanya biarkan layar menyala jika perangkat terhubung ke sumber daya listrik"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Escape untuk Mematikan Layar / Tidur"
+msgstr "Tekan Escape untuk Tidur / Suspend"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
-msgstr "Tekan Escape di layar kunci untuk mematikan layar (atau tidur)"
+msgstr "Tekan Escape pada layar kunci untuk mematikan layar (atau menidurkan sistem)"
 
 msgid "Extras"
-msgstr "Fitur Tambahan"
-
-msgid "Integrations"
-msgstr "Integrasi"
+msgstr "Ekstra"
 
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] Ekspansi GDM"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
-msgstr "Status: Diaktifkan. Tata letak kustom aktif di GDM."
+msgstr "Status: Aktif. Tata letak kustom aktif di GDM."
+
+msgid "Status: Disabled."
+msgstr "Status: Nonaktif."
 
 msgid "Enabled"
 msgstr "Aktif"
 
-msgid "GDM Expansion - Remove"
-msgstr "Ekstensi GDM - Hapus"
+msgid "Disabled"
+msgstr "Nonaktif"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "Kembalikan tata letak layar masuk GDM ke Default GNOME. Untuk mencopot pemasangan, jalankan perintah yang disalin di terminal."
+msgid "Cupertino System Actions"
+msgstr "Tindakan Sistem Cupertino"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "Salin perintah pencopotan ke papan klip"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "Tampilkan Tidurkan, Mulai Ulang, dan Matikan di bawah daftar pengguna, menggantikan menu daya Pengaturan Cepat."
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "Perintah pencopotan berhasil disalin ke papan klip!"
+msgid "GDM Expansion Documentation"
+msgstr "Dokumentasi Ekspansi GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "Kembalikan tata letak layar masuk GDM ke default GNOME. Lihat petunjuk di repositori."
+
+msgid "Open repository documentation"
+msgstr "Buka Dokumentasi Repositori"
 
 msgid "Extension is not installed system-wide in /usr/share."
 msgstr "Ekstensi tidak terpasang secara sistem di /usr/share."
 
 msgid "GDM expansion modules (src/pro) are missing system-wide."
-msgstr "Modul ekstensi GDM (src/pro) tidak ditemukan di seluruh sistem."
+msgstr "Modul ekspansi GDM (src/pro) tidak ditemukan di sistem."
 
 msgid "GDM session mode is not enabled in system-wide metadata."
 msgstr "Mode sesi GDM belum diaktifkan di metadata sistem."
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
-msgstr "Konfigurasi penggantian dconf GDM (/etc/dconf/db/gdm.d) tidak ditemukan."
+msgstr "Konfigurasi dconf untuk GDM (/etc/dconf/db/gdm.d) tidak ditemukan."
 
 msgid "GDM integration is not configured."
 msgstr "Integrasi GDM belum dikonfigurasi."
 
-msgid "Status: Disabled."
-msgstr "Status: Dinonaktifkan."
+msgid "GDM DLC Documentation"
+msgstr "Dokumentasi DLC GDM"
 
-msgid "Disabled"
-msgstr "Dinonaktifkan"
-
-msgid "Enable GDM DLC Support"
-msgstr "Aktifkan Dukungan DLC GDM"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "Klik ikon untuk menyalin perintah penginstal, lalu jalankan di terminal."
-
-msgid "Copy install command to clipboard"
-msgstr "Salin perintah penginstalan ke papan klip"
-
-msgid "Copied install command to clipboard!"
-msgstr "Perintah penginstalan berhasil disalin ke papan klip!"
-
-msgid "Upgrade to [PRO]"
-msgstr "Tingkatkan ke [PRO]"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "Lihat fitur PRO ekstensi ini di repositori GitHub-nya."
-
-msgid "Visit documentation on GitHub"
-msgstr "Buka dokumentasi di GitHub"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "Kunjungi repositori untuk melihat panduan penyiapan dan pemasangan."
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] Integrasi WACK Shell"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "Terpasang. Mengaktifkan transisi memudar dan kustomisasi Shell bergaya Cupertino."
-
 msgid "Installed"
 msgstr "Terpasang"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - Periksa Pembaruan"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "Salin perintah untuk memeriksa ketersediaan versi WACK Shell yang lebih baru."
-
-msgid "Copy update-check command to clipboard"
-msgstr "Salin perintah pemeriksaan pembaruan"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "Perintah pemeriksaan pembaruan WACK Shell berhasil disalin ke papan klip!"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "Belum terpasang. Pasang WACK Shell untuk membuka efek transisi."
 
 msgid "Not Installed"
 msgstr "Belum Terpasang"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - Pasang"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Terpasang. Mengaktifkan transisi halus dan kustomisasi shell bergaya Cupertino."
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "Dapatkan transisi memudar desktop tingkat lanjut dan kustomisasi Shell bergaya Cupertino. Mungkin terdapat bug, laporkan jika ditemukan."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Belum terpasang. Pasang WACK Shell untuk membuka efek transisi."
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "Perintah pemasangan WACK Shell berhasil disalin ke papan klip!"
+msgid "WACK Shell Repository"
+msgstr "Repositori WACK Shell"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "Buka repositori WACK Shell untuk dokumentasi dan pembaruan."
 
 msgid "Open WACK Shell repository"
-msgstr "Buka repositori WACK Shell"
+msgstr "Buka Repositori WACK Shell"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "Kunjungi repositori untuk melihat petunjuk pemasangan dan paket rilis."
 
 msgid "Clear Visual Cache"
 msgstr "Bersihkan Cache Visual"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "Menghapus data visual sementara yang digunakan untuk gambar latar dan efek visual. Data akan dibuat ulang secara otomatis."
+msgstr "Menghapus data visual sementara untuk gambar latar dan efek kedalaman. Data akan dibuat ulang secara otomatis."
 
 msgid "Clear"
 msgstr "Bersihkan"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "Membersihkan cache visual yang digunakan untuk gambar latar dan efek visual"
+msgstr "Membersihkan cache visual yang digunakan untuk gambar latar dan efek"
 
 msgid "Visual cache cleared successfully!"
 msgstr "Cache visual berhasil dibersihkan!"

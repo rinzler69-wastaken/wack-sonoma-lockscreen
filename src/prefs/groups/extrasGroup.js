@@ -1,4 +1,5 @@
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 import { isWackShellInstalled, flushWackCache } from '../prefsUtils.js';
@@ -7,7 +8,7 @@ import { isWackShellInstalled, flushWackCache } from '../prefsUtils.js';
 import { getGdmStatus } from '../prefsUtils.js';
 // </GDM_EXCLUDE>
 
-export function buildExtrasGroup(extensionPreferences, window, _) {
+export function buildExtrasGroup(extensionPreferences, window, settings, _) {
     const extrasGroup = new Adw.PreferencesGroup({
         title: _('Extras'),
     });
@@ -30,6 +31,15 @@ export function buildExtrasGroup(extensionPreferences, window, _) {
         });
         gdmStatusLabel.add_css_class('success');
         gdmExpander.add_suffix(gdmStatusLabel);
+
+        if (settings.settings_schema.has_key('cupertino-system-actions')) {
+            const systemActionsRow = new Adw.SwitchRow({
+                title: _('Cupertino System Actions'),
+                subtitle: _('Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu.'),
+            });
+            settings.bind('cupertino-system-actions', systemActionsRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+            gdmExpander.add_row(systemActionsRow);
+        }
 
         const uninstallRow = new Adw.ActionRow({
             title: _('GDM Expansion Documentation'),

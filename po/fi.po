@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: fi\n"
@@ -28,7 +28,7 @@ msgid "Resources"
 msgstr "Resurssit"
 
 msgid "Extension Repo"
-msgstr "Laajennuksen tietovarasto"
+msgstr "Laajennuksen lähdekoodi"
 
 msgid "Open on GitHub"
 msgstr "Avaa GitHubissa"
@@ -51,35 +51,38 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "Avaa Saweria"
 
+msgid "Upgrade to [PRO]"
+msgstr "Päivitä [PRO]-versioon"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Tarkista laajennuksen PRO-ominaisuudet sen GitHub-sivulta."
+
+msgid "Visit documentation on GitHub"
+msgstr "Lue ohjeet GitHubissa"
+
 msgid "Configuration"
 msgstr "Asetukset"
 
 msgid "General"
 msgstr "Yleiset"
 
-msgid "Date Style"
-msgstr "Päivämäärätyyli"
+msgid "Password Field Indicators"
+msgstr "Salasanakentän ilmaisimet"
 
-msgid "Choose between shortened and full date names."
-msgstr "Valitse lyhennettyjen ja täydellisten päivämäärien välillä."
-
-msgid "Short"
-msgstr "Lyhyt"
-
-msgid "Full"
-msgstr "Täydellinen"
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "Näytä Caps Lock- ja näppäimistöasettelukuvakkeet salasanakentässä."
 
 msgid "Cursor Blinking"
-msgstr "Kohdistimen vilkunta"
+msgstr "Kohdistimen vilkkuminen"
 
 msgid "Enable or disable text cursor blinking in the password field."
-msgstr "Ota tekstikohdistimen vilkunta käyttöön tai poista se käytöstä salasanakentässä."
+msgstr "Ota tekstikohdistimen vilkkuminen käyttöön tai poista se käytöstä salasanakentässä."
 
 msgid "Custom Lockscreen Wallpaper"
 msgstr "Mukautettu lukitusnäytön taustakuva"
 
 msgid "Use a custom image overlay for the lockscreen background."
-msgstr "Käytä mukautettua kuvaa lukitusnäytön taustalla."
+msgstr "Käytä mukautettua kuvaa lukitusnäytön taustana."
 
 msgid "Wallpaper Image Path"
 msgstr "Taustakuvan polku"
@@ -87,11 +90,14 @@ msgstr "Taustakuvan polku"
 msgid "No image selected"
 msgstr "Ei kuvaa valittuna"
 
-msgid "Select Image File"
-msgstr "Valitse kuvatiedosto"
-
 msgid "Select Lockscreen Wallpaper"
 msgstr "Valitse lukitusnäytön taustakuva"
+
+msgid "Images and Slideshows"
+msgstr "Kuvat ja diaesitykset"
+
+msgid "Select Image File"
+msgstr "Valitse kuvatiedosto"
 
 msgid "Select"
 msgstr "Valitse"
@@ -99,11 +105,83 @@ msgstr "Valitse"
 msgid "Cancel"
 msgstr "Peruuta"
 
-msgid "Image Files"
-msgstr "Kuvatiedostot"
+msgid "Per-Monitor Wallpapers"
+msgstr "Näyttökohtaiset taustakuvat"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "Näytöt, joilla ei ole omaa taustakuvaa, käyttävät yllä olevaa."
+
+msgid "Default"
+msgstr "Oletus"
+
+msgid "Use the Default Wallpaper"
+msgstr "Käytä oletustaustakuvaa"
+
+msgid "Clock and Date"
+msgstr "Kello ja päivämäärä"
+
+msgid "Clock Weight"
+msgstr "Kellon paksuus"
+
+msgid "Font weight of the lockscreen time."
+msgstr "Lukitusnäytön kellonajan fontin paksuus."
+
+msgid "Restore defaults"
+msgstr "Palauta oletukset"
+
+msgid "Light"
+msgstr "Ohut"
+
+msgid "Regular"
+msgstr "Tavallinen"
+
+msgid "Medium"
+msgstr "Keskivahva"
+
+msgid "Semibold"
+msgstr "Puolilihavoitu"
+
+msgid "Bold"
+msgstr "Lihavoitu"
+
+msgid "Heavy"
+msgstr "Erittäin lihavoitu"
+
+msgid "Clock Format"
+msgstr "Kellon muoto"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "Ohita järjestelmän 12/24 tunnin asetus lukitusnäytöllä."
+
+msgid "System"
+msgstr "Järjestelmä"
+
+msgid "12-hour"
+msgstr "12-tuntinen"
+
+msgid "24-hour"
+msgstr "24-tuntinen"
+
+msgid "Date Style"
+msgstr "Päiväyksen tyyli"
+
+msgid "Choose between shortened and full date names."
+msgstr "Valitse lyhennettyjen ja täydellisten päivämääränimien välillä."
+
+msgid "Short"
+msgstr "Lyhyt"
+
+msgid "Full"
+msgstr "Täysi"
+
+msgid "Wallpaper-Tinted Clock"
+msgstr "Taustakuvan sävyttämä kello"
+
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "Sävytä kello ja päivämäärä taustakuvan vaalealla värisävyllä."
 
 msgid "Lockscreen Mode"
-msgstr "Lukitusnäyttötila"
+msgstr "Lukitusnäytön tila"
 
 msgid "Mode"
 msgstr "Tila"
@@ -120,17 +198,29 @@ msgstr "Täydellinen macOS Sonomasta inspiroitunut lukitusnäytön asettelu (vai
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "macOS Sonoma -tyylinen kello perinteisen GNOME-asettelun päällä."
 
+msgid "Sonoma Status Corner"
+msgstr "Sonoma-tilanurkka"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "Muotoilee oikean yläkulman akku-, verkko- ja syöttölähdekuvakkeet uudelleen."
+
 msgid "Always Show User Widget"
-msgstr "Näytä aina käyttäjäelementti"
+msgstr "Näytä käyttäjäwidget aina"
 
 msgid "Hides notifications by default. Press Shift+N to show notifications."
 msgstr "Piilottaa ilmoitukset oletuksena. Paina Shift+N näyttääksesi ilmoitukset."
 
 msgid "Prompt Vibrancy"
-msgstr "Salasanakentän visuaalinen tehoste"
+msgstr "Kehotteen eloisuus"
 
 msgid "Adaptive color and depth enhancements for the password field."
 msgstr "Mukautuvat väri- ja syvyysparannukset salasanakenttään."
+
+msgid "Lightweight, color-based mode."
+msgstr "Kevyt, väripohjainen tila."
+
+msgid "Advanced, blur-based mode."
+msgstr "Edistynyt, sumennukseen perustuva tila."
 
 msgid "Tonal"
 msgstr "Sävy"
@@ -138,35 +228,29 @@ msgstr "Sävy"
 msgid "Acrylic"
 msgstr "Akryyli"
 
-msgid "Lightweight, color-based mode."
-msgstr "Kevyt, väripohjainen tila."
-
-msgid "Advanced, blur-based mode."
-msgstr "Edistynyt, sumennuspohjainen tila."
-
 msgid "Show message when locked"
-msgstr "Näytä viesti lukittuna"
+msgstr "Näytä viesti lukitussa tilassa"
 
 msgid "Set..."
-msgstr "Aseta…"
+msgstr "Aseta..."
 
 msgid "Set a message to appear on the lockscreen"
-msgstr "Aseta lukitusnäytössä näytettävä viesti"
+msgstr "Aseta lukitusnäytöllä näytettävä viesti"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Unlock Crossfade"
-msgstr "Ristihäivytys lukitusta avattaessa"
+msgstr "Lukituksen avauksen häivytys"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "Häivyttää lukitusnäytön työpöydälle lukitusta avattaessa (poistuu automaattisesti käytöstä virransäästötilassa)."
+msgstr "Häivytä lukitusnäyttö työpöydäksi lukitusta avattaessa (poistuu automaattisesti käytöstä virransäästötilassa)."
 
 msgid "Requires WACK Shell to be installed and enabled."
-msgstr "Vaatii WACK Shellin asennettuna ja käytössä."
+msgstr "Vaatii, että WACK Shell on asennettu ja käytössä."
 
 msgid "Requires WACK Shell to be enabled."
-msgstr "Vaatii WACK Shellin käyttöön ottamisen."
+msgstr "Vaatii, että WACK Shell on käytössä."
 
 msgid "Crossfade Speed"
 msgstr "Häivytysnopeus"
@@ -178,31 +262,16 @@ msgid "Faster"
 msgstr "Nopeampi"
 
 msgid "Clock Animation"
-msgstr "Kelloanimaatio"
+msgstr "Kellon animaatio"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "Käytetään päivämäärään ja aikaan salasanaikkunan avautuessa"
-
-msgid "Prompt Animation"
-msgstr "Tunnistautumisanimaatio"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "Käytetään tunnistautumisikkunaan sen ilmestyessä"
-
-msgid "Reset Animations"
-msgstr "Palauta animaatiot"
-
-msgid "Restore defaults"
-msgstr "Palauta oletukset"
-
-msgid "Reset animations"
-msgstr "Palauta animaatiot"
+msgstr "Käytetään päivämäärään ja kellonaikaan salasanakehotetta avattaessa"
 
 msgid "Scale Down"
 msgstr "Pienennä"
 
 msgid "Zoom Up"
-msgstr "Suurenna"
+msgstr "Lähennä ylös"
 
 msgid "Slide Up"
 msgstr "Liu'uta ylös"
@@ -210,26 +279,35 @@ msgstr "Liu'uta ylös"
 msgid "Fade"
 msgstr "Häivytys"
 
+msgid "Prompt Animation"
+msgstr "Kehotteen animaatio"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Käytetään todennuskehotteeseen sen tullessa näkyviin"
+
 msgid "GNOME Default"
-msgstr "GNOME-oletus"
+msgstr "GNOMEn oletus"
 
 msgid "Rise"
-msgstr "Nouse"
+msgstr "Nousu"
 
 msgid "Zoom"
-msgstr "Zoom"
+msgstr "Zoomaus"
 
-msgid "Screen Timeout"
-msgstr "Näytön aikakatkaisu"
+msgid "Reset Animations"
+msgstr "Nollaa animaatiot"
+
+msgid "Reset animations"
+msgstr "Nollaa animaatiot"
 
 msgid "Display and Power"
-msgstr "Näyttö ja virranhallinta"
+msgstr "Näyttö ja virta"
 
 msgid "Keep Screen On"
 msgstr "Pidä näyttö päällä"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "Estää näytön välittömän sammumisen lukitsemisen yhteydessä. Näyttö sammuu järjestelmäasetuksissa määritetyn normaalin ajan jälkeen."
+msgstr "Estää näytön sammumisen välittömästi lukituksen yhteydessä. Näyttö sammuu edelleen järjestelmäasetuksissa määritetyn ajan kuluttua."
 
 msgid "Only on AC Power"
 msgstr "Vain verkkovirralla"
@@ -238,37 +316,43 @@ msgid "Only keep the screen on if the system is plugged in"
 msgstr "Pidä näyttö päällä vain, kun laite on kytketty verkkovirtaan"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Escape näytön sammuttamiseen / valmiustilaan"
+msgstr "Escape-näppäin valmiustilaan"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
-msgstr "Paina Escape lukitusnäytössä sammuttaaksesi näytön (tai siirtyäksesi valmiustilaan)"
+msgstr "Paina Escape-näppäintä lukitusnäytöllä sammuttaaksesi näytön (tai siirtyäksesi valmiustilaan)"
 
 msgid "Extras"
-msgstr "Lisätoiminnot"
-
-msgid "Integrations"
-msgstr "Integraatiot"
+msgstr "Lisäominaisuudet"
 
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] GDM-laajennus"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
 msgstr "Tila: Käytössä. Mukautettu asettelu on aktiivinen GDM:ssä."
 
+msgid "Status: Disabled."
+msgstr "Tila: Ei käytössä."
+
 msgid "Enabled"
 msgstr "Käytössä"
 
-msgid "GDM Expansion - Remove"
-msgstr "GDM-laajennus - Poista"
+msgid "Disabled"
+msgstr "Ei käytössä"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "Palauta GDM-kirjautumisnäyttö GNOMEn oletukseksi. Poista asennus suorittamalla kopioitu komento päätteessä."
+msgid "Cupertino System Actions"
+msgstr "Cupertino-järjestelmätoiminnot"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "Kopioi poistokomento leikepöydälle"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "Näytä Valmiustila, Käynnistä uudelleen ja Sammuta käyttäjäluettelon alla pika-asetusten virtavalikon sijaan."
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "Poistokomento kopioitu leikepöydälle!"
+msgid "GDM Expansion Documentation"
+msgstr "GDM-laajennuksen ohjeet"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "Palauta GDM-kirjautumisnäytön asettelu GNOMEn oletusarvoon. Katso ohjeet koodivarastosta."
+
+msgid "Open repository documentation"
+msgstr "Avaa koodivaraston ohjeet"
 
 msgid "Extension is not installed system-wide in /usr/share."
 msgstr "Laajennusta ei ole asennettu järjestelmänlaajuisesti hakemistoon /usr/share."
@@ -277,91 +361,58 @@ msgid "GDM expansion modules (src/pro) are missing system-wide."
 msgstr "GDM-laajennusmoduulit (src/pro) puuttuvat järjestelmästä."
 
 msgid "GDM session mode is not enabled in system-wide metadata."
-msgstr "GDM-istuntotila ei ole käytössä järjestelmänlaajuisissa metatiedoissa."
+msgstr "GDM-istuntotilaa ei ole otettu käyttöön järjestelmän metatiedoissa."
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
-msgstr "GDM dconf -ohituskokoonpano (/etc/dconf/db/gdm.d) puuttuu."
+msgstr "GDM:n dconf-määritys (/etc/dconf/db/gdm.d) puuttuu."
 
 msgid "GDM integration is not configured."
 msgstr "GDM-integraatiota ei ole määritetty."
 
-msgid "Status: Disabled."
-msgstr "Tila: Ei käytössä."
+msgid "GDM DLC Documentation"
+msgstr "GDM DLC -ohjeet"
 
-msgid "Disabled"
-msgstr "Ei käytössä"
-
-msgid "Enable GDM DLC Support"
-msgstr "Ota GDM DLC -tuki käyttöön"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "Kopioi asennuskomento napsauttamalla kuvaketta ja suorita se päätteessä."
-
-msgid "Copy install command to clipboard"
-msgstr "Kopioi asennuskomento leikepöydälle"
-
-msgid "Copied install command to clipboard!"
-msgstr "Asennuskomento kopioitu leikepöydälle!"
-
-msgid "Upgrade to [PRO]"
-msgstr "Päivitä [PRO]-versioon"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "Tutustu tämän laajennuksen PRO-ominaisuuksiin sen GitHub-sivulla."
-
-msgid "Visit documentation on GitHub"
-msgstr "Katso dokumentaatio GitHubissa"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "Käy koodivarastossa nähdäksesi asennus- ja määritysohjeet."
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] WACK Shell -integraatio"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "Asennettu. Ottaa käyttöön häivytyssiirtymät ja Cupertino-vaikutteiset kuorimukautukset."
-
 msgid "Installed"
 msgstr "Asennettu"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - Tarkista päivitykset"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "Kopioi komento tarkistaaksesi, onko WACK Shellistä saatavilla uudempi versio."
-
-msgid "Copy update-check command to clipboard"
-msgstr "Kopioi päivityksen tarkistuskomento"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "WACK Shellin päivityksen tarkistuskomento kopioitu leikepöydälle!"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "Ei asennettu. Asenna WACK Shell ottaaksesi siirtymätehosteet käyttöön."
 
 msgid "Not Installed"
 msgstr "Ei asennettu"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - Asenna"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Asennettu. Ottaa käyttöön häivytyssiirtymät ja Cupertinon inspiroimat kuoren mukautukset."
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "Hanki edistyneet työpöydän häivytyssiirtymät ja Cupertino-vaikutteiset kuorimukautukset. Saattaa sisältää virheitä; ilmoita löytäessäsi."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Ei asennettu. Asenna WACK Shell ottaaksesi siirtymätehosteet käyttöön."
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "WACK Shellin asennuskomento kopioitu leikepöydälle!"
+msgid "WACK Shell Repository"
+msgstr "WACK Shell -koodivarasto"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "Avaa WACK Shell -koodivarasto ohjeita ja päivityksiä varten."
 
 msgid "Open WACK Shell repository"
-msgstr "Avaa WACK Shellin tietovarasto"
+msgstr "Avaa WACK Shell -koodivarasto"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "Käy koodivarastossa nähdäksesi asennusohjeet ja julkaisupaketit."
 
 msgid "Clear Visual Cache"
 msgstr "Tyhjennä visuaalinen välimuisti"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "Poistaa taustakuville ja visuaalisille tehosteille käytetyt väliaikaiset kuvatiedot. Ne luodaan automaattisesti uudelleen."
+msgstr "Tyhjentää taustakuville ja tehosteille käytetyt väliaikaiset visuaaliset tiedot. Ne luodaan automaattisesti uudelleen."
 
 msgid "Clear"
 msgstr "Tyhjennä"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "Tyhjentää taustakuville ja visuaalisille tehosteille käytetyn visuaalisen välimuistin"
+msgstr "Tyhjentää taustakuville ja tehosteille käytetyn visuaalisen välimuistin"
 
 msgid "Visual cache cleared successfully!"
 msgstr "Visuaalinen välimuisti tyhjennetty!"

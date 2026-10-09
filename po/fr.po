@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: fr\n"
@@ -51,47 +51,53 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "Ouvrir Saweria"
 
+msgid "Upgrade to [PRO]"
+msgstr "Passer à la version [PRO]"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Découvrez les fonctionnalités PRO sur le dépôt GitHub de cette extension."
+
+msgid "Visit documentation on GitHub"
+msgstr "Consulter la documentation sur GitHub"
+
 msgid "Configuration"
 msgstr "Configuration"
 
 msgid "General"
 msgstr "Général"
 
-msgid "Date Style"
-msgstr "Style de date"
+msgid "Password Field Indicators"
+msgstr "Indicateurs du champ de mot de passe"
 
-msgid "Choose between shortened and full date names."
-msgstr "Choisissez entre les noms de date abrégés et complets."
-
-msgid "Short"
-msgstr "Court"
-
-msgid "Full"
-msgstr "Complet"
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "Affiche les icônes de Verr. Maj. et de disposition du clavier dans le champ du mot de passe."
 
 msgid "Cursor Blinking"
 msgstr "Clignotement du curseur"
 
 msgid "Enable or disable text cursor blinking in the password field."
-msgstr "Active ou désactive le clignotement du curseur dans le champ de mot de passe."
+msgstr "Active ou désactive le clignotement du curseur dans le champ du mot de passe."
 
 msgid "Custom Lockscreen Wallpaper"
 msgstr "Fond d'écran de verrouillage personnalisé"
 
 msgid "Use a custom image overlay for the lockscreen background."
-msgstr "Utilise une image personnalisée pour l'arrière-plan de l'écran de verrouillage."
+msgstr "Utiliser une image personnalisée pour l'arrière-plan de l'écran de verrouillage."
 
 msgid "Wallpaper Image Path"
-msgstr "Chemin de l'image d'arrière-plan"
+msgstr "Chemin de l'image de fond d'écran"
 
 msgid "No image selected"
 msgstr "Aucune image sélectionnée"
 
-msgid "Select Image File"
-msgstr "Sélectionner un fichier image"
-
 msgid "Select Lockscreen Wallpaper"
 msgstr "Sélectionner le fond d'écran de verrouillage"
+
+msgid "Images and Slideshows"
+msgstr "Images et diaporamas"
+
+msgid "Select Image File"
+msgstr "Sélectionner un fichier image"
 
 msgid "Select"
 msgstr "Sélectionner"
@@ -99,11 +105,83 @@ msgstr "Sélectionner"
 msgid "Cancel"
 msgstr "Annuler"
 
-msgid "Image Files"
-msgstr "Fichiers image"
+msgid "Per-Monitor Wallpapers"
+msgstr "Fonds d'écran par écran"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "Les écrans sans fond d'écran dédié utiliseront celui défini ci-dessus."
+
+msgid "Default"
+msgstr "Par défaut"
+
+msgid "Use the Default Wallpaper"
+msgstr "Utiliser le fond d'écran par défaut"
+
+msgid "Clock and Date"
+msgstr "Horloge et date"
+
+msgid "Clock Weight"
+msgstr "Épaisseur de l'horloge"
+
+msgid "Font weight of the lockscreen time."
+msgstr "Épaisseur de la police de l'heure sur l'écran de verrouillage."
+
+msgid "Restore defaults"
+msgstr "Restaurer les valeurs par défaut"
+
+msgid "Light"
+msgstr "Léger"
+
+msgid "Regular"
+msgstr "Normal"
+
+msgid "Medium"
+msgstr "Moyen"
+
+msgid "Semibold"
+msgstr "Semi-gras"
+
+msgid "Bold"
+msgstr "Gras"
+
+msgid "Heavy"
+msgstr "Épais"
+
+msgid "Clock Format"
+msgstr "Format de l'horloge"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "Remplacer le réglage 12/24 heures du système sur l'écran de verrouillage."
+
+msgid "System"
+msgstr "Système"
+
+msgid "12-hour"
+msgstr "12 heures"
+
+msgid "24-hour"
+msgstr "24 heures"
+
+msgid "Date Style"
+msgstr "Style de la date"
+
+msgid "Choose between shortened and full date names."
+msgstr "Choisir entre les noms de date courts ou complets."
+
+msgid "Short"
+msgstr "Court"
+
+msgid "Full"
+msgstr "Complet"
+
+msgid "Wallpaper-Tinted Clock"
+msgstr "Horloge teintée par le fond d'écran"
+
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "Teinter l'horloge et la date avec une nuance légère de la couleur du fond d'écran."
 
 msgid "Lockscreen Mode"
-msgstr "Mode d'écran de verrouillage"
+msgstr "Mode de l'écran de verrouillage"
 
 msgid "Mode"
 msgstr "Mode"
@@ -115,10 +193,16 @@ msgid "Cupertino"
 msgstr "Cupertino"
 
 msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
-msgstr "Disposition complète inspirée de macOS Sonoma (cliquez sur l'icône d'utilisateur pour changer d'utilisateur)."
+msgstr "Une disposition complète inspirée de macOS Sonoma (cliquez sur l'icône utilisateur pour changer d'utilisateur)."
 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
-msgstr "Horloge style macOS Sonoma sur la disposition et le flux classiques de GNOME."
+msgstr "Horloge de style macOS Sonoma sur la disposition et le fonctionnement classiques de GNOME."
+
+msgid "Sonoma Status Corner"
+msgstr "Coin d'état Sonoma"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "Applique le style Sonoma aux icônes de batterie, réseau et source d'entrée en haut à droite."
 
 msgid "Always Show User Widget"
 msgstr "Toujours afficher le widget utilisateur"
@@ -127,10 +211,16 @@ msgid "Hides notifications by default. Press Shift+N to show notifications."
 msgstr "Masque les notifications par défaut. Appuyez sur Maj+N pour les afficher."
 
 msgid "Prompt Vibrancy"
-msgstr "Rendu visuel du champ de mot de passe"
+msgstr "Vibrance de l'invite"
 
 msgid "Adaptive color and depth enhancements for the password field."
-msgstr "Améliorations adaptatives de couleur et de profondeur pour le champ de mot de passe."
+msgstr "Améliorations adaptatives de couleur et de profondeur pour le champ du mot de passe."
+
+msgid "Lightweight, color-based mode."
+msgstr "Mode léger basé sur la couleur."
+
+msgid "Advanced, blur-based mode."
+msgstr "Mode avancé avec flou d'arrière-plan."
 
 msgid "Tonal"
 msgstr "Tonal"
@@ -138,14 +228,8 @@ msgstr "Tonal"
 msgid "Acrylic"
 msgstr "Acrylique"
 
-msgid "Lightweight, color-based mode."
-msgstr "Mode léger basé sur la couleur."
-
-msgid "Advanced, blur-based mode."
-msgstr "Mode avancé basé sur le flou."
-
 msgid "Show message when locked"
-msgstr "Afficher un message lors du verrouillage"
+msgstr "Afficher un message au verrouillage"
 
 msgid "Set..."
 msgstr "Définir…"
@@ -154,13 +238,13 @@ msgid "Set a message to appear on the lockscreen"
 msgstr "Définir un message à afficher sur l'écran de verrouillage"
 
 msgid "OK"
-msgstr "Valider"
+msgstr "OK"
 
 msgid "Unlock Crossfade"
-msgstr "Fondu au déverrouillage"
+msgstr "Fondu de déverrouillage"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "Effectue un fondu entre l'écran de verrouillage et le bureau lors du déverrouillage (automatiquement désactivé en mode économie d'énergie)."
+msgstr "Effectue un fondu entre l'écran de verrouillage et le bureau au déverrouillage (désactivé en mode Économie d'énergie)."
 
 msgid "Requires WACK Shell to be installed and enabled."
 msgstr "Nécessite que WACK Shell soit installé et activé."
@@ -172,7 +256,7 @@ msgid "Crossfade Speed"
 msgstr "Vitesse du fondu"
 
 msgid "Slower"
-msgstr "Plus lent"
+msgstr "Plus lente"
 
 msgid "Faster"
 msgstr "Plus rapide"
@@ -181,64 +265,58 @@ msgid "Clock Animation"
 msgstr "Animation de l'horloge"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "Appliquée à la date et à l'heure lors de l'ouverture du champ de mot de passe"
-
-msgid "Prompt Animation"
-msgstr "Animation du champ d'authentification"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "Appliquée au champ d'authentification lors de son apparition"
-
-msgid "Reset Animations"
-msgstr "Réinitialiser les animations"
-
-msgid "Restore defaults"
-msgstr "Restaurer les valeurs par défaut"
-
-msgid "Reset animations"
-msgstr "Réinitialiser les animations"
+msgstr "Appliqué à la date et l'heure lors de l'ouverture de l'invite de mot de passe"
 
 msgid "Scale Down"
-msgstr "Réduction d'échelle"
+msgstr "Rétrécir"
 
 msgid "Zoom Up"
-msgstr "Agrandissement"
+msgstr "Zoom vers le haut"
 
 msgid "Slide Up"
-msgstr "Glissement vers le haut"
+msgstr "Glisser vers le haut"
 
 msgid "Fade"
 msgstr "Fondu"
+
+msgid "Prompt Animation"
+msgstr "Animation de l'invite"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Appliqué à l'invite d'authentification lors de son apparition"
 
 msgid "GNOME Default"
 msgstr "GNOME par défaut"
 
 msgid "Rise"
-msgstr "Élévation"
+msgstr "Montée"
 
 msgid "Zoom"
 msgstr "Zoom"
 
-msgid "Screen Timeout"
-msgstr "Délai d'extinction de l'écran"
+msgid "Reset Animations"
+msgstr "Réinitialiser les animations"
+
+msgid "Reset animations"
+msgstr "Réinitialiser les animations"
 
 msgid "Display and Power"
-msgstr "Écran et énergie"
+msgstr "Affichage et alimentation"
 
 msgid "Keep Screen On"
-msgstr "Garder l'écran allumé"
+msgstr "Maintenir l'écran allumé"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "Empêche l'écran de s'éteindre immédiatement lors du verrouillage. L'écran s'éteindra après le délai habituel défini dans les paramètres système."
+msgstr "Empêche l'écran de s'éteindre immédiatement au verrouillage. L'écran s'éteindra après le délai habituel défini dans les paramètres système."
 
 msgid "Only on AC Power"
 msgstr "Uniquement sur secteur"
 
 msgid "Only keep the screen on if the system is plugged in"
-msgstr "Ne garder l'écran allumé que si l'appareil est branché sur secteur"
+msgstr "Ne maintient l'écran allumé que si l'ordinateur est branché sur secteur"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Échap pour éteindre l'écran / mettre en veille"
+msgstr "Touche Échap pour mettre en veille"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "Appuyez sur Échap sur l'écran de verrouillage pour éteindre l'écran (ou mettre en veille)"
@@ -246,122 +324,95 @@ msgstr "Appuyez sur Échap sur l'écran de verrouillage pour éteindre l'écran 
 msgid "Extras"
 msgstr "Extras"
 
-msgid "Integrations"
-msgstr "Intégrations"
-
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] Extension GDM"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
 msgstr "État : Activé. La disposition personnalisée est active sur GDM."
 
+msgid "Status: Disabled."
+msgstr "État : Désactivé."
+
 msgid "Enabled"
 msgstr "Activé"
 
-msgid "GDM Expansion - Remove"
-msgstr "Extension GDM - Désinstaller"
+msgid "Disabled"
+msgstr "Désactivé"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "Rétablit la disposition de l'écran de connexion GDM par défaut de GNOME. Pour désinstaller, exécutez la commande copiée dans un terminal."
+msgid "Cupertino System Actions"
+msgstr "Actions système Cupertino"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "Copier la commande de désinstallation dans le presse-papiers"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "Affiche Mettre en veille, Redémarrer et Éteindre sous la liste des utilisateurs, remplaçant le menu d'alimentation des Paramètres rapides."
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "Commande de désinstallation copiée dans le presse-papiers !"
+msgid "GDM Expansion Documentation"
+msgstr "Documentation de l'extension GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "Rétablir la disposition de l'écran de connexion GDM par défaut de GNOME. Consultez les instructions du dépôt."
+
+msgid "Open repository documentation"
+msgstr "Ouvrir la documentation du dépôt"
 
 msgid "Extension is not installed system-wide in /usr/share."
-msgstr "L'extension n'est pas installée à l'échelle du système dans /usr/share."
+msgstr "L'extension n'est pas installée au niveau système dans /usr/share."
 
 msgid "GDM expansion modules (src/pro) are missing system-wide."
-msgstr "Les modules d'extension GDM (src/pro) sont absents au niveau système."
+msgstr "Les modules d'extension GDM (src/pro) sont manquants au niveau système."
 
 msgid "GDM session mode is not enabled in system-wide metadata."
 msgstr "Le mode de session GDM n'est pas activé dans les métadonnées système."
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
-msgstr "La configuration dconf de GDM (/etc/dconf/db/gdm.d) est manquante."
+msgstr "La configuration de remplacement dconf pour GDM (/etc/dconf/db/gdm.d) est manquante."
 
 msgid "GDM integration is not configured."
 msgstr "L'intégration GDM n'est pas configurée."
 
-msgid "Status: Disabled."
-msgstr "État : Désactivé."
+msgid "GDM DLC Documentation"
+msgstr "Documentation du module GDM"
 
-msgid "Disabled"
-msgstr "Désactivé"
-
-msgid "Enable GDM DLC Support"
-msgstr "Activer la prise en charge du DLC GDM"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "Cliquez sur l'icône pour copier la commande d'installation, puis exécutez-la dans un terminal."
-
-msgid "Copy install command to clipboard"
-msgstr "Copier la commande d'installation dans le presse-papiers"
-
-msgid "Copied install command to clipboard!"
-msgstr "Commande d'installation copiée dans le presse-papiers !"
-
-msgid "Upgrade to [PRO]"
-msgstr "Passer à [PRO]"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "Découvrez les fonctionnalités PRO de cette extension sur son dépôt GitHub."
-
-msgid "Visit documentation on GitHub"
-msgstr "Consulter la documentation sur GitHub"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "Consultez le dépôt pour voir la documentation de configuration et d'installation."
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] Intégration WACK Shell"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "Installé. Active les transitions en fondu et les personnalisations de Shell inspirées de Cupertino."
-
 msgid "Installed"
 msgstr "Installé"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - Vérifier les mises à jour"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "Copiez la commande pour vérifier si une version plus récente de WACK Shell est disponible."
-
-msgid "Copy update-check command to clipboard"
-msgstr "Copier la commande de recherche de mise à jour"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "Commande de vérification de mise à jour de WACK Shell copiée !"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "Non installé. Installez WACK Shell pour débloquer les effets de transition."
 
 msgid "Not Installed"
 msgstr "Non installé"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - Installer"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Installé. Active les transitions de fondu et les personnalisations du shell inspirées de Cupertino."
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "Obtenez des transitions en fondu avancées et des personnalisations de Shell inspirées de Cupertino. Peut contenir des bogues, signalez-les si trouvés."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Non installé. Installez WACK Shell pour débloquer les effets de transition."
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "Commande d'installation de WACK Shell copiée dans le presse-papiers !"
+msgid "WACK Shell Repository"
+msgstr "Dépôt WACK Shell"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "Ouvrir le dépôt WACK Shell pour consulter la documentation et les mises à jour."
 
 msgid "Open WACK Shell repository"
 msgstr "Ouvrir le dépôt WACK Shell"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "Consultez le dépôt pour voir les instructions d'installation et les paquets disponibles."
 
 msgid "Clear Visual Cache"
 msgstr "Vider le cache visuel"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "Supprime les données visuelles temporaires utilisées pour les fonds d'écran et les effets de rendu. Elles seront régénérées automatiquement."
+msgstr "Supprime les données visuelles temporaires utilisées pour les fonds d'écran et les effets de flou. Elles seront régénérées automatiquement."
 
 msgid "Clear"
-msgstr "Vider"
+msgstr "Effacer"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "Vide le cache visuel utilisé pour les fonds d'écran et les effets de rendu"
+msgstr "Vide le cache visuel utilisé pour les fonds d'écran et les effets"
 
 msgid "Visual cache cleared successfully!"
 msgstr "Cache visuel vidé avec succès !"

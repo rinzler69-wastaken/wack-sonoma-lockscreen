@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: tr\n"
@@ -51,11 +51,116 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "Saweria'yı Aç"
 
+msgid "Upgrade to [PRO]"
+msgstr "[PRO] Sürümüne Yükselt"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "Bu uzantının PRO özelliklerini GitHub deposundan inceleyin."
+
+msgid "Visit documentation on GitHub"
+msgstr "GitHub'daki belgelere göz atın"
+
 msgid "Configuration"
 msgstr "Yapılandırma"
 
 msgid "General"
 msgstr "Genel"
+
+msgid "Password Field Indicators"
+msgstr "Parola Alanı Göstergeleri"
+
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "Parola alanında Caps Lock ve klavye düzeni simgelerini gösterir."
+
+msgid "Cursor Blinking"
+msgstr "İmleç Yanıp Sönmesi"
+
+msgid "Enable or disable text cursor blinking in the password field."
+msgstr "Parola alanında metin imlecinin yanıp sönmesini etkinleştirin veya devre dışı bırakın."
+
+msgid "Custom Lockscreen Wallpaper"
+msgstr "Özel Kilit Ekranı Duvar Kağıdı"
+
+msgid "Use a custom image overlay for the lockscreen background."
+msgstr "Kilit ekranı arka planı için özel bir görsel kullanın."
+
+msgid "Wallpaper Image Path"
+msgstr "Duvar Kağıdı Görsel Yolu"
+
+msgid "No image selected"
+msgstr "Görsel seçilmedi"
+
+msgid "Select Lockscreen Wallpaper"
+msgstr "Kilit Ekranı Duvar Kağıdını Seçin"
+
+msgid "Images and Slideshows"
+msgstr "Görseller ve Slayt Gösterileri"
+
+msgid "Select Image File"
+msgstr "Görsel Dosyası Seç"
+
+msgid "Select"
+msgstr "Seç"
+
+msgid "Cancel"
+msgstr "İptal"
+
+msgid "Per-Monitor Wallpapers"
+msgstr "Monitör Başına Duvar Kağıtları"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "Kendi duvar kağıdı olmayan monitörler yukarıdakini kullanır."
+
+msgid "Default"
+msgstr "Varsayılan"
+
+msgid "Use the Default Wallpaper"
+msgstr "Varsayılan Duvar Kağıdını Kullan"
+
+msgid "Clock and Date"
+msgstr "Saat ve Tarih"
+
+msgid "Clock Weight"
+msgstr "Saat Kalınlığı"
+
+msgid "Font weight of the lockscreen time."
+msgstr "Kilit ekranı saat metninin yazı tipi kalınlığı."
+
+msgid "Restore defaults"
+msgstr "Varsayılanlara Sıfırla"
+
+msgid "Light"
+msgstr "İnce"
+
+msgid "Regular"
+msgstr "Normal"
+
+msgid "Medium"
+msgstr "Orta"
+
+msgid "Semibold"
+msgstr "Yarı Kalın"
+
+msgid "Bold"
+msgstr "Kalın"
+
+msgid "Heavy"
+msgstr "Çok Kalın"
+
+msgid "Clock Format"
+msgstr "Saat Biçimi"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "Kilit ekranında sistemin 12/24 saat ayarını geçersiz kılın."
+
+msgid "System"
+msgstr "Sistem"
+
+msgid "12-hour"
+msgstr "12 saat"
+
+msgid "24-hour"
+msgstr "24 saat"
 
 msgid "Date Style"
 msgstr "Tarih Biçimi"
@@ -69,38 +174,11 @@ msgstr "Kısa"
 msgid "Full"
 msgstr "Tam"
 
-msgid "Cursor Blinking"
-msgstr "İmleç Yanıp Sönmesi"
+msgid "Wallpaper-Tinted Clock"
+msgstr "Duvar Kağıdı Tonunda Saat"
 
-msgid "Enable or disable text cursor blinking in the password field."
-msgstr "Parola alanında metin imlecinin yanıp sönmesini etkinleştirin veya devre dışı bırakın."
-
-msgid "Custom Lockscreen Wallpaper"
-msgstr "Özel Kilit Ekranı Duvar Kağıdı"
-
-msgid "Use a custom image overlay for the lockscreen background."
-msgstr "Kilit ekranı arka planı için özel bir resim kaplaması kullanın."
-
-msgid "Wallpaper Image Path"
-msgstr "Duvar Kağıdı Resim Yolu"
-
-msgid "No image selected"
-msgstr "Resim seçilmedi"
-
-msgid "Select Image File"
-msgstr "Resim Dosyası Seç"
-
-msgid "Select Lockscreen Wallpaper"
-msgstr "Kilit Ekranı Duvar Kağıdını Seç"
-
-msgid "Select"
-msgstr "Seç"
-
-msgid "Cancel"
-msgstr "İptal"
-
-msgid "Image Files"
-msgstr "Resim Dosyaları"
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "Saati ve tarihi duvar kağıdının açık bir tonuyla renklendirir."
 
 msgid "Lockscreen Mode"
 msgstr "Kilit Ekranı Modu"
@@ -120,23 +198,23 @@ msgstr "macOS Sonoma'dan ilham alan eksiksiz kilit ekranı düzeni (Kullanıcı 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
 msgstr "Klasik, GNOME uyumlu düzen ve akış üzerinde macOS Sonoma tarzı saat."
 
+msgid "Sonoma Status Corner"
+msgstr "Sonoma Durum Köşesi"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "Sağ üstteki pil, ağ ve giriş kaynağı simgelerini yeniden biçimlendirir."
+
 msgid "Always Show User Widget"
-msgstr "Kullanıcı Widget'ını Her Zaman Göster"
+msgstr "Kullanıcı Aracını Her Zaman Göster"
 
 msgid "Hides notifications by default. Press Shift+N to show notifications."
 msgstr "Bildirimleri varsayılan olarak gizler. Bildirimleri göstermek için Shift+N tuşlarına basın."
 
 msgid "Prompt Vibrancy"
-msgstr "Parola Alanı Görsel Efekti"
+msgstr "Giriş Alanı Canlılığı"
 
 msgid "Adaptive color and depth enhancements for the password field."
-msgstr "Parola alanı için uyarlanabilir renk ve derinlik iyileştirmeleri."
-
-msgid "Tonal"
-msgstr "Tonlama"
-
-msgid "Acrylic"
-msgstr "Akrilik"
+msgstr "Parola alanı için uyarlanabilir renk ve derinlik geliştirmeleri."
 
 msgid "Lightweight, color-based mode."
 msgstr "Hafif, renk tabanlı mod."
@@ -144,23 +222,29 @@ msgstr "Hafif, renk tabanlı mod."
 msgid "Advanced, blur-based mode."
 msgstr "Gelişmiş, bulanıklık tabanlı mod."
 
+msgid "Tonal"
+msgstr "Tonlama"
+
+msgid "Acrylic"
+msgstr "Akrilik"
+
 msgid "Show message when locked"
-msgstr "Kilitlendiğinde mesaj göster"
+msgstr "Kilitliyken mesaj göster"
 
 msgid "Set..."
-msgstr "Ayarla…"
+msgstr "Ayarla..."
 
 msgid "Set a message to appear on the lockscreen"
-msgstr "Kilit ekranında görünecek bir mesaj ayarlayın"
+msgstr "Kilit ekranında görünecek bir mesaj belirleyin"
 
 msgid "OK"
 msgstr "Tamam"
 
 msgid "Unlock Crossfade"
-msgstr "Kilit Açma Çapraz Geçişi"
+msgstr "Kilit Açma Geçiş Efekti"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "Kilidi açarken kilit ekranını masaüstüyle çapraz geçişle birleştirir (Güç Tasarrufu modunda otomatik olarak devre dışı bırakılır)."
+msgstr "Kilit açılırken kilit ekranı ile masaüstü arasında geçiş efekti uygular (Güç Tasarrufu modunda otomatik devre dışı kalır)."
 
 msgid "Requires WACK Shell to be installed and enabled."
 msgstr "WACK Shell'in kurulu ve etkin olmasını gerektirir."
@@ -169,7 +253,7 @@ msgid "Requires WACK Shell to be enabled."
 msgstr "WACK Shell'in etkin olmasını gerektirir."
 
 msgid "Crossfade Speed"
-msgstr "Çapraz Geçiş Hızı"
+msgstr "Geçiş Hızı"
 
 msgid "Slower"
 msgstr "Daha Yavaş"
@@ -181,28 +265,13 @@ msgid "Clock Animation"
 msgstr "Saat Animasyonu"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "Parola ekranı açılırken tarih ve saate uygulanır"
-
-msgid "Prompt Animation"
-msgstr "Kimlik Doğrulama Ekranı Animasyonu"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "Görünürken kimlik doğrulama alanına uygulanır"
-
-msgid "Reset Animations"
-msgstr "Animasyonları Sıfırla"
-
-msgid "Restore defaults"
-msgstr "Varsayılanları Geri Yükle"
-
-msgid "Reset animations"
-msgstr "Animasyonları sıfırla"
+msgstr "Parola istemi açılırken tarih ve saate uygulanır"
 
 msgid "Scale Down"
 msgstr "Küçült"
 
 msgid "Zoom Up"
-msgstr "Büyüt"
+msgstr "Yukarı Yakınlaştır"
 
 msgid "Slide Up"
 msgstr "Yukarı Kaydır"
@@ -210,17 +279,26 @@ msgstr "Yukarı Kaydır"
 msgid "Fade"
 msgstr "Solma"
 
+msgid "Prompt Animation"
+msgstr "İstem Animasyonu"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "Kimlik doğrulama istemi görünürken uygulanır"
+
 msgid "GNOME Default"
 msgstr "GNOME Varsayılanı"
 
 msgid "Rise"
-msgstr "Yüksel"
+msgstr "Yükselme"
 
 msgid "Zoom"
-msgstr "Yakınlaştır"
+msgstr "Yakınlaştırma"
 
-msgid "Screen Timeout"
-msgstr "Ekran Zaman Aşımı"
+msgid "Reset Animations"
+msgstr "Animasyonları Sıfırla"
+
+msgid "Reset animations"
+msgstr "Animasyonları sıfırla"
 
 msgid "Display and Power"
 msgstr "Ekran ve Güç"
@@ -229,55 +307,61 @@ msgid "Keep Screen On"
 msgstr "Ekranı Açık Tut"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "Kilitlendiğinde ekranın hemen kapanmasını önler. Ekran, sistem ayarlarında belirlenen normal zaman aşımı süresinden sonra kapanacaktır."
+msgstr "Kilitlendiğinde ekranın hemen kapanmasını önler. Ekran, sistem ayarlarında belirlenen normal zaman aşımından sonra kapanacaktır."
 
 msgid "Only on AC Power"
 msgstr "Yalnızca Prize Takılıyken"
 
 msgid "Only keep the screen on if the system is plugged in"
-msgstr "Ekranı yalnızca cihaz prize takılıyken açık tutun"
+msgstr "Ekranı yalnızca cihaz prize takılı olduğunda açık tutar"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Ekranı Kapatmak / Askıya Almak için Escape"
+msgstr "Uyku / Askıya Alma için Escape"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
-msgstr "Ekranı kapatmak (veya askıya almak) için kilit ekranında Escape tuşuna basın"
+msgstr "Ekranı uyutmak (veya askıya almak) için kilit ekranında Escape tuşuna basın"
 
 msgid "Extras"
 msgstr "Ekstralar"
 
-msgid "Integrations"
-msgstr "Entegrasyonlar"
-
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] GDM Genişletmesi"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
-msgstr "Durum: Etkin. Özel düzen GDM üzerinde aktif."
+msgstr "Durum: Etkin. GDM üzerinde özel düzen aktiftir."
+
+msgid "Status: Disabled."
+msgstr "Durum: Devre Dışı."
 
 msgid "Enabled"
 msgstr "Etkin"
 
-msgid "GDM Expansion - Remove"
-msgstr "GDM Genişletmesi - Kaldır"
+msgid "Disabled"
+msgstr "Devre Dışı"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "GDM giriş ekranı düzenini GNOME Varsayılanına döndürün. Kaldırmak için kopyalanan komutu bir terminalde çalıştırın."
+msgid "Cupertino System Actions"
+msgstr "Cupertino Sistem Eylemleri"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "Kaldırma komutunu panoya kopyala"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "Hızlı Ayarlar güç menüsü yerine kullanıcı listesinin altında Askıya Al, Yeniden Başlat ve Kapat seçeneklerini gösterir."
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "Kaldırma komutu panoya kopyalandı!"
+msgid "GDM Expansion Documentation"
+msgstr "GDM Genişletme Belgeleri"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "GDM giriş ekranı düzenini varsayılan GNOME düzenine geri döndürün. Depodaki talimatlara bakın."
+
+msgid "Open repository documentation"
+msgstr "Depo Belgelerini Aç"
 
 msgid "Extension is not installed system-wide in /usr/share."
-msgstr "Uzantı /usr/share dizinine sistem genelinde kurulmamış."
+msgstr "Uzantı, /usr/share dizinine sistem genelinde kurulmamış."
 
 msgid "GDM expansion modules (src/pro) are missing system-wide."
 msgstr "GDM genişletme modülleri (src/pro) sistem genelinde eksik."
 
 msgid "GDM session mode is not enabled in system-wide metadata."
-msgstr "GDM oturum modu sistem genelindeki meta verilerde etkin değil."
+msgstr "GDM oturum modu, sistem genelindeki meta verilerde etkinleştirilmemiş."
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
 msgstr "GDM dconf geçersiz kılma yapılandırması (/etc/dconf/db/gdm.d) eksik."
@@ -285,83 +369,50 @@ msgstr "GDM dconf geçersiz kılma yapılandırması (/etc/dconf/db/gdm.d) eksik
 msgid "GDM integration is not configured."
 msgstr "GDM entegrasyonu yapılandırılmamış."
 
-msgid "Status: Disabled."
-msgstr "Durum: Devre Dışı."
+msgid "GDM DLC Documentation"
+msgstr "GDM DLC Belgeleri"
 
-msgid "Disabled"
-msgstr "Devre Dışı"
-
-msgid "Enable GDM DLC Support"
-msgstr "GDM DLC Desteğini Etkinleştir"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "Kurulum komutunu kopyalamak için simgeye tıklayın, ardından bir terminalde çalıştırın."
-
-msgid "Copy install command to clipboard"
-msgstr "Kurulum komutunu panoya kopyala"
-
-msgid "Copied install command to clipboard!"
-msgstr "Kurulum komutu panoya kopyalandı!"
-
-msgid "Upgrade to [PRO]"
-msgstr "[PRO]'ya Yükselt"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "Bu uzantının PRO özelliklerini GitHub deposundan inceleyin."
-
-msgid "Visit documentation on GitHub"
-msgstr "GitHub'daki Belgeleri Ziyaret Edin"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "Kurulum ve yapılandırma belgelerini görmek için depoyu ziyaret edin."
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] WACK Shell Entegrasyonu"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "Kuruldu. Çapraz geçişleri ve Cupertino'dan ilham alan kabuk özelleştirmelerini etkinleştirir."
-
 msgid "Installed"
-msgstr "Kuruldu"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - Güncellemeleri Denetle"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "WACK Shell'in daha yeni bir sürümünün mevcut olup olmadığını doğrulamak için komutu kopyalayın."
-
-msgid "Copy update-check command to clipboard"
-msgstr "Güncelleme denetleme komutunu panoya kopyala"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "WACK Shell güncelleme denetleme komutu panoya kopyalandı!"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "Kurulu değil. Geçiş efektlerinin kilidini açmak için WACK Shell'i kurun."
+msgstr "Yüklendi"
 
 msgid "Not Installed"
-msgstr "Kurulu Değil"
+msgstr "Yüklü Değil"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - Kur"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "Yüklendi. Geçiş efektlerini ve Cupertino'dan ilham alan kabuk özelleştirmelerini etkinleştirir."
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "Gelişmiş masaüstü çapraz geçişleri ve Cupertino tarzı kabuk özelleştirmeleri edinin. Hatalar içerebilir; bulursanız bildirin."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "Yüklü değil. Geçiş efektlerini açmak için WACK Shell'i yükleyin."
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "WACK Shell kurulum komutu panoya kopyalandı!"
+msgid "WACK Shell Repository"
+msgstr "WACK Shell Deposu"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "Belgeler ve güncellemeler için WACK Shell deposunu açın."
 
 msgid "Open WACK Shell repository"
 msgstr "WACK Shell Deposunu Aç"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "Kurulum talimatlarını ve sürüm paketlerini görmek için depoyu ziyaret edin."
 
 msgid "Clear Visual Cache"
 msgstr "Görsel Önbelleği Temizle"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "Duvar kağıtları ve görsel efektler için kullanılan geçici görsel verileri siler. Otomatik olarak yeniden oluşturulacaktır."
+msgstr "Duvar kağıtları ve canlılık efektleri için kullanılan geçici görsel verileri temizler. Otomatik olarak yeniden oluşturulacaktır."
 
 msgid "Clear"
 msgstr "Temizle"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "Duvar kağıtları ve görsel efektler için kullanılan görsel önbelleği temizler"
+msgstr "Duvar kağıtları ve efektler için kullanılan görsel önbelleği temizler"
 
 msgid "Visual cache cleared successfully!"
 msgstr "Görsel önbellek başarıyla temizlendi!"

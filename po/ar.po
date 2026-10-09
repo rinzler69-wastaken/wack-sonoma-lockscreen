@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: ar\n"
@@ -28,16 +28,16 @@ msgid "Resources"
 msgstr "المصادر"
 
 msgid "Extension Repo"
-msgstr "مستودع الامتداد"
+msgstr "مستودع الإضافة"
 
 msgid "Open on GitHub"
-msgstr "فتح على GitHub"
+msgstr "فتح في GitHub"
 
 msgid "Enjoying this extension?"
-msgstr "هل يعجبك هذا الامتداد؟"
+msgstr "هل تستمتع بهذه الإضافة؟"
 
 msgid "Consider supporting its development!"
-msgstr "فكر في دعم تطويره!"
+msgstr "فكر في دعم تطويرها!"
 
 msgid "Ko-fi"
 msgstr "Ko-fi"
@@ -51,35 +51,38 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "فتح Saweria"
 
+msgid "Upgrade to [PRO]"
+msgstr "الترقية إلى [PRO]"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "تحقق من ميزات PRO في مستودع GitHub الخاص بهذه الإضافة."
+
+msgid "Visit documentation on GitHub"
+msgstr "زيارة التوثيق على GitHub"
+
 msgid "Configuration"
 msgstr "الإعدادات"
 
 msgid "General"
 msgstr "عام"
 
-msgid "Date Style"
-msgstr "نمط التاريخ"
+msgid "Password Field Indicators"
+msgstr "مؤشرات حقل كلمة المرور"
 
-msgid "Choose between shortened and full date names."
-msgstr "اختر بين أسماء التواريخ المختصرة والكاملة."
-
-msgid "Short"
-msgstr "مختصر"
-
-msgid "Full"
-msgstr "كامل"
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "إظهار أيقونات Caps Lock وتخطيط لوحة المفاتيح داخل حقل كلمة المرور."
 
 msgid "Cursor Blinking"
 msgstr "وميض المؤشر"
 
 msgid "Enable or disable text cursor blinking in the password field."
-msgstr "تفعيل أو تعطيل وميض المؤشر في حقل كلمة المرور."
+msgstr "تمكين أو تعطيل وميض مؤشر النص في حقل كلمة المرور."
 
 msgid "Custom Lockscreen Wallpaper"
 msgstr "خلفية مخصصة لشاشة القفل"
 
 msgid "Use a custom image overlay for the lockscreen background."
-msgstr "استخدام صورة مخصصة كخلفية لشاشة القفل."
+msgstr "استخدم صورة مخصصة كخلفية لشاشة القفل."
 
 msgid "Wallpaper Image Path"
 msgstr "مسار صورة الخلفية"
@@ -87,11 +90,14 @@ msgstr "مسار صورة الخلفية"
 msgid "No image selected"
 msgstr "لم يتم تحديد أي صورة"
 
-msgid "Select Image File"
-msgstr "تحديد ملف صورة"
-
 msgid "Select Lockscreen Wallpaper"
 msgstr "تحديد خلفية شاشة القفل"
+
+msgid "Images and Slideshows"
+msgstr "الصور وعروض الشرائح"
+
+msgid "Select Image File"
+msgstr "تحديد ملف الصورة"
 
 msgid "Select"
 msgstr "تحديد"
@@ -99,8 +105,80 @@ msgstr "تحديد"
 msgid "Cancel"
 msgstr "إلغاء"
 
-msgid "Image Files"
-msgstr "ملفات الصور"
+msgid "Per-Monitor Wallpapers"
+msgstr "خلفيات لكل شاشة"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "الشاشات التي ليس لها خلفية خاصة بها ستستخدم الخلفية المحددة أعلاه."
+
+msgid "Default"
+msgstr "افتراضي"
+
+msgid "Use the Default Wallpaper"
+msgstr "استخدام الخلفية الافتراضية"
+
+msgid "Clock and Date"
+msgstr "الساعة والتاريخ"
+
+msgid "Clock Weight"
+msgstr "سمك خط الساعة"
+
+msgid "Font weight of the lockscreen time."
+msgstr "سمك خط الوقت على شاشة القفل."
+
+msgid "Restore defaults"
+msgstr "استعادة الافتراضيات"
+
+msgid "Light"
+msgstr "خفيف"
+
+msgid "Regular"
+msgstr "عادي"
+
+msgid "Medium"
+msgstr "متوسط"
+
+msgid "Semibold"
+msgstr "شبه عريض"
+
+msgid "Bold"
+msgstr "عريض"
+
+msgid "Heavy"
+msgstr "ثقيل"
+
+msgid "Clock Format"
+msgstr "تنسيق الوقت"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "تجاوز إعداد نظام 12/24 ساعة على شاشة القفل."
+
+msgid "System"
+msgstr "النظام"
+
+msgid "12-hour"
+msgstr "12 ساعة"
+
+msgid "24-hour"
+msgstr "24 ساعة"
+
+msgid "Date Style"
+msgstr "نمط التاريخ"
+
+msgid "Choose between shortened and full date names."
+msgstr "الاختيار بين أسماء التواريخ المختصرة والكاملة."
+
+msgid "Short"
+msgstr "قصير"
+
+msgid "Full"
+msgstr "كامل"
+
+msgid "Wallpaper-Tinted Clock"
+msgstr "ساعة متناسقة مع لون الخلفية"
+
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "تلوين الساعة والتاريخ بلون خفيف متناسق مع خلفية الشاشة."
 
 msgid "Lockscreen Mode"
 msgstr "وضع شاشة القفل"
@@ -115,28 +193,28 @@ msgid "Cupertino"
 msgstr "كوبرتينو"
 
 msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to switch users)."
-msgstr "تخطيط كامل لشاشة القفل مستوحى من macOS Sonoma (انقر فوق أيقونة المستخدم لتبديل المستخدمين)."
+msgstr "تخطيط كامل مستوحى من macOS Sonoma (انقر فوق أيقونة المستخدم لتبديل المستخدمين)."
 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
-msgstr "ساعة بنمط macOS Sonoma مع تخطيط وسير العمل الكلاسيكي المتوافق مع GNOME."
+msgstr "ساعة بأسلوب macOS Sonoma فوق التخطيط الكلاسيكي المتوافق مع GNOME."
+
+msgid "Sonoma Status Corner"
+msgstr "زاوية حالة سونوما"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "إعادة تصميم أيقونات البطارية والشبكة ومصدر الإدخال في الزاوية العلوية اليمنى."
 
 msgid "Always Show User Widget"
-msgstr "إظهار عنصر واجهة المستخدم دائمًا"
+msgstr "إظهار عنصر المستخدم دائمًا"
 
 msgid "Hides notifications by default. Press Shift+N to show notifications."
-msgstr "يخفي الإشعارات افتراضيًا. اضغط على Shift+N لإظهارها."
+msgstr "إخفاء الإشعارات افتراضيًا. اضغط على Shift+N لعرضها."
 
 msgid "Prompt Vibrancy"
-msgstr "المظهر البصري لحقل كلمة المرور"
+msgstr "حيوية حقل كلمة المرور"
 
 msgid "Adaptive color and depth enhancements for the password field."
-msgstr "تحسينات تكيفية للون والعمق لحقل كلمة المرور."
-
-msgid "Tonal"
-msgstr "لوني"
-
-msgid "Acrylic"
-msgstr "أكريليك"
+msgstr "تحسينات متكيفة للألوان والعمق لحقل كلمة المرور."
 
 msgid "Lightweight, color-based mode."
 msgstr "وضع خفيف يعتمد على الألوان."
@@ -144,11 +222,17 @@ msgstr "وضع خفيف يعتمد على الألوان."
 msgid "Advanced, blur-based mode."
 msgstr "وضع متقدم يعتمد على التمويه."
 
+msgid "Tonal"
+msgstr "نغمي"
+
+msgid "Acrylic"
+msgstr "أكريليك"
+
 msgid "Show message when locked"
 msgstr "إظهار رسالة عند القفل"
 
 msgid "Set..."
-msgstr "تعيين…"
+msgstr "تعيين..."
 
 msgid "Set a message to appear on the lockscreen"
 msgstr "تعيين رسالة لتظهر على شاشة القفل"
@@ -157,19 +241,19 @@ msgid "OK"
 msgstr "موافق"
 
 msgid "Unlock Crossfade"
-msgstr "التلاشي التدريجي عند إلغاء القفل"
+msgstr "تلاشي سلس عند إلغاء القفل"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "تلاشٍ تدريجي بين شاشة القفل وسطح المكتب عند إلغاء القفل (يتم تعطيله تلقائيًا في وضع توفير الطاقة)."
+msgstr "تلاشي سلس بين شاشة القفل وسطح المكتب عند إلغاء القفل (يتم تعطيله تلقائيًا في وضع توفير الطاقة)."
 
 msgid "Requires WACK Shell to be installed and enabled."
-msgstr "يتطلب تثبيت WACK Shell وتفعيله."
+msgstr "يتطلب تثبيت وتفعيل WACK Shell."
 
 msgid "Requires WACK Shell to be enabled."
 msgstr "يتطلب تفعيل WACK Shell."
 
 msgid "Crossfade Speed"
-msgstr "سرعة التلاشي التدريجي"
+msgstr "سرعة التلاشي"
 
 msgid "Slower"
 msgstr "أبطأ"
@@ -181,46 +265,40 @@ msgid "Clock Animation"
 msgstr "حركة الساعة"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "تُطبق على التاريخ والوقت أثناء فتح حقل كلمة المرور"
-
-msgid "Prompt Animation"
-msgstr "حركة حقل المصادقة"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "تُطبق على حقل المصادقة أثناء ظهوره"
-
-msgid "Reset Animations"
-msgstr "إعادة تعيين الحركات"
-
-msgid "Restore defaults"
-msgstr "استعادة الإعدادات الافتراضية"
-
-msgid "Reset animations"
-msgstr "إعادة تعيين الحركات"
+msgstr "يُطبق على التاريخ والوقت عند فتح طلب كلمة المرور"
 
 msgid "Scale Down"
 msgstr "تصغير"
 
 msgid "Zoom Up"
-msgstr "تكبير"
+msgstr "تكبير لأعلى"
 
 msgid "Slide Up"
-msgstr "سحب للأعلى"
+msgstr "تمرير لأعلى"
 
 msgid "Fade"
 msgstr "تلاشي"
 
+msgid "Prompt Animation"
+msgstr "حركة طلب المصادقة"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "يُطبق على طلب المصادقة أثناء ظهوره"
+
 msgid "GNOME Default"
-msgstr "افتراضي GNOME"
+msgstr "افتراضي جنوم"
 
 msgid "Rise"
-msgstr "صعود"
+msgstr "ارتفاع"
 
 msgid "Zoom"
-msgstr "تكبير"
+msgstr "تقريب"
 
-msgid "Screen Timeout"
-msgstr "مهلة إيقاف الشاشة"
+msgid "Reset Animations"
+msgstr "إعادة تعيين الحركات"
+
+msgid "Reset animations"
+msgstr "إعادة تعيين الحركات"
 
 msgid "Display and Power"
 msgstr "الشاشة والطاقة"
@@ -229,55 +307,61 @@ msgid "Keep Screen On"
 msgstr "إبقاء الشاشة قيد التشغيل"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "يمنع إيقاف تشغيل الشاشة فورًا عند القفل. ستنطفئ الشاشة بعد انتهاء المهلة المعتادة المحددة في إعدادات النظام."
+msgstr "منع إيقاف تشغيل الشاشة فورًا عند القفل. ستظل الشاشة تتوقف بعد المدة المحددة في إعدادات النظام."
 
 msgid "Only on AC Power"
-msgstr "فقط عند الاتصال بمصدر طاقة"
+msgstr "فقط عند الاتصال بمصدر الطاقة"
 
 msgid "Only keep the screen on if the system is plugged in"
 msgstr "إبقاء الشاشة قيد التشغيل فقط إذا كان الجهاز متصلاً بالكهرباء"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "Escape لإطفاء الشاشة / التعليق"
+msgstr "مفتاح Escape للتعليق / السكون"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
-msgstr "اضغط على Escape في شاشة القفل لإطفاء الشاشة (أو تعليق النظام)"
+msgstr "اضغط على مفتاح Escape على شاشة القفل لإيقاف تشغيل الشاشة (أو التعليق)"
 
 msgid "Extras"
 msgstr "إضافات"
 
-msgid "Integrations"
-msgstr "عمليات التكامل"
-
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] توسيع GDM"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
-msgstr "الحالة: مفعّل. التخطيط المخصص نشط على GDM."
+msgstr "الحالة: مفعل. التخطيط المخصص نشط على GDM."
+
+msgid "Status: Disabled."
+msgstr "الحالة: معطل."
 
 msgid "Enabled"
-msgstr "مفعّل"
+msgstr "مفعل"
 
-msgid "GDM Expansion - Remove"
-msgstr "توسعة GDM - إزالة"
+msgid "Disabled"
+msgstr "معطل"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "استعادة تخطيط شاشة تسجيل الدخول في GDM إلى الوضع الافتراضي لـ GNOME. لإلغاء التثبيت، شغّل الأمر المنسوخ في الطرفية."
+msgid "Cupertino System Actions"
+msgstr "إجراءات نظام كوبرتينو"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "نسخ أمر إلغاء التثبيت إلى الحافظة"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "إظهار التعليق وإعادة التشغيل وإيقاف التشغيل أسفل قائمة المستخدمين، واستبدال قائمة الطاقة في الإعدادات السريعة."
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "تم نسخ أمر إلغاء التثبيت إلى الحافظة!"
+msgid "GDM Expansion Documentation"
+msgstr "توثيق توسيع GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "استعادة تخطيط شاشة تسجيل الدخول GDM إلى الوضع الافتراضي لـ GNOME. راجع تعليمات المستودع."
+
+msgid "Open repository documentation"
+msgstr "فتح توثيق المستودع"
 
 msgid "Extension is not installed system-wide in /usr/share."
-msgstr "الامتداد غير مثبت على مستوى النظام في /usr/share."
+msgstr "الإضافة غير مثبتة على مستوى النظام في /usr/share."
 
 msgid "GDM expansion modules (src/pro) are missing system-wide."
-msgstr "وحدات توسعة GDM (src/pro) مفقودة على مستوى النظام."
+msgstr "وحدات توسيع GDM (src/pro) مفقودة على مستوى النظام."
 
 msgid "GDM session mode is not enabled in system-wide metadata."
-msgstr "وضع جلسة GDM غير مفعّل في بيانات التعريف على مستوى النظام."
+msgstr "وضع جلسة GDM غير مفعل في البيانات الوصفية للنظام."
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
 msgstr "تكوين تجاوز dconf لـ GDM (/etc/dconf/db/gdm.d) مفقود."
@@ -285,83 +369,50 @@ msgstr "تكوين تجاوز dconf لـ GDM (/etc/dconf/db/gdm.d) مفقود."
 msgid "GDM integration is not configured."
 msgstr "تكامل GDM غير مهيأ."
 
-msgid "Status: Disabled."
-msgstr "الحالة: معطّل."
+msgid "GDM DLC Documentation"
+msgstr "توثيق GDM DLC"
 
-msgid "Disabled"
-msgstr "معطّل"
-
-msgid "Enable GDM DLC Support"
-msgstr "تفعيل دعم GDM DLC"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "انقر على الأيقونة لنسخ أمر التثبيت، ثم شغّله في الطرفية."
-
-msgid "Copy install command to clipboard"
-msgstr "نسخ أمر التثبيت إلى الحافظة"
-
-msgid "Copied install command to clipboard!"
-msgstr "تم نسخ أمر التثبيت إلى الحافظة!"
-
-msgid "Upgrade to [PRO]"
-msgstr "الترقية إلى [PRO]"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "تحقق من ميزات PRO لهذا الامتداد في مستودع GitHub الخاص به."
-
-msgid "Visit documentation on GitHub"
-msgstr "زيارة التوثيق على GitHub"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "قم بزيارة المستودع لعرض وثائق الإعداد والتثبيت."
 
 msgid "[BETA] WACK Shell Integration"
 msgstr "[BETA] تكامل WACK Shell"
 
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "مثبّت. يتيح انتقالات التلاشي التدريجي وتخصيصات الواجهة المستوحاة من Cupertino."
-
 msgid "Installed"
-msgstr "مثبّت"
-
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - التحقق من وجود تحديثات"
-
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "انسخ الأمر للتحقق مما إذا كان هناك إصدار أحدث من WACK Shell متاحًا."
-
-msgid "Copy update-check command to clipboard"
-msgstr "نسخ أمر التحقق من التحديث"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "تم نسخ أمر التحقق من تحديث WACK Shell إلى الحافظة!"
-
-msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "غير مثبّت. قم بتثبيت WACK Shell لإلغاء قفل تأثيرات الانتقال."
+msgstr "مثبت"
 
 msgid "Not Installed"
-msgstr "غير مثبّت"
+msgstr "غير مثبت"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - تثبيت"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "مثبت. يتيح تأثيرات التلاشي الانتقالي وتخصيصات الواجهة المستوحاة من كوبرتينو."
 
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "احصل على انتقالات تلاشٍ متقدمة وتخصيصات للواجهة مستوحاة من Cupertino. قد يحتوي على أخطاء، يُرجى الإبلاغ عنها إذا وجدتها."
+msgid "Not installed. Install WACK Shell to unlock transition effects."
+msgstr "غير مثبت. قم بتثبيت WACK Shell لتفعيل تأثيرات الانتقال."
 
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "تم نسخ أمر تثبيت WACK Shell إلى الحافظة!"
+msgid "WACK Shell Repository"
+msgstr "مستودع WACK Shell"
+
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "افتح مستودع WACK Shell للحصول على الوثائق والتحديثات."
 
 msgid "Open WACK Shell repository"
 msgstr "فتح مستودع WACK Shell"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "قم بزيارة المستودع لعرض تعليمات التثبيت وحزم الإصدار."
 
 msgid "Clear Visual Cache"
 msgstr "مسح الذاكرة المؤقتة للرسومات"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "يمسح البيانات الرسومية المؤقتة المستخدمة للخلفيات وتأثيرات المظهر البصري. ستتم إعادة إنشائها تلقائيًا."
+msgstr "مسح البيانات المؤقتة المستخدمة للخلفيات وتأثيرات الحيوية. ستتم إعادة إنشائها تلقائيًا."
 
 msgid "Clear"
 msgstr "مسح"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "يمسح الذاكرة المؤقتة للرسومات المستخدمة للخلفيات وتأثيرات المظهر البصري"
+msgstr "مسح الذاكرة المؤقتة للرسومات المستخدمة للخلفيات والتأثيرات"
 
 msgid "Visual cache cleared successfully!"
 msgstr "تم مسح الذاكرة المؤقتة للرسومات بنجاح!"

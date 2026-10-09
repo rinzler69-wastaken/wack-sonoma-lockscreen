@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wack-lockscreen-clock@rinzler69-wastaken.github.com\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-16 00:00+0000\n"
+"PO-Revision-Date: 2026-10-09 00:00+0000\n"
 "Last-Translator: rinzler69-wastaken\n"
 "Language-Team: WACK Project\n"
 "Language: th\n"
@@ -28,16 +28,16 @@ msgid "Resources"
 msgstr "แหล่งข้อมูล"
 
 msgid "Extension Repo"
-msgstr "ที่เก็บส่วนขยาย"
+msgstr "ที่เก็บข้อมูลส่วนขยาย"
 
 msgid "Open on GitHub"
 msgstr "เปิดบน GitHub"
 
 msgid "Enjoying this extension?"
-msgstr "ชอบส่วนขยายนี้ไหม?"
+msgstr "ชอบส่วนขยายนี้หรือไม่?"
 
 msgid "Consider supporting its development!"
-msgstr "โปรดพิจารณาสนับสนุนการพัฒนา!"
+msgstr "สนับสนุนการพัฒนาส่วนขยายนี้!"
 
 msgid "Ko-fi"
 msgstr "Ko-fi"
@@ -51,11 +51,116 @@ msgstr "Saweria"
 msgid "Open Saweria"
 msgstr "เปิด Saweria"
 
+msgid "Upgrade to [PRO]"
+msgstr "อัปเกรดเป็น [PRO]"
+
+msgid "Check PRO features of this extension on this extension's GitHub repo."
+msgstr "ตรวจสอบฟีเจอร์ PRO ของส่วนขยายนี้บนที่เก็บข้อมูล GitHub"
+
+msgid "Visit documentation on GitHub"
+msgstr "ดูคู่มือบน GitHub"
+
 msgid "Configuration"
 msgstr "การกำหนดค่า"
 
 msgid "General"
 msgstr "ทั่วไป"
+
+msgid "Password Field Indicators"
+msgstr "ไอคอนสถานะในช่องใส่รหัสผ่าน"
+
+msgid "Show Caps Lock and keyboard layout icons inside the password field."
+msgstr "แสดงไอคอน Caps Lock และรูปแบบแป้นพิมพ์ภายในช่องใส่รหัสผ่าน"
+
+msgid "Cursor Blinking"
+msgstr "การกะพริบของเคอร์เซอร์"
+
+msgid "Enable or disable text cursor blinking in the password field."
+msgstr "เปิดหรือปิดการกะพริบของเคอร์เซอร์ในช่องใส่รหัสผ่าน"
+
+msgid "Custom Lockscreen Wallpaper"
+msgstr "ภาพพื้นหลังหน้าจอล็อกแบบกำหนดเอง"
+
+msgid "Use a custom image overlay for the lockscreen background."
+msgstr "ใช้รูปภาพที่กำหนดเองเป็นพื้นหลังของหน้าจอล็อก"
+
+msgid "Wallpaper Image Path"
+msgstr "ตำแหน่งไฟล์ภาพพื้นหลัง"
+
+msgid "No image selected"
+msgstr "ยังไม่ได้เลือกรูปภาพ"
+
+msgid "Select Lockscreen Wallpaper"
+msgstr "เลือกภาพพื้นหลังหน้าจอล็อก"
+
+msgid "Images and Slideshows"
+msgstr "รูปภาพและสไลด์โชว์"
+
+msgid "Select Image File"
+msgstr "เลือกไฟล์รูปภาพ"
+
+msgid "Select"
+msgstr "เลือก"
+
+msgid "Cancel"
+msgstr "ยกเลิก"
+
+msgid "Per-Monitor Wallpapers"
+msgstr "ภาพพื้นหลังแยกตามจอภาพ"
+
+msgid "Monitors without their own wallpaper use the one above."
+msgstr "จอภาพที่ไม่มีภาพพื้นหลังของตัวเองจะใช้ภาพด้านบน"
+
+msgid "Default"
+msgstr "ค่าเริ่มต้น"
+
+msgid "Use the Default Wallpaper"
+msgstr "ใช้ภาพพื้นหลังเริ่มต้น"
+
+msgid "Clock and Date"
+msgstr "นาฬิกาและวันที่"
+
+msgid "Clock Weight"
+msgstr "ความหนาของนาฬิกา"
+
+msgid "Font weight of the lockscreen time."
+msgstr "ความหนาของแบบอักษรสำหรับเวลาบนหน้าจอล็อก"
+
+msgid "Restore defaults"
+msgstr "คืนค่าเริ่มต้น"
+
+msgid "Light"
+msgstr "บาง"
+
+msgid "Regular"
+msgstr "ปกติ"
+
+msgid "Medium"
+msgstr "ปานกลาง"
+
+msgid "Semibold"
+msgstr "กึ่งหนา"
+
+msgid "Bold"
+msgstr "หนา"
+
+msgid "Heavy"
+msgstr "หนาพิเศษ"
+
+msgid "Clock Format"
+msgstr "รูปแบบนาฬิกา"
+
+msgid "Override the system 12/24-hour setting on the lockscreen."
+msgstr "แทนที่การตั้งค่า 12/24 ชั่วโมงของระบบบนหน้าจอล็อก"
+
+msgid "System"
+msgstr "ระบบ"
+
+msgid "12-hour"
+msgstr "12 ชั่วโมง"
+
+msgid "24-hour"
+msgstr "24 ชั่วโมง"
 
 msgid "Date Style"
 msgstr "รูปแบบวันที่"
@@ -64,43 +169,16 @@ msgid "Choose between shortened and full date names."
 msgstr "เลือกระหว่างชื่อวันที่แบบย่อหรือแบบเต็ม"
 
 msgid "Short"
-msgstr "สั้น"
+msgstr "แบบสั้น"
 
 msgid "Full"
-msgstr "เต็ม"
+msgstr "แบบเต็ม"
 
-msgid "Cursor Blinking"
-msgstr "การกะพริบของเคอร์เซอร์"
+msgid "Wallpaper-Tinted Clock"
+msgstr "นาฬิกาย้อมสีตามภาพพื้นหลัง"
 
-msgid "Enable or disable text cursor blinking in the password field."
-msgstr "เปิดหรือปิดใช้งานการกะพริบของเคอร์เซอร์ในช่องใส่รหัสผ่าน"
-
-msgid "Custom Lockscreen Wallpaper"
-msgstr "ภาพพื้นหลังหน้าจอล็อกแบบกำหนดเอง"
-
-msgid "Use a custom image overlay for the lockscreen background."
-msgstr "ใช้ภาพซ้อนทับแบบกำหนดเองสำหรับพื้นหลังหน้าจอล็อก"
-
-msgid "Wallpaper Image Path"
-msgstr "เส้นทางภาพพื้นหลัง"
-
-msgid "No image selected"
-msgstr "ไม่ได้เลือกภาพ"
-
-msgid "Select Image File"
-msgstr "เลือกไฟล์ภาพ"
-
-msgid "Select Lockscreen Wallpaper"
-msgstr "เลือกภาพพื้นหลังหน้าจอล็อก"
-
-msgid "Select"
-msgstr "เลือก"
-
-msgid "Cancel"
-msgstr "ยกเลิก"
-
-msgid "Image Files"
-msgstr "ไฟล์ภาพ"
+msgid "Tint the clock and date with a light shade of the wallpaper colour."
+msgstr "ย้อมสีนาฬิกาและวันที่ด้วยเฉดสีอ่อนตามภาพพื้นหลัง"
 
 msgid "Lockscreen Mode"
 msgstr "โหมดหน้าจอล็อก"
@@ -109,7 +187,7 @@ msgid "Mode"
 msgstr "โหมด"
 
 msgid "Legacy"
-msgstr "แบบดั้งเดิม"
+msgstr "แบบเดิม"
 
 msgid "Cupertino"
 msgstr "คูเปอร์ติโน"
@@ -118,7 +196,13 @@ msgid "A complete macOS Sonoma-inspired lockscreen layout (Click user-icon to sw
 msgstr "เลย์เอาต์หน้าจอล็อกแบบสมบูรณ์ที่ได้รับแรงบันดาลใจจาก macOS Sonoma (คลิกไอคอนผู้ใช้เพื่อสลับผู้ใช้)"
 
 msgid "macOS Sonoma-style clock over the classic, GNOME-compliant layout and flow."
-msgstr "นาฬิกาสไตล์ macOS Sonoma บนเลย์เอาต์มาตรฐานของ GNOME"
+msgstr "นาฬิกาสไตล์ macOS Sonoma บนเลย์เอาต์ดั้งเดิมของ GNOME"
+
+msgid "Sonoma Status Corner"
+msgstr "มุมสถานะ Sonoma"
+
+msgid "Restyle the top-right battery, network and input source icons."
+msgstr "ปรับแต่งไอคอนแบตเตอรี่ เครือข่าย และแหล่งป้อนข้อมูลที่มุมขวาบน"
 
 msgid "Always Show User Widget"
 msgstr "แสดงวิดเจ็ตผู้ใช้เสมอ"
@@ -127,16 +211,10 @@ msgid "Hides notifications by default. Press Shift+N to show notifications."
 msgstr "ซ่อนการแจ้งเตือนตามค่าเริ่มต้น กด Shift+N เพื่อแสดงการแจ้งเตือน"
 
 msgid "Prompt Vibrancy"
-msgstr "เอฟเฟกต์ภาพของช่องรหัสผ่าน"
+msgstr "เอฟเฟกต์ความลึกของช่องใส่รหัสผ่าน"
 
 msgid "Adaptive color and depth enhancements for the password field."
-msgstr "การปรับปรุงสีและความลึกแบบปรับได้สำหรับช่องใส่รหัสผ่าน"
-
-msgid "Tonal"
-msgstr "โทนสี"
-
-msgid "Acrylic"
-msgstr "อะคริลิก"
+msgstr "การปรับแต่งสีและความลึกแบบปรับตัวได้สำหรับช่องใส่รหัสผ่าน"
 
 msgid "Lightweight, color-based mode."
 msgstr "โหมดน้ำหนักเบาที่ใช้สี"
@@ -144,23 +222,29 @@ msgstr "โหมดน้ำหนักเบาที่ใช้สี"
 msgid "Advanced, blur-based mode."
 msgstr "โหมดขั้นสูงที่ใช้การเบลอ"
 
+msgid "Tonal"
+msgstr "โทนสี"
+
+msgid "Acrylic"
+msgstr "อะคริลิก"
+
 msgid "Show message when locked"
 msgstr "แสดงข้อความเมื่อล็อกหน้าจอ"
 
 msgid "Set..."
-msgstr "ตั้งค่า…"
+msgstr "ตั้งค่า..."
 
 msgid "Set a message to appear on the lockscreen"
-msgstr "ตั้งค่าข้อความที่จะปรากฏบนหน้าจอล็อก"
+msgstr "ตั้งค่าข้อความที่จะแสดงบนหน้าจอล็อก"
 
 msgid "OK"
 msgstr "ตกลง"
 
 msgid "Unlock Crossfade"
-msgstr "การเฟดข้ามเมื่อปลดล็อก"
+msgstr "เอฟเฟกต์การเปลี่ยนผ่านขณะปลดล็อก"
 
 msgid "Crossfade the lockscreen with desktop when unlocking (automatically disabled in Power Saver mode)."
-msgstr "เฟดข้ามหน้าจอล็อกกับเดสก์ท็อปเมื่อปลดล็อก (ปิดใช้งานอัตโนมัติในโหมดประหยัดพลังงาน)"
+msgstr "เปลี่ยนผ่านหน้าจอล็อกกับเดสก์ท็อปอย่างราบรื่นเมื่อปลดล็อก (ปิดใช้งานอัตโนมัติในโหมดประหยัดพลังงาน)"
 
 msgid "Requires WACK Shell to be installed and enabled."
 msgstr "ต้องติดตั้งและเปิดใช้งาน WACK Shell"
@@ -169,7 +253,7 @@ msgid "Requires WACK Shell to be enabled."
 msgstr "ต้องเปิดใช้งาน WACK Shell"
 
 msgid "Crossfade Speed"
-msgstr "ความเร็วการเฟดข้าม"
+msgstr "ความเร็วการเปลี่ยนผ่าน"
 
 msgid "Slower"
 msgstr "ช้าลง"
@@ -178,190 +262,157 @@ msgid "Faster"
 msgstr "เร็วขึ้น"
 
 msgid "Clock Animation"
-msgstr "ภาพเคลื่อนไหวของนาฬิกา"
+msgstr "แอนิเมชันนาฬิกา"
 
 msgid "Applied to the date and time while opening the password prompt"
-msgstr "ใช้กับวันที่และเวลาขณะเปิดกล่องใส่รหัสผ่าน"
-
-msgid "Prompt Animation"
-msgstr "ภาพเคลื่อนไหวกล่องข้อความยืนยันตัวตน"
-
-msgid "Applied to the authentication prompt while it appears"
-msgstr "ใช้กับกล่องข้อความยืนยันตัวตนขณะปรากฏขึ้น"
-
-msgid "Reset Animations"
-msgstr "รีเซ็ตภาพเคลื่อนไหว"
-
-msgid "Restore defaults"
-msgstr "คืนค่าเริ่มต้น"
-
-msgid "Reset animations"
-msgstr "รีเซ็ตภาพเคลื่อนไหว"
+msgstr "นำไปใช้กับวันที่และเวลาขณะเปิดช่องใส่รหัสผ่าน"
 
 msgid "Scale Down"
 msgstr "ย่อขนาด"
 
 msgid "Zoom Up"
-msgstr "ซูมขยาย"
+msgstr "ซูมขึ้น"
 
 msgid "Slide Up"
 msgstr "เลื่อนขึ้น"
 
 msgid "Fade"
-msgstr "ค่อยๆ จางลง"
+msgstr "จางหาย"
+
+msgid "Prompt Animation"
+msgstr "แอนิเมชันช่องกรอก"
+
+msgid "Applied to the authentication prompt while it appears"
+msgstr "นำไปใช้กับหน้าต่างยืนยันตัวตนขณะปรากฏ"
 
 msgid "GNOME Default"
-msgstr "ค่าเริ่มต้นของ GNOME"
+msgstr "ค่าเริ่มต้น GNOME"
 
 msgid "Rise"
-msgstr "ลอยขึ้น"
+msgstr "ยกตัวขึ้น"
 
 msgid "Zoom"
 msgstr "ซูม"
 
-msgid "Screen Timeout"
-msgstr "การหมดเวลาหน้าจอ"
+msgid "Reset Animations"
+msgstr "รีเซ็ตแอนิเมชัน"
+
+msgid "Reset animations"
+msgstr "รีเซ็ตแอนิเมชัน"
 
 msgid "Display and Power"
-msgstr "หน้าจอและพลังงาน"
+msgstr "จอแสดงผลและพลังงาน"
 
 msgid "Keep Screen On"
-msgstr "เปิดหน้าจอค้างไว้"
+msgstr "เปิดหน้าจอไว้ตลอด"
 
 msgid "Prevent the screen from immediately turning off when locked. The screen will still turn off after the normal timeout duration set in system settings."
-msgstr "ป้องกันไม่ให้หน้าจอดับลงทันทีเมื่อล็อกหน้าจอ โดยหน้าจอจะยังคงดับลงหลังจากครบเวลาที่ตั้งไว้ในการตั้งค่าระบบ"
+msgstr "ป้องกันไม่ให้หน้าจอดับทันทีเมื่อล็อก หน้าจอจะยังคงดับลงหลังจากครบเวลาที่กำหนดไว้ในการตั้งค่าระบบ"
 
 msgid "Only on AC Power"
-msgstr "เฉพาะเมื่อเสียบปลั๊กไฟ (AC) เท่านั้น"
+msgstr "เฉพาะเมื่อเสียบปลั๊กไฟ"
 
 msgid "Only keep the screen on if the system is plugged in"
-msgstr "เปิดหน้าจอค้างไว้เฉพาะเมื่ออุปกรณ์เสียบสายชาร์จอยู่เท่านั้น"
+msgstr "เปิดหน้าจอไว้เฉพาะเมื่ออุปกรณ์เสียบปลั๊กไฟอยู่เท่านั้น"
 
 msgid "Escape to Sleep / Suspend"
-msgstr "กด Escape เพื่อปิดหน้าจอ / พักเครื่อง"
+msgstr "กดปุ่ม Escape เพื่อพักเครื่อง"
 
 msgid "Press Escape on the lock screen to sleep display (or suspend)"
 msgstr "กด Escape บนหน้าจอล็อกเพื่อดับหน้าจอ (หรือพักเครื่อง)"
 
 msgid "Extras"
-msgstr "ฟังก์ชันเสริม"
-
-msgid "Integrations"
-msgstr "การผสานการทำงาน"
+msgstr "ส่วนเสริม"
 
 msgid "[PRO] GDM Expansion"
-msgstr "[PRO] GDM Expansion"
+msgstr "[PRO] ส่วนเสริม GDM"
 
 msgid "Status: Enabled. Custom layout is active on GDM."
-msgstr "สถานะ: เปิดใช้งานแล้ว เลย์เอาต์แบบกำหนดเองทำงานบน GDM"
+msgstr "สถานะ: เปิดใช้งานแล้ว เลย์เอาต์ที่กำหนดเองกำลังทำงานบน GDM"
+
+msgid "Status: Disabled."
+msgstr "สถานะ: ปิดใช้งาน"
 
 msgid "Enabled"
 msgstr "เปิดใช้งาน"
 
-msgid "GDM Expansion - Remove"
-msgstr "ส่วนขยาย GDM - ลบออก"
+msgid "Disabled"
+msgstr "ปิดใช้งาน"
 
-msgid "Revert GDM login screen layout to GNOME Default. To uninstall, run copied command in a terminal."
-msgstr "เปลี่ยนเลย์เอาต์หน้าจอเข้าสู่ระบบ GDM กลับเป็นค่าเริ่มต้นของ GNOME ในการถอนการติดตั้ง ให้รันคำสั่งที่คัดลอกในเทอร์มินัล"
+msgid "Cupertino System Actions"
+msgstr "ปุ่มควบคุมระบบ Cupertino"
 
-msgid "Copy uninstall command to clipboard"
-msgstr "คัดลอกคำสั่งถอนการติดตั้งไปยังคลิปบอร์ด"
+msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
+msgstr "แสดงพักเครื่อง รีสตาร์ท และปิดเครื่อง ใต้รายชื่อผู้ใช้ แทนที่เมนูเปิด/ปิดในการตั้งค่าด่วน"
 
-msgid "Copied uninstall command to clipboard!"
-msgstr "คัดลอกคำสั่งถอนการติดตั้งไปยังคลิปบอร์ดแล้ว!"
+msgid "GDM Expansion Documentation"
+msgstr "เอกสารส่วนเสริม GDM"
+
+msgid "Revert GDM login screen layout to GNOME Default. See repository instructions."
+msgstr "คืนค่าเลย์เอาต์หน้าจอเข้าสู่ระบบ GDM เป็นค่าเริ่มต้นของ GNOME ดูคำแนะนำในที่เก็บข้อมูล"
+
+msgid "Open repository documentation"
+msgstr "เปิดคู่มือในที่เก็บข้อมูล"
 
 msgid "Extension is not installed system-wide in /usr/share."
-msgstr "ไม่ได้ติดตั้งส่วนขยายทั่วทั้งระบบใน /usr/share"
+msgstr "ส่วนขยายไม่ได้ติดตั้งทั่วทั้งระบบใน /usr/share"
 
 msgid "GDM expansion modules (src/pro) are missing system-wide."
-msgstr "โมดูลส่วนขยาย GDM (src/pro) ขาดหายไปในระบบ"
+msgstr "โมดูลส่วนเสริม GDM (src/pro) ขาดหายไปในระบบ"
 
 msgid "GDM session mode is not enabled in system-wide metadata."
 msgstr "โหมดเซสชัน GDM ไม่ได้เปิดใช้งานในข้อมูลเมตาทั่วทั้งระบบ"
 
 msgid "GDM dconf override configuration (/etc/dconf/db/gdm.d) is missing."
-msgstr "การกำหนดค่า dconf สำหรับ GDM (/etc/dconf/db/gdm.d) ขาดหายไป"
+msgstr "ไม่มีไฟล์การกำหนดค่า dconf สำหรับ GDM (/etc/dconf/db/gdm.d)"
 
 msgid "GDM integration is not configured."
 msgstr "ไม่ได้กำหนดค่าการทำงานร่วมกับ GDM"
 
-msgid "Status: Disabled."
-msgstr "สถานะ: ปิดใช้งาน"
+msgid "GDM DLC Documentation"
+msgstr "เอกสาร GDM DLC"
 
-msgid "Disabled"
-msgstr "ปิดใช้งาน"
-
-msgid "Enable GDM DLC Support"
-msgstr "เปิดใช้งานการรองรับ GDM DLC"
-
-msgid "Click icon to copy installer command, then run it in a terminal."
-msgstr "คลิกไอคอนเพื่อคัดลอกคำสั่งติดตั้ง จากนั้นรันในเทอร์มินัล"
-
-msgid "Copy install command to clipboard"
-msgstr "คัดลอกคำสั่งติดตั้งไปยังคลิปบอร์ด"
-
-msgid "Copied install command to clipboard!"
-msgstr "คัดลอกคำสั่งติดตั้งไปยังคลิปบอร์ดแล้ว!"
-
-msgid "Upgrade to [PRO]"
-msgstr "อัปเกรดเป็น [PRO]"
-
-msgid "Check PRO features of this extension on this extension's GitHub repo."
-msgstr "ดูคุณสมบัติ PRO ของส่วนขยายนี้บนพื้นที่เก็บข้อมูล GitHub"
-
-msgid "Visit documentation on GitHub"
-msgstr "ดูเอกสารคู่มือบน GitHub"
+msgid "Visit the repository to view setup and installation documentation."
+msgstr "ไปที่ที่เก็บข้อมูลเพื่อดูคู่มือการตั้งค่าและการติดตั้ง"
 
 msgid "[BETA] WACK Shell Integration"
-msgstr "[BETA] การผสานการทำงานกับ WACK Shell"
-
-msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
-msgstr "ติดตั้งแล้ว เปิดใช้งานการเปลี่ยนภาพแบบเฟดข้ามและการปรับแต่งเชลล์สไตล์คูเปอร์ติโน"
+msgstr "[BETA] การทำงานร่วมกับ WACK Shell"
 
 msgid "Installed"
 msgstr "ติดตั้งแล้ว"
 
-msgid "WACK Shell - Check for Updates"
-msgstr "WACK Shell - ตรวจสอบการอัปเดต"
+msgid "Not Installed"
+msgstr "ไม่ได้ติดตั้ง"
 
-msgid "Copy check command to verify if a newer version of WACK Shell is available."
-msgstr "คัดลอกคำสั่งเพื่อตรวจสอบว่ามี WACK Shell เวอร์ชันใหม่กว่าหรือไม่"
-
-msgid "Copy update-check command to clipboard"
-msgstr "คัดลอกคำสั่งตรวจสอบการอัปเดต"
-
-msgid "Copied WACK Shell update-check command to clipboard!"
-msgstr "คัดลอกคำสั่งตรวจสอบการอัปเดต WACK Shell ไปยังคลิปบอร์ดแล้ว!"
+msgid "Installed. Enables crossfade transitions and Cupertino-inspired shell customisations."
+msgstr "ติดตั้งแล้ว เปิดใช้งานเอฟเฟกต์การเปลี่ยนผ่านและการปรับแต่งเชลล์สไตล์ Cupertino"
 
 msgid "Not installed. Install WACK Shell to unlock transition effects."
-msgstr "ยังไม่ได้ติดตั้ง ติดตั้ง WACK Shell เพื่อปลดล็อกเอฟเฟกต์การเปลี่ยนภาพ"
+msgstr "ยังไม่ได้ติดตั้ง ติดตั้ง WACK Shell เพื่อปลดล็อกเอฟเฟกต์การเปลี่ยนผ่าน"
 
-msgid "Not Installed"
-msgstr "ยังไม่ได้ติดตั้ง"
+msgid "WACK Shell Repository"
+msgstr "ที่เก็บข้อมูล WACK Shell"
 
-msgid "WACK Shell - Install"
-msgstr "WACK Shell - ติดตั้ง"
-
-msgid "Get advanced desktop crossfade transitions and Cupertino-inspired shell customisations. May contain bugs, report if found."
-msgstr "รับการเปลี่ยนภาพแบบเฟดข้ามบนเดสก์ท็อปขั้นสูงและการปรับแต่งเชลล์สไตล์คูเปอร์ติโน อาจมีข้อผิดพลาด โปรดรายงานหากพบ"
-
-msgid "Copied WACK Shell install command to clipboard!"
-msgstr "คัดลอกคำสั่งติดตั้ง WACK Shell ไปยังคลิปบอร์ดแล้ว!"
+msgid "Open the WACK Shell repository for documentation and updates."
+msgstr "เปิดที่เก็บข้อมูล WACK Shell เพื่อดูเอกสารและการอัปเดต"
 
 msgid "Open WACK Shell repository"
-msgstr "เปิดที่เก็บ WACK Shell"
+msgstr "เปิดที่เก็บข้อมูล WACK Shell"
+
+msgid "Visit the repository to view installation instructions and release packages."
+msgstr "ไปที่ที่เก็บข้อมูลเพื่อดูคำแนะนำในการติดตั้งและแพ็กเกจรุ่นที่เผยแพร่"
 
 msgid "Clear Visual Cache"
 msgstr "ล้างแคชภาพ"
 
 msgid "Clears temporary visual data used for wallpapers and vibrancy effects. It will be regenerated automatically."
-msgstr "ลบข้อมูลภาพชั่วคราวที่ใช้สำหรับภาพพื้นหลังและเอฟเฟกต์ภาพ ข้อมูลจะถูกสร้างขึ้นใหม่โดยอัตโนมัติ"
+msgstr "ล้างข้อมูลภาพชั่วคราวที่ใช้สำหรับภาพพื้นหลังและเอฟเฟกต์ ระบบจะสร้างข้อมูลขึ้นใหม่โดยอัตโนมัติ"
 
 msgid "Clear"
 msgstr "ล้าง"
 
 msgid "Clears the visual cache used for wallpapers and vibrancy effects"
-msgstr "ล้างแคชภาพที่ใช้สำหรับภาพพื้นหลังและเอฟเฟกต์ภาพ"
+msgstr "ล้างแคชภาพที่ใช้สำหรับภาพพื้นหลังและเอฟเฟกต์"
 
 msgid "Visual cache cleared successfully!"
 msgstr "ล้างแคชภาพสำเร็จแล้ว!"

@@ -623,7 +623,11 @@ export class GdmManager {
      * @param {object|null} meta
      */
     _applyUserPresentation(meta) {
-        const systemActions = meta?.systemActions ?? (
+        // GDM's CSA (Cupertino System Actions) state is a session-level presentation
+        // property established by the canonical entry session (defaultTheme). It must
+        // remain invariant across account selection switches in the GDM session.
+        const defaultActions = this._wallpaperManager?.themeStore?.defaultTheme()?.meta?.systemActions;
+        const systemActions = defaultActions ?? meta?.systemActions ?? (
             (this._settings && this._settings.settings_schema.has_key('cupertino-system-actions'))
                 ? this._settings.get_boolean('cupertino-system-actions')
                 : true
