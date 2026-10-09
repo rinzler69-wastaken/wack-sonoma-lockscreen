@@ -345,6 +345,12 @@ msgstr "Cupertino-systemhandlinger"
 msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
 msgstr "Vis Dvale, Genstart og Sluk under brugerlisten, hvilket erstatter strømmenuen i Hurtige indstillinger."
 
+msgid "Dim Background Wallpaper"
+msgstr "Dæmp baggrundsbillede"
+
+msgid "Apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast."
+msgstr "Anvend et diskret 15 % mørkt overlag på logindbaggrunden for bedre kontrast."
+
 msgid "GDM Expansion Documentation"
 msgstr "Dokumentation for GDM-udvidelse"
 

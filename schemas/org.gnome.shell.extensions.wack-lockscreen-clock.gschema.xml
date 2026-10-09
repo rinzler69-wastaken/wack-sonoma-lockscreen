@@ -156,5 +156,10 @@
       <summary>Cupertino System Actions</summary>
       <description>GDM DLC: show Suspend / Restart / Power Off buttons under the login user list and hide the Quick Settings power menu.</description>
     </key>
+    <key name="gdm-background-dimmer" type="b">
+      <default>false</default>
+      <summary>Dim background wallpaper</summary>
+      <description>GDM DLC: apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast.</description>
+    </key>
   </schema>
 </schemalist>

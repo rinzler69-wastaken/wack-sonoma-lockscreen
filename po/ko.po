@@ -345,6 +345,12 @@ msgstr "쿠퍼티노 시스템 전원 동작"
 msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
 msgstr "빠른 설정의 전원 메뉴 대신 로그인 사용자 목록 아래에 절전, 다시 시작, 전원 끄기를 표시합니다."
 
+msgid "Dim Background Wallpaper"
+msgstr "배경화면 어둡게 하기"
+
+msgid "Apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast."
+msgstr "로그인 배경화면에 은은한 15% 어두운 오버레이를 적용하여 대비를 높입니다."
+
 msgid "GDM Expansion Documentation"
 msgstr "GDM 확장 기능 문서"
 

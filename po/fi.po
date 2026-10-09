@@ -345,6 +345,12 @@ msgstr "Cupertino-järjestelmätoiminnot"
 msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
 msgstr "Näytä Valmiustila, Käynnistä uudelleen ja Sammuta käyttäjäluettelon alla pika-asetusten virtavalikon sijaan."
 
+msgid "Dim Background Wallpaper"
+msgstr "Himmennä taustakuvaa"
+
+msgid "Apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast."
+msgstr "Lisää kirjautumisnäytön taustakuvaan hienovarainen 15 % tummennus kontrastin parantamiseksi."
+
 msgid "GDM Expansion Documentation"
 msgstr "GDM-laajennuksen ohjeet"
 

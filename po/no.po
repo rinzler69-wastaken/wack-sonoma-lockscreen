@@ -345,6 +345,12 @@ msgstr "Cupertino-systemhandlinger"
 msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
 msgstr "Vis Hvilemodus, Start på nytt og Slå av under brukerlisten i stedet for strømmenyen i Hurtiginnstillinger."
 
+msgid "Dim Background Wallpaper"
+msgstr "Demp bakgrunnsbilde"
+
+msgid "Apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast."
+msgstr "Bruk et subtilt 15 % mørkt overlegg på påloggingsbakgrunnen for bedre kontrast."
+
 msgid "GDM Expansion Documentation"
 msgstr "Dokumentasjon for GDM-utvidelse"
 

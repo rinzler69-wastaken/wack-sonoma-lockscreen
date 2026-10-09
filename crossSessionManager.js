@@ -200,6 +200,8 @@ export class CrossSessionManager {
         ];
         if (this._settings.settings_schema.has_key('cupertino-system-actions'))
             settingsSignals.push('changed::cupertino-system-actions', save);
+        if (this._settings.settings_schema.has_key('gdm-background-dimmer'))
+            settingsSignals.push('changed::gdm-background-dimmer', save);
         settingsSignals.push(this);
 
         this._settings.connectObject(...settingsSignals);
@@ -644,6 +646,9 @@ export class CrossSessionManager {
             systemActions: (this._settings && this._settings.settings_schema.has_key('cupertino-system-actions'))
                 ? this._settings.get_boolean('cupertino-system-actions')
                 : true,
+            backgroundDimmer: (this._settings && this._settings.settings_schema.has_key('gdm-background-dimmer'))
+                ? this._settings.get_boolean('gdm-background-dimmer')
+                : false,
             dateStyle: this._settings ? (this._settings.get_string('date-style') || 'full') : 'full',
             userLocale: GLib.getenv('LC_TIME') || GLib.getenv('LANG') || Intl.DateTimeFormat().resolvedOptions().locale || null,
             clockAlpha: this._clockAlpha ?? 0.6,

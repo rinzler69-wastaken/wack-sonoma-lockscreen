@@ -345,6 +345,12 @@ msgstr "Cupertino 系统操作按钮"
 msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
 msgstr "在登录用户列表下方显示“挂起”、“重启”和“关机”按钮，替代快捷设置电源菜单。"
 
+msgid "Dim Background Wallpaper"
+msgstr "调暗背景壁纸"
+
+msgid "Apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast."
+msgstr "在登录壁纸上应用 15% 的微弱暗色遮罩以增强对比度。"
+
 msgid "GDM Expansion Documentation"
 msgstr "GDM 扩展文档"
 

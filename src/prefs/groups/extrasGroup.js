@@ -41,6 +41,15 @@ export function buildExtrasGroup(extensionPreferences, window, settings, _) {
             gdmExpander.add_row(systemActionsRow);
         }
 
+        if (settings.settings_schema.has_key('gdm-background-dimmer')) {
+            const backgroundDimmerRow = new Adw.SwitchRow({
+                title: _('Dim Background Wallpaper'),
+                subtitle: _('Apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast.'),
+            });
+            settings.bind('gdm-background-dimmer', backgroundDimmerRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+            gdmExpander.add_row(backgroundDimmerRow);
+        }
+
         const uninstallRow = new Adw.ActionRow({
             title: _('GDM Expansion Documentation'),
             subtitle: _('Revert GDM login screen layout to GNOME Default. See repository instructions.'),

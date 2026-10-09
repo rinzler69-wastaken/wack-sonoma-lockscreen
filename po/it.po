@@ -345,6 +345,12 @@ msgstr "Azioni di sistema Cupertino"
 msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
 msgstr "Mostra Sospendi, Riavvia e Spegni sotto l'elenco utenti, sostituendo il menu di alimentazione delle Impostazioni rapide."
 
+msgid "Dim Background Wallpaper"
+msgstr "Attenua sfondo"
+
+msgid "Apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast."
+msgstr "Applica una leggera sovrapposizione scura del 15% allo sfondo di accesso per migliorare il contrasto."
+
 msgid "GDM Expansion Documentation"
 msgstr "Documentazione espansione GDM"
 

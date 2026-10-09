@@ -698,6 +698,11 @@ export class GdmThemeStore {
                 ? this._settings.get_boolean('cupertino-system-actions')
                 : true
         );
+        const defaultDimmer = canonicalMeta?.backgroundDimmer ?? (
+            (this._settings && this._settings.settings_schema.has_key('gdm-background-dimmer'))
+                ? this._settings.get_boolean('gdm-background-dimmer')
+                : false
+        );
         const meta = {
             username: 'gdm',
             source_uri: uri, uri, style,
@@ -711,6 +716,7 @@ export class GdmThemeStore {
             statusCorner: this._settings ? this._settings.get_boolean('status-corner') : true,
             passwordIndicators: this._settings ? this._settings.get_boolean('password-indicators') : true,
             systemActions: defaultActions,
+            backgroundDimmer: defaultDimmer,
             dateStyle: this._settings ? (this._settings.get_string('date-style') || 'full') : 'full',
             clockAlpha: 0.6,
             lockscreenMode: this._settings ? this._settings.get_string('lockscreen-mode') : 'cupertino',
@@ -752,9 +758,10 @@ export class GdmWallpaperView {
         this._group = new Clutter.Actor();
         parent.add_child(this._group);
         parent.set_child_below_sibling(this._group, sibling);
-        this._monitors = [];   // { container, stacks: Map(stackKey -> {root, base, overlay}), topKey }
+        this._monitors = [];   // { container, stacks: Map(stackKey -> {root, base, overlay}), topKey, dimmer }
         this._presentedRevision = -1;
         this._presentedUser = null;
+        this._dimmerEnabled = false;
     }
 
     rebuild() {
@@ -769,8 +776,18 @@ export class GdmWallpaperView {
                 effect: new Shell.BlurEffect({ name: 'blur' }),
             });
             container.get_effect('blur').set({ radius: 0, brightness: 1.0 });
+
+            const dimmer = new St.Widget({
+                width: monitor.width,
+                height: monitor.height,
+                style: 'background-color: rgba(0, 0, 0, 0.15);',
+                opacity: this._dimmerEnabled ? 255 : 0,
+                visible: this._dimmerEnabled,
+            });
+            container.add_child(dimmer);
+
             this._group.add_child(container);
-            this._monitors.push({ container, monitor, stacks: new Map(), topKey: null });
+            this._monitors.push({ container, monitor, stacks: new Map(), topKey: null, dimmer });
         }
     }
 
@@ -782,6 +799,8 @@ export class GdmWallpaperView {
                 continue;
             const stack = this._createStack(m, theme);
             m.container.set_child_below_sibling(stack.root, null);
+            if (m.dimmer)
+                m.container.set_child_above_sibling(m.dimmer, null);
             m.stacks.set(key, stack);
             this._evict(m);
         }
@@ -789,6 +808,9 @@ export class GdmWallpaperView {
 
     /** Click path: property writes only. No I/O, no decode, no sampling. */
     present(theme, animate) {
+        const dim = Boolean(theme.meta?.backgroundDimmer);
+        this.setDimmer(dim, animate);
+
         if (theme.userName === this._presentedUser && theme.revision === this._presentedRevision)
             return;   // idempotent: return-to-picker + onReset both call this safely
         this._presentedUser = theme.userName;
@@ -810,6 +832,8 @@ export class GdmWallpaperView {
 
             stack.root.remove_all_transitions();
             m.container.set_child_above_sibling(stack.root, null);
+            if (m.dimmer)
+                m.container.set_child_above_sibling(m.dimmer, null);
             if (animate) {
                 stack.root.opacity = 0;
                 stack.root.ease({
@@ -819,6 +843,36 @@ export class GdmWallpaperView {
                 stack.root.opacity = 255;
             }
             m.topKey = key;
+        }
+    }
+
+    setDimmer(enabled, animate = true) {
+        const isEnabled = Boolean(enabled);
+        if (this._dimmerEnabled === isEnabled && animate)
+            return;
+        this._dimmerEnabled = isEnabled;
+
+        for (const m of this._monitors) {
+            if (!m.dimmer)
+                continue;
+            m.dimmer.remove_all_transitions();
+            if (this._dimmerEnabled)
+                m.dimmer.visible = true;
+
+            if (animate) {
+                m.dimmer.ease({
+                    opacity: this._dimmerEnabled ? 255 : 0,
+                    duration: 250,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        if (!this._dimmerEnabled && m.dimmer)
+                            m.dimmer.visible = false;
+                    },
+                });
+            } else {
+                m.dimmer.opacity = this._dimmerEnabled ? 255 : 0;
+                m.dimmer.visible = this._dimmerEnabled;
+            }
         }
     }
 

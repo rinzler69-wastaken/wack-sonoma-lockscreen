@@ -345,6 +345,12 @@ msgstr "Cupertino-systeemacties"
 msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
 msgstr "Toon Pauzestand, Herstarten en Uitschakelen onder de gebruikerslijst in plaats van het energiemenu in Snelle instellingen."
 
+msgid "Dim Background Wallpaper"
+msgstr "Achtergrond dimmen"
+
+msgid "Apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast."
+msgstr "Past een subtiele donkere overlay van 15% toe op de inlogachtergrond voor meer contrast."
+
 msgid "GDM Expansion Documentation"
 msgstr "Documentatie voor GDM-uitbreiding"
 

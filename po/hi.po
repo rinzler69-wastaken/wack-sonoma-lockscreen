@@ -345,6 +345,12 @@ msgstr "क्यूपर्टिनो सिस्टम क्रिया�
 msgid "Show Suspend, Restart and Power Off under the login user list, replacing the Quick Settings power menu."
 msgstr "त्वरित सेटिंग्स पावर मेनू को बदलकर लॉगिन उपयोगकर्ता सूची के नीचे सस्पेंड, पुनरारंभ और पावर बंद दिखाएं।"
 
+msgid "Dim Background Wallpaper"
+msgstr "पृष्ठभूमि वॉलपेपर को मंद करें"
+
+msgid "Apply a subtle 15% darkening overlay to the login wallpaper for enhanced contrast."
+msgstr "बेहतर कंट्रास्ट के लिए लॉगिन वॉलपेपर पर 15% गहरा ओवरले लागू करें।"
+
 msgid "GDM Expansion Documentation"
 msgstr "GDM विस्तार दस्तावेज़"
 
