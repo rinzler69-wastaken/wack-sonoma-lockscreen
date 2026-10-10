@@ -1,3 +1,11 @@
+import Clutter from 'gi://Clutter';
+import St from 'gi://St';
+
+// St.BoxLayout has `vertical` through GNOME 50 and `orientation` from 50; 51 dropped `vertical`.
+export const VERTICAL_BOX = St.BoxLayout.find_property('orientation')
+    ? {orientation: Clutter.Orientation.VERTICAL}
+    : {vertical: true};
+
 export function _log(msg) {
     console.debug(msg);
 }

@@ -2,7 +2,7 @@ import Clutter from 'gi://Clutter';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { _setActorVisible } from './mainUtils.js';
+import { _setActorVisible, VERTICAL_BOX } from './mainUtils.js';
 
 export class LockscreenMessageManager {
     constructor(extension) {
@@ -29,7 +29,7 @@ export class LockscreenMessageManager {
         this.label.x_expand = true;
 
         this.content = new St.BoxLayout({
-            vertical: true,
+            ...VERTICAL_BOX,
             x_align: Clutter.ActorAlign.CENTER,
             y_align: Clutter.ActorAlign.CENTER,
             style_class: 'wack-cupertino-lockscreen-message-content',

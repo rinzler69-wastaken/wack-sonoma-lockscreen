@@ -7,6 +7,7 @@ import St from 'gi://St';
 import Gettext from 'gettext';
 
 import { HINT_TIMEOUT, CROSSFADE_TIME, getPrettyDate } from './constants.js';
+import { VERTICAL_BOX } from './mainUtils.js';
 import { getClockTintColor, getHintTextStyle } from './colorUtils.js';
 
 const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('gnome-shell'));
@@ -29,7 +30,7 @@ export const WackClock = GObject.registerClass(
         _init() {
             super._init({
                 style_class: 'unlock-dialog-clock',
-                vertical: true,
+                ...VERTICAL_BOX,
                 y_align: Clutter.ActorAlign.CENTER,
             });
 
