@@ -2,7 +2,7 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
-import { _log } from './gdmUtils.js';
+import { _log, userListItems } from './gdmUtils.js';
 import { getUserLabelStyle } from '../main/colorUtils.js';
 
 export class GdmAvatarManager {
@@ -49,11 +49,8 @@ export class GdmAvatarManager {
                 'item-added', (_ul, item) => this._setupUserListItem(item),
                 this
             );
-            if (userList._items) {
-                for (const item of userList._items.values()) {
-                    this._setupUserListItem(item);
-                }
-            }
+            for (const item of userListItems(userList))
+                this._setupUserListItem(item);
         }
     }
 
@@ -83,24 +80,22 @@ export class GdmAvatarManager {
         const userList = this._dialog?._userList || this._gdm._dialog?._userList;
         if (userList) {
             userList.disconnectObject(this);
-            if (userList._items) {
-                for (const item of userList._items.values()) {
-                    const avatar = item._userWidget?._avatar;
-                    const user = avatar?._user || item._userWidget?._user;
-                    if (user)
-                        user.disconnectObject(this);
-                    if (avatar) {
-                        if (avatar._wackOrigUpdate) {
-                            avatar.update = avatar._wackOrigUpdate;
-                            delete avatar._wackOrigUpdate;
-                        }
-                        delete avatar._wackUpdating;
-                        delete avatar._wackSettingStyle;
-                        if (avatar._wackHasVibrancy) {
-                            avatar.set_style(null);
-                        }
-                        delete avatar._wackHasVibrancy;
+            for (const item of userListItems(userList)) {
+                const avatar = item._userWidget?._avatar;
+                const user = avatar?._user || item._userWidget?._user;
+                if (user)
+                    user.disconnectObject(this);
+                if (avatar) {
+                    if (avatar._wackOrigUpdate) {
+                        avatar.update = avatar._wackOrigUpdate;
+                        delete avatar._wackOrigUpdate;
                     }
+                    delete avatar._wackUpdating;
+                    delete avatar._wackSettingStyle;
+                    if (avatar._wackHasVibrancy) {
+                        avatar.set_style(null);
+                    }
+                    delete avatar._wackHasVibrancy;
                 }
             }
         }
@@ -263,11 +258,8 @@ export class GdmAvatarManager {
 
     updateUserListVibrancy() {
         const userList = this._dialog?._userList || this._gdm._dialog?._userList;
-        if (!userList?._items) return;
-
-        for (const item of userList._items.values()) {
+        for (const item of userListItems(userList))
             this._setupUserListItem(item);
-        }
     }
 
 

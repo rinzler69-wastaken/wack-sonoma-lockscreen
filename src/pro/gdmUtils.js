@@ -26,6 +26,15 @@ export function _setActorVisible(actor, visible, opacity) {
  * @param {object} meta
  * @returns {string|null}
  */
+// The login dialog's UserList keeps `_items` as an object keyed by user name
+// on GNOME 46 and as a Map on later versions.
+export function userListItems(userList) {
+    const items = userList?._items;
+    if (!items)
+        return [];
+    return items instanceof Map ? [...items.values()] : Object.values(items);
+}
+
 export function resolveGdmAccessibleUri(meta) {
     if (!meta)
         return null;

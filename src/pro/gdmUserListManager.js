@@ -5,6 +5,7 @@ import {
     GDM_USER_STACK_VERTICAL_FRACTION_NO_CSA,
     GDM_USER_LIST_CAP_WITH_CSA,
     GDM_USER_LIST_CAP_NO_CSA,
+    userListItems,
 } from './gdmUtils.js';
 
 export class GdmUserListManager {
@@ -65,15 +66,15 @@ export class GdmUserListManager {
     applyUserListWidths(dialog = null) {
         const targetDialog = dialog || this._gdm._dialog;
         const userList = targetDialog?._userList;
-        if (!userList || userList._items.size === 0) return;
+        if (!userList || userListItems(userList).length === 0) return;
 
         let maxW = 0;
-        for (const item of userList._items.values()) {
+        for (const item of userListItems(userList)) {
             const w = this.getItemTightWidth(item);
             if (w > maxW) maxW = w;
         }
 
-        for (const item of userList._items.values()) {
+        for (const item of userListItems(userList)) {
             item.x_expand = false;
             item.set_width(maxW);
         }
@@ -81,7 +82,7 @@ export class GdmUserListManager {
         const hasCsa = Boolean(this._gdm._powerButtons?.actor?.visible);
         const cap = hasCsa ? GDM_USER_LIST_CAP_WITH_CSA : GDM_USER_LIST_CAP_NO_CSA;
 
-        const items = Array.from(userList._items.values());
+        const items = userListItems(userList);
         if (items.length > cap) {
             let capHeight = 0;
             for (let i = 0; i < cap; i++) {
@@ -122,7 +123,7 @@ export class GdmUserListManager {
             userList.set_height(-1);
             userList.vscrollbar_policy = St.PolicyType.AUTOMATIC;
             userList.hscrollbar_policy = St.PolicyType.AUTOMATIC;
-            for (const item of userList._items.values()) {
+            for (const item of userListItems(userList)) {
                 item.x_expand = true;
                 item.set_width(-1);
             }
