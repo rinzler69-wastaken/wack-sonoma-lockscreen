@@ -19,7 +19,7 @@ export const TIME_LABEL_HEIGHT_FALLBACK = 128; // Fallback natural height for th
 
 // Background blur settings when entering the password prompt
 export const PROMPT_BLUR_RADIUS = 50;
-export const PROMPT_BLUR_BRIGHTNESS = 1.0;
+export const PROMPT_BLUR_BRIGHTNESS = 0.85;
 
 // Cancel button sampling constants (for lockscreen)
 export const CANCEL_BUTTON_HOVER_OVERLAY_ALPHA = 0.12;
