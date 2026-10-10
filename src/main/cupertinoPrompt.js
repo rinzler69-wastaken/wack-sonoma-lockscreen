@@ -4,6 +4,7 @@ import GObject from 'gi://GObject';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 import * as UserWidget from 'resource:///org/gnome/shell/ui/userWidget.js';
+import { VERTICAL_BOX } from './mainUtils.js';
 import { getPromptBlendOverlay, getUserLabelStyle, getHintTextStyle } from './colorUtils.js';
 
 export const WackCupertinoRestPrompt = GObject.registerClass(
@@ -11,7 +12,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
         _init(user, extension) {
             super._init({
                 style_class: 'login-dialog-prompt-layout',
-                vertical: true,
+                ...VERTICAL_BOX,
                 x_expand: true,
                 x_align: Clutter.ActorAlign.CENTER,
                 reactive: false,

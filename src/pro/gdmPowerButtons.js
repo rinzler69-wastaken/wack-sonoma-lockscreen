@@ -5,6 +5,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as SystemActions from 'resource:///org/gnome/shell/misc/systemActions.js';
 import Gettext from 'gettext';
 import { getChromeAlpha, getUserLabelStyle } from '../main/colorUtils.js';
+import { VERTICAL_BOX } from '../main/mainUtils.js';
 
 // Reuse gnome-shell's translated action names.
 const shellDomain = Gettext.domain('gnome-shell');
@@ -87,7 +88,7 @@ export class GdmPowerButtons {
                 style_class: 'wack-gdm-power-label',
                 x_align: Clutter.ActorAlign.CENTER,
             });
-            const content = new St.BoxLayout({ vertical: true });
+            const content = new St.BoxLayout({ ...VERTICAL_BOX });
             content.add_child(icon);
             content.add_child(labelWidget);
 

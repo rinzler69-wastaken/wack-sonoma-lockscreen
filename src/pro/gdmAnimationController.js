@@ -3,6 +3,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { WackCupertinoRestPrompt } from '../main/cupertinoPrompt.js';
 import { _log, _setActorVisible, GDM_CROSSFADE_DURATION } from './gdmUtils.js';
+import { VERTICAL_BOX } from '../main/mainUtils.js';
 
 export class GdmAnimationController {
     constructor(gdmManager) {
@@ -372,7 +373,7 @@ export class GdmAnimationController {
         }
 
         this._gdm._cupertinoRestPromptContainer = new St.BoxLayout({
-            vertical: true,
+            ...VERTICAL_BOX,
             style_class: 'wack-cupertino-rest',
             opacity: 0,
             visible: true,
