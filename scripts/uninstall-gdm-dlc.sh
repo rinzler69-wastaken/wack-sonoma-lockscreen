@@ -105,6 +105,10 @@ fi
 # 4. Remove GDM dconf override
 echo "-> Removing GDM dconf overrides..."
 rm -f "$DCONF_FILE"
+# Remove the GDM dconf profile only if the installer created it.
+if [ "$(head -n 1 /etc/dconf/profile/gdm 2>/dev/null)" = "# Created by the WACK Sonoma Lockscreen GDM DLC installer" ]; then
+    rm -f /etc/dconf/profile/gdm
+fi
 
 # 5. Compile the GDM dconf binary database
 echo "-> Recompiling dconf database..."
