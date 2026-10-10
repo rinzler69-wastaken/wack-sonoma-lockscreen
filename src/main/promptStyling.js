@@ -13,6 +13,7 @@ export class PromptStyling {
         this.lastPromptBounds = null;
         this._lastPromptColor = null;
         this._lastClockAlpha = null;
+        this._entryFocusIdleId = null;
     }
 
     findPromptEntry(actor) {
@@ -100,14 +101,24 @@ export class PromptStyling {
                     return Clutter.EVENT_PROPAGATE;
                 },
                 'key-focus-out', () => {
-                    GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                        if (entry && entry.get_stage && entry.get_stage())
+                    if (this._entryFocusIdleId) {
+                        GLib.source_remove(this._entryFocusIdleId);
+                        this._entryFocusIdleId = null;
+                    }
+                    this._entryFocusIdleId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                        this._entryFocusIdleId = null;
+                        if (entry && !entry._isDestroyed && entry.get_stage && entry.get_stage())
                             this._updatePromptEntryStyle(entry);
                         return GLib.SOURCE_REMOVE;
                     });
                     return Clutter.EVENT_PROPAGATE;
                 },
                 'destroy', () => {
+                    entry._isDestroyed = true;
+                    if (this._entryFocusIdleId) {
+                        GLib.source_remove(this._entryFocusIdleId);
+                        this._entryFocusIdleId = null;
+                    }
                     if (global.stage)
                         global.stage.disconnectObject(entry);
                 },
@@ -122,8 +133,13 @@ export class PromptStyling {
                         return Clutter.EVENT_PROPAGATE;
                     },
                     'key-focus-out', () => {
-                        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                            if (entry && entry.get_stage && entry.get_stage())
+                        if (this._entryFocusIdleId) {
+                            GLib.source_remove(this._entryFocusIdleId);
+                            this._entryFocusIdleId = null;
+                        }
+                        this._entryFocusIdleId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                            this._entryFocusIdleId = null;
+                            if (entry && !entry._isDestroyed && entry.get_stage && entry.get_stage())
                                 this._updatePromptEntryStyle(entry);
                             return GLib.SOURCE_REMOVE;
                         });
@@ -619,6 +635,10 @@ export class PromptStyling {
     }
 
     teardown() {
+        if (this._entryFocusIdleId) {
+            GLib.source_remove(this._entryFocusIdleId);
+            this._entryFocusIdleId = null;
+        }
         this.stopCursorBlink();
         this.clearCupertinoPromptBackground();
         this.clearBottomButtonsBackground();

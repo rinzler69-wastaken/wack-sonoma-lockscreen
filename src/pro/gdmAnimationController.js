@@ -369,22 +369,37 @@ export class GdmAnimationController {
         authPrompt.remove_style_class_name('wack-gdm-legacy-prompt');
 
         if (this._gdm._cupertinoRestPromptContainer) {
-            this._gdm._cupertinoRestPromptContainer.destroy();
+            const container = this._gdm._cupertinoRestPromptContainer;
+            this._gdm._cupertinoRestPromptContainer = null;
+            this._gdm._cupertinoRestPrompt = null;
+            container.destroy();
         }
 
-        this._gdm._cupertinoRestPromptContainer = new St.BoxLayout({
+        const container = new St.BoxLayout({
             ...VERTICAL_BOX,
             style_class: 'wack-cupertino-rest',
             opacity: 0,
             visible: true,
         });
-        this._gdm._cupertinoRestPromptContainer.set_position(-1000, -1000);
-        this._gdm._cupertinoRestPrompt = new WackCupertinoRestPrompt(this._gdm._dialog._user, this._gdm._extension);
+        this._gdm._cupertinoRestPromptContainer = container;
+        container.set_position(-1000, -1000);
+        const restPrompt = new WackCupertinoRestPrompt(this._gdm._dialog._user, this._gdm._extension);
+        this._gdm._cupertinoRestPrompt = restPrompt;
+
+        container.connectObject('destroy', () => {
+            if (this._gdm._cupertinoRestPromptContainer === container)
+                this._gdm._cupertinoRestPromptContainer = null;
+        }, this);
+        restPrompt.connectObject('destroy', () => {
+            if (this._gdm._cupertinoRestPrompt === restPrompt)
+                this._gdm._cupertinoRestPrompt = null;
+        }, this);
+
         if (this._gdm._avatarManager && this._gdm._avatarManager._lastAvatarColor) {
-            this._gdm._cupertinoRestPrompt.updateVisuals(this._gdm._avatarManager._lastAvatarColor);
+            restPrompt.updateVisuals(this._gdm._avatarManager._lastAvatarColor);
         }
-        this._gdm._cupertinoRestPromptContainer.add_child(this._gdm._cupertinoRestPrompt);
-        this._gdm._dialog.add_child(this._gdm._cupertinoRestPromptContainer);
+        container.add_child(restPrompt);
+        this._gdm._dialog.add_child(container);
 
         authPrompt.scale_x = 1;
         authPrompt.scale_y = 1;
@@ -437,9 +452,10 @@ export class GdmAnimationController {
         this._gdm._selectedPromptMode = 'cupertino';
 
         if (this._gdm._cupertinoRestPromptContainer) {
-            this._gdm._cupertinoRestPromptContainer.destroy();
+            const container = this._gdm._cupertinoRestPromptContainer;
             this._gdm._cupertinoRestPromptContainer = null;
             this._gdm._cupertinoRestPrompt = null;
+            container.destroy();
         }
         this._gdm._lastWellH = undefined;
         this._gdm._lastYCenterFraction = undefined;

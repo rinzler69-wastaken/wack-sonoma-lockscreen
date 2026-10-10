@@ -86,16 +86,19 @@ export class GdmAvatarManager {
                 if (user)
                     user.disconnectObject(this);
                 if (avatar) {
-                    if (avatar._wackOrigUpdate) {
-                        avatar.update = avatar._wackOrigUpdate;
-                        delete avatar._wackOrigUpdate;
+                    avatar.disconnectObject(this);
+                    if (!avatar._isDestroyed) {
+                        if (avatar._wackOrigUpdate) {
+                            avatar.update = avatar._wackOrigUpdate;
+                            delete avatar._wackOrigUpdate;
+                        }
+                        delete avatar._wackUpdating;
+                        delete avatar._wackSettingStyle;
+                        if (avatar._wackHasVibrancy) {
+                            avatar.set_style(null);
+                        }
+                        delete avatar._wackHasVibrancy;
                     }
-                    delete avatar._wackUpdating;
-                    delete avatar._wackSettingStyle;
-                    if (avatar._wackHasVibrancy) {
-                        avatar.set_style(null);
-                    }
-                    delete avatar._wackHasVibrancy;
                 }
             }
         }
@@ -112,7 +115,7 @@ export class GdmAvatarManager {
         if (!avatar._wackOrigUpdate) {
             avatar._wackOrigUpdate = avatar.update.bind(avatar);
             avatar.update = () => {
-                if (avatar._wackSettingStyle || avatar._wackUpdating)
+                if (avatar._isDestroyed || avatar._wackSettingStyle || avatar._wackUpdating)
                     return;
                 avatar._wackUpdating = true;
                 avatar._wackOrigUpdate();
@@ -120,6 +123,14 @@ export class GdmAvatarManager {
 
                 this._applyStyleToUserListItemAvatar(avatar);
             };
+
+            avatar.connectObject('destroy', () => {
+                avatar._isDestroyed = true;
+                delete avatar._wackOrigUpdate;
+                delete avatar._wackUpdating;
+                delete avatar._wackSettingStyle;
+                delete avatar._wackHasVibrancy;
+            }, this);
 
             const user = avatar._user || item?._userWidget?._user;
             if (user && !user.is_loaded) {
@@ -140,7 +151,7 @@ export class GdmAvatarManager {
     }
 
     _applyStyleToUserListItemAvatar(avatar) {
-        if (!avatar || avatar._wackSettingStyle) return;
+        if (!avatar || avatar._isDestroyed || avatar._wackSettingStyle) return;
 
         // Never touch picture avatars! GNOME Shell sets their photo via background-image on avatar.style.
         if (this._hasImageAvatar(avatar)) {

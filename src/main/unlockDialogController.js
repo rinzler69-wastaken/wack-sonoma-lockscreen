@@ -268,9 +268,14 @@ export class UnlockDialogController {
             );
         }
 
+        dialog.connectObject('destroy', () => {
+            this.uninstall(dialog);
+        }, this);
+
         // Core transition logic intercept
         this.origSetTransitionProgress = dialog._setTransitionProgress.bind(dialog);
         dialog._setTransitionProgress = (progress) => {
+            if (!this.origSetTransitionProgress) return;
             this.origSetTransitionProgress(progress);
 
             const isNowActive = this._extension._promptActive;
@@ -334,41 +339,45 @@ export class UnlockDialogController {
                 const authPrompt = dialog._authPrompt ?? dialog._promptBox?._authPrompt;
                 const mainBox = authPrompt?._mainBox;
                 const cupertinoMgr = this._extension._cupertinoPromptManager;
+                const restPromptContainer = cupertinoMgr?.restPromptContainer;
+                const restPrompt = cupertinoMgr?.restPrompt;
 
-                if (cupertinoMgr?.restPromptContainer) {
+                if (restPromptContainer && !restPromptContainer._isDestroyed) {
                     if (hasNotifs && progress === 0) {
-                        cupertinoMgr.restPromptContainer.opacity = 0;
-                        cupertinoMgr.restPromptContainer.visible = false;
+                        restPromptContainer.opacity = 0;
+                        restPromptContainer.visible = false;
                     } else {
                         const targetOpacity = hasNotifs ? Math.round(255 * progress) : 255;
-                        cupertinoMgr.restPromptContainer.opacity = targetOpacity;
-                        cupertinoMgr.restPromptContainer.visible = targetOpacity > 0;
+                        restPromptContainer.opacity = targetOpacity;
+                        restPromptContainer.visible = targetOpacity > 0;
                         const subOpacity = Math.round(255 * (1 - progress));
-                        if (cupertinoMgr.restPrompt?._hintBoxWrapper) {
-                            cupertinoMgr.restPrompt._hintBoxWrapper.opacity = subOpacity;
+                        if (restPrompt && !restPrompt._isDestroyed) {
+                            if (restPrompt._hintBoxWrapper) {
+                                restPrompt._hintBoxWrapper.opacity = subOpacity;
+                            }
+                            const nameLabel = restPrompt._userWell?.get_child()?._label;
+                            if (nameLabel) nameLabel.opacity = subOpacity;
                         }
-                        const nameLabel = cupertinoMgr.restPrompt?._userWell?.get_child()?._label;
-                        if (nameLabel) nameLabel.opacity = subOpacity;
                     }
                 }
 
-                if (cupertinoMgr?.restPrompt?._avatarButton) {
+                if (restPrompt && !restPrompt._isDestroyed && restPrompt._avatarButton) {
                     const shouldBeClickable = progress > 0;
                     if (shouldBeClickable) {
-                        cupertinoMgr.restPrompt._avatarButton.add_style_class_name('wack-avatar-clickable');
+                        restPrompt._avatarButton.add_style_class_name('wack-avatar-clickable');
                     } else {
-                        cupertinoMgr.restPrompt._avatarButton.remove_style_class_name('wack-avatar-clickable');
+                        restPrompt._avatarButton.remove_style_class_name('wack-avatar-clickable');
                     }
-                    cupertinoMgr.restPrompt._avatarButton.reactive = shouldBeClickable;
-                    if (!shouldBeClickable) cupertinoMgr.restPrompt._avatarButton.hover = false;
+                    restPrompt._avatarButton.reactive = shouldBeClickable;
+                    if (!shouldBeClickable) restPrompt._avatarButton.hover = false;
                 }
 
-                if (this._extension._promptActor) {
+                if (this._extension._promptActor && !this._extension._promptActor._isDestroyed && this._extension._promptActor.get_stage && this._extension._promptActor.get_stage()) {
                     this._extension._promptActor.set({ opacity: Math.round(255 * progress), scale_x: 1, scale_y: 1, translation_y: 0 });
                     this._extension._promptActor.visible = progress > 0;
                 }
 
-                if (mainBox) mainBox.opacity = Math.round(255 * progress);
+                if (mainBox && !mainBox._isDestroyed && mainBox.get_stage && mainBox.get_stage()) mainBox.opacity = Math.round(255 * progress);
 
                 const messageActor = this._extension._getLockscreenMessageActor();
                 const messageManager = this._extension._messageManager;
@@ -450,6 +459,10 @@ export class UnlockDialogController {
 
         if (dialog?._notificationsBox) {
             dialog._notificationsBox.disconnectObject(this);
+        }
+
+        if (dialog) {
+            dialog.disconnectObject(this);
         }
 
         if (this.finishTimeoutId) {
