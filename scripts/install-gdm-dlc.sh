@@ -9,6 +9,7 @@ UUID="wack-lockscreen-clock@rinzler69-wastaken.github.com"
 TARGET_DIR="/usr/share/gnome-shell/extensions/$UUID"
 DCONF_GDM_DIR="/etc/dconf/db/gdm.d"
 DCONF_FILE="$DCONF_GDM_DIR/99-wack-lockscreen"
+DCONF_PROFILE_MARK="# Created by the WACK Sonoma Lockscreen GDM DLC installer"
 
 # Determine user home and local extension directories globally
 REAL_HOME="${SUDO_USER_HOME:-${HOME}}"
@@ -61,6 +62,43 @@ if [ "${1:-}" = "--force" ]; then
     FORCE=true
 fi
 
+# GDM only reads the gdm system-db if its dconf profile names it. The
+# profile packaged by some distros (Ubuntu 24.04 and 26.04's gdm3) lists only
+# user-db and a file-db, and some images ship none; then the override is
+# silently ignored. /etc/dconf/profile takes precedence over /usr/share, so
+# write our own there, based on the packaged one, only when it lacks the line.
+ensure_gdm_dconf_profile() {
+    GDM_PROFILE_ETC=/etc/dconf/profile/gdm
+    GDM_PROFILE_USR=/usr/share/dconf/profile/gdm
+    if [ -f "$GDM_PROFILE_ETC" ]; then
+        GDM_PROFILE_BASE="$GDM_PROFILE_ETC"
+    elif [ -f "$GDM_PROFILE_USR" ]; then
+        GDM_PROFILE_BASE="$GDM_PROFILE_USR"
+    else
+        GDM_PROFILE_BASE=""
+    fi
+
+    if [ -n "$GDM_PROFILE_BASE" ] && grep -q '^system-db:gdm$' "$GDM_PROFILE_BASE"; then
+        :
+    elif [ "$GDM_PROFILE_BASE" = "$GDM_PROFILE_ETC" ]; then
+        echo "Warning: $GDM_PROFILE_ETC has no 'system-db:gdm' line, so GDM will ignore the override."
+        echo "         Add that line after 'user-db:user' yourself; the installer does not edit it."
+    else
+        echo "-> GDM dconf profile has no 'system-db:gdm'; writing $GDM_PROFILE_ETC..."
+        mkdir -p /etc/dconf/profile
+        {
+            echo "$DCONF_PROFILE_MARK"
+            if [ -n "$GDM_PROFILE_BASE" ]; then
+                awk '{ print } /^user-db:/ && !done { print "system-db:gdm"; done = 1 }
+                     END { if (!done) print "system-db:gdm" }' "$GDM_PROFILE_BASE"
+            else
+                printf '%s\n' "user-db:user" "system-db:gdm" "file-db:/usr/share/gdm/greeter-dconf-defaults"
+            fi
+        } > "$GDM_PROFILE_ETC"
+        chmod 644 "$GDM_PROFILE_ETC"
+    fi
+}
+
 if [ "$FORCE" = false ] && { [ -f "$TARGET_DIR/src/pro/pro.js" ] || [ -f "$TARGET_DIR/pro.js" ]; } && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
     echo "-> Verifying and repairing system-wide permissions and ownership..."
     chown -R root:root "$TARGET_DIR"
@@ -72,6 +110,7 @@ if [ "$FORCE" = false ] && { [ -f "$TARGET_DIR/src/pro/pro.js" ] || [ -f "$TARGE
     fi
     chown root:root "$DCONF_FILE"
     chmod 644 "$DCONF_FILE"
+    ensure_gdm_dconf_profile
     dconf update
     echo ""
     echo "✨ GDM Expansion is already installed on this system (permissions verified)."
@@ -224,6 +263,9 @@ find "$TARGET_DIR" -type f -exec chmod 644 {} +
 if [ -d "$TARGET_DIR/scripts" ]; then
     find "$TARGET_DIR/scripts" -type f -name "*.sh" -exec chmod 755 {} + || true
 fi
+
+# 7a. Make sure GDM's dconf profile reads the gdm system-db.
+ensure_gdm_dconf_profile
 
 # 7. Configure GDM dconf system-db overrides
 echo "-> Configuring GDM dconf system-db overrides..."
