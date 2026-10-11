@@ -313,6 +313,18 @@
     border: 1px solid rgba(255, 255, 255, 0.8) !important;
 }
 
+/* GNOME's stylesheet pads the peek-password icon by 2.5em so it stays clear of
+   the arrow button that overlays the end of the entry. Shell themes that
+   replace GNOME's stylesheet (ChromaLeon, User Theme themes) can lack the rule,
+   which leaves the icon under the arrow. Same value as GNOME's. */
+.unlock-dialog .login-dialog-prompt-entry StIcon.peek-password:ltr {
+    padding-right: 2.5em;
+}
+
+.unlock-dialog .login-dialog-prompt-entry StIcon.peek-password:rtl {
+    padding-left: 2.5em;
+}
+
 /* Tighten vertical spacing inside the rest-prompt widget */
 .wack-cupertino-rest .login-dialog-prompt-layout {
     spacing: 0 !important;
