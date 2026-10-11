@@ -22,7 +22,7 @@ import { WackLayout } from './src/main/layoutManager.js';
 import { NotificationManager } from './src/main/notificationManager.js';
 import {
     PROMPT_BLUR_RADIUS,
-    BACKGROUND_BLURRING_BRIGHTNESS,
+    PROMPT_BLUR_BRIGHTNESS,
     CUPERTINO_UNLOCK_FADE_DURATION,
     CROSSFADE_SPEED_SLOW,
     CROSSFADE_SPEED_FAST,
@@ -315,7 +315,7 @@ export default class WackLockscreenClockExtension extends Extension {
             const isCupertino = this._lockscreenMode === 'cupertino';
             const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
             const targetRadius = isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor * progress;
-            const targetBrightness = isCupertino ? 1.0 : 1.0 - (1.0 - BACKGROUND_BLURRING_BRIGHTNESS) * progress;
+            const targetBrightness = isCupertino ? 1.0 : 1.0 - (1.0 - PROMPT_BLUR_BRIGHTNESS) * progress;
 
             for (const widget of this._dialog?._backgroundGroup ?? []) {
                 const effect = widget.get_effect('blur');
@@ -477,18 +477,17 @@ export default class WackLockscreenClockExtension extends Extension {
         const shadingType = this._bgSettings.get_enum('color-shading-type');
 
         let wellH = 0;
-        const restPrompt = this._cupertinoPromptManager?.restPrompt;
-        const validRestPrompt = (restPrompt && !restPrompt._isDestroyed) ? restPrompt : null;
-        if (validRestPrompt?._userWell) {
-            const [, , , hSize] = validRestPrompt._userWell.get_preferred_size();
+        if (this._cupertinoPromptManager?.restPrompt?._userWell) {
+            const [, , , hSize] = this._cupertinoPromptManager.restPrompt._userWell.get_preferred_size();
             wellH = hSize > 0 ? hSize : 0;
         }
 
         let yCenterFraction = null;
         let promptBounds = null;
         const authPrompt = this._dialog?._authPrompt ?? this._dialog?._promptBox?._authPrompt;
-        const entry = this._findPromptEntry(authPrompt) ?? validRestPrompt?._hintBox;
-        if (entry && entry.get_stage && entry.get_stage()) {
+        const restPrompt = this._cupertinoPromptManager?.restPrompt;
+        const entry = this._findPromptEntry(authPrompt) ?? restPrompt?._hintBox;
+        if (entry) {
             const [xTrans, yTrans] = entry.get_transformed_position();
             const wTrans = entry.get_width() || 0;
             const hTrans = entry.get_height() || 0;
@@ -531,9 +530,9 @@ export default class WackLockscreenClockExtension extends Extension {
         }
 
         let avatarBounds = null;
-        const avatarButton = validRestPrompt?._avatarButton
+        const avatarButton = restPrompt?._avatarButton
             ?? authPrompt?._userWell?.get_child()?._avatarButton;
-        if (avatarButton && avatarButton.get_stage && avatarButton.get_stage()) {
+        if (avatarButton && avatarButton.get_stage()) {
             const [axTrans, ayTrans] = avatarButton.get_transformed_position();
             const awTrans = avatarButton.get_width() || 56;
             const ahTrans = avatarButton.get_height() || 56;
@@ -666,10 +665,10 @@ export default class WackLockscreenClockExtension extends Extension {
             this._crossSessionManager.setClockAlphaAndPromptColor(alpha, promptColor, inactiveAlpha, inactivePromptColor);
         // </GDM_EXCLUDE>
 
-        if (validRestPrompt?.updateVisuals) {
-            validRestPrompt.updateVisuals(promptColor, alpha);
-        } else if (validRestPrompt?.updateAvatarVibrancy && promptColor?.avatarColor) {
-            validRestPrompt.updateAvatarVibrancy(promptColor.avatarColor);
+        if (this._cupertinoPromptManager?.restPrompt?.updateVisuals) {
+            this._cupertinoPromptManager.restPrompt.updateVisuals(promptColor, alpha);
+        } else if (this._cupertinoPromptManager?.restPrompt?.updateAvatarVibrancy && promptColor?.avatarColor) {
+            this._cupertinoPromptManager.restPrompt.updateAvatarVibrancy(promptColor.avatarColor);
         }
 
         if (a11yButton && promptColor)

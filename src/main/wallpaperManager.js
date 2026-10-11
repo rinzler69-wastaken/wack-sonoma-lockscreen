@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import St from 'gi://St';
 import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { PROMPT_BLUR_RADIUS, BACKGROUND_BLURRING_BRIGHTNESS } from './constants.js';
+import { PROMPT_BLUR_RADIUS, PROMPT_BLUR_BRIGHTNESS } from './constants.js';
 import { resolveSlideshowXml } from './wallpaperUtils.js';
 
 export class WallpaperManager {
@@ -103,7 +103,7 @@ export class WallpaperManager {
             const isCupertino = this._extension._lockscreenMode === 'cupertino';
             this.setCustomWallpaperBlur(
                 isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor * progress,
-                isCupertino ? 1.0 : 1.0 - (1.0 - BACKGROUND_BLURRING_BRIGHTNESS) * progress
+                isCupertino ? 1.0 : 1.0 - (1.0 - PROMPT_BLUR_BRIGHTNESS) * progress
             );
         }
 

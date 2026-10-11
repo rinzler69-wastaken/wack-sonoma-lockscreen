@@ -13,7 +13,6 @@ export class PromptStyling {
         this.lastPromptBounds = null;
         this._lastPromptColor = null;
         this._lastClockAlpha = null;
-        this._entryFocusIdleId = null;
     }
 
     findPromptEntry(actor) {
@@ -101,24 +100,14 @@ export class PromptStyling {
                     return Clutter.EVENT_PROPAGATE;
                 },
                 'key-focus-out', () => {
-                    if (this._entryFocusIdleId) {
-                        GLib.source_remove(this._entryFocusIdleId);
-                        this._entryFocusIdleId = null;
-                    }
-                    this._entryFocusIdleId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                        this._entryFocusIdleId = null;
-                        if (entry && !entry._isDestroyed && entry.get_stage && entry.get_stage())
+                    GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                        if (entry && entry.get_stage && entry.get_stage())
                             this._updatePromptEntryStyle(entry);
                         return GLib.SOURCE_REMOVE;
                     });
                     return Clutter.EVENT_PROPAGATE;
                 },
                 'destroy', () => {
-                    entry._isDestroyed = true;
-                    if (this._entryFocusIdleId) {
-                        GLib.source_remove(this._entryFocusIdleId);
-                        this._entryFocusIdleId = null;
-                    }
                     if (global.stage)
                         global.stage.disconnectObject(entry);
                 },
@@ -133,13 +122,8 @@ export class PromptStyling {
                         return Clutter.EVENT_PROPAGATE;
                     },
                     'key-focus-out', () => {
-                        if (this._entryFocusIdleId) {
-                            GLib.source_remove(this._entryFocusIdleId);
-                            this._entryFocusIdleId = null;
-                        }
-                        this._entryFocusIdleId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                            this._entryFocusIdleId = null;
-                            if (entry && !entry._isDestroyed && entry.get_stage && entry.get_stage())
+                        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                            if (entry && entry.get_stage && entry.get_stage())
                                 this._updatePromptEntryStyle(entry);
                             return GLib.SOURCE_REMOVE;
                         });
@@ -220,7 +204,7 @@ export class PromptStyling {
                     shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
             } else {
                 const sAlpha = color.shadowAlpha !== undefined ? (color.shadowAlpha * (1.0 - veilAlpha)).toFixed(3) : '0';
-                shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${sAlpha}), inset 0 0 200px rgba(0, 0, 0, ${veilAlpha.toFixed(3)}) !important;`;
+                shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${sAlpha}), inset 0 0 0 999px rgba(0, 0, 0, ${veilAlpha.toFixed(3)}) !important;`;
             }
             bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; border: none !important;`;
         } else {
@@ -635,10 +619,6 @@ export class PromptStyling {
     }
 
     teardown() {
-        if (this._entryFocusIdleId) {
-            GLib.source_remove(this._entryFocusIdleId);
-            this._entryFocusIdleId = null;
-        }
         this.stopCursorBlink();
         this.clearCupertinoPromptBackground();
         this.clearBottomButtonsBackground();

@@ -487,7 +487,7 @@ export async function getWallpaperPromptColor(params) {
             const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
             sampledA11yColor = applyPromptVisualState(
                 raw,
-                resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
                 { preblend: true }
             );
         }
@@ -496,7 +496,7 @@ export async function getWallpaperPromptColor(params) {
             const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
             sampledSessionColor = applyPromptVisualState(
                 raw,
-                resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
                 { preblend: true }
             );
         }
@@ -505,7 +505,7 @@ export async function getWallpaperPromptColor(params) {
             const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
             sampledSuspendColor = applyPromptVisualState(
                 raw,
-                resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
                 { preblend: true }
             );
         }
@@ -514,7 +514,7 @@ export async function getWallpaperPromptColor(params) {
             const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
             sampledRestartColor = applyPromptVisualState(
                 raw,
-                resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
                 { preblend: true }
             );
         }
@@ -523,7 +523,7 @@ export async function getWallpaperPromptColor(params) {
             const raw = sampledPrimary || { r: 40, g: 40, b: 40 };
             sampledPowerOffColor = applyPromptVisualState(
                 raw,
-                resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
+                promptVisualState ?? resolvePromptVisualState(raw, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA),
                 { preblend: true }
             );
         }

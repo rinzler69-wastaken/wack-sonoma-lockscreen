@@ -377,22 +377,24 @@ export function ensurePromptVisualState(color, whiteBlendAlpha = CUPERTINO_PROMP
  * @param {{preblend?: boolean}} [options]
  */
 export function applyPromptVisualState(sourceColor, visualState, options = {}) {
-    const overlay = visualState.overlay;
-    const isSameColor = sourceColor.r === visualState.sourceColor?.r &&
-        sourceColor.g === visualState.sourceColor?.g &&
-        sourceColor.b === visualState.sourceColor?.b;
+    const overlay = visualState?.overlay;
+    const isSameColor = sourceColor.r === visualState?.sourceColor?.r &&
+        sourceColor.g === visualState?.sourceColor?.g &&
+        sourceColor.b === visualState?.sourceColor?.b;
 
     let blended;
-    if (isSameColor && visualState.finalColor) {
+    if (isSameColor && visualState?.finalColor) {
         blended = visualState.finalColor;
-    } else if (visualState.isBrightHue) {
+    } else if (visualState?.isBrightHue) {
         blended = getPromptDarkenedHueColor(sourceColor);
-    } else {
+    } else if (overlay) {
         blended = blendOverOpaque(
             sourceColor,
             { r: overlay.r, g: overlay.g, b: overlay.b },
             overlay.alpha
         );
+    } else {
+        blended = sourceColor;
     }
     const display = options.preblend ? blended : sourceColor;
 
@@ -406,15 +408,15 @@ export function applyPromptVisualState(sourceColor, visualState, options = {}) {
         noise: visualState?.noise ?? sourceColor?.noise ?? 0.0,
         rgba: `rgba(${display.r}, ${display.g}, ${display.b}, 1.0)`,
         hex: rgbToHex(display.r, display.g, display.b),
-        overlayR: overlay.r,
-        overlayG: overlay.g,
-        overlayB: overlay.b,
-        overlayAlpha: overlay.alpha,
-        overlayRgba: overlay.rgba,
-        shadowAlpha: visualState.shadowAlpha,
-        useInverse: visualState.useInverse,
-        isBrightSample: visualState.isBrightSample,
-        isBrightHue: visualState.isBrightHue,
+        overlayR: overlay?.r ?? 255,
+        overlayG: overlay?.g ?? 255,
+        overlayB: overlay?.b ?? 255,
+        overlayAlpha: overlay?.alpha ?? 0.18,
+        overlayRgba: overlay?.rgba ?? 'rgba(255, 255, 255, 0.1800)',
+        shadowAlpha: visualState?.shadowAlpha,
+        useInverse: visualState?.useInverse ?? false,
+        isBrightSample: visualState?.isBrightSample ?? false,
+        isBrightHue: visualState?.isBrightHue ?? false,
         visualState,
     };
 }
@@ -706,7 +708,7 @@ export function getPromptDimVeilAlpha(visualStateOrLightness) {
  * @param {boolean} [useInverse=false]
  * @returns {{style: string, isInverseClass: boolean}}
  */
-export function getNotifCardBackground(color, useInverse = false, progress = 0) {
+export function getNotifCardBackground(color, useInverse = false) {
     if (!color) {
         return { style: '', isInverseClass: useInverse };
     }
@@ -721,9 +723,6 @@ export function getNotifCardBackground(color, useInverse = false, progress = 0) 
     const noise = vs.noise ?? 0.0;
     const clampedL = clamp01(pL);
 
-    // Crossfade factor: t = 1 at progress = 0 (full inverse), t = 0 at progress = 1 (inverse crossfaded out)
-    const t = Math.max(0, Math.min(1, 1 - progress));
-
     if (isInv && isBrightHue && darkened && darkened.r != null) {
         let alpha = 0.58 + 0.12 * clampedL;
         if (noise > 0.0) {
@@ -731,37 +730,22 @@ export function getNotifCardBackground(color, useInverse = false, progress = 0) 
         }
         alpha = clamp01(Math.max(0.55, Math.min(0.70, alpha)));
 
-        // Non-inverse card background in stylesheet.css is rgba(255, 255, 255, 0.1125)
-        const baseR = 255, baseG = 255, baseB = 255, baseA = 0.1125;
-        const curR = Math.round(baseR + (darkened.r - baseR) * t);
-        const curG = Math.round(baseG + (darkened.g - baseG) * t);
-        const curB = Math.round(baseB + (darkened.b - baseB) * t);
-        const curA = baseA + (alpha - baseA) * t;
-
         return {
-            style: `background-color: rgba(${curR}, ${curG}, ${curB}, ${curA.toFixed(3)}) !important;`,
+            style: `background-color: rgba(${darkened.r}, ${darkened.g}, ${darkened.b}, ${alpha.toFixed(3)}) !important;`,
             isInverseClass: false,
         };
     } else if (isInv) {
         let blendAlpha = vs.overlay?.alpha ?? vs.blendAlpha;
         if (blendAlpha == null) {
-            const ratio = clamp01((clampedL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) / (1.0 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD));
-            blendAlpha = PROMPT_INVERSE_ALPHA_CEILING * ratio;
+            const t = clamp01((clampedL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) / (1.0 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD));
+            blendAlpha = PROMPT_INVERSE_ALPHA_CEILING * t;
         }
         let darkAlpha = Math.max(0.04, Math.min(PROMPT_INVERSE_ALPHA_CEILING, blendAlpha));
         if (noise > 0.0) {
             darkAlpha += Math.min(0.02, noise * 1.0);
         }
-
-        // Neutral inverse (rgba(0, 0, 0, darkAlpha)) crossfades to non-inverse
-        const baseR = 255, baseG = 255, baseB = 255, baseA = 0.1125;
-        const curR = Math.round(baseR + (0 - baseR) * t);
-        const curG = Math.round(baseG + (0 - baseG) * t);
-        const curB = Math.round(baseB + (0 - baseB) * t);
-        const curA = baseA + (darkAlpha - baseA) * t;
-
         return {
-            style: `background-color: rgba(${curR}, ${curG}, ${curB}, ${curA.toFixed(3)}) !important;`,
+            style: `background-color: rgba(0, 0, 0, ${darkAlpha.toFixed(3)}) !important;`,
             isInverseClass: false,
         };
     }

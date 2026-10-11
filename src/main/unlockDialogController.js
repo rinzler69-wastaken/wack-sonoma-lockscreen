@@ -4,7 +4,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {
     PROMPT_BLUR_RADIUS,
-    BACKGROUND_BLURRING_BRIGHTNESS,
+    PROMPT_BLUR_BRIGHTNESS,
     NOTIF_BLUR_RADIUS,
     NOTIF_BLUR_NAME,
     CUPERTINO_UNLOCK_PANEL_FADE,
@@ -268,14 +268,9 @@ export class UnlockDialogController {
             );
         }
 
-        dialog.connectObject('destroy', () => {
-            this.uninstall(dialog);
-        }, this);
-
         // Core transition logic intercept
         this.origSetTransitionProgress = dialog._setTransitionProgress.bind(dialog);
         dialog._setTransitionProgress = (progress) => {
-            if (!this.origSetTransitionProgress) return;
             this.origSetTransitionProgress(progress);
 
             const isNowActive = this._extension._promptActive;
@@ -298,7 +293,7 @@ export class UnlockDialogController {
             const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
             const isCupertino = this._extension._lockscreenMode === 'cupertino';
             const globalBlur = isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor * progress;
-            const globalBrightness = isCupertino ? 1.0 : 1.0 - (1.0 - BACKGROUND_BLURRING_BRIGHTNESS) * progress;
+            const globalBrightness = isCupertino ? 1.0 : 1.0 - (1.0 - PROMPT_BLUR_BRIGHTNESS) * progress;
 
             for (const widget of dialog._backgroundGroup ?? []) {
                 const effect = widget.get_effect('blur');
@@ -328,10 +323,6 @@ export class UnlockDialogController {
                 }
             }
 
-            if (!isCupertino && this._extension._notifManager) {
-                this._extension._notifManager.updateCardTransition(progress);
-            }
-
             const notifOpacity = hasNotifs ? Math.round(255 * (1 - progress)) : 0;
             const hintContainer = this._extension._clockLayoutManager?.hintContainer;
 
@@ -343,45 +334,41 @@ export class UnlockDialogController {
                 const authPrompt = dialog._authPrompt ?? dialog._promptBox?._authPrompt;
                 const mainBox = authPrompt?._mainBox;
                 const cupertinoMgr = this._extension._cupertinoPromptManager;
-                const restPromptContainer = cupertinoMgr?.restPromptContainer;
-                const restPrompt = cupertinoMgr?.restPrompt;
 
-                if (restPromptContainer && !restPromptContainer._isDestroyed) {
+                if (cupertinoMgr?.restPromptContainer) {
                     if (hasNotifs && progress === 0) {
-                        restPromptContainer.opacity = 0;
-                        restPromptContainer.visible = false;
+                        cupertinoMgr.restPromptContainer.opacity = 0;
+                        cupertinoMgr.restPromptContainer.visible = false;
                     } else {
                         const targetOpacity = hasNotifs ? Math.round(255 * progress) : 255;
-                        restPromptContainer.opacity = targetOpacity;
-                        restPromptContainer.visible = targetOpacity > 0;
+                        cupertinoMgr.restPromptContainer.opacity = targetOpacity;
+                        cupertinoMgr.restPromptContainer.visible = targetOpacity > 0;
                         const subOpacity = Math.round(255 * (1 - progress));
-                        if (restPrompt && !restPrompt._isDestroyed) {
-                            if (restPrompt._hintBoxWrapper) {
-                                restPrompt._hintBoxWrapper.opacity = subOpacity;
-                            }
-                            const nameLabel = restPrompt._userWell?.get_child()?._label;
-                            if (nameLabel) nameLabel.opacity = subOpacity;
+                        if (cupertinoMgr.restPrompt?._hintBoxWrapper) {
+                            cupertinoMgr.restPrompt._hintBoxWrapper.opacity = subOpacity;
                         }
+                        const nameLabel = cupertinoMgr.restPrompt?._userWell?.get_child()?._label;
+                        if (nameLabel) nameLabel.opacity = subOpacity;
                     }
                 }
 
-                if (restPrompt && !restPrompt._isDestroyed && restPrompt._avatarButton) {
+                if (cupertinoMgr?.restPrompt?._avatarButton) {
                     const shouldBeClickable = progress > 0;
                     if (shouldBeClickable) {
-                        restPrompt._avatarButton.add_style_class_name('wack-avatar-clickable');
+                        cupertinoMgr.restPrompt._avatarButton.add_style_class_name('wack-avatar-clickable');
                     } else {
-                        restPrompt._avatarButton.remove_style_class_name('wack-avatar-clickable');
+                        cupertinoMgr.restPrompt._avatarButton.remove_style_class_name('wack-avatar-clickable');
                     }
-                    restPrompt._avatarButton.reactive = shouldBeClickable;
-                    if (!shouldBeClickable) restPrompt._avatarButton.hover = false;
+                    cupertinoMgr.restPrompt._avatarButton.reactive = shouldBeClickable;
+                    if (!shouldBeClickable) cupertinoMgr.restPrompt._avatarButton.hover = false;
                 }
 
-                if (this._extension._promptActor && !this._extension._promptActor._isDestroyed && this._extension._promptActor.get_stage && this._extension._promptActor.get_stage()) {
+                if (this._extension._promptActor) {
                     this._extension._promptActor.set({ opacity: Math.round(255 * progress), scale_x: 1, scale_y: 1, translation_y: 0 });
                     this._extension._promptActor.visible = progress > 0;
                 }
 
-                if (mainBox && !mainBox._isDestroyed && mainBox.get_stage && mainBox.get_stage()) mainBox.opacity = Math.round(255 * progress);
+                if (mainBox) mainBox.opacity = Math.round(255 * progress);
 
                 const messageActor = this._extension._getLockscreenMessageActor();
                 const messageManager = this._extension._messageManager;
@@ -463,10 +450,6 @@ export class UnlockDialogController {
 
         if (dialog?._notificationsBox) {
             dialog._notificationsBox.disconnectObject(this);
-        }
-
-        if (dialog) {
-            dialog.disconnectObject(this);
         }
 
         if (this.finishTimeoutId) {

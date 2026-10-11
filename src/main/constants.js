@@ -19,8 +19,7 @@ export const TIME_LABEL_HEIGHT_FALLBACK = 128; // Fallback natural height for th
 
 // Background blur settings when entering the password prompt
 export const PROMPT_BLUR_RADIUS = 50;
-export const PROMPT_BLUR_BRIGHTNESS = 1.0;
-export const BACKGROUND_BLURRING_BRIGHTNESS = 0.85;
+export const PROMPT_BLUR_BRIGHTNESS = 0.85;
 
 // Cancel button sampling constants (for lockscreen)
 export const CANCEL_BUTTON_HOVER_OVERLAY_ALPHA = 0.12;
@@ -37,14 +36,14 @@ export const AVATAR_BUTTON_X_OFFSET = 0; // px
 export const AVATAR_BUTTON_Y_OFFSET = 0; // px
 
 // Accessibility button sampling constants (for lockscreen)
-export const A11Y_BUTTON_WIDTH = 34; // px
-export const A11Y_BUTTON_HEIGHT = 34; // px
+export const A11Y_BUTTON_WIDTH = 38; // px
+export const A11Y_BUTTON_HEIGHT = 38; // px
 export const A11Y_BUTTON_X_OFFSET = 0; // px
 export const A11Y_BUTTON_Y_OFFSET = 0; // px
 
 // Desktop Environment / Session select button sampling constants (for lockscreen)
-export const SESSION_BUTTON_WIDTH = 34; // px
-export const SESSION_BUTTON_HEIGHT = 34; // px
+export const SESSION_BUTTON_WIDTH = 38; // px
+export const SESSION_BUTTON_HEIGHT = 38; // px
 export const SESSION_BUTTON_X_OFFSET = 0; // px
 export const SESSION_BUTTON_Y_OFFSET = 0; // px
 

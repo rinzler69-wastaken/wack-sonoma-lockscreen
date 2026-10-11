@@ -15,7 +15,7 @@ export function _logError(msg) {
 }
 
 export function _setActorVisible(actor, visible, opacity) {
-    if (!actor || actor._isDestroyed)
+    if (!actor)
         return;
 
     actor.visible = visible;

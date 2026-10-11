@@ -54,12 +54,6 @@ export class CupertinoPromptManager {
         });
 
         this.restPrompt = new WackCupertinoRestPrompt(this._extension._dialog._user, this._extension);
-        this.restPrompt.connectObject('destroy', () => {
-            this.restPrompt = null;
-        }, this);
-        this.restPromptContainer.connectObject('destroy', () => {
-            this.restPromptContainer = null;
-        }, this);
         if (this._extension._lastPromptColor || this._extension._lastClockAlpha != null) {
             this.restPrompt.updateVisuals(this._extension._lastPromptColor, this._extension._lastClockAlpha);
         }
@@ -92,7 +86,7 @@ export class CupertinoPromptManager {
 
         const clockManager = this._extension._clockLayoutManager;
         const wackActor = clockManager.overflowActive ? clockManager.overflowLabel : clockManager.hint;
-        const cupertinoActor = (this._extension._lockscreenMode === 'cupertino' && this.restPrompt && !this.restPrompt._isDestroyed)
+        const cupertinoActor = (this._extension._lockscreenMode === 'cupertino' && this.restPrompt)
             ? this.restPrompt._hintBox : null;
 
         this.showingInhibitHint = true;
@@ -121,7 +115,7 @@ export class CupertinoPromptManager {
             }
         }
 
-        if (this.restPrompt && !this.restPrompt._isDestroyed) {
+        if (this.restPrompt) {
             if (cupertinoActor) {
                 cupertinoActor.opacity = 255;
                 cupertinoActor.visible = true;
@@ -277,10 +271,9 @@ export class CupertinoPromptManager {
         const hasNotifs = this._extension._notifManager.hasVisibleNotifs();
 
         if (this.restPromptContainer) {
-            const restPrompt = this.restPrompt;
-            if (restPrompt && !restPrompt._isDestroyed && restPrompt._avatarButton) {
-                restPrompt._avatarButton.reactive = this._extension._promptActive;
-                if (!this._extension._promptActive) restPrompt._avatarButton.hover = false;
+            if (this.restPrompt?._avatarButton) {
+                this.restPrompt._avatarButton.reactive = this._extension._promptActive;
+                if (!this._extension._promptActive) this.restPrompt._avatarButton.hover = false;
             }
 
             const count = this._extension._notifManager.getNativeNotifCount();
@@ -310,10 +303,10 @@ export class CupertinoPromptManager {
                     this.restPromptContainer.visible = false;
                 }
             } else {
-                if (restPrompt && !restPrompt._isDestroyed)
-                    restPrompt.setNotifCount(nextCount);
-                const hintBoxWrapper = (restPrompt && !restPrompt._isDestroyed) ? restPrompt._hintBoxWrapper : null;
-                const nameLabel = (restPrompt && !restPrompt._isDestroyed) ? restPrompt._userWell?.get_child()?._label : null;
+                if (this.restPrompt)
+                    this.restPrompt.setNotifCount(nextCount);
+                const hintBoxWrapper = this.restPrompt?._hintBoxWrapper;
+                const nameLabel = this.restPrompt?._userWell?.get_child()?._label;
 
                 if (animate && !this._extension._promptActive) {
                     this.restPromptContainer.remove_all_transitions();
@@ -493,18 +486,13 @@ export class CupertinoPromptManager {
             this.seat.disconnectObject(this);
             this.seat = null;
         }
-        const prompt = this.restPrompt;
-        this.restPrompt = null;
-        if (prompt) {
-            prompt.disconnectObject(this);
-            if (!prompt._isDestroyed)
-                prompt.destroy();
+        if (this.restPrompt) {
+            this.restPrompt.destroy();
+            this.restPrompt = null;
         }
-        const container = this.restPromptContainer;
-        this.restPromptContainer = null;
-        if (container) {
-            container.disconnectObject(this);
-            container.destroy();
+        if (this.restPromptContainer) {
+            this.restPromptContainer.destroy();
+            this.restPromptContainer = null;
         }
     }
 
