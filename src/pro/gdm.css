@@ -155,8 +155,8 @@
     background-color: rgba(236, 236, 236, 0.175);
     color: rgba(255, 255, 255, 0.85) !important;
     padding: 0.5px !important;
-    height: 34px !important;
-    width: 34px !important;
+    height: 40px !important;
+    width: 40px !important;
     border-radius: 9999px !important;
     border: 1px solid transparent !important;
 }
@@ -184,8 +184,8 @@
     background-color: rgba(236, 236, 236, 0.175);
     color: rgba(255, 255, 255, 0.85) !important;
     padding: 0.5px !important;
-    width: 34px !important;
-    height: 34px !important;
+    width: 40px !important;
+    height: 40px !important;
     border-radius: 9999px !important;
     border: 1px solid transparent !important;
     box-shadow: none;
