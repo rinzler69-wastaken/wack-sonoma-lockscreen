@@ -6,7 +6,7 @@ import Gdm from 'gi://Gdm';
 import Gettext from 'gettext';
 import { WackCupertinoRestPrompt } from './cupertinoPrompt.js';
 import { CROSSFADE_TIME, NOTIF_BLUR_RADIUS, NOTIF_BLUR_NAME } from './constants.js';
-import { _logError, _setActorVisible } from './mainUtils.js';
+import { _logError, _setActorVisible, VERTICAL_BOX } from './mainUtils.js';
 
 const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('gnome-shell'));
 
@@ -49,7 +49,7 @@ export class CupertinoPromptManager {
 
         this.restPromptContainer = new St.BoxLayout({
             style_class: 'wack-cupertino-rest',
-            vertical: true,
+            ...VERTICAL_BOX,
             reactive: false,
         });
 
@@ -62,7 +62,7 @@ export class CupertinoPromptManager {
         this._extension._updateLockscreenMessage();
 
         if (!this.seat) {
-            const backend = this._extension.get_context ? this._extension.get_context().get_backend() : Clutter.get_default_backend();
+            const backend = global.stage.get_context ? global.stage.get_context().get_backend() : Clutter.get_default_backend();
             this.seat = backend.get_default_seat();
             this.seat.connectObject('notify::touch-mode', () => this.syncCupertinoHint(), this);
         }
