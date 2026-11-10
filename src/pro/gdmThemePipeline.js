@@ -155,6 +155,14 @@ export class GdmThemeStore {
         return this._fallback;
     }
 
+    get defaultUser() {
+        return this._defaultUser;
+    }
+
+    setDefaultUser(userName) {
+        this._defaultUser = userName;
+    }
+
     // ---- write side --------------------------------------------------------
     setLayout(layout) {
         // layout = { key, wellH, yCenterFraction, bounds: {prompt,cancel,avatar,a11y,session} }

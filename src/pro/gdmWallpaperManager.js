@@ -29,6 +29,9 @@ export class GdmWallpaperManager {
             const effectiveUser = activeUser ?? this.themeStore._defaultUser;
             if (userName === null || userName === effectiveUser || (activeUser === null && userName === this.themeStore._defaultUser)) {
                 this.applyWallpaper(activeUser, true);
+                if (this._gdm._avatarManager?.updateUserListVibrancy) {
+                    this._gdm._avatarManager.updateUserListVibrancy();
+                }
             }
         });
 
@@ -121,8 +124,10 @@ export class GdmWallpaperManager {
 
                 this.sharedWallpaperRefreshId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
                     this.sharedWallpaperRefreshId = null;
-                    if (this.themeStore)
+                    if (this.themeStore) {
+                        this.themeStore.setDefaultUser(rawName);
                         this.themeStore.loadUser(rawName).catch(() => {});
+                    }
                     return GLib.SOURCE_REMOVE;
                 });
                 GLib.Source.set_name_by_id(this.sharedWallpaperRefreshId, '[WACK] GdmWallpaperManager.sharedWallpaperRefresh');

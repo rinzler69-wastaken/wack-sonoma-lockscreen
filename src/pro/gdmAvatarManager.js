@@ -1,3 +1,4 @@
+import Cairo from 'gi://cairo';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -15,6 +16,7 @@ export class GdmAvatarManager {
         this._lastAvatarColor = null;
         this._connectedUser = null;
         this._dialog = null;
+        this._activeSessionUsers = null;
     }
 
     setup(dialog = null) {
@@ -81,10 +83,24 @@ export class GdmAvatarManager {
         if (userList) {
             userList.disconnectObject(this);
             for (const item of userListItems(userList)) {
-                const avatar = item._userWidget?._avatar;
-                const user = avatar?._user || item._userWidget?._user;
+                const userWidget = item._userWidget;
+                const avatar = userWidget?._avatar;
+                const user = item.user || avatar?._user || userWidget?._user;
                 if (user)
                     user.disconnectObject(this);
+                if (userWidget && userWidget._wackAvatarContainer) {
+                    const container = userWidget._wackAvatarContainer;
+                    if (avatar && container.contains(avatar)) {
+                        container.remove_child(avatar);
+                        userWidget.remove_child(container);
+                        userWidget.insert_child_at_index(avatar, 0);
+                    }
+                    container.destroy();
+                    delete userWidget._wackAvatarContainer;
+                    delete userWidget._wackSessionBadge;
+                    delete userWidget._wackSessionBadgeConnected;
+                    delete userWidget._wackUpdateBadge;
+                }
                 if (avatar) {
                     avatar.disconnectObject(this);
                     if (!avatar._isDestroyed) {
@@ -106,11 +122,144 @@ export class GdmAvatarManager {
         this.gdmAvatarSetup = false;
         this._lastAvatarColor = null;
         this._dialog = null;
+        this._activeSessionUsers = null;
+    }
+
+    _getActiveSessionUsers() {
+        if (this._activeSessionUsers !== null)
+            return this._activeSessionUsers;
+
+        this._activeSessionUsers = new Set();
+        try {
+            const res = Gio.DBus.system.call_sync(
+                'org.freedesktop.login1',
+                '/org/freedesktop/login1',
+                'org.freedesktop.login1.Manager',
+                'ListSessions',
+                null, null, Gio.DBusCallFlags.NONE, -1, null
+            );
+            const [sessions] = res.deepUnpack();
+            for (const [, uid, userName, seat] of sessions) {
+                if (seat && uid >= 1000)
+                    this._activeSessionUsers.add(userName);
+            }
+        } catch (_) {}
+
+        return this._activeSessionUsers;
     }
 
     _setupUserListItem(item) {
-        const avatar = item?._userWidget?._avatar;
-        if (!avatar) return;
+        const userWidget = item?._userWidget;
+        const avatar = userWidget?._avatar;
+        if (!avatar || !userWidget) return;
+
+        const user = item.user || avatar._user || userWidget._user;
+
+        if (!userWidget._wackAvatarContainer) {
+            const container = new St.Widget({
+                layout_manager: new Clutter.BinLayout(),
+                x_expand: false,
+                y_expand: false,
+                reactive: false,
+            });
+            userWidget.remove_child(avatar);
+            container.add_child(avatar);
+
+            const badge = new St.Bin({
+                style_class: 'wack-gdm-session-badge',
+                x_expand: true,
+                y_expand: true,
+                x_align: Clutter.ActorAlign.END,
+                y_align: Clutter.ActorAlign.END,
+                translation_x: 1,
+                translation_y: 1,
+                reactive: false,
+                can_focus: false,
+            });
+            const syncBadgeOffset = () => {
+                const node = badge.get_theme_node();
+                const ox = node.get_length('offset-x') || node.get_length('translation-x');
+                const oy = node.get_length('offset-y') || node.get_length('translation-y');
+                if (ox !== 0) badge.translation_x = ox;
+                if (oy !== 0) badge.translation_y = oy;
+            };
+            badge.connect('style-changed', syncBadgeOffset);
+            const checkIcon = new St.DrawingArea({
+                style_class: 'wack-gdm-session-badge-icon',
+                width: 9,
+                height: 9,
+                x_align: Clutter.ActorAlign.CENTER,
+                y_align: Clutter.ActorAlign.CENTER,
+                reactive: false,
+            });
+            const syncIconSize = () => {
+                const node = checkIcon.get_theme_node();
+                const iconSize = node.get_length('icon-size');
+                if (iconSize > 0)
+                    checkIcon.set_size(iconSize, iconSize);
+            };
+            checkIcon.connect('style-changed', syncIconSize);
+            checkIcon.connect('repaint', (area) => {
+                const cr = area.get_context();
+                const [w, h] = area.get_surface_size();
+                if (w <= 0 || h <= 0) {
+                    cr.$dispose();
+                    return;
+                }
+                const node = area.get_theme_node();
+                const fgColor = node.get_foreground_color();
+                if (fgColor) {
+                    cr.setSourceRGBA(
+                        fgColor.red / 255,
+                        fgColor.green / 255,
+                        fgColor.blue / 255,
+                        fgColor.alpha / 255
+                    );
+                } else {
+                    cr.setSourceRGB(1, 1, 1);
+                }
+                const scale = Math.max(0.2, w / 10);
+                cr.setLineWidth(Math.max(1.0, 1.8 * scale));
+                cr.setLineCap(Cairo.LineCap.ROUND);
+                cr.setLineJoin(Cairo.LineJoin.ROUND);
+                cr.moveTo(w * 0.22, h * 0.52);
+                cr.lineTo(w * 0.44, h * 0.76);
+                cr.lineTo(w * 0.82, h * 0.28);
+                cr.stroke();
+                cr.$dispose();
+            });
+            badge.set_child(checkIcon);
+            container.add_child(badge);
+
+            userWidget.insert_child_at_index(container, 0);
+            userWidget._wackAvatarContainer = container;
+            userWidget._wackSessionBadge = badge;
+        }
+
+        const badge = userWidget._wackSessionBadge;
+        const itemUserName = user ? user.get_user_name() : null;
+        const updateBadge = () => {
+            if (badge && !badge._isDestroyed) {
+                const activeUsers = this._getActiveSessionUsers();
+                if (activeUsers.size === 0) {
+                    badge.visible = false;
+                    return;
+                }
+                const defaultUser = this._gdm._wallpaperManager?.themeStore?.defaultUser;
+                badge.visible = Boolean(defaultUser && itemUserName === defaultUser && activeUsers.has(itemUserName));
+            }
+        };
+        userWidget._wackUpdateBadge = updateBadge;
+
+        if (user && !userWidget._wackSessionBadgeConnected) {
+            userWidget._wackSessionBadgeConnected = true;
+            user.connectObject(
+                'notify::is-loaded', updateBadge,
+                'changed', updateBadge,
+                this
+            );
+        }
+        updateBadge();
 
         if (!avatar._wackOrigUpdate) {
             avatar._wackOrigUpdate = avatar.update.bind(avatar);
@@ -130,9 +279,15 @@ export class GdmAvatarManager {
                 delete avatar._wackUpdating;
                 delete avatar._wackSettingStyle;
                 delete avatar._wackHasVibrancy;
+                if (userWidget._wackAvatarContainer) {
+                    userWidget._wackAvatarContainer.destroy();
+                    delete userWidget._wackAvatarContainer;
+                    delete userWidget._wackSessionBadge;
+                    delete userWidget._wackSessionBadgeConnected;
+                    delete userWidget._wackUpdateBadge;
+                }
             }, this);
 
-            const user = avatar._user || item?._userWidget?._user;
             if (user && !user.is_loaded) {
                 user.connectObject(
                     'notify::is-loaded', () => this._applyStyleToUserListItemAvatar(avatar),
@@ -268,6 +423,7 @@ export class GdmAvatarManager {
     }
 
     updateUserListVibrancy() {
+        this._activeSessionUsers = null;
         const userList = this._dialog?._userList || this._gdm._dialog?._userList;
         for (const item of userListItems(userList))
             this._setupUserListItem(item);

@@ -133,6 +133,26 @@
     icon-size: 58px !important;
     width: 58px !important;
     height: 58px !important;
+    border-radius: 9999px !important;
+    border: none !important;
+}
+
+/* ── Active Session (Logged-In) User Badge ────────────────────────────── */
+
+.wack-gdm-session-badge {
+    background-color: #ffcc00;
+    border: 1px solid #ffffff;
+    border-radius: 9999px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    width: 16px;
+    height: 16px;
+    offset-x: -1px;
+    offset-y: -1px;
+}
+
+.wack-gdm-session-badge-icon {
+    color: #ffffff;
+    icon-size: 12px;
 }
 
 /* ── Cupertino GDM Prompt States ──────────────────────────────────────── */
