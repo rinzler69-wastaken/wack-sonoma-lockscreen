@@ -329,10 +329,7 @@ export class GdmAnimationController {
         _log('[WACK/GdmManager] _onUserSelected called');
         const authPrompt = this._gdm._dialog?._authPrompt;
         if (!authPrompt) return;
-        this._gdm._verificationSucceeded = false;
-        this._gdm._promptResetAnimating = false;
-        this._gdm._skipLegacyPromptEntryAnimation = false;
-        this._gdm._legacyPromptAnimationState = 'selection';
+        this._gdm._authState.selectUser(this._gdm._authState.isNotListed);
         this.animateSessionMenuButtonIn();
         this._gdm._powerButtons?.syncQuickSettingsVisibility();
 
@@ -483,9 +480,6 @@ export class GdmAnimationController {
         }
 
         this._gdm._applyWallpaper(null, true, true);
-
-        this._gdm._legacyPromptAnimationState = 'idle';
-        this._gdm._skipLegacyPromptEntryAnimation = false;
-        this._gdm._verificationSucceeded = false;
+        this._gdm._authState.reset('onReset');
     }
 }

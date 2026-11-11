@@ -14,6 +14,190 @@ import { applyClockAnimation, applyPromptAnimation } from './anims.js';
 import { _setActorVisible } from './mainUtils.js';
 import { PasswordIndicators, connectFailureShake } from './passwordField.js';
 
+export const UnlockSequenceState = Object.freeze({
+    IDLE: 'IDLE',
+    PREPARING: 'PREPARING',
+    SNAPSHOT_ANIMATING: 'SNAPSHOT_ANIMATING',
+    FINISHING: 'FINISHING',
+    COMPLETED: 'COMPLETED',
+});
+
+class UnlockSequenceController {
+    constructor(extension) {
+        this._extension = extension;
+        this.state = UnlockSequenceState.IDLE;
+        this._sessionModeOverridden = false;
+        this.finishTimeoutId = null;
+        this.finishFallbackId = null;
+        this.windowFadeContainer = null;
+    }
+
+    start(onComplete, origFinish, dialog, lockDialogGroup) {
+        this.abort();
+        this.state = UnlockSequenceState.PREPARING;
+
+        const capturedSnapshots = Array.isArray(global.wack_window_snapshots)
+            ? global.wack_window_snapshots.splice(0)
+            : [];
+
+        const panel = Main.panel;
+        if (panel) {
+            panel.ease({ opacity: 0, duration: CUPERTINO_UNLOCK_PANEL_FADE, mode: Clutter.AnimationMode.EASE_OUT_QUAD });
+        }
+
+        this.finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, CUPERTINO_UNLOCK_TSO_DELAY, () => {
+            this.finishTimeoutId = null;
+            this.state = UnlockSequenceState.SNAPSHOT_ANIMATING;
+            this._extension._themeManager.tempSessionModeOverride();
+            this._sessionModeOverridden = true;
+
+            const duration = this._extension._cupertinoUnlockFadeDuration;
+            const mode = Clutter.AnimationMode.EASE_OUT_QUAD;
+
+            if (panel) {
+                panel.remove_all_transitions();
+                const panelHeight = panel.height || 60;
+                panel.translation_y = -panelHeight;
+                panel.opacity = 255;
+                panel.ease({ translation_y: 0, duration, mode });
+            }
+
+            if (capturedSnapshots.length > 0) {
+                const stageWidth = global.stage.width;
+                const stageHeight = global.stage.height;
+
+                this.windowFadeContainer = new Clutter.Actor({
+                    width: stageWidth,
+                    height: stageHeight,
+                });
+
+                lockDialogGroup.add_child(this.windowFadeContainer);
+                lockDialogGroup.set_child_above_sibling(this.windowFadeContainer, dialog);
+
+                const STAGGER_MS = 16;
+                capturedSnapshots.forEach((snapshot, index) => {
+                    const actor = new Clutter.Actor({
+                        content: snapshot.content,
+                        x: snapshot.rect.x,
+                        y: snapshot.rect.y,
+                        width: snapshot.rect.width,
+                        height: snapshot.rect.height,
+                        opacity: 0,
+                    });
+
+                    const w = Math.max(1, snapshot.rect.width);
+                    const h = Math.max(1, snapshot.rect.height);
+                    const pivotX = (stageWidth / 2 - snapshot.rect.x) / w;
+                    const pivotY = (stageHeight / 2 - snapshot.rect.y) / h;
+                    actor.set_pivot_point(pivotX, pivotY);
+
+                    actor.scale_x = 0.92;
+                    actor.scale_y = 0.92;
+
+                    this.windowFadeContainer.add_child(actor);
+
+                    const revIndex = capturedSnapshots.length - 1 - index;
+                    const delay = revIndex * STAGGER_MS;
+
+                    actor.ease({
+                        scale_x: 1.0,
+                        scale_y: 1.0,
+                        opacity: 255,
+                        duration: duration - delay,
+                        delay,
+                        mode,
+                    });
+                });
+            }
+
+            const clockWrapper = this._extension._clockLayoutManager?.clockWrapper;
+            const hintContainer = this._extension._clockLayoutManager?.hintContainer;
+            const customOverlay = this._extension._wallpaperManager?.customWallpaperOverlay;
+            const actorsToFade = [clockWrapper, hintContainer, this._extension._mainBox, customOverlay].filter(a => a != null);
+            actorsToFade.forEach(actor => {
+                actor.ease({ opacity: 0, duration, mode });
+            });
+
+            this.finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, duration, () => {
+                this.finishTimeoutId = null;
+                this.state = UnlockSequenceState.FINISHING;
+
+                let called = false;
+                const safeOnComplete = () => {
+                    if (called) return;
+                    called = true;
+
+                    if (this.finishFallbackId) {
+                        GLib.source_remove(this.finishFallbackId);
+                        this.finishFallbackId = null;
+                    }
+
+                    if (this._sessionModeOverridden) {
+                        this._extension._themeManager.restoreSessionMode();
+                        this._sessionModeOverridden = false;
+                    }
+
+                    if (this.windowFadeContainer) {
+                        this.windowFadeContainer.destroy();
+                        this.windowFadeContainer = null;
+                    }
+
+                    if (this._extension._wallpaperManager?.customWallpaperOverlay) {
+                        this._extension._wallpaperManager.customWallpaperOverlay.destroy();
+                        this._extension._wallpaperManager.customWallpaperOverlay = null;
+                    }
+
+                    if (global.wack_window_snapshots)
+                        delete global.wack_window_snapshots;
+
+                    this.state = UnlockSequenceState.COMPLETED;
+                    onComplete();
+                    this.state = UnlockSequenceState.IDLE;
+                };
+
+                origFinish(safeOnComplete);
+
+                this.finishFallbackId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
+                    this.finishFallbackId = null;
+                    safeOnComplete();
+                    return GLib.SOURCE_REMOVE;
+                });
+
+                return GLib.SOURCE_REMOVE;
+            });
+
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    abort() {
+        if (this.finishTimeoutId) {
+            GLib.source_remove(this.finishTimeoutId);
+            this.finishTimeoutId = null;
+        }
+
+        if (this.finishFallbackId) {
+            GLib.source_remove(this.finishFallbackId);
+            this.finishFallbackId = null;
+        }
+
+        if (this._sessionModeOverridden) {
+            this._extension._themeManager.restoreSessionMode();
+            this._sessionModeOverridden = false;
+        }
+
+        if (this.windowFadeContainer) {
+            this.windowFadeContainer.destroy();
+            this.windowFadeContainer = null;
+        }
+
+        if (global.wack_window_snapshots)
+            delete global.wack_window_snapshots;
+
+        this.state = UnlockSequenceState.IDLE;
+    }
+}
+
 export class UnlockDialogController {
     constructor(extension) {
         this._extension = extension;
@@ -22,10 +206,13 @@ export class UnlockDialogController {
         this.origFinish = null;
         this.origSetTransitionProgress = null;
         this.origEnsureAuthPrompt = null;
-        this.finishTimeoutId = null;
-        this.finishFallbackId = null;
-        this.windowFadeContainer = null;
+        this._unlockSequence = new UnlockSequenceController(extension);
     }
+
+    get finishTimeoutId() { return this._unlockSequence.finishTimeoutId; }
+    get finishFallbackId() { return this._unlockSequence.finishFallbackId; }
+    get windowFadeContainer() { return this._unlockSequence.windowFadeContainer; }
+    get unlockSequenceState() { return this._unlockSequence.state; }
 
     _setupAuthPrompt(authPrompt) {
         if (!authPrompt) return;
@@ -114,136 +301,7 @@ export class UnlockDialogController {
         dialog.finish = (onComplete) => {
             const isCupertino = this._extension._lockscreenMode === 'cupertino';
             if (isCupertino && this._extension._cupertinoUnlockFade) {
-                const capturedSnapshots = Array.isArray(global.wack_window_snapshots)
-                    ? global.wack_window_snapshots.splice(0)
-                    : [];
-
-                const panel = Main.panel;
-                if (panel) {
-                    panel.ease({ opacity: 0, duration: CUPERTINO_UNLOCK_PANEL_FADE, mode: Clutter.AnimationMode.EASE_OUT_QUAD });
-                }
-
-                if (this.finishTimeoutId) {
-                    GLib.source_remove(this.finishTimeoutId);
-                    this.finishTimeoutId = null;
-                }
-
-                this.finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, CUPERTINO_UNLOCK_TSO_DELAY, () => {
-                    this.finishTimeoutId = null;
-                    this._extension._themeManager.tempSessionModeOverride();
-
-                    const duration = this._extension._cupertinoUnlockFadeDuration;
-                    const mode = Clutter.AnimationMode.EASE_OUT_QUAD;
-
-                    if (panel) {
-                        panel.remove_all_transitions();
-                        const panelHeight = panel.height || 60;
-                        panel.translation_y = -panelHeight;
-                        panel.opacity = 255;
-                        panel.ease({ translation_y: 0, duration, mode });
-                    }
-
-                    if (capturedSnapshots.length > 0) {
-                        const stageWidth = global.stage.width;
-                        const stageHeight = global.stage.height;
-
-                        this.windowFadeContainer = new Clutter.Actor({
-                            width: stageWidth,
-                            height: stageHeight,
-                        });
-
-                        lockDialogGroup.add_child(this.windowFadeContainer);
-                        lockDialogGroup.set_child_above_sibling(this.windowFadeContainer, dialog);
-
-                        const STAGGER_MS = 16;
-                        capturedSnapshots.forEach((snapshot, index) => {
-                            const actor = new Clutter.Actor({
-                                content: snapshot.content,
-                                x: snapshot.rect.x,
-                                y: snapshot.rect.y,
-                                width: snapshot.rect.width,
-                                height: snapshot.rect.height,
-                                opacity: 0,
-                            });
-
-                            const w = Math.max(1, snapshot.rect.width);
-                            const h = Math.max(1, snapshot.rect.height);
-                            const pivotX = (stageWidth / 2 - snapshot.rect.x) / w;
-                            const pivotY = (stageHeight / 2 - snapshot.rect.y) / h;
-                            actor.set_pivot_point(pivotX, pivotY);
-
-                            actor.scale_x = 0.92;
-                            actor.scale_y = 0.92;
-
-                            this.windowFadeContainer.add_child(actor);
-
-                            const revIndex = capturedSnapshots.length - 1 - index;
-                            const delay = revIndex * STAGGER_MS;
-
-                            actor.ease({
-                                scale_x: 1.0,
-                                scale_y: 1.0,
-                                opacity: 255,
-                                duration: duration - delay,
-                                delay,
-                                mode,
-                            });
-                        });
-                    }
-
-                    const clockWrapper = this._extension._clockLayoutManager?.clockWrapper;
-                    const hintContainer = this._extension._clockLayoutManager?.hintContainer;
-                    const customOverlay = this._extension._wallpaperManager?.customWallpaperOverlay;
-                    const actorsToFade = [clockWrapper, hintContainer, this._extension._mainBox, customOverlay].filter(a => a != null);
-                    actorsToFade.forEach(actor => {
-                        actor.ease({ opacity: 0, duration, mode });
-                    });
-
-                    if (this.finishTimeoutId) {
-                        GLib.source_remove(this.finishTimeoutId);
-                        this.finishTimeoutId = null;
-                    }
-                    this.finishTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, duration, () => {
-                        this.finishTimeoutId = null;
-
-                        let called = false;
-                        const safeOnComplete = () => {
-                            if (called) return;
-                            called = true;
-                            if (this.finishFallbackId) {
-                                GLib.source_remove(this.finishFallbackId);
-                                this.finishFallbackId = null;
-                            }
-                            this._extension._themeManager.restoreSessionMode();
-                            if (this.windowFadeContainer) {
-                                this.windowFadeContainer.destroy();
-                                this.windowFadeContainer = null;
-                            }
-                            if (this._extension._wallpaperManager?.customWallpaperOverlay) {
-                                this._extension._wallpaperManager.customWallpaperOverlay.destroy();
-                                this._extension._wallpaperManager.customWallpaperOverlay = null;
-                            }
-                            if (global.wack_window_snapshots)
-                                delete global.wack_window_snapshots;
-                            onComplete();
-                        };
-
-                        this.origFinish(safeOnComplete);
-
-                        if (this.finishFallbackId) {
-                            GLib.source_remove(this.finishFallbackId);
-                            this.finishFallbackId = null;
-                        }
-                        this.finishFallbackId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
-                            this.finishFallbackId = null;
-                            safeOnComplete();
-                            return GLib.SOURCE_REMOVE;
-                        });
-
-                        return GLib.SOURCE_REMOVE;
-                    });
-                    return GLib.SOURCE_REMOVE;
-                });
+                this._unlockSequence.start(onComplete, this.origFinish, dialog, lockDialogGroup);
             } else {
                 this.origFinish(onComplete);
             }
@@ -469,19 +527,6 @@ export class UnlockDialogController {
             dialog.disconnectObject(this);
         }
 
-        if (this.finishTimeoutId) {
-            GLib.source_remove(this.finishTimeoutId);
-            this.finishTimeoutId = null;
-        }
-
-        if (this.finishFallbackId) {
-            GLib.source_remove(this.finishFallbackId);
-            this.finishFallbackId = null;
-        }
-
-        if (this.windowFadeContainer) {
-            this.windowFadeContainer.destroy();
-            this.windowFadeContainer = null;
-        }
+        this._unlockSequence.abort();
     }
 }

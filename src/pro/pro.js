@@ -16,6 +16,7 @@ import { GdmPromptStyling } from './gdmPromptStyling.js';
 import { GdmAvatarManager } from './gdmAvatarManager.js';
 import { GdmAnimationController } from './gdmAnimationController.js';
 import { GdmPowerButtons } from './gdmPowerButtons.js';
+import { GdmAuthState, GdmAuthStateController } from './gdmAuthState.js';
 import { PasswordIndicators, connectFailureShake } from '../main/passwordField.js';
 
 const MESSAGE_PROMPT_GAP = 48;
@@ -39,6 +40,7 @@ export class GdmManager {
         this._animController = new GdmAnimationController(this);
         this._powerButtons = new GdmPowerButtons(this);
         this._passwordIndicators = null;
+        this._authState = new GdmAuthStateController(this);
 
         this._origEnsureUnlockDialog = null;
         this._findDialogTimeoutId = null;
@@ -73,6 +75,37 @@ export class GdmManager {
         this._origSetUserListExpanded = null;
         this._origAuthPromptCancel = null;
     }
+
+    get authState() { return this._authState; }
+
+    get _verificationSucceeded() { return this._authState.isSuccess; }
+    set _verificationSucceeded(v) {
+        if (v) this._authState.markSuccess();
+        else if (this._authState.isSuccess) this._authState.reset('manual_unset');
+    }
+
+    get _promptResetAnimating() { return this._authState.isResetting; }
+    set _promptResetAnimating(v) {
+        if (v) this._authState.beginReset();
+        else if (this._authState.isResetting) this._authState.finishReset();
+    }
+
+    get _legacyPromptAnimationState() { return this._authState.legacyAnimationState; }
+    set _legacyPromptAnimationState(v) {
+        if (v === 'selection') this._authState.selectUser(this._authState.isNotListed);
+        else if (v === 'success') this._authState.markSuccess();
+        else if (v === 'idle') {
+            if (this._authState.isSelection) this._authState.beginAuthentication();
+            else if (this._authState.isResetting) this._authState.finishReset();
+            else if (!this._authState.isSuccess) this._authState.reset('legacy_idle');
+        }
+    }
+
+    get _skipLegacyPromptEntryAnimation() { return this._authState.skipLegacyEntry; }
+    set _skipLegacyPromptEntryAnimation(v) { this._authState.skipLegacyEntry = Boolean(v); }
+
+    get _isNotListed() { return this._authState.isNotListed; }
+    set _isNotListed(v) { this._authState.isNotListed = Boolean(v); }
 
     enable() {
         _log('[WACK/GdmManager] enable() called, mode=' + Main.sessionMode.currentMode);
@@ -203,6 +236,7 @@ export class GdmManager {
         this._skipLegacyPromptEntryAnimation = false;
         this._promptResetAnimating = false;
         this._isNotListed = false;
+        this._authState.reset('setup');
 
         if (dialog.vfunc_allocate) {
             this._origVfuncAllocate = dialog.vfunc_allocate;
@@ -222,6 +256,7 @@ export class GdmManager {
                 this._skipLegacyPromptEntryAnimation = false;
                 this._promptResetAnimating = false;
                 this._isNotListed = false;
+                this._authState.reset('login_screen_session_activated');
                 this._animController._legacySuccessFadeRunning = false;
 
                 if (this._clockManager?.clockWrapper) {
@@ -414,6 +449,7 @@ export class GdmManager {
             this._verificationSucceeded = true;
             this._legacyPromptAnimationState = 'success';
             this._skipLegacyPromptEntryAnimation = true;
+            this._authState.markSuccess();
             this._stopCursorBlink();
             if (this._selectedPromptMode === 'wack')
                 this._resetLegacyPromptTransform();
@@ -563,15 +599,18 @@ export class GdmManager {
             }
 
             if (this._promptResetAnimating)
-                return undefined;
+                if (this._authState.isResetting)
+                    return undefined;
 
             this._promptResetAnimating = true;
             this._legacyPromptAnimationState = 'idle';
+            this._authState.beginReset();
 
             if (this._selectedPromptMode === 'wack') {
                 this._animateLegacyReturnToPicker();
                 this._animateLegacyPromptOut(() => {
                     this._promptResetAnimating = false;
+                    this._authState.finishReset();
                     if (this._dialog?._authPrompt && this._origAuthPromptReset)
                         this._origAuthPromptReset(...args);
                 });
@@ -579,6 +618,7 @@ export class GdmManager {
                 this._animateCupertinoReturnToPicker();
                 this._animateCupertinoPromptOut(() => {
                     this._promptResetAnimating = false;
+                    this._authState.finishReset();
                     if (this._dialog?._authPrompt && this._origAuthPromptReset)
                         this._origAuthPromptReset(...args);
                 });
@@ -686,6 +726,7 @@ export class GdmManager {
 
     _teardown() {
         this._verificationSucceeded = false;
+        this._authState.reset('teardown');
         this._animController._legacySuccessFadeRunning = false;
         this._stopCursorBlink();
         this._promptResetAnimating = false;
