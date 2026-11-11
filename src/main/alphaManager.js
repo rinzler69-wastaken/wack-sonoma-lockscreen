@@ -23,15 +23,12 @@ import {
     mapNormalizedBoundsToPixbuf,
 } from './wallpaperUtils.js';
 import {
-    createBlurredPromptSlice,
     sampleRegionAverageColor,
     sampleClockRegionLuminance,
     sampleSolidGradientPromptColors,
     sampleWallpaperChromeColors,
 } from './wallpaperSampler.js';
 import {
-    PROMPT_BLUR_RADIUS,
-    PROMPT_BLUR_BRIGHTNESS,
     CANCEL_BUTTON_HOVER_OVERLAY_ALPHA,
     CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA,
 } from './constants.js';
@@ -43,8 +40,6 @@ import {
     getCache,
     setCache,
     hasCache,
-    scheduleVibrancyPruning,
-    ensureCacheDirectory,
     CacheMetrics,
 } from './alphaCache.js';
 import {
@@ -53,8 +48,6 @@ import {
     createPromptVibrancyIdentity,
     serializePromptVibrancyIdentity,
     formatBoundsKey,
-    computeSliceHash,
-    resolveSlicePath,
 } from './cacheIdentity.js';
 
 export { initCache, flushAllCache };
@@ -291,14 +284,8 @@ export async function getWallpaperPromptColor(params) {
             const hasSession = !!cached.sessionColor;
             const hasCancel = !!cached.cancelColor;
             const hasCsa = !!cached.suspendColor && !!cached.restartColor && !!cached.powerOffColor;
-            if (vibrancyMode === 'tonal' || vibrancyMode === 'less') {
-                if (cached.r != null && hasAvatar && hasA11y && hasSession && hasCancel && hasCsa)
-                    return { ...cached, transitionInfo: transitionInfo ?? null };
-            } else {
-                const hasPromptImg = cached.imagePath && Gio.File.new_for_path(cached.imagePath).query_exists(null);
-                if (hasPromptImg && hasAvatar && hasA11y && hasSession && hasCancel && hasCsa)
-                    return { ...cached, transitionInfo: transitionInfo ?? null };
-            }
+            if (cached.r != null && hasAvatar && hasA11y && hasSession && hasCancel && hasCsa)
+                return { ...cached, transitionInfo: transitionInfo ?? null };
         }
     }
 
@@ -375,59 +362,25 @@ export async function getWallpaperPromptColor(params) {
                 const restartMappedBounds = mapNormalizedBoundsToPixbuf(restart, pbWidth, pbHeight, visibleViewport);
                 const powerOffMappedBounds = mapNormalizedBoundsToPixbuf(powerOff, pbWidth, pbHeight, visibleViewport);
 
+                const sampled = sampleRegionAverageColor(pixbuf, mappedBounds) || { r: 40, g: 40, b: 40 };
+                promptVisualState = resolvePromptVisualState(sampled, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
+                shadowAlpha = promptVisualState.shadowAlpha ?? PROMPT_SHADOW_FLOOR;
+
                 if (vibrancyMode === 'tonal' || vibrancyMode === 'less') {
-                    const sampled = sampleRegionAverageColor(pixbuf, mappedBounds) || { r: 40, g: 40, b: 40 };
-                    promptVisualState = resolvePromptVisualState(sampled, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
                     sampledPrimary = applyPromptVisualState(sampled, promptVisualState, { preblend: true });
-                    sampledStart = sampledPrimary;
-                    sampledEnd = sampledPrimary;
-                    direction = 'none';
-
-                    shadowAlpha = promptVisualState.shadowAlpha ?? PROMPT_SHADOW_FLOOR;
-
-                    const rawCancel = sampleRegionAverageColor(pixbuf, cancelMappedBounds) || sampled || { r: 40, g: 40, b: 40 };
-                    sampledCancelColor = applyPromptVisualState(
-                        rawCancel,
-                        promptVisualState,
-                        { preblend: true }
-                    );
                 } else {
-                    const userName = GLib.get_user_name();
-                    const hash = computeSliceHash(cacheKey);
-                    const { targetDir, filePath } = resolveSlicePath(userName, hash, isXml, xmlName);
-
-                    ensureCacheDirectory(targetDir);
-
-                    const actualCropW = Math.max(1, mappedBounds.xEnd - mappedBounds.xStart);
-                    const actualCropH = Math.max(1, mappedBounds.yEnd - mappedBounds.yStart);
-                    const targetDestH = 40;
-                    const targetDestW = Math.max(1, Math.round(targetDestH * (actualCropW / actualCropH)));
-                    const sliceResult = createBlurredPromptSlice(pixbuf, mappedBounds, targetDestW, targetDestH, PROMPT_BLUR_RADIUS, PROMPT_BLUR_BRIGHTNESS);
-                    if (sliceResult?.pixbuf) {
-                        const tmpPath = `${filePath}.tmp.${GLib.random_int()}`;
-                        sliceResult.pixbuf.savev(tmpPath, 'png', [], []);
-                        const tmpFile = Gio.File.new_for_path(tmpPath);
-                        tmpFile.set_attribute_uint32('unix::mode', 0o644, Gio.FileQueryInfoFlags.NONE, null);
-                        const destFile = Gio.File.new_for_path(filePath);
-                        tmpFile.move(destFile, Gio.FileCopyFlags.OVERWRITE, null, null);
-
-                        imagePath = filePath;
-                        shadowAlpha = sliceResult.shadowAlpha;
-                        sampledPrimary = sliceResult.avgColor;
-                        sampledStart = sliceResult.avgColor;
-                        sampledEnd = sliceResult.avgColor;
-                        direction = 'none';
-                        promptVisualState = sliceResult.visualState
-                            ?? resolvePromptVisualState(sliceResult.avgColor, CUPERTINO_PROMPT_WHITE_BLEND_ALPHA);
-
-                        // Schedule asynchronous background pruning
-                        scheduleVibrancyPruning(targetDir, hash);
-                    }
-
-                    // Sample dedicated color for cancel button
-                    const rawCancelColor = sampleRegionAverageColor(pixbuf, cancelMappedBounds) || sampledPrimary || { r: 40, g: 40, b: 40 };
-                    sampledCancelColor = applyPromptVisualState(rawCancelColor, promptVisualState, { preblend: true });
+                    sampledPrimary = sampled;
                 }
+                sampledStart = sampledPrimary;
+                sampledEnd = sampledPrimary;
+                direction = 'none';
+
+                const rawCancel = sampleRegionAverageColor(pixbuf, cancelMappedBounds) || sampled || { r: 40, g: 40, b: 40 };
+                sampledCancelColor = applyPromptVisualState(
+                    rawCancel,
+                    promptVisualState,
+                    { preblend: true }
+                );
 
                 // Decoupled chrome sampling (avatar, a11y, session, CSA power buttons)
                 const chromeColors = sampleWallpaperChromeColors({
