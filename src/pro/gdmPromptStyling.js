@@ -245,6 +245,7 @@ export class GdmPromptStyling {
                 blur = createKawaseBlurEffect({
                     name: 'wack-prompt-acrylic-blur',
                     mode: 1,
+                    live: true,
                     radius: PROMPT_BLUR_RADIUS,
                     brightness: 1.0,
                     corner_radius: 999,
@@ -582,6 +583,7 @@ export class GdmPromptStyling {
                     blur = createKawaseBlurEffect({
                         name: 'wack-cancel-acrylic-blur',
                         mode: 1,
+                        live: true,
                         radius: PROMPT_BLUR_RADIUS,
                         brightness: 1.0,
                         corner_radius: 999,

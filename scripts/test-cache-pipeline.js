@@ -754,6 +754,10 @@ assert(gdmThemeText.includes("createKawaseBlurEffect"), 'gdmThemePipeline import
 assert(gdmThemeText.includes("p.value?.r != null"), 'gdmThemePipeline validates acrylic palette via color channels independently of disk PNGs');
 assert(kawaseText.includes("sourceFramebuffer.blit"), 'KawaseBlurEffect uses direct CoglFramebuffer blit for static background capture');
 assert(kawaseText.includes("invalidate()"), 'KawaseBlurEffect provides invalidate() to refresh static background cache');
+const liveEffect = makeKawaseEffect({ live: true });
+assert(liveEffect.live === true, 'KawaseBlurEffect honors live: true');
+assert(psText.includes('live: true'), 'promptStyling configures live Kawase blur for prompt chip');
+assert(gpsText.includes('live: true'), 'gdmPromptStyling configures live Kawase blur for prompt chip');
 
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);

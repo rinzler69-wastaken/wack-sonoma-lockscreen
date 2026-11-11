@@ -271,6 +271,11 @@ export const KawaseBlurEffect = GObject.registerClass({
             GObject.ParamFlags.READWRITE,
             0, 1, 0
         ),
+        'live': GObject.ParamSpec.boolean(
+            'live', null, null,
+            GObject.ParamFlags.READWRITE,
+            false
+        ),
     },
 }, class KawaseBlurEffect extends Clutter.Effect {
     _init(params = {}) {
@@ -303,6 +308,17 @@ export const KawaseBlurEffect = GObject.registerClass({
         this._opacity_factor = params.opacity_factor ?? 1.0;
         this._corner_radius = params.corner_radius ?? 0;
         this._mode = params.mode ?? 0;
+        this._live = params.live ?? false;
+    }
+
+    get live() { return this._live; }
+    set live(val) {
+        const boolVal = Boolean(val);
+        if (this._live === boolVal) return;
+        this._live = boolVal;
+        this.blurValid = false;
+        this.queue_repaint();
+        this.notify('live');
     }
 
     get mode() { return this._mode; }
@@ -582,9 +598,8 @@ export const KawaseBlurEffect = GObject.registerClass({
         const positionChanged = (this._lastX !== viewX || this._lastY !== viewY ||
                                  this._lastW !== w || this._lastH !== h);
 
-        const needsCapture = (this._mode === 1)
-            ? (!this.blurValid || positionChanged)
-            : (!this.blurValid || isActorDirty || positionChanged);
+        const needsCapture = this._live
+            || (this._mode === 1 ? (!this.blurValid || positionChanged) : (!this.blurValid || isActorDirty || positionChanged));
 
         if (needsCapture) {
             this.addBlurPasses(node, actor, inputBounds, passes, blend, paintContext);
@@ -656,6 +671,20 @@ export const KawaseBlurEffect = GObject.registerClass({
                         blitLayer.set_name('WackKawase background blit');
                         blitLayer.add_child(blitNode);
                         node.add_child(blitLayer);
+                        blitted = true;
+                    }
+                } catch (_) {
+                    blitted = false;
+                }
+            }
+            if (!blitted) {
+                try {
+                    const blitFn = sourceFramebuffer.blit
+                        ? (s, ...a) => s.blit(...a)
+                        : Cogl.blit_framebuffer;
+                    if (blitFn) {
+                        blitFn(sourceFramebuffer, this.downTargets[0].framebuffer,
+                               blitSrcX, blitSrcY, 0, 0, targetW, targetH);
                     }
                 } catch (_) {
                 }
