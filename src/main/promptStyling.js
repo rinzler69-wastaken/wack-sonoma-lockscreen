@@ -2,7 +2,13 @@ import GLib from 'gi://GLib';
 import Clutter from 'gi://Clutter';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { _log, _logError } from './mainUtils.js';
-import { getChromeAlpha, getHintTextStyle, getPromptDimVeilAlpha } from './colorUtils.js';
+import {
+    getChromeAlpha,
+    getHintTextStyle,
+    getPromptDimVeilAlpha,
+    getAcrylicChipBackground,
+    getAcrylicCancelButtonBackground,
+} from './colorUtils.js';
 import { createKawaseBlurEffect } from './kawaseBlurEffect.js';
 import { PROMPT_BLUR_RADIUS } from './constants.js';
 
@@ -235,11 +241,7 @@ export class PromptStyling {
                 blur.set_enabled(true);
             }
 
-            const isInv = visualState.useInverse || visualState.isBrightSample || false;
-            const baseAlpha = isFocused ? 0.16 : 0.10;
-            const tintColor = isInv
-                ? `rgba(0, 0, 0, ${(baseAlpha + 0.15).toFixed(3)})`
-                : `rgba(255, 255, 255, ${baseAlpha.toFixed(3)})`;
+            const tintColor = getAcrylicChipBackground(color, isFocused);
 
             if (isFocused) {
                 if (color.shadowAlpha !== undefined)
@@ -575,11 +577,7 @@ export class PromptStyling {
                     blur.set_enabled(true);
                 }
 
-                const isInv = visualState.useInverse || visualState.isBrightSample || false;
-                const baseAlpha = isPressed ? 0.28 : (isHovered ? 0.22 : 0.14);
-                const tintColor = isInv
-                    ? `rgba(0, 0, 0, ${(baseAlpha + 0.15).toFixed(3)})`
-                    : `rgba(255, 255, 255, ${baseAlpha.toFixed(3)})`;
+                const tintColor = getAcrylicCancelButtonBackground(color, isPressed, isHovered);
 
                 if (!isFocused)
                     overlayStyle += ` border: none !important;`;

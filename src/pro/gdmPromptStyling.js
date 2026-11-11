@@ -1,7 +1,13 @@
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import { getChromeAlpha, getHintTextStyle, getPromptDimVeilAlpha } from '../main/colorUtils.js';
+import {
+    getChromeAlpha,
+    getHintTextStyle,
+    getPromptDimVeilAlpha,
+    getAcrylicChipBackground,
+    getAcrylicCancelButtonBackground,
+} from '../main/colorUtils.js';
 import { createKawaseBlurEffect } from '../main/kawaseBlurEffect.js';
 import { PROMPT_BLUR_RADIUS } from '../main/constants.js';
 
@@ -253,13 +259,11 @@ export class GdmPromptStyling {
                 entry.add_effect(blur);
             } else {
                 blur.set_enabled(true);
+                if (this._lastPromptColor !== color)
+                    blur.invalidate();
             }
 
-            const isInv = visualState.useInverse || visualState.isBrightSample || false;
-            const baseAlpha = isFocused ? 0.16 : 0.10;
-            const tintColor = isInv
-                ? `rgba(0, 0, 0, ${(baseAlpha + 0.15).toFixed(3)})`
-                : `rgba(255, 255, 255, ${baseAlpha.toFixed(3)})`;
+            const tintColor = getAcrylicChipBackground(color, isFocused);
 
             if (isFocused) {
                 if (color.shadowAlpha !== undefined)
@@ -593,11 +597,7 @@ export class GdmPromptStyling {
                     blur.set_enabled(true);
                 }
 
-                const isInv = visualState.useInverse || visualState.isBrightSample || false;
-                const baseAlpha = isPressed ? 0.28 : (isHovered ? 0.22 : 0.14);
-                const tintColor = isInv
-                    ? `rgba(0, 0, 0, ${(baseAlpha + 0.15).toFixed(3)})`
-                    : `rgba(255, 255, 255, ${baseAlpha.toFixed(3)})`;
+                const tintColor = getAcrylicCancelButtonBackground(color, isPressed, isHovered);
 
                 if (!isFocused)
                     overlayStyle += ` border: none !important;`;

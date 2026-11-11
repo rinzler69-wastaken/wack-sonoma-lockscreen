@@ -772,3 +772,108 @@ export function getNotifCardBackground(color, useInverse = false, progress = 0) 
     };
 }
 
+/**
+ * Calculates the exact Acrylic glass tint color string for prompt chip surfaces,
+ * guaranteeing 100% mathematical parity with notification cards for both
+ * hue-preserve inverse and regular neutral inverse paths.
+ *
+ * @param {object|null} color
+ * @param {boolean} [isFocused=false]
+ * @returns {string} e.g. "rgba(r, g, b, a)"
+ */
+export function getAcrylicChipBackground(color, isFocused = false) {
+    if (!color)
+        return isFocused ? 'rgba(255, 255, 255, 0.160)' : 'rgba(255, 255, 255, 0.113)';
+
+    const vs = color.visualState ?? color;
+    const isBrightHue = color.isBrightHue ?? vs.isBrightHue ?? false;
+    const isInv = vs.useInverse ?? vs.isBrightSample ?? false;
+    const darkened = vs.finalColor ?? color.start ?? (color.r != null ? color : null);
+
+    const pL = vs.perceptualLightness ?? vs.perceptualL ??
+        (vs.luminance != null ? getPerceptualLightness(vs.luminance) : 0.5);
+    const noise = vs.noise ?? 0.0;
+    const clampedL = clamp01(pL);
+
+    if (isInv && isBrightHue && darkened && darkened.r != null) {
+        let alpha = 0.58 + 0.12 * clampedL;
+        if (noise > 0.0)
+            alpha += Math.min(0.025, noise * 1.5);
+        alpha = clamp01(Math.max(0.55, Math.min(0.70, alpha)));
+        if (isFocused)
+            alpha = Math.min(0.75, alpha + 0.05);
+
+        return `rgba(${darkened.r}, ${darkened.g}, ${darkened.b}, ${alpha.toFixed(3)})`;
+    } else if (isInv) {
+        let blendAlpha = vs.overlay?.alpha ?? vs.blendAlpha;
+        if (blendAlpha == null) {
+            const ratio = clamp01((clampedL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) / (1.0 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD));
+            blendAlpha = PROMPT_INVERSE_ALPHA_CEILING * ratio;
+        }
+        let darkAlpha = Math.max(0.04, Math.min(PROMPT_INVERSE_ALPHA_CEILING, blendAlpha));
+        if (noise > 0.0)
+            darkAlpha += Math.min(0.02, noise * 1.0);
+        if (isFocused)
+            darkAlpha = Math.min(PROMPT_INVERSE_ALPHA_CEILING + 0.05, darkAlpha + 0.04);
+
+        return `rgba(0, 0, 0, ${darkAlpha.toFixed(3)})`;
+    }
+
+    const baseAlpha = isFocused ? 0.16 : 0.1125;
+    return `rgba(255, 255, 255, ${baseAlpha.toFixed(3)})`;
+}
+
+/**
+ * Calculates the exact Acrylic glass tint color string for Cancel buttons,
+ * maintaining identical hue-preserve and regular inverse behavior with state boosts.
+ *
+ * @param {object|null} color
+ * @param {boolean} [isPressed=false]
+ * @param {boolean} [isHovered=false]
+ * @returns {string} e.g. "rgba(r, g, b, a)"
+ */
+export function getAcrylicCancelButtonBackground(color, isPressed = false, isHovered = false) {
+    if (!color) {
+        const baseA = isPressed ? 0.28 : (isHovered ? 0.22 : 0.14);
+        return `rgba(255, 255, 255, ${baseA.toFixed(3)})`;
+    }
+
+    const vs = color.visualState ?? color;
+    const isBrightHue = color.isBrightHue ?? vs.isBrightHue ?? false;
+    const isInv = vs.useInverse ?? vs.isBrightSample ?? false;
+    const darkened = vs.finalColor ?? color.start ?? (color.r != null ? color : null);
+
+    const pL = vs.perceptualLightness ?? vs.perceptualL ??
+        (vs.luminance != null ? getPerceptualLightness(vs.luminance) : 0.5);
+    const noise = vs.noise ?? 0.0;
+    const clampedL = clamp01(pL);
+
+    const boost = isPressed ? 0.14 : (isHovered ? 0.08 : 0.0);
+
+    if (isInv && isBrightHue && darkened && darkened.r != null) {
+        let alpha = 0.58 + 0.12 * clampedL;
+        if (noise > 0.0)
+            alpha += Math.min(0.025, noise * 1.5);
+        alpha = clamp01(Math.max(0.55, Math.min(0.70, alpha)));
+        alpha = Math.min(0.85, alpha + boost);
+
+        return `rgba(${darkened.r}, ${darkened.g}, ${darkened.b}, ${alpha.toFixed(3)})`;
+    } else if (isInv) {
+        let blendAlpha = vs.overlay?.alpha ?? vs.blendAlpha;
+        if (blendAlpha == null) {
+            const ratio = clamp01((clampedL - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD) / (1.0 - PROMPT_BRIGHT_HUE_LIGHTNESS_THRESHOLD));
+            blendAlpha = PROMPT_INVERSE_ALPHA_CEILING * ratio;
+        }
+        let darkAlpha = Math.max(0.04, Math.min(PROMPT_INVERSE_ALPHA_CEILING, blendAlpha));
+        if (noise > 0.0)
+            darkAlpha += Math.min(0.02, noise * 1.0);
+        darkAlpha = Math.min(0.60, darkAlpha + boost);
+
+        return `rgba(0, 0, 0, ${darkAlpha.toFixed(3)})`;
+    }
+
+    const baseA = isPressed ? 0.28 : (isHovered ? 0.22 : 0.14);
+    return `rgba(255, 255, 255, ${baseA.toFixed(3)})`;
+}
+
+

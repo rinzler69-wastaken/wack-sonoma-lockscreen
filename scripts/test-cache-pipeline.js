@@ -20,6 +20,11 @@ import {
     MAX_CACHE_ENTRIES,
     CacheMetrics,
 } from '../src/main/alphaCache.js';
+import {
+    getNotifCardBackground,
+    getAcrylicChipBackground,
+    getAcrylicCancelButtonBackground,
+} from '../src/main/colorUtils.js';
 
 let passed = 0;
 let failed = 0;
@@ -758,6 +763,74 @@ const liveEffect = makeKawaseEffect({ live: true });
 assert(liveEffect.live === true, 'KawaseBlurEffect honors live: true');
 assert(psText.includes('live: false'), 'promptStyling configures static Kawase blur for prompt chip');
 assert(gpsText.includes('live: true'), 'gdmPromptStyling configures dynamic Kawase blur for prompt chip');
+
+// 19. Test Acrylic Glass Tint Parity (Prompt Chip, Cancel Button, Notif Card)
+print('\n[19] Testing Acrylic Glass Tint Parity & Downsample Leak Protection:');
+assert(kawaseText.includes('setPaintOpacity(layerPipeline, 0)'), 'createRenderTarget zeroes layerPipeline opacity to eliminate downsample slice leaks');
+assert(kawaseText.includes('captureGeometry(actor, sourceFramebuffer)'), 'addBlurPasses uses captureGeometry projection for exact pixel sampling');
+
+// Hue-Preserve Inverse test case (e.g. bright yellow / warm wallpaper sample)
+const brightHueColor = {
+    r: 240, g: 190, b: 50,
+    isBrightHue: true,
+    visualState: {
+        useInverse: true,
+        isBrightHue: true,
+        isBrightSample: true,
+        finalColor: { r: 85, g: 65, b: 15 },
+        perceptualLightness: 0.78,
+        noise: 0.01,
+    },
+};
+
+const notifHueBg = getNotifCardBackground(brightHueColor, false);
+const chipHueBg = getAcrylicChipBackground(brightHueColor, false);
+assert(chipHueBg.startsWith('rgba(85, 65, 15,'), 'Prompt chip honors Hue-Preserve Inverse by using darkened color instead of black');
+assert(notifHueBg.style.includes(chipHueBg), 'Prompt chip Hue-Preserve Inverse background matches notification card background identically');
+
+const chipHueFocused = getAcrylicChipBackground(brightHueColor, true);
+assert(chipHueFocused.startsWith('rgba(85, 65, 15,'), 'Prompt chip focused state retains Hue-Preserve Inverse darkened color');
+
+const cancelHueBg = getAcrylicCancelButtonBackground(brightHueColor, false, false);
+assert(cancelHueBg.startsWith('rgba(85, 65, 15,'), 'Cancel button honors Hue-Preserve Inverse darkened color');
+const cancelHueHover = getAcrylicCancelButtonBackground(brightHueColor, false, true);
+assert(cancelHueHover.startsWith('rgba(85, 65, 15,'), 'Cancel button hovered retains Hue-Preserve Inverse darkened color');
+
+// Regular Neutral Inverse test case (e.g. bright white / grey wallpaper sample)
+const neutralInvColor = {
+    r: 235, g: 235, b: 235,
+    isBrightHue: false,
+    visualState: {
+        useInverse: true,
+        isBrightHue: false,
+        isBrightSample: true,
+        perceptualLightness: 0.90,
+        noise: 0.01,
+        overlay: { r: 0, g: 0, b: 0, alpha: 0.16 },
+    },
+};
+
+const notifNeutralBg = getNotifCardBackground(neutralInvColor, false);
+const chipNeutralBg = getAcrylicChipBackground(neutralInvColor, false);
+assert(chipNeutralBg.startsWith('rgba(0, 0, 0,'), 'Prompt chip honors Regular Neutral Inverse using black overlay');
+assert(notifNeutralBg.style.includes(chipNeutralBg), 'Prompt chip Regular Neutral Inverse matches notification card darkAlpha identically');
+
+// Non-Inverse Normal test case (e.g. dark / colorful non-bright wallpaper sample)
+const normalDarkColor = {
+    r: 30, g: 30, b: 50,
+    isBrightHue: false,
+    visualState: {
+        useInverse: false,
+        isBrightHue: false,
+        isBrightSample: false,
+        perceptualLightness: 0.25,
+    },
+};
+
+const chipNormalBg = getAcrylicChipBackground(normalDarkColor, false);
+assert(chipNormalBg === 'rgba(255, 255, 255, 0.113)', 'Prompt chip non-inverse unfocused uses 0.113 frosted white matching card base');
+const chipNormalFocused = getAcrylicChipBackground(normalDarkColor, true);
+assert(chipNormalFocused === 'rgba(255, 255, 255, 0.160)', 'Prompt chip non-inverse focused uses 0.160 frosted white');
 
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);

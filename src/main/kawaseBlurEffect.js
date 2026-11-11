@@ -185,6 +185,7 @@ function createRenderTarget(context, width, height) {
 
     const layerPipeline = Cogl.Pipeline.new(context);
     layerPipeline.set_layer_texture(0, texture);
+    setPaintOpacity(layerPipeline, 0);
 
     return { texture, framebuffer, layerPipeline, width, height, usedWidth: 0, usedHeight: 0 };
 }
@@ -205,6 +206,44 @@ function setFloat(pipeline, name, value) {
 function setVector2(pipeline, name, x, y) {
     setFloat(pipeline, `${name}_x`, x);
     setFloat(pipeline, `${name}_y`, y);
+}
+
+function captureGeometry(actor, framebuffer) {
+    if (!framebuffer?.get_modelview_matrix || !framebuffer?.get_projection_matrix) {
+        const [originX, originY] = actor.get_transformed_position();
+        return { sourceX: Math.round(originX), sourceY: Math.round(originY) };
+    }
+
+    try {
+        const m = framebuffer.get_modelview_matrix()
+            .multiply(framebuffer.get_projection_matrix())
+            .to_float();
+        const viewportX = framebuffer.get_viewport_x ? framebuffer.get_viewport_x() : 0;
+        const viewportY = framebuffer.get_viewport_y ? framebuffer.get_viewport_y() : 0;
+        const viewportWidth = framebuffer.get_viewport_width ? framebuffer.get_viewport_width() : framebuffer.get_width();
+        const viewportHeight = framebuffer.get_viewport_height ? framebuffer.get_viewport_height() : framebuffer.get_height();
+
+        const corners = [[0, 0], [actor.width, 0], [0, actor.height], [actor.width, actor.height]]
+            .map(([x, y]) => {
+                const w = x * m[3] + y * m[7] + m[15];
+                if (Math.abs(w) < 0.0001)
+                    return [viewportX, viewportY];
+                return [
+                    viewportX + ((x * m[0] + y * m[4] + m[12]) / w + 1) * viewportWidth / 2,
+                    viewportY + (1 - (x * m[1] + y * m[5] + m[13]) / w) * viewportHeight / 2,
+                ];
+            });
+
+        const xs = corners.map(p => p[0]);
+        const ys = corners.map(p => p[1]);
+        return {
+            sourceX: Math.floor(Math.min(...xs)),
+            sourceY: Math.floor(Math.min(...ys)),
+        };
+    } catch (_) {
+        const [originX, originY] = actor.get_transformed_position();
+        return { sourceX: Math.round(originX), sourceY: Math.round(originY) };
+    }
 }
 
 function addPassNode(parent, target, pipeline, bounds, name) {
@@ -590,7 +629,7 @@ export const KawaseBlurEffect = GObject.registerClass({
 
         const isActorDirty = Boolean(flags & Clutter.EffectPaintFlags.ACTOR_DIRTY);
         const positionChanged = (this._lastX !== viewX || this._lastY !== viewY ||
-                                 this._lastW !== w || this._lastH !== h);
+            this._lastW !== w || this._lastH !== h);
 
         const needsCapture = this._live
             || (this._mode === 1 ? (!this.blurValid || positionChanged) : (!this.blurValid || isActorDirty || positionChanged));
@@ -619,40 +658,38 @@ export const KawaseBlurEffect = GObject.registerClass({
     addBlurPasses(node, actor, bounds, passes, blend, paintContext) {
         const sourceFramebuffer = paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null;
         if (this._mode === 1 && sourceFramebuffer) {
-            const [originX, originY] = actor.get_transformed_position();
-            const stageView = paintContext?.get_stage_view ? paintContext.get_stage_view() : null;
-            let srcX = Math.round(originX);
-            let srcY = Math.round(originY);
-            if (stageView) {
-                const layout = stageView.get_layout();
-                srcX -= layout.x;
-                srcY -= layout.y;
-            }
-
+            const geom = captureGeometry(actor, sourceFramebuffer);
             const scale = actor.get_resource_scale();
-            const blitSrcX = Math.max(0, Math.round((srcX + bounds.x) * scale));
-            const blitSrcY = Math.max(0, Math.round((srcY + bounds.y) * scale));
-            const targetW = this.downTargets[0].usedWidth;
-            const targetH = this.downTargets[0].usedHeight;
+            const blitSrcX = Math.max(0, Math.round(geom.sourceX + bounds.x * scale));
+            const blitSrcY = Math.max(0, Math.round(geom.sourceY + bounds.y * scale));
 
-            try {
-                if (sourceFramebuffer.blit) {
-                    sourceFramebuffer.blit(
-                        this.downTargets[0].framebuffer,
-                        blitSrcX, blitSrcY,
-                        0, 0,
-                        targetW, targetH
-                    );
-                } else if (Cogl.blit_framebuffer) {
-                    Cogl.blit_framebuffer(
-                        sourceFramebuffer,
-                        this.downTargets[0].framebuffer,
-                        blitSrcX, blitSrcY,
-                        0, 0,
-                        targetW, targetH
-                    );
+            const fbW = sourceFramebuffer.get_width ? sourceFramebuffer.get_width() : 0;
+            const fbH = sourceFramebuffer.get_height ? sourceFramebuffer.get_height() : 0;
+            const maxW = fbW > 0 ? Math.max(0, fbW - blitSrcX) : this.downTargets[0].usedWidth;
+            const maxH = fbH > 0 ? Math.max(0, fbH - blitSrcY) : this.downTargets[0].usedHeight;
+            const blitW = Math.min(this.downTargets[0].usedWidth, maxW);
+            const blitH = Math.min(this.downTargets[0].usedHeight, maxH);
+
+            if (blitW > 0 && blitH > 0) {
+                try {
+                    if (sourceFramebuffer.blit) {
+                        sourceFramebuffer.blit(
+                            this.downTargets[0].framebuffer,
+                            blitSrcX, blitSrcY,
+                            0, 0,
+                            blitW, blitH
+                        );
+                    } else if (Cogl.blit_framebuffer) {
+                        Cogl.blit_framebuffer(
+                            sourceFramebuffer,
+                            this.downTargets[0].framebuffer,
+                            blitSrcX, blitSrcY,
+                            0, 0,
+                            blitW, blitH
+                        );
+                    }
+                } catch (_) {
                 }
-            } catch (_) {
             }
         } else {
             const actorLayer = Clutter.LayerNode.new_to_framebuffer(
