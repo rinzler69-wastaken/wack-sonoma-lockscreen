@@ -5,6 +5,14 @@ import GLib from 'gi://GLib';
 import St from 'gi://St';
 import { _log, userListItems } from './gdmUtils.js';
 import { getUserLabelStyle } from '../main/colorUtils.js';
+import { AvatarType } from './gdmAuthState.js';
+
+export const AvatarType = Object.freeze({
+    IMAGE: 'IMAGE',
+    SYMBOLIC: 'SYMBOLIC',
+    PENDING: 'PENDING',
+});
+export { AvatarType };
 
 export class GdmAvatarManager {
     constructor(gdmManager) {
@@ -17,6 +25,17 @@ export class GdmAvatarManager {
         this._connectedUser = null;
         this._dialog = null;
         this._activeSessionUsers = null;
+    }
+
+    _classifyAvatar(avatar) {
+        if (!avatar || avatar._isDestroyed)
+            return null;
+        if (this._hasImageAvatar(avatar))
+            return AvatarType.IMAGE;
+        const user = avatar._user;
+        if (user && !user.is_loaded)
+            return AvatarType.PENDING;
+        return AvatarType.SYMBOLIC;
     }
 
     setup(dialog = null) {
@@ -82,47 +101,54 @@ export class GdmAvatarManager {
         const userList = this._dialog?._userList || this._gdm._dialog?._userList;
         if (userList) {
             userList.disconnectObject(this);
-            for (const item of userListItems(userList)) {
-                const userWidget = item._userWidget;
-                const avatar = userWidget?._avatar;
-                const user = item.user || avatar?._user || userWidget?._user;
-                if (user)
-                    user.disconnectObject(this);
-                if (userWidget && userWidget._wackAvatarContainer) {
-                    const container = userWidget._wackAvatarContainer;
-                    if (avatar && container.contains(avatar)) {
-                        container.remove_child(avatar);
-                        userWidget.remove_child(container);
-                        userWidget.insert_child_at_index(avatar, 0);
-                    }
-                    container.destroy();
-                    delete userWidget._wackAvatarContainer;
-                    delete userWidget._wackSessionBadge;
-                    delete userWidget._wackSessionBadgeConnected;
-                    delete userWidget._wackUpdateBadge;
-                }
-                if (avatar) {
-                    avatar.disconnectObject(this);
-                    if (!avatar._isDestroyed) {
-                        if (avatar._wackOrigUpdate) {
-                            avatar.update = avatar._wackOrigUpdate;
-                            delete avatar._wackOrigUpdate;
-                        }
-                        delete avatar._wackUpdating;
-                        delete avatar._wackSettingStyle;
-                        if (avatar._wackHasVibrancy) {
-                            avatar.set_style(null);
-                        }
-                        delete avatar._wackHasVibrancy;
-                    }
-                }
-            }
+            for (const item of userListItems(userList))
+                this._teardownUserListItem(item);
         }
 
         this.gdmAvatarSetup = false;
         this._lastAvatarColor = null;
         this._dialog = null;
         this._activeSessionUsers = null;
+    }
+
+    _teardownUserListItem(item) {
+        if (!item) return;
+        const userWidget = item._userWidget;
+        const avatar = userWidget?._avatar;
+        const user = item.user || avatar?._user || userWidget?._user;
+
+        if (user)
+            user.disconnectObject(this);
+
+        if (userWidget && userWidget._wackAvatarContainer) {
+            const container = userWidget._wackAvatarContainer;
+            if (avatar && container.contains(avatar)) {
+                container.remove_child(avatar);
+                userWidget.remove_child(container);
+                userWidget.insert_child_at_index(avatar, 0);
+            }
+            container.destroy();
+            delete userWidget._wackAvatarContainer;
+            delete userWidget._wackSessionBadge;
+            delete userWidget._wackSessionBadgeConnected;
+            delete userWidget._wackUpdateBadge;
+        }
+
+        if (avatar) {
+            avatar.disconnectObject(this);
+            if (!avatar._isDestroyed) {
+                if (avatar._wackOrigUpdate) {
+                    avatar.update = avatar._wackOrigUpdate;
+                    delete avatar._wackOrigUpdate;
+                }
+                delete avatar._wackUpdating;
+                delete avatar._wackSettingStyle;
+                if (avatar._wackHasVibrancy) {
+                    avatar.set_style(null);
+                }
+                delete avatar._wackHasVibrancy;
+            }
+        }
     }
 
     _getActiveSessionUsers() {
@@ -143,7 +169,7 @@ export class GdmAvatarManager {
                 if (seat && uid >= 1000)
                     this._activeSessionUsers.add(userName);
             }
-        } catch (_) {}
+        } catch (_) { }
 
         return this._activeSessionUsers;
     }
@@ -267,25 +293,18 @@ export class GdmAvatarManager {
                 if (avatar._isDestroyed || avatar._wackSettingStyle || avatar._wackUpdating)
                     return;
                 avatar._wackUpdating = true;
-                avatar._wackOrigUpdate();
-                avatar._wackUpdating = false;
+                try {
+                    avatar._wackOrigUpdate();
+                } finally {
+                    avatar._wackUpdating = false;
+                }
 
                 this._applyStyleToUserListItemAvatar(avatar);
             };
 
             avatar.connectObject('destroy', () => {
                 avatar._isDestroyed = true;
-                delete avatar._wackOrigUpdate;
-                delete avatar._wackUpdating;
-                delete avatar._wackSettingStyle;
-                delete avatar._wackHasVibrancy;
-                if (userWidget._wackAvatarContainer) {
-                    userWidget._wackAvatarContainer.destroy();
-                    delete userWidget._wackAvatarContainer;
-                    delete userWidget._wackSessionBadge;
-                    delete userWidget._wackSessionBadgeConnected;
-                    delete userWidget._wackUpdateBadge;
-                }
+                this._teardownUserListItem(item);
             }, this);
 
             if (user && !user.is_loaded) {
@@ -308,16 +327,13 @@ export class GdmAvatarManager {
     _applyStyleToUserListItemAvatar(avatar) {
         if (!avatar || avatar._isDestroyed || avatar._wackSettingStyle) return;
 
-        // Never touch picture avatars! GNOME Shell sets their photo via background-image on avatar.style.
-        if (this._hasImageAvatar(avatar)) {
+        const classification = this._classifyAvatar(avatar);
+        if (classification === AvatarType.IMAGE) {
             delete avatar._wackHasVibrancy;
             return;
         }
 
-        // If user info is still loading via AccountsService, wait until it's loaded before styling
-        // so we don't prematurely style an account whose photo hasn't been read yet.
-        const user = avatar._user;
-        if (user && !user.is_loaded)
+        if (classification === AvatarType.PENDING)
             return;
 
         const color = this._lastAvatarColor;
@@ -326,8 +342,11 @@ export class GdmAvatarManager {
 
         if (avatar.get_style() !== buttonStyle) {
             avatar._wackSettingStyle = true;
-            avatar.set_style(buttonStyle);
-            avatar._wackSettingStyle = false;
+            try {
+                avatar.set_style(buttonStyle);
+            } finally {
+                avatar._wackSettingStyle = false;
+            }
             if (buttonStyle)
                 avatar._wackHasVibrancy = true;
             else
@@ -361,65 +380,72 @@ export class GdmAvatarManager {
             this._lastAvatarColor = avatarColor;
         if (this._updatingVibrancy) return;
 
-        const color = this._lastAvatarColor;
         this._updatingVibrancy = true;
-        const bgRgba = color ? (color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`) : null;
-        const buttonStyle = bgRgba ? `background-color: ${bgRgba} !important; border-radius: 999px !important;` : null;
+        try {
+            const color = this._lastAvatarColor;
+            const bgRgba = color ? (color.rgba || `rgba(${color.r}, ${color.g}, ${color.b}, 1.0)`) : null;
+            const buttonStyle = bgRgba ? `background-color: ${bgRgba} !important; border-radius: 999px !important;` : null;
 
-        const applyToWell = (uw) => {
-            if (!uw) return;
-            const avatar = uw._avatar || uw._avatarButton?.get_child();
-            const avatarButton = uw._avatarButton;
-            if (!avatarButton) return;
+            const applyToWell = (uw) => {
+                if (!uw) return;
+                const avatar = uw._avatar || uw._avatarButton?.get_child();
+                const avatarButton = uw._avatarButton;
+                if (!avatarButton) return;
 
-            if (this._hasImageAvatar(avatar)) {
-                if (avatarButton.get_style() !== null)
-                    avatarButton.set_style(null);
-                // Never clear or overwrite avatar.style for picture avatars!
-                delete avatar._wackHasVibrancy;
-            } else {
-                if (avatarButton.get_style() !== buttonStyle)
-                    avatarButton.set_style(buttonStyle);
-                // Apply to the avatar widget directly for placeholder/symbolic avatars
-                if (avatar) {
-                    if (avatar.get_style() !== buttonStyle) {
-                        avatar._wackSettingStyle = true;
-                        avatar.set_style(buttonStyle);
-                        avatar._wackSettingStyle = false;
-                        if (buttonStyle)
-                            avatar._wackHasVibrancy = true;
-                        else
-                            delete avatar._wackHasVibrancy;
+                const classification = this._classifyAvatar(avatar);
+                if (classification === AvatarType.IMAGE) {
+                    if (avatarButton.get_style() !== null)
+                        avatarButton.set_style(null);
+                    // Never clear or overwrite avatar.style for picture avatars!
+                    delete avatar._wackHasVibrancy;
+                } else if (classification === AvatarType.SYMBOLIC) {
+                    if (avatarButton.get_style() !== buttonStyle)
+                        avatarButton.set_style(buttonStyle);
+                    // Apply to the avatar widget directly for placeholder/symbolic avatars
+                    if (avatar) {
+                        if (avatar.get_style() !== buttonStyle) {
+                            avatar._wackSettingStyle = true;
+                            try {
+                                avatar.set_style(buttonStyle);
+                            } finally {
+                                avatar._wackSettingStyle = false;
+                            }
+                            if (buttonStyle)
+                                avatar._wackHasVibrancy = true;
+                            else
+                                delete avatar._wackHasVibrancy;
+                        }
+                        avatar.clip_to_allocation = true;
+                        const child = avatar.get_child();
+                        if (child) {
+                            const iconStyle = buttonStyle ? 'background-color: transparent !important; border-radius: 999px !important;' : null;
+                            if (child.get_style() !== iconStyle)
+                                child.set_style(iconStyle);
+                        }
                     }
-                    avatar.clip_to_allocation = true;
-                    const child = avatar.get_child();
-                    if (child) {
-                        const iconStyle = buttonStyle ? 'background-color: transparent !important; border-radius: 999px !important;' : null;
-                        if (child.get_style() !== iconStyle)
-                            child.set_style(iconStyle);
-                    }
+                    if (avatarButton)
+                        avatarButton.clip_to_allocation = true;
                 }
-                if (avatarButton)
-                    avatarButton.clip_to_allocation = true;
+            };
+
+            const authPrompt = this._dialog?._authPrompt || this._gdm._dialog?._authPrompt;
+            const authPromptWell = authPrompt?._userWell?.get_child();
+            applyToWell(authPromptWell);
+            if (authPromptWell?._label) {
+                authPromptWell._label.set_style(color ? getUserLabelStyle(color) : null);
             }
-        };
 
-        const authPrompt = this._dialog?._authPrompt || this._gdm._dialog?._authPrompt;
-        const authPromptWell = authPrompt?._userWell?.get_child();
-        applyToWell(authPromptWell);
-        if (authPromptWell?._label) {
-            authPromptWell._label.set_style(color ? getUserLabelStyle(color) : null);
+            if (this._gdm._cupertinoRestPrompt?.updateVisuals) {
+                this._gdm._cupertinoRestPrompt.updateVisuals(color);
+            } else {
+                applyToWell(this._gdm._cupertinoRestPrompt?._userWell?.get_child());
+            }
+
+            // Also apply to empty-avatar tiles in the user selection list.
+            this.updateUserListVibrancy();
+        } finally {
+            this._updatingVibrancy = false;
         }
-
-        if (this._gdm._cupertinoRestPrompt?.updateVisuals) {
-            this._gdm._cupertinoRestPrompt.updateVisuals(color);
-        } else {
-            applyToWell(this._gdm._cupertinoRestPrompt?._userWell?.get_child());
-        }
-
-        // Also apply to empty-avatar tiles in the user selection list.
-        this.updateUserListVibrancy();
-        this._updatingVibrancy = false;
     }
 
     updateUserListVibrancy() {
@@ -459,8 +485,11 @@ export class GdmAvatarManager {
                     if (avatar._wackSettingStyle || avatar._wackUpdating)
                         return;
                     avatar._wackUpdating = true;
-                    avatar._wackOrigUpdate();
-                    avatar._wackUpdating = false;
+                    try {
+                        avatar._wackOrigUpdate();
+                    } finally {
+                        avatar._wackUpdating = false;
+                    }
 
                     this.updateAvatarVibrancy();
                 };

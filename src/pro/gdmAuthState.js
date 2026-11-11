@@ -8,6 +8,12 @@ export const GdmAuthState = Object.freeze({
     SUCCESS: 'success',               // Verification succeeded, fading out
 });
 
+export const AvatarType = Object.freeze({
+    IMAGE: 'IMAGE',
+    SYMBOLIC: 'SYMBOLIC',
+    PENDING: 'PENDING',
+});
+
 const VALID_TRANSITIONS = {
     [GdmAuthState.IDLE]: [GdmAuthState.SELECTION, GdmAuthState.SUCCESS],
     [GdmAuthState.SELECTION]: [GdmAuthState.AUTHENTICATING, GdmAuthState.RESETTING, GdmAuthState.SUCCESS, GdmAuthState.IDLE],

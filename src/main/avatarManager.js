@@ -4,6 +4,7 @@ export class AvatarManager {
         this.cupertinoAvatarSetup = false;
         this.origUpdateUser = null;
         this.origMethodName = null;
+        this._lastAvatarColor = null;
     }
 
     setupCupertinoAvatarOverride() {

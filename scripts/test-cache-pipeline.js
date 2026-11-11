@@ -560,6 +560,94 @@ syncStore.loadUserSync('charlie', futureV2Manifest);
 await asyncStore.loadUser('charlie', futureV2Manifest);
 assert(!syncStore.themes.has('charlie') && !asyncStore.themes.has('charlie'), 'Both sync and async paths reject unsupported version 2 manifest');
 
+// 11. Test GDM Auth State Machine
+print('\n[11] Testing GDM Auth State Machine:');
+const { GdmAuthState, GdmAuthStateController } = await import('../src/pro/gdmAuthState.js');
+
+const mockGdm = { _dialog: { _user: { get_user_name: () => 'alice' } } };
+const authCtrl = new GdmAuthStateController(mockGdm);
+
+assert(authCtrl.state === GdmAuthState.IDLE, 'Initial state is IDLE');
+assert(authCtrl.isIdle === true, 'isIdle is true');
+assert(authCtrl.isNotListed === false, 'isNotListed initially false');
+assert(authCtrl.legacyAnimationState === 'idle', 'Initial legacy state is idle');
+
+// Selection transition
+const selResult = authCtrl.selectUser(false);
+assert(selResult === true, 'selectUser transition succeeds');
+assert(authCtrl.state === GdmAuthState.SELECTION, 'State is SELECTION');
+assert(authCtrl.isSelection === true, 'isSelection is true');
+assert(authCtrl.legacyAnimationState === 'selection', 'Legacy state in SELECTION is selection');
+
+// Authentication transition
+const authResult = authCtrl.beginAuthentication();
+assert(authResult === true, 'beginAuthentication succeeds');
+assert(authCtrl.state === GdmAuthState.AUTHENTICATING, 'State is AUTHENTICATING');
+assert(authCtrl.isAuthenticating === true, 'isAuthenticating is true');
+assert(authCtrl.legacyAnimationState === 'idle', 'Legacy state in AUTHENTICATING is idle');
+
+// Soft retry (stay in authenticating)
+const retryResult = authCtrl.transitionTo(GdmAuthState.AUTHENTICATING, 'retry');
+assert(retryResult === true, 'Soft retry staying in AUTHENTICATING succeeds');
+
+// Reset to picker
+const resetStart = authCtrl.beginReset();
+assert(resetStart === true, 'beginReset succeeds');
+assert(authCtrl.state === GdmAuthState.RESETTING, 'State is RESETTING');
+assert(authCtrl.isResetting === true, 'isResetting is true');
+
+const resetFinish = authCtrl.finishReset();
+assert(resetFinish === true, 'finishReset succeeds');
+assert(authCtrl.state === GdmAuthState.IDLE, 'State returned to IDLE');
+
+// Verification success
+authCtrl.selectUser(true);
+assert(authCtrl.isNotListed === true, 'isNotListed properly set when true');
+authCtrl.beginAuthentication();
+const succResult = authCtrl.markSuccess();
+assert(succResult === true, 'markSuccess succeeds');
+assert(authCtrl.state === GdmAuthState.SUCCESS, 'State is SUCCESS');
+assert(authCtrl.isSuccess === true, 'isSuccess is true');
+assert(authCtrl.legacyAnimationState === 'success', 'Legacy state in SUCCESS is success');
+
+// Guard against invalid transition while verified
+const invalidTransition = authCtrl.transitionTo(GdmAuthState.SELECTION, 'spurious');
+assert(invalidTransition === false, 'Spurious selection transition from SUCCESS is rejected');
+assert(authCtrl.state === GdmAuthState.SUCCESS, 'State remains SUCCESS after rejected transition');
+
+// Full reset leaves SUCCESS
+authCtrl.reset('dialog_teardown');
+assert(authCtrl.state === GdmAuthState.IDLE, 'reset() cleanly returns from SUCCESS to IDLE');
+assert(authCtrl.isNotListed === false, 'reset() clears isNotListed');
+
+// 12. Test Unlock Sequence State Lifecycle & Snapshot Preservation
+print('\n[12] Testing Unlock Sequence State:');
+const { UnlockSequenceState } = await import('../src/main/unlockState.js');
+
+assert(UnlockSequenceState.IDLE === 'IDLE', 'UnlockSequenceState has IDLE');
+assert(UnlockSequenceState.PREPARING === 'PREPARING', 'UnlockSequenceState has PREPARING');
+assert(UnlockSequenceState.SNAPSHOT_ANIMATING === 'SNAPSHOT_ANIMATING', 'UnlockSequenceState has SNAPSHOT_ANIMATING');
+assert(UnlockSequenceState.FINISHING === 'FINISHING', 'UnlockSequenceState has FINISHING');
+assert(UnlockSequenceState.COMPLETED === 'COMPLETED', 'UnlockSequenceState has COMPLETED');
+
+// Verify snapshot splice behavior
+const mockGlobal = globalThis.global || globalThis;
+mockGlobal.wack_window_snapshots = [{ id: 1 }, { id: 2 }];
+const captured = Array.isArray(mockGlobal.wack_window_snapshots)
+    ? mockGlobal.wack_window_snapshots.splice(0)
+    : [];
+assert(captured.length === 2, 'Captured exactly 2 window snapshots');
+assert(mockGlobal.wack_window_snapshots.length === 0, 'Global snapshots array drained by splice');
+delete mockGlobal.wack_window_snapshots;
+
+// 13. Test Avatar Classification Types
+print('\n[13] Testing Avatar Classification:');
+const { AvatarType } = await import('../src/pro/gdmAuthState.js');
+
+assert(AvatarType.IMAGE === 'IMAGE', 'AvatarType has IMAGE');
+assert(AvatarType.SYMBOLIC === 'SYMBOLIC', 'AvatarType has SYMBOLIC');
+assert(AvatarType.PENDING === 'PENDING', 'AvatarType has PENDING');
+
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
 print(`========================================\n`);

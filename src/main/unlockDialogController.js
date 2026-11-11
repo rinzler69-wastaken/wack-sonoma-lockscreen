@@ -10,17 +10,12 @@ import {
     CUPERTINO_UNLOCK_PANEL_FADE,
     CUPERTINO_UNLOCK_TSO_DELAY,
 } from './constants.js';
+import { UnlockSequenceState } from './unlockState.js';
 import { applyClockAnimation, applyPromptAnimation } from './anims.js';
 import { _setActorVisible } from './mainUtils.js';
 import { PasswordIndicators, connectFailureShake } from './passwordField.js';
 
-export const UnlockSequenceState = Object.freeze({
-    IDLE: 'IDLE',
-    PREPARING: 'PREPARING',
-    SNAPSHOT_ANIMATING: 'SNAPSHOT_ANIMATING',
-    FINISHING: 'FINISHING',
-    COMPLETED: 'COMPLETED',
-});
+export { UnlockSequenceState };
 
 class UnlockSequenceController {
     constructor(extension) {
@@ -33,12 +28,28 @@ class UnlockSequenceController {
     }
 
     start(onComplete, origFinish, dialog, lockDialogGroup) {
-        this.abort();
-        this.state = UnlockSequenceState.PREPARING;
-
+        // Capture snapshots immediately before any timeouts or session mode changes.
+        // Splicing removes them from global so they cannot be reused or race with wack-shell.
         const capturedSnapshots = Array.isArray(global.wack_window_snapshots)
             ? global.wack_window_snapshots.splice(0)
             : [];
+
+        if (this.finishTimeoutId) {
+            GLib.source_remove(this.finishTimeoutId);
+            this.finishTimeoutId = null;
+        }
+
+        if (this.finishFallbackId) {
+            GLib.source_remove(this.finishFallbackId);
+            this.finishFallbackId = null;
+        }
+
+        if (this.windowFadeContainer) {
+            this.windowFadeContainer.destroy();
+            this.windowFadeContainer = null;
+        }
+
+        this.state = UnlockSequenceState.PREPARING;
 
         const panel = Main.panel;
         if (panel) {
@@ -190,9 +201,6 @@ class UnlockSequenceController {
             this.windowFadeContainer.destroy();
             this.windowFadeContainer = null;
         }
-
-        if (global.wack_window_snapshots)
-            delete global.wack_window_snapshots;
 
         this.state = UnlockSequenceState.IDLE;
     }
@@ -528,5 +536,7 @@ export class UnlockDialogController {
         }
 
         this._unlockSequence.abort();
+        if (global.wack_window_snapshots)
+            delete global.wack_window_snapshots;
     }
 }
