@@ -324,6 +324,15 @@
     spacing: 4px !important;
 }
 
+/* GNOME 51's stylesheet adds margin-top: 80px to the unlock dialog's prompt layout.
+   The prompt stack is anchored by its top edge, so that margin pushed the entry
+   about 80px lower than on 50 and off the bottom of an 800px-high screen. */
+.wack-cupertino-rest .login-dialog-prompt-layout,
+.wack-cupertino-prompt .login-dialog-prompt-layout,
+.wack-cupertino-prompt.login-dialog-prompt-layout {
+    margin-top: 0 !important;
+}
+
 /* Inline hint label anchored to the user widget in rest state */
 .wack-cupertino-hint {
     color: rgba(255, 255, 255, 0.625);
