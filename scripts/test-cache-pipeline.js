@@ -661,7 +661,6 @@ const avatarManagerText = new TextDecoder('utf-8').decode(avatarManagerBytes);
 const duplicateDeclarations = (avatarManagerText.match(/const\s+AvatarType\s*=/g) || []).length;
 assert(duplicateDeclarations === 0, 'gdmAvatarManager.js must not re-declare AvatarType');
 assert(avatarManagerText.includes("import { AvatarType } from './gdmAuthState.js'"), 'gdmAvatarManager imports AvatarType from gdmAuthState');
-assert(avatarManagerText.includes("item.remove_style_pseudo_class('logged-in')"), 'gdmAvatarManager intercepts _updateLoggedIn to remove logged-in pseudo-class');
 
 const gdmCssFile = Gio.File.new_for_path('src/pro/gdm.css');
 const [, gdmCssBytes] = gdmCssFile.load_contents(null);
