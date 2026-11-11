@@ -148,9 +148,23 @@ export const WackClock = GObject.registerClass(
         }
 
         /**
+         * GNOME 51 calls this on the dialog's clock when the selected
+         * authentication mechanism changes; the hint replaces the default text.
+         * @param {string|null|undefined} hint
+         */
+        selectAuthHint(hint) {
+            this._authHint = hint;
+            this._updateHint();
+        }
+
+        /**
          * Standardizes the unlock hint text for desktop and touch devices.
          */
         _updateHint() {
+            if (this._authHint) {
+                this._hint.text = this._authHint;
+                return;
+            }
             this._hint.text = this._seat.touch_mode
                 ? shellGettext('Swipe up to unlock')
                 : shellGettext('Click or press a key to unlock');
