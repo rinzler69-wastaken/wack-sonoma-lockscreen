@@ -661,6 +661,14 @@ const avatarManagerText = new TextDecoder('utf-8').decode(avatarManagerBytes);
 const duplicateDeclarations = (avatarManagerText.match(/const\s+AvatarType\s*=/g) || []).length;
 assert(duplicateDeclarations === 0, 'gdmAvatarManager.js must not re-declare AvatarType');
 assert(avatarManagerText.includes("import { AvatarType } from './gdmAuthState.js'"), 'gdmAvatarManager imports AvatarType from gdmAuthState');
+assert(avatarManagerText.includes("item.remove_style_pseudo_class('logged-in')"), 'gdmAvatarManager intercepts _updateLoggedIn to remove logged-in pseudo-class');
+
+const gdmCssFile = Gio.File.new_for_path('src/pro/gdm.css');
+const [, gdmCssBytes] = gdmCssFile.load_contents(null);
+const gdmCssText = new TextDecoder('utf-8').decode(gdmCssBytes);
+assert(gdmCssText.includes('.login-dialog-user-list-item:logged-in .user-icon'), 'gdm.css targets logged-in user icon');
+assert(!gdmCssText.includes('border-color: -st-accent-color !important;'), 'gdm.css removes accent-color border on logged-in users');
+assert(gdmCssText.includes('border-color: transparent !important;'), 'gdm.css forces border-color transparent for logged-in users');
 
 const legacyDconf = Gio.File.new_for_path('/etc/dconf/db/gdm.d/99-wack-lockscreen');
 assert(!legacyDconf.query_exists(null), 'Legacy 99-wack-lockscreen is removed to prevent GDM Settings purge');

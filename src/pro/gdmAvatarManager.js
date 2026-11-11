@@ -59,7 +59,7 @@ export class GdmAvatarManager {
             authPrompt.connectObject('destroy', () => this.teardown(true), this);
         }
 
-        const userList = this._dialog?._userList;
+        const userList = this._dialog?._userList || this._gdm._dialog?._userList;
         if (userList) {
             userList.connectObject(
                 'item-added', (_ul, item) => this._setupUserListItem(item),
@@ -111,6 +111,17 @@ export class GdmAvatarManager {
 
     _teardownUserListItem(item, dialogDestroyed = false) {
         if (!item) return;
+
+        if (item._wackOrigUpdateLoggedIn) {
+            if (!dialogDestroyed && !item._isDestroyed) {
+                item._updateLoggedIn = item._wackOrigUpdateLoggedIn;
+                const u = item.user || item._userWidget?._user;
+                if (u && typeof u.is_logged_in === 'function' && u.is_logged_in())
+                    item.add_style_pseudo_class('logged-in');
+            }
+            delete item._wackOrigUpdateLoggedIn;
+        }
+
         const userWidget = item._userWidget;
         const avatar = userWidget?._avatar;
         const user = item.user || avatar?._user || userWidget?._user;
@@ -175,6 +186,17 @@ export class GdmAvatarManager {
     }
 
     _setupUserListItem(item) {
+        if (!item) return;
+
+        // Force hide active session accent border by intercepting UserListItem._updateLoggedIn
+        if (typeof item._updateLoggedIn === 'function' && !item._wackOrigUpdateLoggedIn) {
+            item._wackOrigUpdateLoggedIn = item._updateLoggedIn.bind(item);
+            item._updateLoggedIn = () => {
+                item.remove_style_pseudo_class('logged-in');
+            };
+            item.remove_style_pseudo_class('logged-in');
+        }
+
         const userWidget = item?._userWidget;
         const avatar = userWidget?._avatar;
         if (!avatar || !userWidget) return;

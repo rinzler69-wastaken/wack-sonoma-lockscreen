@@ -357,9 +357,10 @@
     box-sizing: border-box !important;
 }
 
-/* Highlight logged-in users with the system accent color */
+/* Force hide accent circle on active session avatars */
+.login-dialog-user-list-view .login-dialog-user-list .login-dialog-user-list-item:logged-in .user-icon,
 .login-dialog-user-list-item:logged-in .user-icon {
-    border-color: -st-accent-color !important;
+    border-color: transparent !important;
 }
 
 .login-dialog-user-list-item {
