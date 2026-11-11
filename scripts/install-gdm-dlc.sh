@@ -8,7 +8,8 @@ set -euo pipefail
 UUID="wack-lockscreen-clock@rinzler69-wastaken.github.com"
 TARGET_DIR="/usr/share/gnome-shell/extensions/$UUID"
 DCONF_GDM_DIR="/etc/dconf/db/gdm.d"
-DCONF_FILE="$DCONF_GDM_DIR/99-wack-lockscreen"
+DCONF_FILE="$DCONF_GDM_DIR/50-wack-lockscreen"
+DCONF_LEGACY_FILE="$DCONF_GDM_DIR/99-wack-lockscreen"
 DCONF_PROFILE_MARK="# Created by the WACK Sonoma Lockscreen GDM DLC installer"
 
 # Determine user home and local extension directories globally
@@ -102,6 +103,9 @@ ensure_gdm_dconf_profile() {
 if [ "$FORCE" = false ] && { [ -f "$TARGET_DIR/src/pro/pro.js" ] || [ -f "$TARGET_DIR/pro.js" ]; } && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
     echo "-> Verifying and repairing system-wide permissions and ownership..."
     chown -R root:root "$TARGET_DIR"
+    if [ -d "$TARGET_DIR/.git" ] && [ -n "${SUDO_USER:-}" ]; then
+        chown -R "$SUDO_USER:$SUDO_USER" "$TARGET_DIR/.git"
+    fi
     chmod -R u=rwX,go=rX "$TARGET_DIR"
     find "$TARGET_DIR" -type d -exec chmod 755 {} +
     find "$TARGET_DIR" -type f -exec chmod 644 {} +
@@ -257,6 +261,9 @@ fi
 # 6. Ensure correct file ownership and permissions for GDM
 echo "-> Setting system-wide permissions and ownership (root:root, 755/644)..."
 chown -R root:root "$TARGET_DIR"
+if [ -d "$TARGET_DIR/.git" ] && [ -n "${SUDO_USER:-}" ]; then
+    chown -R "$SUDO_USER:$SUDO_USER" "$TARGET_DIR/.git"
+fi
 chmod -R u=rwX,go=rX "$TARGET_DIR"
 find "$TARGET_DIR" -type d -exec chmod 755 {} +
 find "$TARGET_DIR" -type f -exec chmod 644 {} +
@@ -271,6 +278,7 @@ ensure_gdm_dconf_profile
 echo "-> Configuring GDM dconf system-db overrides..."
 mkdir -p "$DCONF_GDM_DIR"
 chmod 755 "$DCONF_GDM_DIR"
+rm -f "$DCONF_LEGACY_FILE"
 cat <<EOF > "$DCONF_FILE"
 [org/gnome/shell]
 enabled-extensions=['$UUID']

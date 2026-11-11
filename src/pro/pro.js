@@ -28,6 +28,7 @@ export class GdmManager {
         this._interfaceSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
         this._active = false;
         this._dialog = null;
+        this._dialogDestroyed = false;
         this._dialogParent = null;
 
         // Subsystems
@@ -123,7 +124,7 @@ export class GdmManager {
 
             if (Main.screenShield._dialog && this._dialog !== Main.screenShield._dialog) {
                 if (this._dialog) {
-                    this._teardown();
+                    this._teardown(this._dialogDestroyed);
                 }
                 this._dialog = Main.screenShield._dialog;
                 this._setup();
@@ -229,6 +230,12 @@ export class GdmManager {
 
     _setup() {
         const dialog = this._dialog;
+        this._dialogDestroyed = false;
+        dialog.connectObject('destroy', () => {
+            this._dialogDestroyed = true;
+            this._onDialogDestroyed();
+        }, this);
+
         this._dialogParent = dialog.get_parent();
 
         this._verificationSucceeded = false;
@@ -724,7 +731,14 @@ export class GdmManager {
         });
     }
 
-    _teardown() {
+    _onDialogDestroyed() {
+        _log('[WACK/GdmManager] LoginDialog destroyed');
+        this._teardown(true);
+        this._dialog = null;
+        this._dialogParent = null;
+    }
+
+    _teardown(isDestroyed = false) {
         this._verificationSucceeded = false;
         this._authState.reset('teardown');
         this._animController._legacySuccessFadeRunning = false;
@@ -733,18 +747,20 @@ export class GdmManager {
         this._legacyPromptAnimationState = 'idle';
         this._skipLegacyPromptEntryAnimation = false;
         const dialog = this._dialog;
+        const dialogAlive = dialog && !this._dialogDestroyed && !isDestroyed;
 
         this._wallpaperManager.teardown();
         this._clockManager.teardown();
         this._messageManager.teardown();
-        this._userListManager.teardown(dialog);
+        this._userListManager.teardown(dialogAlive ? dialog : null);
         this._promptStyling.teardown();
-        this._avatarManager.teardown();
+        this._avatarManager.teardown(!dialogAlive);
         this._powerButtons.teardown();
         this._passwordIndicators?.destroy();
         this._passwordIndicators = null;
         Main.panel.remove_style_class_name('wack-status-corner');
-        dialog?._authPrompt?._userVerifier?.disconnectObject(this);
+        if (dialogAlive)
+            dialog?._authPrompt?._userVerifier?.disconnectObject(this);
 
         if (this._cupertinoRestPromptContainer) {
             this._cupertinoRestPromptContainer.destroy();
@@ -752,108 +768,90 @@ export class GdmManager {
             this._cupertinoRestPrompt = null;
         }
 
-        if (this._opacityId && dialog) {
+        if (this._opacityId && dialogAlive) {
             dialog.disconnect(this._opacityId);
             this._opacityId = null;
         }
 
-        if (this._origAuthPromptReset && dialog?._authPrompt) {
-            dialog._authPrompt.reset = this._origAuthPromptReset;
-            this._origAuthPromptReset = null;
+        if (dialogAlive && dialog?._authPrompt) {
+            if (this._origAuthPromptReset) {
+                dialog._authPrompt.reset = this._origAuthPromptReset;
+            }
+            if (this._origAuthPromptCancel) {
+                dialog._authPrompt.cancel = this._origAuthPromptCancel;
+            }
+            if (this._origAuthPromptSetMessage) {
+                dialog._authPrompt.setMessage = this._origAuthPromptSetMessage;
+            }
         }
-        if (this._origAuthPromptCancel && dialog?._authPrompt) {
-            dialog._authPrompt.cancel = this._origAuthPromptCancel;
-            this._origAuthPromptCancel = null;
-        }
-        if (this._origAuthPromptSetMessage && dialog?._authPrompt) {
-            dialog._authPrompt.setMessage = this._origAuthPromptSetMessage;
-            this._origAuthPromptSetMessage = null;
-        }
+        this._origAuthPromptReset = null;
+        this._origAuthPromptCancel = null;
+        this._origAuthPromptSetMessage = null;
 
-        for (const { actor, id } of this._allocationHandlers)
-            actor.disconnect(id);
+        for (const { actor, id } of this._allocationHandlers) {
+            if (dialogAlive && actor)
+                actor.disconnect(id);
+        }
         this._allocationHandlers = [];
 
-        if (this._origVfuncAllocate && dialog) {
-            dialog.vfunc_allocate = this._origVfuncAllocate;
-            this._origVfuncAllocate = null;
-        }
-        if (this._origShowPrompt && dialog) {
-            dialog._showPrompt = this._origShowPrompt;
-            this._origShowPrompt = null;
-        }
-        if (this._origOnReset && dialog) {
-            dialog._onReset = this._origOnReset;
-            this._origOnReset = null;
-        }
-        if (this._origOnSessionOpened && dialog) {
-            dialog._onSessionOpened = this._origOnSessionOpened;
-            this._origOnSessionOpened = null;
-        }
-        if (this._origStartSession && dialog) {
-            dialog._startSession = this._origStartSession;
-            this._origStartSession = null;
-        }
-        if (this._origOnVerificationComplete && dialog) {
-            dialog._onVerificationComplete = this._origOnVerificationComplete;
-            this._origOnVerificationComplete = null;
-        }
-        if (this._userVerifierCompleteId) {
-            const uv = dialog?._userVerifier || dialog?._authPrompt?._userVerifier;
-            if (uv)
-                uv.disconnect(this._userVerifierCompleteId);
-            this._userVerifierCompleteId = 0;
-        }
-        if (this._userVerifierSessionOpenedId) {
-            const uv = dialog?._userVerifier || dialog?._authPrompt?._userVerifier;
-            if (uv)
-                uv.disconnect(this._userVerifierSessionOpenedId);
-            this._userVerifierSessionOpenedId = 0;
-        }
-        if (this._notListedButtonId && dialog?._notListedButton) {
-            dialog._notListedButton.disconnect(this._notListedButtonId);
-            this._notListedButtonId = 0;
-        }
-        if (this._origAskForUsername && dialog) {
-            dialog._askForUsernameAndBeginVerification = this._origAskForUsername;
-            this._origAskForUsername = null;
-        }
-        if (this._origBeginVerificationForItem && dialog) {
-            dialog._beginVerificationForItem = this._origBeginVerificationForItem;
-            this._origBeginVerificationForItem = null;
-        }
-        if (this._origOnPrompted && dialog) {
-            dialog._onPrompted = this._origOnPrompted;
-            this._origOnPrompted = null;
-        }
-        if (this._origLoginScreenSessionActivated && dialog) {
-            dialog._loginScreenSessionActivated = this._origLoginScreenSessionActivated;
-            this._origLoginScreenSessionActivated = null;
-        }
-        if (this._origSetUserListExpanded && dialog) {
-            dialog._setUserListExpanded = this._origSetUserListExpanded;
-            this._origSetUserListExpanded = null;
-        }
+        if (dialogAlive) {
+            if (this._origVfuncAllocate) dialog.vfunc_allocate = this._origVfuncAllocate;
+            if (this._origShowPrompt) dialog._showPrompt = this._origShowPrompt;
+            if (this._origOnReset) dialog._onReset = this._origOnReset;
+            if (this._origOnSessionOpened) dialog._onSessionOpened = this._origOnSessionOpened;
+            if (this._origStartSession) dialog._startSession = this._origStartSession;
+            if (this._origOnVerificationComplete) dialog._onVerificationComplete = this._origOnVerificationComplete;
+            if (this._userVerifierCompleteId) {
+                const uv = dialog._userVerifier || dialog._authPrompt?._userVerifier;
+                if (uv) uv.disconnect(this._userVerifierCompleteId);
+            }
+            if (this._userVerifierSessionOpenedId) {
+                const uv = dialog._userVerifier || dialog._authPrompt?._userVerifier;
+                if (uv) uv.disconnect(this._userVerifierSessionOpenedId);
+            }
+            if (this._notListedButtonId && dialog._notListedButton) {
+                dialog._notListedButton.disconnect(this._notListedButtonId);
+            }
+            if (this._origAskForUsername) dialog._askForUsernameAndBeginVerification = this._origAskForUsername;
+            if (this._origBeginVerificationForItem) dialog._beginVerificationForItem = this._origBeginVerificationForItem;
+            if (this._origOnPrompted) dialog._onPrompted = this._origOnPrompted;
+            if (this._origLoginScreenSessionActivated) dialog._loginScreenSessionActivated = this._origLoginScreenSessionActivated;
+            if (this._origSetUserListExpanded) dialog._setUserListExpanded = this._origSetUserListExpanded;
+            if (dialog._logoBin) dialog._logoBin.opacity = 255;
 
-        if (dialog?._logoBin)
-            dialog._logoBin.opacity = 255;
+            if (dialog._authPrompt) {
+                dialog._authPrompt.translation_x = 0;
+                dialog._authPrompt.translation_y = 0;
+                dialog._authPrompt.remove_style_class_name('wack-cupertino-prompt');
+                this._clearCupertinoPromptBackground();
+                this._clearBottomButtonsBackground();
+                if (dialog._authPrompt._message)
+                    dialog._authPrompt._message.remove_style_class_name('wack-cupertino-message');
+                if (dialog._authPrompt._capsLockWarningLabel)
+                    dialog._authPrompt._capsLockWarningLabel.remove_style_class_name('wack-cupertino-caps-lock-warning');
+            }
 
-        if (dialog?._authPrompt) {
-            dialog._authPrompt.translation_x = 0;
-            dialog._authPrompt.translation_y = 0;
-            dialog._authPrompt.remove_style_class_name('wack-cupertino-prompt');
-            this._clearCupertinoPromptBackground();
-            this._clearBottomButtonsBackground();
-            if (dialog._authPrompt._message)
-                dialog._authPrompt._message.remove_style_class_name('wack-cupertino-message');
-            if (dialog._authPrompt._capsLockWarningLabel)
-                dialog._authPrompt._capsLockWarningLabel.remove_style_class_name('wack-cupertino-caps-lock-warning');
-        }
+            if (dialog._userSelectionBox) {
+                dialog._userSelectionBox.translation_x = 0;
+                dialog._userSelectionBox.translation_y = 0;
+            }
 
-        if (dialog?._userSelectionBox) {
-            dialog._userSelectionBox.translation_x = 0;
-            dialog._userSelectionBox.translation_y = 0;
+            dialog.disconnectObject(this);
         }
+        this._origVfuncAllocate = null;
+        this._origShowPrompt = null;
+        this._origOnReset = null;
+        this._origOnSessionOpened = null;
+        this._origStartSession = null;
+        this._origOnVerificationComplete = null;
+        this._userVerifierCompleteId = 0;
+        this._userVerifierSessionOpenedId = 0;
+        this._notListedButtonId = 0;
+        this._origAskForUsername = null;
+        this._origBeginVerificationForItem = null;
+        this._origOnPrompted = null;
+        this._origLoginScreenSessionActivated = null;
+        this._origSetUserListExpanded = null;
 
         const systemBgActor = Main.layoutManager?._systemBackground;
         if (systemBgActor && systemBgActor.content?.background) {

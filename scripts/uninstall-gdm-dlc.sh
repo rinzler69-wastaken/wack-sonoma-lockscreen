@@ -8,7 +8,8 @@ set -euo pipefail
 UUID="wack-lockscreen-clock@rinzler69-wastaken.github.com"
 TARGET_DIR="/usr/share/gnome-shell/extensions/$UUID"
 DCONF_GDM_DIR="/etc/dconf/db/gdm.d"
-DCONF_FILE="$DCONF_GDM_DIR/99-wack-lockscreen"
+DCONF_FILE="$DCONF_GDM_DIR/50-wack-lockscreen"
+DCONF_LEGACY_FILE="$DCONF_GDM_DIR/99-wack-lockscreen"
 
 # Ensure script is run with root privileges
 if [ "$EUID" -ne 0 ]; then
@@ -33,7 +34,7 @@ echo "System Directory: $TARGET_DIR"
 echo "User Directory: $USER_DIR"
 
 # 1. Check if already uninstalled
-if [ ! -d "$TARGET_DIR" ] && [ ! -f "$DCONF_FILE" ]; then
+if [ ! -d "$TARGET_DIR" ] && [ ! -f "$DCONF_FILE" ] && [ ! -f "$DCONF_LEGACY_FILE" ]; then
     echo ""
     echo "✨ GDM Expansion is already uninstalled from GDM."
     exit 0
@@ -104,7 +105,7 @@ fi
 
 # 4. Remove GDM dconf override
 echo "-> Removing GDM dconf overrides..."
-rm -f "$DCONF_FILE"
+rm -f "$DCONF_FILE" "$DCONF_LEGACY_FILE"
 # Remove the GDM dconf profile only if the installer created it.
 if [ "$(head -n 1 /etc/dconf/profile/gdm 2>/dev/null)" = "# Created by the WACK Sonoma Lockscreen GDM DLC installer" ]; then
     rm -f /etc/dconf/profile/gdm

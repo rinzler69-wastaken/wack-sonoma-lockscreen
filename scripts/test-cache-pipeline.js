@@ -648,6 +648,22 @@ assert(AvatarType.IMAGE === 'IMAGE', 'AvatarType has IMAGE');
 assert(AvatarType.SYMBOLIC === 'SYMBOLIC', 'AvatarType has SYMBOLIC');
 assert(AvatarType.PENDING === 'PENDING', 'AvatarType has PENDING');
 
+// 14. Test GDM DLC Integrity & Configuration Invariants
+print('\n[14] Testing GDM DLC Integrity & GDM Settings Resilience:');
+const avatarManagerFile = Gio.File.new_for_path('src/pro/gdmAvatarManager.js');
+const [, avatarManagerBytes] = avatarManagerFile.load_contents(null);
+const avatarManagerText = new TextDecoder('utf-8').decode(avatarManagerBytes);
+
+const duplicateDeclarations = (avatarManagerText.match(/const\s+AvatarType\s*=/g) || []).length;
+assert(duplicateDeclarations === 0, 'gdmAvatarManager.js must not re-declare AvatarType');
+assert(avatarManagerText.includes("import { AvatarType } from './gdmAuthState.js'"), 'gdmAvatarManager imports AvatarType from gdmAuthState');
+
+const legacyDconf = Gio.File.new_for_path('/etc/dconf/db/gdm.d/99-wack-lockscreen');
+assert(!legacyDconf.query_exists(null), 'Legacy 99-wack-lockscreen is removed to prevent GDM Settings purge');
+
+const safeDconf = Gio.File.new_for_path('/etc/dconf/db/gdm.d/50-wack-lockscreen');
+assert(safeDconf.query_exists(null), '50-wack-lockscreen exists with priority < 95');
+
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
 print(`========================================\n`);

@@ -7,11 +7,6 @@ import { _log, userListItems } from './gdmUtils.js';
 import { getUserLabelStyle } from '../main/colorUtils.js';
 import { AvatarType } from './gdmAuthState.js';
 
-export const AvatarType = Object.freeze({
-    IMAGE: 'IMAGE',
-    SYMBOLIC: 'SYMBOLIC',
-    PENDING: 'PENDING',
-});
 export { AvatarType };
 
 export class GdmAvatarManager {
@@ -61,7 +56,7 @@ export class GdmAvatarManager {
                 this.wrapGdmAvatar();
             }
 
-            authPrompt.connectObject('destroy', () => this.teardown(), this);
+            authPrompt.connectObject('destroy', () => this.teardown(true), this);
         }
 
         const userList = this._dialog?._userList;
@@ -75,18 +70,20 @@ export class GdmAvatarManager {
         }
     }
 
-    teardown() {
+    teardown(dialogDestroyed = false) {
         const authPrompt = this._dialog?._authPrompt || this._gdm._dialog?._authPrompt;
         if (authPrompt) authPrompt.disconnectObject(this);
 
-        if (authPrompt && authPrompt._userWell && this.gdmOrigUserWellYAlign !== undefined && this.gdmOrigUserWellYAlign !== null) {
-            authPrompt._userWell.y_align = this.gdmOrigUserWellYAlign;
-            this.gdmOrigUserWellYAlign = null;
-        }
+        if (!dialogDestroyed) {
+            if (authPrompt && authPrompt._userWell && this.gdmOrigUserWellYAlign !== undefined && this.gdmOrigUserWellYAlign !== null) {
+                authPrompt._userWell.y_align = this.gdmOrigUserWellYAlign;
+            }
 
-        if (authPrompt && this.gdmOrigUpdateUser && this.gdmOrigMethodName) {
-            authPrompt[this.gdmOrigMethodName] = this.gdmOrigUpdateUser;
+            if (authPrompt && this.gdmOrigUpdateUser && this.gdmOrigMethodName) {
+                authPrompt[this.gdmOrigMethodName] = this.gdmOrigUpdateUser;
+            }
         }
+        this.gdmOrigUserWellYAlign = null;
         this.gdmOrigUpdateUser = null;
         this.gdmOrigMethodName = null;
 
@@ -95,14 +92,15 @@ export class GdmAvatarManager {
             this._connectedUser = null;
         }
 
-        this.unwrapGdmAvatar();
+        if (!dialogDestroyed)
+            this.unwrapGdmAvatar();
 
         // Disconnect from userList and clear any vibrancy styles and update wrappers
         const userList = this._dialog?._userList || this._gdm._dialog?._userList;
         if (userList) {
             userList.disconnectObject(this);
             for (const item of userListItems(userList))
-                this._teardownUserListItem(item);
+                this._teardownUserListItem(item, dialogDestroyed);
         }
 
         this.gdmAvatarSetup = false;
@@ -111,7 +109,7 @@ export class GdmAvatarManager {
         this._activeSessionUsers = null;
     }
 
-    _teardownUserListItem(item) {
+    _teardownUserListItem(item, dialogDestroyed = false) {
         if (!item) return;
         const userWidget = item._userWidget;
         const avatar = userWidget?._avatar;
@@ -119,6 +117,8 @@ export class GdmAvatarManager {
 
         if (user)
             user.disconnectObject(this);
+
+        if (dialogDestroyed) return;
 
         if (userWidget && userWidget._wackAvatarContainer) {
             const container = userWidget._wackAvatarContainer;
