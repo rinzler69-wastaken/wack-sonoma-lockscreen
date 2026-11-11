@@ -3,7 +3,7 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
-import { _log, userListItems } from './gdmUtils.js';
+import { _log, _logError, userListItems } from './gdmUtils.js';
 import { getUserLabelStyle } from '../main/colorUtils.js';
 import { AvatarType } from './gdmAuthState.js';
 
@@ -169,7 +169,9 @@ export class GdmAvatarManager {
                 if (seat && uid >= 1000)
                     this._activeSessionUsers.add(userName);
             }
-        } catch (_) { }
+        } catch (e) {
+            _logError(`[WACK/GdmAvatar] Failed to query active sessions: ${e}`);
+        }
 
         return this._activeSessionUsers;
     }

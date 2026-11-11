@@ -448,14 +448,6 @@ export default class WackLockscreenClockExtension extends Extension {
     }
 
     async _updateClockAlphaAndPromptColor() {
-        try {
-            return await this._updateClockAlphaAndPromptColorInner();
-        } catch (err) {
-            logError(err, '[WACK/Extension] _updateClockAlphaAndPromptColor CRASH:');
-        }
-    }
-
-    async _updateClockAlphaAndPromptColorInner() {
         const dialog = this._dialog;
         const seq = ++this._wallpaperUpdateSeq;
 

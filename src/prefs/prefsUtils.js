@@ -50,7 +50,7 @@ export function getGdmStatus(dir) {
     if (!hasGdmSessionMode)
         return { enabled: false, reason: 'missing-session-mode' };
 
-    const dconfFile = Gio.File.new_for_path('/etc/dconf/db/gdm.d/99-wack-lockscreen');
+    const dconfFile = Gio.File.new_for_path('/etc/dconf/db/gdm.d/50-wack-lockscreen');
     if (!dconfFile.query_exists(null))
         return { enabled: false, reason: 'missing-dconf' };
 

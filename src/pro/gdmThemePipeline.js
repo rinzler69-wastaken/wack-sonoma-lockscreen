@@ -970,11 +970,8 @@ export class GdmWallpaperView {
 
     destroy() {
         if (this._group) {
-            try {
+            if (!this._group._isDestroyed)
                 this._group.destroy();   // destroys containers, stacks and effects with it
-            } catch (_) {
-                // Actor already disposed during shell/gdm teardown
-            }
             this._group = null;
         }
         this._monitors = [];

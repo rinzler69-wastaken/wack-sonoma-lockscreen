@@ -209,41 +209,36 @@ function setVector2(pipeline, name, x, y) {
 }
 
 function captureGeometry(actor, framebuffer) {
-    if (!framebuffer?.get_modelview_matrix || !framebuffer?.get_projection_matrix) {
+    const mv = framebuffer?.get_modelview_matrix ? framebuffer.get_modelview_matrix() : null;
+    const proj = framebuffer?.get_projection_matrix ? framebuffer.get_projection_matrix() : null;
+    if (!mv || !proj) {
         const [originX, originY] = actor.get_transformed_position();
         return { sourceX: Math.round(originX), sourceY: Math.round(originY) };
     }
 
-    try {
-        const m = framebuffer.get_modelview_matrix()
-            .multiply(framebuffer.get_projection_matrix())
-            .to_float();
-        const viewportX = framebuffer.get_viewport_x ? framebuffer.get_viewport_x() : 0;
-        const viewportY = framebuffer.get_viewport_y ? framebuffer.get_viewport_y() : 0;
-        const viewportWidth = framebuffer.get_viewport_width ? framebuffer.get_viewport_width() : framebuffer.get_width();
-        const viewportHeight = framebuffer.get_viewport_height ? framebuffer.get_viewport_height() : framebuffer.get_height();
+    const m = mv.multiply(proj).to_float();
+    const viewportX = framebuffer.get_viewport_x ? framebuffer.get_viewport_x() : 0;
+    const viewportY = framebuffer.get_viewport_y ? framebuffer.get_viewport_y() : 0;
+    const viewportWidth = framebuffer.get_viewport_width ? framebuffer.get_viewport_width() : framebuffer.get_width();
+    const viewportHeight = framebuffer.get_viewport_height ? framebuffer.get_viewport_height() : framebuffer.get_height();
 
-        const corners = [[0, 0], [actor.width, 0], [0, actor.height], [actor.width, actor.height]]
-            .map(([x, y]) => {
-                const w = x * m[3] + y * m[7] + m[15];
-                if (Math.abs(w) < 0.0001)
-                    return [viewportX, viewportY];
-                return [
-                    viewportX + ((x * m[0] + y * m[4] + m[12]) / w + 1) * viewportWidth / 2,
-                    viewportY + (1 - (x * m[1] + y * m[5] + m[13]) / w) * viewportHeight / 2,
-                ];
-            });
+    const corners = [[0, 0], [actor.width, 0], [0, actor.height], [actor.width, actor.height]]
+        .map(([x, y]) => {
+            const w = x * m[3] + y * m[7] + m[15];
+            if (Math.abs(w) < 0.0001)
+                return [viewportX, viewportY];
+            return [
+                viewportX + ((x * m[0] + y * m[4] + m[12]) / w + 1) * viewportWidth / 2,
+                viewportY + (1 - (x * m[1] + y * m[5] + m[13]) / w) * viewportHeight / 2,
+            ];
+        });
 
-        const xs = corners.map(p => p[0]);
-        const ys = corners.map(p => p[1]);
-        return {
-            sourceX: Math.floor(Math.min(...xs)),
-            sourceY: Math.floor(Math.min(...ys)),
-        };
-    } catch (_) {
-        const [originX, originY] = actor.get_transformed_position();
-        return { sourceX: Math.round(originX), sourceY: Math.round(originY) };
-    }
+    const xs = corners.map(p => p[0]);
+    const ys = corners.map(p => p[1]);
+    return {
+        sourceX: Math.floor(Math.min(...xs)),
+        sourceY: Math.floor(Math.min(...ys)),
+    };
 }
 
 function addPassNode(parent, target, pipeline, bounds, name) {
@@ -671,24 +666,21 @@ export const KawaseBlurEffect = GObject.registerClass({
             const blitH = Math.min(this.downTargets[0].usedHeight, maxH);
 
             if (blitW > 0 && blitH > 0) {
-                try {
-                    if (sourceFramebuffer.blit) {
-                        sourceFramebuffer.blit(
-                            this.downTargets[0].framebuffer,
-                            blitSrcX, blitSrcY,
-                            0, 0,
-                            blitW, blitH
-                        );
-                    } else if (Cogl.blit_framebuffer) {
-                        Cogl.blit_framebuffer(
-                            sourceFramebuffer,
-                            this.downTargets[0].framebuffer,
-                            blitSrcX, blitSrcY,
-                            0, 0,
-                            blitW, blitH
-                        );
-                    }
-                } catch (_) {
+                if (sourceFramebuffer.blit) {
+                    sourceFramebuffer.blit(
+                        this.downTargets[0].framebuffer,
+                        blitSrcX, blitSrcY,
+                        0, 0,
+                        blitW, blitH
+                    );
+                } else if (Cogl.blit_framebuffer) {
+                    Cogl.blit_framebuffer(
+                        sourceFramebuffer,
+                        this.downTargets[0].framebuffer,
+                        blitSrcX, blitSrcY,
+                        0, 0,
+                        blitW, blitH
+                    );
                 }
             }
         } else {
@@ -753,12 +745,8 @@ export const KawaseBlurEffect = GObject.registerClass({
 });
 
 export function createKawaseBlurEffect(params = {}) {
-    try {
-        const effect = new KawaseBlurEffect(params);
-        if (params.name)
-            effect.name = params.name;
-        return effect;
-    } catch (_) {
-        return new Shell.BlurEffect({ name: 'blur', ...params });
-    }
+    const effect = new KawaseBlurEffect(params);
+    if (params.name)
+        effect.name = params.name;
+    return effect;
 }
