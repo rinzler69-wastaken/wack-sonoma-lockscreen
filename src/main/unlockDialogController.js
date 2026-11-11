@@ -1,6 +1,7 @@
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
+import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {
     PROMPT_BLUR_RADIUS,
@@ -14,6 +15,7 @@ import { UnlockSequenceState } from './unlockState.js';
 import { applyClockAnimation, applyPromptAnimation } from './anims.js';
 import { _setActorVisible } from './mainUtils.js';
 import { PasswordIndicators, connectFailureShake } from './passwordField.js';
+import { createKawaseBlurEffect, KawaseBlurEffect } from './kawaseBlurEffect.js';
 
 export { UnlockSequenceState };
 
@@ -210,11 +212,27 @@ export class UnlockDialogController {
     constructor(extension) {
         this._extension = extension;
         this.origUpdateBgEffects = null;
+        this.origUpdateBackgrounds = null;
         this.origUpdateUserSwitchVisibility = null;
         this.origFinish = null;
         this.origSetTransitionProgress = null;
         this.origEnsureAuthPrompt = null;
         this._unlockSequence = new UnlockSequenceController(extension);
+    }
+
+    _setupBackgroundGroupKawase(dialog) {
+        if (!dialog?._backgroundGroup)
+            return;
+
+        for (const widget of dialog._backgroundGroup) {
+            const effect = widget.get_effect('blur');
+            if (effect && !(effect instanceof KawaseBlurEffect)) {
+                widget.remove_effect(effect);
+                const kawase = createKawaseBlurEffect({ radius: 0, brightness: 1.0 });
+                kawase.name = 'blur';
+                widget.add_effect(kawase);
+            }
+        }
     }
 
     get finishTimeoutId() { return this._unlockSequence.finishTimeoutId; }
@@ -280,9 +298,20 @@ export class UnlockDialogController {
         }
 
         // Background effects override
+        if (dialog._updateBackgrounds) {
+            this.origUpdateBackgrounds = dialog._updateBackgrounds.bind(dialog);
+            dialog._updateBackgrounds = () => {
+                this.origUpdateBackgrounds();
+                this._setupBackgroundGroupKawase(dialog);
+                if (dialog._updateBackgroundEffects)
+                    dialog._updateBackgroundEffects();
+            };
+        }
+
         if (dialog._updateBackgroundEffects) {
             this.origUpdateBgEffects = dialog._updateBackgroundEffects.bind(dialog);
             dialog._updateBackgroundEffects = () => {
+                this._setupBackgroundGroupKawase(dialog);
                 for (const widget of dialog._backgroundGroup ?? []) {
                     const effect = widget.get_effect('blur');
                     if (effect) effect.set({ brightness: 1.0, radius: 0 });
@@ -491,9 +520,27 @@ export class UnlockDialogController {
     }
 
     uninstall(dialog) {
+        if (dialog && this.origUpdateBackgrounds) {
+            dialog._updateBackgrounds = this.origUpdateBackgrounds;
+            this.origUpdateBackgrounds = null;
+        }
+
         if (dialog && this.origUpdateBgEffects) {
             dialog._updateBackgroundEffects = this.origUpdateBgEffects;
             this.origUpdateBgEffects = null;
+        }
+
+        if (dialog?._backgroundGroup) {
+            for (const widget of dialog._backgroundGroup) {
+                const effect = widget.get_effect('blur');
+                if (effect instanceof KawaseBlurEffect) {
+                    widget.remove_effect(effect);
+                    const nativeBlur = new Shell.BlurEffect({ name: 'blur' });
+                    widget.add_effect(nativeBlur);
+                }
+            }
+            if (dialog._updateBackgroundEffects)
+                dialog._updateBackgroundEffects();
         }
 
         if (dialog && this.origUpdateUserSwitchVisibility) {

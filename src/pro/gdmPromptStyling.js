@@ -2,6 +2,8 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import { getChromeAlpha, getHintTextStyle, getPromptDimVeilAlpha } from '../main/colorUtils.js';
+import { createKawaseBlurEffect } from '../main/kawaseBlurEffect.js';
+import { PROMPT_BLUR_RADIUS } from '../main/constants.js';
 
 export class GdmPromptStyling {
     constructor(gdmManager) {
@@ -111,6 +113,10 @@ export class GdmPromptStyling {
 
             if (authPrompt)
                 authPrompt.disconnectObject(this);
+
+            const blur = entry.get_effect('wack-prompt-acrylic-blur');
+            if (blur)
+                entry.remove_effect(blur);
 
             if (entry._wackOriginalStyle !== undefined) {
                 entry.set_style(entry._wackOriginalStyle);
@@ -233,8 +239,27 @@ export class GdmPromptStyling {
         let shadowStyle = '';
         let bgStyle;
 
-        if (!isSolid && color.imagePath) {
-            const imageUri = color.imagePath.startsWith('file://') ? color.imagePath : `file://${color.imagePath}`;
+        if (!isSolid) {
+            let blur = entry.get_effect('wack-prompt-acrylic-blur');
+            if (!blur) {
+                blur = createKawaseBlurEffect({
+                    name: 'wack-prompt-acrylic-blur',
+                    mode: 1,
+                    radius: PROMPT_BLUR_RADIUS,
+                    brightness: 1.0,
+                    corner_radius: 999,
+                });
+                entry.add_effect(blur);
+            } else {
+                blur.set_enabled(true);
+            }
+
+            const isInv = visualState.useInverse || visualState.isBrightSample || false;
+            const baseAlpha = isFocused ? 0.16 : 0.10;
+            const tintColor = isInv
+                ? `rgba(0, 0, 0, ${(baseAlpha + 0.15).toFixed(3)})`
+                : `rgba(255, 255, 255, ${baseAlpha.toFixed(3)})`;
+
             if (isFocused) {
                 if (color.shadowAlpha !== undefined)
                     shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${color.shadowAlpha.toFixed(3)}) !important;`;
@@ -242,8 +267,12 @@ export class GdmPromptStyling {
                 const sAlpha = color.shadowAlpha !== undefined ? (color.shadowAlpha * (1.0 - veilAlpha)).toFixed(3) : '0';
                 shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${sAlpha}), inset 0 0 200px rgba(0, 0, 0, ${veilAlpha.toFixed(3)}) !important;`;
             }
-            bgStyle = ` background-color: transparent !important; background-gradient-direction: none !important; background-image: url("${imageUri}") !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; border: none !important;`;
+            bgStyle = ` background-color: ${tintColor} !important; background-gradient-direction: none !important; background-image: none !important; border: none !important;`;
         } else {
+            const blur = entry.get_effect('wack-prompt-acrylic-blur');
+            if (blur)
+                blur.set_enabled(false);
+
             const dimFactor = isFocused ? 1.0 : (1.0 - veilAlpha);
 
             if (color.shadowAlpha !== undefined) {

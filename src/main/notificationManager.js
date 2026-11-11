@@ -3,13 +3,7 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 import Gettext from 'gettext';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-
-let Blur = null;
-try {
-    Blur = (await import('gi://Blur')).default;
-} catch (_) {
-}
-
+import { createKawaseBlurEffect } from './kawaseBlurEffect.js';
 import {
     NOTIF_BLUR_NAME,
     NOTIF_BLUR_RADIUS,
@@ -37,22 +31,13 @@ export class NotificationManager {
     }
 
     _makeCardBlur() {
-        if (Blur) {
-            return new Blur.BlurEffect({
-                name: NOTIF_BLUR_NAME,
-                mode: Blur.BlurMode.BACKGROUND,
-                radius: NOTIF_BLUR_RADIUS,
-                brightness: NOTIF_BLUR_BRIGHTNESS,
-                corner_radius: NOTIF_CARD_RADIUS,
-            });
-        } else {
-            return new Shell.BlurEffect({
-                name: NOTIF_BLUR_NAME,
-                mode: Shell.BlurMode.BACKGROUND,
-                radius: NOTIF_BLUR_RADIUS,
-                brightness: NOTIF_BLUR_BRIGHTNESS,
-            });
-        }
+        return createKawaseBlurEffect({
+            name: NOTIF_BLUR_NAME,
+            mode: 1,
+            radius: NOTIF_BLUR_RADIUS,
+            brightness: NOTIF_BLUR_BRIGHTNESS,
+            corner_radius: NOTIF_CARD_RADIUS,
+        });
     }
 
     _applyCardStyle(actor) {

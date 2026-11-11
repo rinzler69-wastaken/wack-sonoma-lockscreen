@@ -8,6 +8,7 @@ import { getWallpaperAlpha, getWallpaperPromptColor } from '../main/alphaManager
 import { initCache } from '../main/alphaCache.js';
 import { resolveSlideshowXmlContent } from '../main/constants.js';
 import { resolveGdmAccessibleUri, _log, _logError } from './gdmUtils.js';
+import { createKawaseBlurEffect } from '../main/kawaseBlurEffect.js';
 function loadContentsAsync(file, cancellable = null) {
     return new Promise((resolve, reject) => {
         file.load_contents_async(cancellable, (f, res) => {
@@ -345,11 +346,11 @@ export class GdmThemeStore {
         // matches current slide) > previous palette (stale fallback for display only if matching image).
         const previous = this._themes.get(userName);
         let palette = this._paletteCache.get(paletteKey) ?? null;
-        // For ACRYLIC palettes the visual result depends on a PNG file artifact.
-        // If that artifact was deleted (e.g. by the sibling Light/Dark variant's
-        // pruning pass) while the in-memory entry survived, treat it as a miss so
-        // the generation pipeline is triggered to recreate the file.
+        // For ACRYLIC palettes with live Kawase blur, palette colors are valid
+        // even if the disk PNG was pruned. If neither colors nor imagePath exist,
+        // treat it as a miss.
         if (palette !== null && !isSolidMode(palette.mode) &&
+            palette.value?.r == null &&
             !(palette.value?.imagePath && Gio.File.new_for_path(palette.value.imagePath).query_exists(null))) {
             this._paletteCache.delete(paletteKey);
             palette = null;
@@ -412,7 +413,7 @@ export class GdmThemeStore {
             return false;
         if (p.image !== theme.image)
             return false;
-        return isSolidMode(p.mode) || Boolean(p.value?.imagePath && Gio.File.new_for_path(p.value.imagePath).query_exists(null));
+        return isSolidMode(p.mode) || p.value?.r != null || Boolean(p.value?.imagePath && Gio.File.new_for_path(p.value.imagePath).query_exists(null));
     }
 
     _adoptShippedPalette(meta, image, slide) {
@@ -424,7 +425,7 @@ export class GdmThemeStore {
             return null;
         const isSolid = isSolidMode(userVibrancy);
         const hasImg = pc.imagePath && Gio.File.new_for_path(pc.imagePath).query_exists(null);
-        if (!isSolid && !hasImg)
+        if (!isSolid && !hasImg && pc.r == null)
             return null;
 
         // If this is a slideshow, ensure the shipped palette matches the current slide
@@ -779,11 +780,13 @@ export class GdmWallpaperView {
         this._presentedRevision = -1;
 
         for (const monitor of Main.layoutManager.monitors) {
+            const blurEffect = createKawaseBlurEffect({ radius: 0, brightness: 1.0 });
+            blurEffect.name = 'blur';
             const container = new St.Widget({
                 x: monitor.x, y: monitor.y, width: monitor.width, height: monitor.height,
-                effect: new Shell.BlurEffect({ name: 'blur' }),
+                effect: blurEffect,
             });
-            container.get_effect('blur').set({ radius: 0, brightness: 1.0 });
+            container.get_effect('blur')?.set({ radius: 0, brightness: 1.0 });
 
             const dimmer = new St.Widget({
                 width: monitor.width,
@@ -967,7 +970,11 @@ export class GdmWallpaperView {
 
     destroy() {
         if (this._group) {
-            this._group.destroy();   // destroys containers, stacks and effects with it
+            try {
+                this._group.destroy();   // destroys containers, stacks and effects with it
+            } catch (_) {
+                // Actor already disposed during shell/gdm teardown
+            }
             this._group = null;
         }
         this._monitors = [];

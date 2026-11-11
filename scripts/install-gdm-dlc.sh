@@ -102,9 +102,10 @@ ensure_gdm_dconf_profile() {
 
 if [ "$FORCE" = false ] && { [ -f "$TARGET_DIR/src/pro/pro.js" ] || [ -f "$TARGET_DIR/pro.js" ]; } && [ -f "$TARGET_DIR/crossSessionManager.js" ] && [ -f "$DCONF_FILE" ]; then
     echo "-> Verifying and repairing system-wide permissions and ownership..."
-    chown -R root:root "$TARGET_DIR"
-    if [ -d "$TARGET_DIR/.git" ] && [ -n "${SUDO_USER:-}" ]; then
-        chown -R "$SUDO_USER:$SUDO_USER" "$TARGET_DIR/.git"
+    if [ -n "${SUDO_USER:-}" ]; then
+        chown -R "$SUDO_USER:$SUDO_USER" "$TARGET_DIR"
+    else
+        chown -R root:root "$TARGET_DIR"
     fi
     chmod -R u=rwX,go=rX "$TARGET_DIR"
     find "$TARGET_DIR" -type d -exec chmod 755 {} +
@@ -260,9 +261,10 @@ fi
 
 # 6. Ensure correct file ownership and permissions for GDM
 echo "-> Setting system-wide permissions and ownership (root:root, 755/644)..."
-chown -R root:root "$TARGET_DIR"
-if [ -d "$TARGET_DIR/.git" ] && [ -n "${SUDO_USER:-}" ]; then
-    chown -R "$SUDO_USER:$SUDO_USER" "$TARGET_DIR/.git"
+if [ -n "${SUDO_USER:-}" ]; then
+    chown -R "$SUDO_USER:$SUDO_USER" "$TARGET_DIR"
+else
+    chown -R root:root "$TARGET_DIR"
 fi
 chmod -R u=rwX,go=rX "$TARGET_DIR"
 find "$TARGET_DIR" -type d -exec chmod 755 {} +

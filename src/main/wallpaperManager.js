@@ -6,6 +6,7 @@ import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { PROMPT_BLUR_RADIUS, BACKGROUND_BLURRING_BRIGHTNESS } from './constants.js';
 import { resolveSlideshowXml } from './wallpaperUtils.js';
+import { createKawaseBlurEffect } from './kawaseBlurEffect.js';
 
 export class WallpaperManager {
     constructor(extension) {
@@ -82,13 +83,15 @@ export class WallpaperManager {
         if (!this.customWallpaperOverlay) {
             this.customWallpaperOverlay = new Clutter.Actor({ opacity: 255 });
             for (const monitor of monitors) {
+                const blurEffect = createKawaseBlurEffect({ radius: 0, brightness: 1.0 });
+                blurEffect.name = 'blur';
                 const widget = new St.Widget({
                     style_class: 'screen-shield-background',
                     x: monitor.x,
                     y: monitor.y,
                     width: monitor.width,
                     height: monitor.height,
-                    effect: new Shell.BlurEffect({ name: 'blur' }),
+                    effect: blurEffect,
                 });
                 widget.get_effect('blur')?.set({ brightness: 1.0, radius: 0 });
                 this.customWallpaperOverlay.add_child(widget);

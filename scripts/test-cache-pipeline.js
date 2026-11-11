@@ -664,6 +664,86 @@ assert(!legacyDconf.query_exists(null), 'Legacy 99-wack-lockscreen is removed to
 const safeDconf = Gio.File.new_for_path('/etc/dconf/db/gdm.d/50-wack-lockscreen');
 assert(safeDconf.query_exists(null), '50-wack-lockscreen exists with priority < 95');
 
+// 15. Test Dual Kawase Blur Sampling Mathematics
+print('\n[15] Testing Dual Kawase Blur Sampling Mathematics:');
+const { getKawaseConfiguration, getKawaseInputBounds } = await import('../src/main/kawaseSampling.js');
+
+const zeroCfg = getKawaseConfiguration(0);
+assert(zeroCfg.passes === 1, 'Radius 0 requires 1 pass');
+assert(zeroCfg.blend === 0, 'Radius 0 has 0 blend');
+
+const cfg30 = getKawaseConfiguration(30);
+assert(cfg30.passes >= 2, 'Radius 30 requires at least 2 passes');
+assert(cfg30.blend >= 0 && cfg30.blend <= 1.0, 'Radius 30 blend factor in [0, 1]');
+
+const cfg60 = getKawaseConfiguration(60);
+assert(cfg60.passes > cfg30.passes, 'Larger radius 60 requires more passes than radius 30');
+
+const bounds = { x: 0, y: 0, width: 1920, height: 1080 };
+const inputBounds = getKawaseInputBounds(bounds, 1920, 1080, 1.0, cfg30.passes);
+assert(inputBounds.width >= bounds.width, 'Input bounds cover at least actor width');
+assert(inputBounds.height >= bounds.height, 'Input bounds cover at least actor height');
+assert(inputBounds.x <= bounds.x, 'Input bounds padded on left');
+assert(inputBounds.y <= bounds.y, 'Input bounds padded on top');
+
+// 16. Test UnlockDialog Background Group Kawase Invariants
+print('\n[16] Testing UnlockDialog Background Group Kawase Invariants:');
+const unlockDialogControllerFile = Gio.File.new_for_path('src/main/unlockDialogController.js');
+const [, udcBytes] = unlockDialogControllerFile.load_contents(null);
+const udcText = new TextDecoder('utf-8').decode(udcBytes);
+
+assert(udcText.includes('createKawaseBlurEffect'), 'unlockDialogController imports createKawaseBlurEffect');
+assert(udcText.includes('_setupBackgroundGroupKawase'), 'unlockDialogController declares _setupBackgroundGroupKawase');
+assert(udcText.includes('Shell.BlurEffect'), 'unlockDialogController restores native Shell.BlurEffect on uninstall');
+assert(udcText.includes('origUpdateBackgrounds'), 'unlockDialogController tracks and restores origUpdateBackgrounds');
+
+// 17. Test Notification Cards Kawase Blur Integration
+print('\n[17] Testing Notification Cards Kawase Blur Integration:');
+const notifManagerFile = Gio.File.new_for_path('src/main/notificationManager.js');
+const [, notifBytes] = notifManagerFile.load_contents(null);
+const notifText = new TextDecoder('utf-8').decode(notifBytes);
+
+assert(notifText.includes("import { createKawaseBlurEffect } from './kawaseBlurEffect.js'"), 'notificationManager imports createKawaseBlurEffect');
+assert(!notifText.includes("import('gi://Blur')"), 'notificationManager removes legacy broken gi://Blur dynamic import');
+assert(notifText.includes('mode: 1'), 'notificationManager requests background blur mode');
+assert(notifText.includes('corner_radius: NOTIF_CARD_RADIUS'), 'notificationManager configures SDF rounded corner radius');
+
+const kawaseFile = Gio.File.new_for_path('src/main/kawaseBlurEffect.js');
+const [, kawaseBytes] = kawaseFile.load_contents(null);
+const kawaseText = new TextDecoder('utf-8').decode(kawaseBytes);
+
+assert(kawaseText.includes("'mode': GObject.ParamSpec.int"), 'KawaseBlurEffect declares mode GObject property');
+assert(kawaseText.includes('add_blit_rectangle'), 'KawaseBlurEffect supports hardware background blitting');
+
+// 18. Test Prompt Chip Acrylic Live Kawase Blur Integration
+print('\n[18] Testing Prompt Chip Acrylic Live Kawase Blur Integration:');
+const promptStylingFile = Gio.File.new_for_path('src/main/promptStyling.js');
+const [, psBytes] = promptStylingFile.load_contents(null);
+const psText = new TextDecoder('utf-8').decode(psBytes);
+
+assert(psText.includes("import { createKawaseBlurEffect } from './kawaseBlurEffect.js'"), 'promptStyling imports createKawaseBlurEffect');
+assert(psText.includes('wack-prompt-acrylic-blur'), 'promptStyling manages wack-prompt-acrylic-blur effect');
+assert(psText.includes('corner_radius: 999'), 'promptStyling sets capsule corner_radius: 999');
+assert(psText.includes('mode: 1'), 'promptStyling uses background blit mode for prompt chip');
+assert(psText.includes("entry.remove_effect(blur)"), 'promptStyling removes blur effect on teardown');
+
+const gdmPromptStylingFile = Gio.File.new_for_path('src/pro/gdmPromptStyling.js');
+const [, gpsBytes] = gdmPromptStylingFile.load_contents(null);
+const gpsText = new TextDecoder('utf-8').decode(gpsBytes);
+
+assert(gpsText.includes("import { createKawaseBlurEffect } from '../main/kawaseBlurEffect.js'"), 'gdmPromptStyling imports createKawaseBlurEffect');
+assert(gpsText.includes('wack-prompt-acrylic-blur'), 'gdmPromptStyling manages wack-prompt-acrylic-blur effect');
+assert(gpsText.includes('corner_radius: 999'), 'gdmPromptStyling sets capsule corner_radius: 999');
+assert(gpsText.includes('mode: 1'), 'gdmPromptStyling uses background blit mode for prompt chip');
+assert(gpsText.includes("entry.remove_effect(blur)"), 'gdmPromptStyling removes blur effect on teardown');
+
+const gdmThemeFile = Gio.File.new_for_path('src/pro/gdmThemePipeline.js');
+const [, gdmThemeBytes] = gdmThemeFile.load_contents(null);
+const gdmThemeText = new TextDecoder('utf-8').decode(gdmThemeBytes);
+
+assert(gdmThemeText.includes("createKawaseBlurEffect"), 'gdmThemePipeline imports createKawaseBlurEffect');
+assert(gdmThemeText.includes("p.value?.r != null"), 'gdmThemePipeline validates acrylic palette via color channels independently of disk PNGs');
+
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
 print(`========================================\n`);
