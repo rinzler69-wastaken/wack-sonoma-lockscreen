@@ -139,6 +139,7 @@ export class GdmAnimationController {
         authPrompt.scale_y = 0.5;
         authPrompt.translation_x = 0;
         authPrompt.translation_y = 200;
+        this._gdm._promptStyling?.setPromptBlurLive(true);
         authPrompt.ease({
             opacity: 255,
             scale_x: 1,
@@ -146,6 +147,9 @@ export class GdmAnimationController {
             translation_y: 0,
             duration: GDM_CROSSFADE_DURATION,
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => {
+                this._gdm._promptStyling?.settlePromptStaticBlur();
+            },
         });
     }
 
@@ -214,6 +218,7 @@ export class GdmAnimationController {
                 this.resetLegacyPromptTransform();
                 authPrompt.visible = false;
                 authPrompt.opacity = 255;
+                this._gdm._promptStyling?.trashPromptStaticBlur();
                 if (onComplete) onComplete();
             },
         });
@@ -225,6 +230,7 @@ export class GdmAnimationController {
         this.setLegacyPromptChrome(false, true);
         this._gdm._setPromptBackgroundBlur(false, true);
         this._gdm._applyWallpaper(null, true, true);
+        this._gdm._promptStyling?.trashPromptStaticBlur();
 
         const userSelection = this._gdm._dialog?._userSelectionBox;
         if (!userSelection)
@@ -280,6 +286,7 @@ export class GdmAnimationController {
                 _log('[WACK/GdmManager] _animateCupertinoPromptOut: animation complete');
                 authPrompt.visible = false;
                 authPrompt.opacity = 255;
+                this._gdm._promptStyling?.trashPromptStaticBlur();
                 if (onComplete) onComplete();
             },
         });
@@ -299,15 +306,20 @@ export class GdmAnimationController {
         authPrompt.remove_all_transitions();
         authPrompt.visible = true;
         authPrompt.opacity = 0;
+        this._gdm._promptStyling?.setPromptBlurLive(true);
         authPrompt.ease({
             opacity: 255,
             duration: GDM_CROSSFADE_DURATION,
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => {
+                this._gdm._promptStyling?.settlePromptStaticBlur();
+            },
         });
     }
 
     animateCupertinoReturnToPicker() {
         this._gdm._applyWallpaper(null, true, true);
+        this._gdm._promptStyling?.trashPromptStaticBlur();
 
         const userSelection = this._gdm._dialog?._userSelectionBox;
         if (!userSelection)

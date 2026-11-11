@@ -18,7 +18,7 @@ export const DATE_LABEL_HEIGHT = 25;
 export const TIME_LABEL_HEIGHT_FALLBACK = 128; // Fallback natural height for the time label in logical px
 
 // Background blur settings when entering the password prompt
-export const PROMPT_BLUR_RADIUS = 50;
+export const PROMPT_BLUR_RADIUS = 65;
 export const PROMPT_BLUR_BRIGHTNESS = 1.0;
 export const BACKGROUND_BLURRING_BRIGHTNESS = 0.85;
 
@@ -50,7 +50,7 @@ export const SESSION_BUTTON_Y_OFFSET = 0; // px
 
 
 // Individual notification card blur settings
-export const NOTIF_BLUR_RADIUS = 50;
+export const NOTIF_BLUR_RADIUS = 65;
 export const NOTIF_BLUR_BRIGHTNESS = 1.0;
 export const NOTIF_BLUR_NAME = 'wack-notif-blur';
 export const NOTIF_CARD_RADIUS = 12;

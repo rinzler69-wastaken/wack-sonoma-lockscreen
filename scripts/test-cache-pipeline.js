@@ -23,7 +23,6 @@ import {
 import {
     getNotifCardBackground,
     getAcrylicChipBackground,
-    getAcrylicCancelButtonBackground,
 } from '../src/main/colorUtils.js';
 
 let passed = 0;
@@ -735,7 +734,7 @@ const psText = new TextDecoder('utf-8').decode(psBytes);
 
 assert(psText.includes("import { createKawaseBlurEffect } from './kawaseBlurEffect.js'"), 'promptStyling imports createKawaseBlurEffect');
 assert(psText.includes('wack-prompt-acrylic-blur'), 'promptStyling manages wack-prompt-acrylic-blur effect');
-assert(psText.includes('wack-cancel-acrylic-blur'), 'promptStyling manages wack-cancel-acrylic-blur effect');
+assert(!psText.includes("name: 'wack-cancel-acrylic-blur'"), 'promptStyling keeps Cancel button as pure Tonal object without acrylic blur');
 assert(psText.includes('corner_radius: 999'), 'promptStyling sets capsule corner_radius: 999');
 assert(psText.includes('mode: 1'), 'promptStyling uses background blit mode for prompt chip');
 assert(psText.includes("entry.remove_effect(blur)"), 'promptStyling removes blur effect on teardown');
@@ -746,10 +745,21 @@ const gpsText = new TextDecoder('utf-8').decode(gpsBytes);
 
 assert(gpsText.includes("import { createKawaseBlurEffect } from '../main/kawaseBlurEffect.js'"), 'gdmPromptStyling imports createKawaseBlurEffect');
 assert(gpsText.includes('wack-prompt-acrylic-blur'), 'gdmPromptStyling manages wack-prompt-acrylic-blur effect');
-assert(gpsText.includes('wack-cancel-acrylic-blur'), 'gdmPromptStyling manages wack-cancel-acrylic-blur effect');
+assert(!gpsText.includes("name: 'wack-cancel-acrylic-blur'"), 'gdmPromptStyling keeps Cancel button as pure Tonal object without acrylic blur');
 assert(gpsText.includes('corner_radius: 999'), 'gdmPromptStyling sets capsule corner_radius: 999');
 assert(gpsText.includes('mode: 1'), 'gdmPromptStyling uses background blit mode for prompt chip');
 assert(gpsText.includes("entry.remove_effect(blur)"), 'gdmPromptStyling removes blur effect on teardown');
+assert(gpsText.includes('setPromptBlurLive'), 'gdmPromptStyling declares setPromptBlurLive for dynamic transition tracking');
+assert(gpsText.includes('settlePromptStaticBlur'), 'gdmPromptStyling declares settlePromptStaticBlur to freeze blur onComplete');
+assert(gpsText.includes('trashPromptStaticBlur'), 'gdmPromptStyling declares trashPromptStaticBlur to clean targets on cancel');
+
+const animFile = Gio.File.new_for_path('src/pro/gdmAnimationController.js');
+const [, animBytes] = animFile.load_contents(null);
+const animText = new TextDecoder('utf-8').decode(animBytes);
+
+assert(animText.includes('setPromptBlurLive(true)'), 'gdmAnimationController switches blur to dynamic on prompt entrance');
+assert(animText.includes('settlePromptStaticBlur()'), 'gdmAnimationController settles blur to static on transition onComplete');
+assert(animText.includes('trashPromptStaticBlur()'), 'gdmAnimationController trashes blur targets on return to picker / cancel');
 
 const gdmThemeFile = Gio.File.new_for_path('src/pro/gdmThemePipeline.js');
 const [, gdmThemeBytes] = gdmThemeFile.load_contents(null);
@@ -762,9 +772,9 @@ assert(kawaseText.includes("invalidate()"), 'KawaseBlurEffect provides invalidat
 const liveEffect = makeKawaseEffect({ live: true });
 assert(liveEffect.live === true, 'KawaseBlurEffect honors live: true');
 assert(psText.includes('live: false'), 'promptStyling configures static Kawase blur for prompt chip');
-assert(gpsText.includes('live: true'), 'gdmPromptStyling configures dynamic Kawase blur for prompt chip');
+assert(gpsText.includes('live: true'), 'gdmPromptStyling initializes dynamic Kawase blur for prompt chip entrance');
 
-// 19. Test Acrylic Glass Tint Parity (Prompt Chip, Cancel Button, Notif Card)
+// 19. Test Acrylic Glass Tint Parity (Prompt Chip, Notif Card)
 print('\n[19] Testing Acrylic Glass Tint Parity & Downsample Leak Protection:');
 assert(kawaseText.includes('setPaintOpacity(layerPipeline, 0)'), 'createRenderTarget zeroes layerPipeline opacity to eliminate downsample slice leaks');
 assert(kawaseText.includes('captureGeometry(actor, sourceFramebuffer)'), 'addBlurPasses uses captureGeometry projection for exact pixel sampling');
@@ -790,11 +800,6 @@ assert(notifHueBg.style.includes(chipHueBg), 'Prompt chip Hue-Preserve Inverse b
 
 const chipHueFocused = getAcrylicChipBackground(brightHueColor, true);
 assert(chipHueFocused.startsWith('rgba(85, 65, 15,'), 'Prompt chip focused state retains Hue-Preserve Inverse darkened color');
-
-const cancelHueBg = getAcrylicCancelButtonBackground(brightHueColor, false, false);
-assert(cancelHueBg.startsWith('rgba(85, 65, 15,'), 'Cancel button honors Hue-Preserve Inverse darkened color');
-const cancelHueHover = getAcrylicCancelButtonBackground(brightHueColor, false, true);
-assert(cancelHueHover.startsWith('rgba(85, 65, 15,'), 'Cancel button hovered retains Hue-Preserve Inverse darkened color');
 
 // Regular Neutral Inverse test case (e.g. bright white / grey wallpaper sample)
 const neutralInvColor = {

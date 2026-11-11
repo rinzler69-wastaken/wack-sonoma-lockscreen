@@ -6,7 +6,6 @@ import {
     getHintTextStyle,
     getPromptDimVeilAlpha,
     getAcrylicChipBackground,
-    getAcrylicCancelButtonBackground,
 } from '../main/colorUtils.js';
 import { createKawaseBlurEffect } from '../main/kawaseBlurEffect.js';
 import { PROMPT_BLUR_RADIUS } from '../main/constants.js';
@@ -23,6 +22,7 @@ export class GdmPromptStyling {
 
     teardown() {
         this.stopCursorBlink();
+        this.trashPromptStaticBlur();
         this.clearCupertinoPromptBackground();
         this.clearBottomButtonsBackground();
     }
@@ -78,6 +78,37 @@ export class GdmPromptStyling {
         if (this.cursorBlinkTimeoutId) {
             GLib.source_remove(this.cursorBlinkTimeoutId);
             this.cursorBlinkTimeoutId = 0;
+        }
+    }
+
+    setPromptBlurLive(live) {
+        const authPrompt = this._gdm._dialog?._authPrompt;
+        const entry = this.findPromptEntry(authPrompt);
+        const blur = entry?.get_effect('wack-prompt-acrylic-blur');
+        if (blur) {
+            blur.live = live;
+            if (live)
+                blur.invalidate();
+        }
+    }
+
+    settlePromptStaticBlur() {
+        const authPrompt = this._gdm._dialog?._authPrompt;
+        const entry = this.findPromptEntry(authPrompt);
+        const blur = entry?.get_effect('wack-prompt-acrylic-blur');
+        if (blur) {
+            blur.live = false;
+            blur.invalidate();
+        }
+    }
+
+    trashPromptStaticBlur() {
+        const authPrompt = this._gdm._dialog?._authPrompt;
+        const entry = this.findPromptEntry(authPrompt);
+        const blur = entry?.get_effect('wack-prompt-acrylic-blur');
+        if (blur) {
+            blur.releaseTargets();
+            entry.remove_effect(blur);
         }
     }
 
@@ -577,39 +608,9 @@ export class GdmPromptStyling {
                 shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${cancelShadowAlpha.toFixed(3)}) !important;`;
             }
 
-            const defaultVibrancy = this._gdm._extension ? this._gdm._extension.getSettings().get_string('prompt-vibrancy') : 'tonal';
-            const vibrancyMode = color.vibrancyMode ?? defaultVibrancy;
-            const isSolid = (vibrancyMode === 'tonal' || vibrancyMode === 'less');
-
-            if (!isSolid) {
-                let blur = button.get_effect('wack-cancel-acrylic-blur');
-                if (!blur) {
-                    blur = createKawaseBlurEffect({
-                        name: 'wack-cancel-acrylic-blur',
-                        mode: 1,
-                        live: true,
-                        radius: PROMPT_BLUR_RADIUS,
-                        brightness: 1.0,
-                        corner_radius: 999,
-                    });
-                    button.add_effect(blur);
-                } else {
-                    blur.set_enabled(true);
-                }
-
-                const tintColor = getAcrylicCancelButtonBackground(color, isPressed, isHovered);
-
-                if (!isFocused)
-                    overlayStyle += ` border: none !important;`;
-
-                const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: ${tintColor} !important;${overlayStyle}${shadowStyle}`;
-                button.set_style(`${button._wackOriginalStyle}${bgStyle}`);
-                return;
-            } else {
-                const blur = button.get_effect('wack-cancel-acrylic-blur');
-                if (blur)
-                    blur.set_enabled(false);
-            }
+            const blur = button.get_effect('wack-cancel-acrylic-blur');
+            if (blur)
+                button.remove_effect(blur);
         }
 
         const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: rgb(${curR}, ${curG}, ${curB}) !important;${overlayStyle}${shadowStyle}`;
@@ -742,6 +743,7 @@ export class GdmPromptStyling {
     }
 
     clearCupertinoPromptBackground() {
+        this.trashPromptStaticBlur();
         const authPrompt = this._gdm._dialog ? this._gdm._dialog._authPrompt : null;
         const entry = this.findPromptEntry(authPrompt);
         if (entry)

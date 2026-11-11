@@ -7,7 +7,6 @@ import {
     getHintTextStyle,
     getPromptDimVeilAlpha,
     getAcrylicChipBackground,
-    getAcrylicCancelButtonBackground,
 } from './colorUtils.js';
 import { createKawaseBlurEffect } from './kawaseBlurEffect.js';
 import { PROMPT_BLUR_RADIUS } from './constants.js';
@@ -558,38 +557,9 @@ export class PromptStyling {
                 shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${cancelShadowAlpha.toFixed(3)}) !important;`;
             }
 
-            const vibrancyMode = color.vibrancyMode ?? (this._extension?._settings?.get_string('prompt-vibrancy') ?? 'tonal');
-            const isSolid = (vibrancyMode === 'tonal' || vibrancyMode === 'less');
-
-            if (!isSolid) {
-                let blur = button.get_effect('wack-cancel-acrylic-blur');
-                if (!blur) {
-                    blur = createKawaseBlurEffect({
-                        name: 'wack-cancel-acrylic-blur',
-                        mode: 1,
-                        live: false,
-                        radius: PROMPT_BLUR_RADIUS,
-                        brightness: 1.0,
-                        corner_radius: 999,
-                    });
-                    button.add_effect(blur);
-                } else {
-                    blur.set_enabled(true);
-                }
-
-                const tintColor = getAcrylicCancelButtonBackground(color, isPressed, isHovered);
-
-                if (!isFocused)
-                    overlayStyle += ` border: none !important;`;
-
-                const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: ${tintColor} !important;${overlayStyle}${shadowStyle}`;
-                button.set_style(`${button._wackOriginalStyle}${bgStyle}`);
-                return;
-            } else {
-                const blur = button.get_effect('wack-cancel-acrylic-blur');
-                if (blur)
-                    blur.set_enabled(false);
-            }
+            const blur = button.get_effect('wack-cancel-acrylic-blur');
+            if (blur)
+                button.remove_effect(blur);
         }
 
         const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: rgb(${curR}, ${curG}, ${curB}) !important;${overlayStyle}${shadowStyle}`;
