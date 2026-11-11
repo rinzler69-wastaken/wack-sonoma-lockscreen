@@ -551,8 +551,6 @@ export const KawaseBlurEffect = GObject.registerClass({
         this.updateSampling(passes, blend);
 
         const isActorDirty = (flags & Clutter.EffectPaintFlags.ACTOR_DIRTY);
-        if (!this.blurValid || isActorDirty) {
-            this.addBlurPasses(node, actor, inputBounds, passes, blend);
         if (this._mode === 1 || !this.blurValid || isActorDirty) {
             this.addBlurPasses(node, actor, inputBounds, passes, blend, paintContext);
             this.blurValid = true;
@@ -570,14 +568,6 @@ export const KawaseBlurEffect = GObject.registerClass({
         }
     }
 
-    addBlurPasses(node, actor, bounds, passes, blend) {
-        const actorLayer = Clutter.LayerNode.new_to_framebuffer(
-            this.downTargets[0].framebuffer,
-            this.downTargets[0].layerPipeline
-        );
-        actorLayer.set_name('WackKawase source');
-        actorLayer.add_child(new Clutter.ActorNode(actor, 255));
-        node.add_child(actorLayer);
     addBlurPasses(node, actor, bounds, passes, blend, paintContext) {
         const sourceFramebuffer = paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null;
         if (this._mode === 1 && sourceFramebuffer) {
@@ -689,7 +679,6 @@ export const KawaseBlurEffect = GObject.registerClass({
 
 export function createKawaseBlurEffect(params = {}) {
     try {
-        return new KawaseBlurEffect(params);
         const effect = new KawaseBlurEffect(params);
         if (params.name)
             effect.name = params.name;

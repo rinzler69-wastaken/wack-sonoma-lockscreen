@@ -708,6 +708,13 @@ assert(!notifText.includes("import('gi://Blur')"), 'notificationManager removes 
 assert(notifText.includes('mode: 1'), 'notificationManager requests background blur mode');
 assert(notifText.includes('corner_radius: NOTIF_CARD_RADIUS'), 'notificationManager configures SDF rounded corner radius');
 
+const { KawaseBlurEffect, createKawaseBlurEffect: makeKawaseEffect } = await import('../src/main/kawaseBlurEffect.js');
+assert(KawaseBlurEffect !== undefined, 'KawaseBlurEffect class imported and evaluated cleanly in GJS');
+const testEffect = makeKawaseEffect({ radius: 25, mode: 1, corner_radius: 12 });
+assert(testEffect !== null, 'createKawaseBlurEffect returns valid effect instance');
+assert(testEffect.mode === 1, 'createKawaseBlurEffect honors mode: 1');
+assert(testEffect.corner_radius === 12, 'createKawaseBlurEffect honors corner_radius: 12');
+
 const kawaseFile = Gio.File.new_for_path('src/main/kawaseBlurEffect.js');
 const [, kawaseBytes] = kawaseFile.load_contents(null);
 const kawaseText = new TextDecoder('utf-8').decode(kawaseBytes);
