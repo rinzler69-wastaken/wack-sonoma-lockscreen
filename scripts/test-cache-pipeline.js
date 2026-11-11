@@ -751,7 +751,7 @@ assert(gpsText.includes('mode: 1'), 'gdmPromptStyling uses background blit mode 
 assert(gpsText.includes("entry.remove_effect(blur)"), 'gdmPromptStyling removes blur effect on teardown');
 assert(gpsText.includes('setPromptBlurLive'), 'gdmPromptStyling declares setPromptBlurLive for dynamic transition tracking');
 assert(gpsText.includes('settlePromptStaticBlur'), 'gdmPromptStyling declares settlePromptStaticBlur to freeze blur onComplete');
-assert(gpsText.includes('trashPromptStaticBlur'), 'gdmPromptStyling declares trashPromptStaticBlur to clean targets on cancel');
+assert(gpsText.includes('disposePromptStaticBlur'), 'gdmPromptStyling declares disposePromptStaticBlur to clean targets on cancel');
 
 const animFile = Gio.File.new_for_path('src/pro/gdmAnimationController.js');
 const [, animBytes] = animFile.load_contents(null);
@@ -759,7 +759,7 @@ const animText = new TextDecoder('utf-8').decode(animBytes);
 
 assert(animText.includes('setPromptBlurLive(true)'), 'gdmAnimationController switches blur to dynamic on prompt entrance');
 assert(animText.includes('settlePromptStaticBlur()'), 'gdmAnimationController settles blur to static on transition onComplete');
-assert(animText.includes('trashPromptStaticBlur()'), 'gdmAnimationController trashes blur targets on return to picker / cancel');
+assert(animText.includes('disposePromptStaticBlur()'), 'gdmAnimationController disposes blur targets on return to picker / cancel');
 
 const gdmThemeFile = Gio.File.new_for_path('src/pro/gdmThemePipeline.js');
 const [, gdmThemeBytes] = gdmThemeFile.load_contents(null);

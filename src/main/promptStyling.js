@@ -51,17 +51,64 @@ export class PromptStyling {
 
         const authPrompt = dialog._authPrompt ?? dialog._promptBox?._authPrompt;
         const entry = this.findPromptEntry(authPrompt);
+        const shouldBlink = (this._extension._cursorBlink !== false);
+
         if (entry && entry.clutter_text) {
-            const shouldBlink = (this._extension._cursorBlink !== false);
             entry.clutter_text.cursor_blink = shouldBlink;
-            entry.clutter_text.cursor_visible = shouldBlink;
+            entry.clutter_text.cursor_visible = true;
         }
+
+        if (!shouldBlink)
+            return;
+
+        let visible = true;
+        this.cursorBlinkTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+            const currentDialog = this._extension._dialog;
+            if (!currentDialog || !this._extension._promptActive) {
+                this.cursorBlinkTimeoutId = null;
+                return GLib.SOURCE_REMOVE;
+            }
+
+            const currentAuthPrompt = currentDialog._authPrompt ?? currentDialog._promptBox?._authPrompt;
+            if (!currentAuthPrompt) {
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            const currentEntry = this.findPromptEntry(currentAuthPrompt);
+            if (!currentEntry || !currentEntry.clutter_text) {
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            const keyFocus = global.stage ? (global.stage.key_focus ?? global.stage.get_key_focus?.()) : null;
+            const hasFocus = currentEntry.has_focus ||
+                keyFocus === currentEntry ||
+                keyFocus === currentEntry.clutter_text ||
+                (typeof currentEntry.clutter_text.has_key_focus === 'function' && currentEntry.clutter_text.has_key_focus());
+
+            if (!hasFocus) {
+                visible = false;
+                currentEntry.clutter_text.cursor_visible = false;
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            visible = !visible;
+            currentEntry.clutter_text.cursor_visible = visible;
+            return GLib.SOURCE_CONTINUE;
+        });
+        GLib.Source.set_name_by_id(this.cursorBlinkTimeoutId, '[WACK] UserLockscreen.cursorBlink');
     }
 
     stopCursorBlink() {
         if (this.cursorBlinkTimeoutId) {
             GLib.source_remove(this.cursorBlinkTimeoutId);
             this.cursorBlinkTimeoutId = null;
+        }
+        const dialog = this._extension._dialog;
+        const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+        const entry = this.findPromptEntry(authPrompt);
+        if (entry?.clutter_text) {
+            entry.clutter_text.cursor_blink = false;
+            entry.clutter_text.cursor_visible = true;
         }
     }
 

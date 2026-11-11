@@ -218,7 +218,7 @@ export class GdmAnimationController {
                 this.resetLegacyPromptTransform();
                 authPrompt.visible = false;
                 authPrompt.opacity = 255;
-                this._gdm._promptStyling?.trashPromptStaticBlur();
+                this._gdm._promptStyling?.disposePromptStaticBlur();
                 if (onComplete) onComplete();
             },
         });
@@ -230,7 +230,7 @@ export class GdmAnimationController {
         this.setLegacyPromptChrome(false, true);
         this._gdm._setPromptBackgroundBlur(false, true);
         this._gdm._applyWallpaper(null, true, true);
-        this._gdm._promptStyling?.trashPromptStaticBlur();
+        this._gdm._promptStyling?.disposePromptStaticBlur();
 
         const userSelection = this._gdm._dialog?._userSelectionBox;
         if (!userSelection)
@@ -286,7 +286,7 @@ export class GdmAnimationController {
                 _log('[WACK/GdmManager] _animateCupertinoPromptOut: animation complete');
                 authPrompt.visible = false;
                 authPrompt.opacity = 255;
-                this._gdm._promptStyling?.trashPromptStaticBlur();
+                this._gdm._promptStyling?.disposePromptStaticBlur();
                 if (onComplete) onComplete();
             },
         });
@@ -319,7 +319,7 @@ export class GdmAnimationController {
 
     animateCupertinoReturnToPicker() {
         this._gdm._applyWallpaper(null, true, true);
-        this._gdm._promptStyling?.trashPromptStaticBlur();
+        this._gdm._promptStyling?.disposePromptStaticBlur();
 
         const userSelection = this._gdm._dialog?._userSelectionBox;
         if (!userSelection)

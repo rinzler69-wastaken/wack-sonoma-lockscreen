@@ -22,7 +22,7 @@ export class GdmPromptStyling {
 
     teardown() {
         this.stopCursorBlink();
-        this.trashPromptStaticBlur();
+        this.disposePromptStaticBlur();
         this.clearCupertinoPromptBackground();
         this.clearBottomButtonsBackground();
     }
@@ -102,7 +102,7 @@ export class GdmPromptStyling {
         }
     }
 
-    trashPromptStaticBlur() {
+    disposePromptStaticBlur() {
         const authPrompt = this._gdm._dialog?._authPrompt;
         const entry = this.findPromptEntry(authPrompt);
         const blur = entry?.get_effect('wack-prompt-acrylic-blur');
@@ -743,7 +743,7 @@ export class GdmPromptStyling {
     }
 
     clearCupertinoPromptBackground() {
-        this.trashPromptStaticBlur();
+        this.disposePromptStaticBlur();
         const authPrompt = this._gdm._dialog ? this._gdm._dialog._authPrompt : null;
         const entry = this.findPromptEntry(authPrompt);
         if (entry)
