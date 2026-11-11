@@ -377,6 +377,11 @@ export class PromptStyling {
             const menu = this._findMenuForButton(button);
             if (menu)
                 menu.disconnectObject(button);
+
+            const blur = button.get_effect('wack-cancel-acrylic-blur');
+            if (blur)
+                button.remove_effect(blur);
+
             if (button._wackOriginalStyle !== undefined) {
                 button.set_style(button._wackOriginalStyle);
                 delete button._wackOriginalStyle;
@@ -548,6 +553,42 @@ export class PromptStyling {
             if (rawShadow !== undefined && rawShadow !== null && rawShadow > 0) {
                 const cancelShadowAlpha = rawShadow * 0.75;
                 shadowStyle = ` box-shadow: 0 2px 24px rgba(0, 0, 0, ${cancelShadowAlpha.toFixed(3)}) !important;`;
+            }
+
+            const vibrancyMode = color.vibrancyMode ?? (this._extension?._settings?.get_string('prompt-vibrancy') ?? 'tonal');
+            const isSolid = (vibrancyMode === 'tonal' || vibrancyMode === 'less');
+
+            if (!isSolid) {
+                let blur = button.get_effect('wack-cancel-acrylic-blur');
+                if (!blur) {
+                    blur = createKawaseBlurEffect({
+                        name: 'wack-cancel-acrylic-blur',
+                        mode: 1,
+                        radius: PROMPT_BLUR_RADIUS,
+                        brightness: 1.0,
+                        corner_radius: 999,
+                    });
+                    button.add_effect(blur);
+                } else {
+                    blur.set_enabled(true);
+                }
+
+                const isInv = visualState.useInverse || visualState.isBrightSample || false;
+                const baseAlpha = isPressed ? 0.28 : (isHovered ? 0.22 : 0.14);
+                const tintColor = isInv
+                    ? `rgba(0, 0, 0, ${(baseAlpha + 0.15).toFixed(3)})`
+                    : `rgba(255, 255, 255, ${baseAlpha.toFixed(3)})`;
+
+                if (!isFocused)
+                    overlayStyle += ` border: none !important;`;
+
+                const bgStyle = ` background-image: none !important; background-gradient-direction: none !important; background-color: ${tintColor} !important;${overlayStyle}${shadowStyle}`;
+                button.set_style(`${button._wackOriginalStyle}${bgStyle}`);
+                return;
+            } else {
+                const blur = button.get_effect('wack-cancel-acrylic-blur');
+                if (blur)
+                    blur.set_enabled(false);
             }
         }
 

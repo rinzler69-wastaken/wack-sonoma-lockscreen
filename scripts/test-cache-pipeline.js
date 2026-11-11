@@ -730,6 +730,7 @@ const psText = new TextDecoder('utf-8').decode(psBytes);
 
 assert(psText.includes("import { createKawaseBlurEffect } from './kawaseBlurEffect.js'"), 'promptStyling imports createKawaseBlurEffect');
 assert(psText.includes('wack-prompt-acrylic-blur'), 'promptStyling manages wack-prompt-acrylic-blur effect');
+assert(psText.includes('wack-cancel-acrylic-blur'), 'promptStyling manages wack-cancel-acrylic-blur effect');
 assert(psText.includes('corner_radius: 999'), 'promptStyling sets capsule corner_radius: 999');
 assert(psText.includes('mode: 1'), 'promptStyling uses background blit mode for prompt chip');
 assert(psText.includes("entry.remove_effect(blur)"), 'promptStyling removes blur effect on teardown');
@@ -740,6 +741,7 @@ const gpsText = new TextDecoder('utf-8').decode(gpsBytes);
 
 assert(gpsText.includes("import { createKawaseBlurEffect } from '../main/kawaseBlurEffect.js'"), 'gdmPromptStyling imports createKawaseBlurEffect');
 assert(gpsText.includes('wack-prompt-acrylic-blur'), 'gdmPromptStyling manages wack-prompt-acrylic-blur effect');
+assert(gpsText.includes('wack-cancel-acrylic-blur'), 'gdmPromptStyling manages wack-cancel-acrylic-blur effect');
 assert(gpsText.includes('corner_radius: 999'), 'gdmPromptStyling sets capsule corner_radius: 999');
 assert(gpsText.includes('mode: 1'), 'gdmPromptStyling uses background blit mode for prompt chip');
 assert(gpsText.includes("entry.remove_effect(blur)"), 'gdmPromptStyling removes blur effect on teardown');
@@ -750,6 +752,8 @@ const gdmThemeText = new TextDecoder('utf-8').decode(gdmThemeBytes);
 
 assert(gdmThemeText.includes("createKawaseBlurEffect"), 'gdmThemePipeline imports createKawaseBlurEffect');
 assert(gdmThemeText.includes("p.value?.r != null"), 'gdmThemePipeline validates acrylic palette via color channels independently of disk PNGs');
+assert(kawaseText.includes("sourceFramebuffer.blit"), 'KawaseBlurEffect uses direct CoglFramebuffer blit for static background capture');
+assert(kawaseText.includes("invalidate()"), 'KawaseBlurEffect provides invalidate() to refresh static background cache');
 
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);

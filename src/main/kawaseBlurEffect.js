@@ -293,6 +293,10 @@ export const KawaseBlurEffect = GObject.registerClass({
         this.appliedSampling = null;
         this.blurValid = false;
         this.appliedOutputUniforms = null;
+        this._lastX = null;
+        this._lastY = null;
+        this._lastW = null;
+        this._lastH = null;
 
         this._radius = params.radius ?? 30;
         this._brightness = params.brightness ?? 0.6;
@@ -520,9 +524,22 @@ export const KawaseBlurEffect = GObject.registerClass({
         this.blurValid = false;
     }
 
+    invalidate() {
+        this.blurValid = false;
+        this._lastX = null;
+        this._lastY = null;
+        this._lastW = null;
+        this._lastH = null;
+        this.queue_repaint();
+    }
+
     vfunc_paint_node(node, paintContext, flags) {
         const actor = this.get_actor();
         if (!actor || actor.width <= 0 || actor.height <= 0)
+            return;
+
+        const paintOpacity = actor.get_paint_opacity();
+        if (paintOpacity === 0)
             return;
 
         if (this._radius === 0 || this._opacity_factor === 0) {
@@ -550,14 +567,36 @@ export const KawaseBlurEffect = GObject.registerClass({
         this.ensureTargets(context, inputBounds, scale, passes);
         this.updateSampling(passes, blend);
 
-        const isActorDirty = (flags & Clutter.EffectPaintFlags.ACTOR_DIRTY);
-        if (this._mode === 1 || !this.blurValid || isActorDirty) {
+        const [originX, originY] = actor.get_transformed_position();
+        const [w, h] = actor.get_transformed_size();
+        const stageView = paintContext?.get_stage_view ? paintContext.get_stage_view() : null;
+        let viewX = Math.round(originX);
+        let viewY = Math.round(originY);
+        if (stageView) {
+            const layout = stageView.get_layout();
+            viewX -= layout.x;
+            viewY -= layout.y;
+        }
+
+        const isActorDirty = Boolean(flags & Clutter.EffectPaintFlags.ACTOR_DIRTY);
+        const positionChanged = (this._lastX !== viewX || this._lastY !== viewY ||
+                                 this._lastW !== w || this._lastH !== h);
+
+        const needsCapture = (this._mode === 1)
+            ? (!this.blurValid || positionChanged)
+            : (!this.blurValid || isActorDirty || positionChanged);
+
+        if (needsCapture) {
             this.addBlurPasses(node, actor, inputBounds, passes, blend, paintContext);
             this.blurValid = true;
+            this._lastX = viewX;
+            this._lastY = viewY;
+            this._lastW = w;
+            this._lastH = h;
         }
 
         this.updateOutputUniforms(actor, inputBounds);
-        setPaintOpacity(this.outputPipeline, actor.get_paint_opacity() / 255);
+        setPaintOpacity(this.outputPipeline, paintOpacity / 255);
         const outputNode = new Clutter.PipelineNode(this.outputPipeline);
         outputNode.set_name('WackKawase output');
         addRectangle(outputNode, inputBounds.x, inputBounds.y, inputBounds.width, inputBounds.height);
@@ -572,7 +611,6 @@ export const KawaseBlurEffect = GObject.registerClass({
         const sourceFramebuffer = paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null;
         if (this._mode === 1 && sourceFramebuffer) {
             const [originX, originY] = actor.get_transformed_position();
-            const [w, h] = actor.get_transformed_size();
             const stageView = paintContext?.get_stage_view ? paintContext.get_stage_view() : null;
             let srcX = Math.round(originX);
             let srcY = Math.round(originY);
@@ -582,16 +620,26 @@ export const KawaseBlurEffect = GObject.registerClass({
                 srcY -= layout.y;
             }
 
-            const backgroundLayer = Clutter.LayerNode.new_to_framebuffer(
-                this.downTargets[0].framebuffer,
-                this.downTargets[0].layerPipeline
-            );
-            backgroundLayer.set_name('WackKawase background source');
-            node.add_child(backgroundLayer);
-            addRectangle(backgroundLayer, 0, 0, bounds.width, bounds.height);
+            const scale = actor.get_resource_scale();
+            const blitSrcX = Math.max(0, Math.round(srcX + bounds.x * scale));
+            const blitSrcY = Math.max(0, Math.round(srcY + bounds.y * scale));
+            const targetW = this.downTargets[0].usedWidth;
+            const targetH = this.downTargets[0].usedHeight;
 
-            let blitDone = false;
-            if (BlitNode) {
+            let blitted = false;
+            if (sourceFramebuffer.blit) {
+                try {
+                    blitted = sourceFramebuffer.blit(
+                        this.downTargets[0].framebuffer,
+                        blitSrcX, blitSrcY,
+                        0, 0,
+                        targetW, targetH
+                    );
+                } catch (_) {
+                    blitted = false;
+                }
+            }
+            if (!blitted && BlitNode) {
                 try {
                     let blitNode = null;
                     try {
@@ -600,22 +648,14 @@ export const KawaseBlurEffect = GObject.registerClass({
                         blitNode = BlitNode.new ? BlitNode.new(sourceFramebuffer) : null;
                     }
                     if (blitNode) {
-                        blitNode.add_blit_rectangle(srcX, srcY, 0, 0, Math.round(w), Math.round(h));
-                        backgroundLayer.add_child(blitNode);
-                        blitDone = true;
-                    }
-                } catch (_) {
-                    blitDone = false;
-                }
-            }
-            if (!blitDone) {
-                try {
-                    const blitFn = sourceFramebuffer.blit
-                        ? (s, ...a) => s.blit(...a)
-                        : Cogl.blit_framebuffer;
-                    if (blitFn) {
-                        blitFn(sourceFramebuffer, this.downTargets[0].framebuffer,
-                               srcX, srcY, 0, 0, Math.round(w), Math.round(h));
+                        blitNode.add_blit_rectangle(blitSrcX, blitSrcY, 0, 0, targetW, targetH);
+                        const blitLayer = Clutter.LayerNode.new_to_framebuffer(
+                            this.downTargets[0].framebuffer,
+                            this.downTargets[0].layerPipeline
+                        );
+                        blitLayer.set_name('WackKawase background blit');
+                        blitLayer.add_child(blitNode);
+                        node.add_child(blitLayer);
                     }
                 } catch (_) {
                 }
@@ -670,6 +710,10 @@ export const KawaseBlurEffect = GObject.registerClass({
         this.appliedSampling = null;
         this.appliedOutputUniforms = null;
         this.blurValid = false;
+        this._lastX = null;
+        this._lastY = null;
+        this._lastW = null;
+        this._lastH = null;
     }
 
     destroy() {
