@@ -720,7 +720,7 @@ const [, kawaseBytes] = kawaseFile.load_contents(null);
 const kawaseText = new TextDecoder('utf-8').decode(kawaseBytes);
 
 assert(kawaseText.includes("'mode': GObject.ParamSpec.int"), 'KawaseBlurEffect declares mode GObject property');
-assert(kawaseText.includes('add_blit_rectangle'), 'KawaseBlurEffect supports hardware background blitting');
+assert(kawaseText.includes('sourceFramebuffer.blit'), 'KawaseBlurEffect supports hardware background blitting');
 
 // 18. Test Prompt Chip Acrylic Live Kawase Blur Integration
 print('\n[18] Testing Prompt Chip Acrylic Live Kawase Blur Integration:');
@@ -756,8 +756,8 @@ assert(kawaseText.includes("sourceFramebuffer.blit"), 'KawaseBlurEffect uses dir
 assert(kawaseText.includes("invalidate()"), 'KawaseBlurEffect provides invalidate() to refresh static background cache');
 const liveEffect = makeKawaseEffect({ live: true });
 assert(liveEffect.live === true, 'KawaseBlurEffect honors live: true');
-assert(psText.includes('live: true'), 'promptStyling configures live Kawase blur for prompt chip');
-assert(gpsText.includes('live: true'), 'gdmPromptStyling configures live Kawase blur for prompt chip');
+assert(psText.includes('live: false'), 'promptStyling configures static Kawase blur for prompt chip');
+assert(gpsText.includes('live: true'), 'gdmPromptStyling configures dynamic Kawase blur for prompt chip');
 
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);

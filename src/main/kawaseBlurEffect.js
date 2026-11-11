@@ -6,12 +6,6 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 import { getKawaseConfiguration, getKawaseInputBounds } from './kawaseSampling.js';
 
-let BlitNode = null;
-try {
-    BlitNode = Clutter.BlitNode;
-} catch (_) {
-}
-
 export { getKawaseConfiguration, getKawaseInputBounds };
 
 const box = new Clutter.ActorBox();
@@ -636,58 +630,29 @@ export const KawaseBlurEffect = GObject.registerClass({
             }
 
             const scale = actor.get_resource_scale();
-            const blitSrcX = Math.max(0, Math.round(srcX + bounds.x * scale));
-            const blitSrcY = Math.max(0, Math.round(srcY + bounds.y * scale));
+            const blitSrcX = Math.max(0, Math.round((srcX + bounds.x) * scale));
+            const blitSrcY = Math.max(0, Math.round((srcY + bounds.y) * scale));
             const targetW = this.downTargets[0].usedWidth;
             const targetH = this.downTargets[0].usedHeight;
 
-            let blitted = false;
-            if (sourceFramebuffer.blit) {
-                try {
-                    blitted = sourceFramebuffer.blit(
+            try {
+                if (sourceFramebuffer.blit) {
+                    sourceFramebuffer.blit(
                         this.downTargets[0].framebuffer,
                         blitSrcX, blitSrcY,
                         0, 0,
                         targetW, targetH
                     );
-                } catch (_) {
-                    blitted = false;
+                } else if (Cogl.blit_framebuffer) {
+                    Cogl.blit_framebuffer(
+                        sourceFramebuffer,
+                        this.downTargets[0].framebuffer,
+                        blitSrcX, blitSrcY,
+                        0, 0,
+                        targetW, targetH
+                    );
                 }
-            }
-            if (!blitted && BlitNode) {
-                try {
-                    let blitNode = null;
-                    try {
-                        blitNode = new BlitNode(sourceFramebuffer);
-                    } catch (_) {
-                        blitNode = BlitNode.new ? BlitNode.new(sourceFramebuffer) : null;
-                    }
-                    if (blitNode) {
-                        blitNode.add_blit_rectangle(blitSrcX, blitSrcY, 0, 0, targetW, targetH);
-                        const blitLayer = Clutter.LayerNode.new_to_framebuffer(
-                            this.downTargets[0].framebuffer,
-                            this.downTargets[0].layerPipeline
-                        );
-                        blitLayer.set_name('WackKawase background blit');
-                        blitLayer.add_child(blitNode);
-                        node.add_child(blitLayer);
-                        blitted = true;
-                    }
-                } catch (_) {
-                    blitted = false;
-                }
-            }
-            if (!blitted) {
-                try {
-                    const blitFn = sourceFramebuffer.blit
-                        ? (s, ...a) => s.blit(...a)
-                        : Cogl.blit_framebuffer;
-                    if (blitFn) {
-                        blitFn(sourceFramebuffer, this.downTargets[0].framebuffer,
-                               blitSrcX, blitSrcY, 0, 0, targetW, targetH);
-                    }
-                } catch (_) {
-                }
+            } catch (_) {
             }
         } else {
             const actorLayer = Clutter.LayerNode.new_to_framebuffer(
