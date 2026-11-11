@@ -844,6 +844,16 @@ assert(chipNormalBg === 'rgba(255, 255, 255, 0.113)', 'Prompt chip non-inverse u
 const chipNormalFocused = getAcrylicChipBackground(normalDarkColor, true);
 assert(chipNormalFocused === 'rgba(255, 255, 255, 0.160)', 'Prompt chip non-inverse focused uses 0.160 frosted white');
 
+// 20. AlphaManager & Constants Contract Invariants
+print('\n[20] Testing AlphaManager & Constants Contract Invariants:');
+const alphaManagerSrc = Gio.File.new_for_path('src/main/alphaManager.js').load_contents(null)[1];
+const alphaManagerText = new TextDecoder().decode(alphaManagerSrc);
+
+assert(alphaManagerText.includes('PROMPT_BLUR_RADIUS'), 'alphaManager imports and references PROMPT_BLUR_RADIUS');
+assert(alphaManagerText.includes('PROMPT_BLUR_BRIGHTNESS'), 'alphaManager imports and references PROMPT_BLUR_BRIGHTNESS');
+assert(alphaManagerText.includes('isBrightHue: promptVisualState?.isBrightHue'), 'alphaManager result contract includes isBrightHue');
+assert(alphaManagerText.includes('useInverse: promptVisualState?.useInverse'), 'alphaManager result contract includes useInverse');
+
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
 print(`========================================\n`);

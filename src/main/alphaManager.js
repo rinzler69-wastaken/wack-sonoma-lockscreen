@@ -29,6 +29,8 @@ import {
     sampleWallpaperChromeColors,
 } from './wallpaperSampler.js';
 import {
+    PROMPT_BLUR_RADIUS,
+    PROMPT_BLUR_BRIGHTNESS,
     CANCEL_BUTTON_HOVER_OVERLAY_ALPHA,
     CANCEL_BUTTON_ACTIVE_OVERLAY_ALPHA,
 } from './constants.js';
@@ -504,6 +506,7 @@ export async function getWallpaperPromptColor(params) {
             powerOffColor: sampledPowerOffColor,
             shadowAlpha: shadowAlpha,
             useInverse: promptVisualState?.useInverse ?? false,
+            isBrightHue: promptVisualState?.isBrightHue ?? false,
             visualState: promptVisualState,
             transitionInfo: transitionInfo ?? null,
         };
