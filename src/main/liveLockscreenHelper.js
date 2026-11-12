@@ -1,11 +1,6 @@
 import Gio from 'gi://Gio';
 
 let shellMain = globalThis.Main ?? null;
-if (!shellMain) {
-    try {
-        shellMain = await import('resource:///org/gnome/shell/ui/main.js');
-    } catch (_) {}
-}
 
 export function _setShellMain(main) {
     shellMain = main;
@@ -19,7 +14,9 @@ export const LIVE_LOCKSCREEN_SCHEMA = 'org.gnome.shell.extensions.live-lockscree
  * @returns {boolean}
  */
 export function isLiveLockscreenEnabled() {
-    const liveExt = shellMain?.extensionManager?.lookup?.(LIVE_LOCKSCREEN_UUID);
+    if (!shellMain || !shellMain.extensionManager)
+        return false;
+    const liveExt = shellMain.extensionManager.lookup(LIVE_LOCKSCREEN_UUID);
     // ExtensionState.ENABLED is 1
     return Boolean(liveExt && liveExt.state === 1);
 }
@@ -30,29 +27,34 @@ export function isLiveLockscreenEnabled() {
  * @returns {string|null}
  */
 export function getLiveLockscreenVideoPath(liveExt = null) {
-    try {
-        const ext = liveExt ?? shellMain?.extensionManager?.lookup?.(LIVE_LOCKSCREEN_UUID);
-        if (ext?.stateObj?._settings)
-            return ext.stateObj._settings.get_string('background-video-path') || null;
+    let ext = liveExt;
+    if (!ext) {
+        if (!shellMain || !shellMain.extensionManager)
+            return null;
+        ext = shellMain.extensionManager.lookup(LIVE_LOCKSCREEN_UUID);
+    }
 
-        const schemaSource = Gio.SettingsSchemaSource.get_default();
-        let schema = schemaSource ? schemaSource.lookup(LIVE_LOCKSCREEN_SCHEMA, true) : null;
-        if (!schema && ext?.dir) {
-            const schemasDir = ext.dir.get_child('schemas');
-            if (schemasDir.query_exists(null)) {
-                const localSource = Gio.SettingsSchemaSource.new_from_directory(
-                    schemasDir.get_path(),
-                    schemaSource,
-                    false
-                );
-                schema = localSource.lookup(LIVE_LOCKSCREEN_SCHEMA, true);
-            }
+    if (ext && ext.stateObj && ext.stateObj._settings)
+        return ext.stateObj._settings.get_string('background-video-path') || null;
+
+    const schemaSource = Gio.SettingsSchemaSource.get_default();
+    let schema = schemaSource ? schemaSource.lookup(LIVE_LOCKSCREEN_SCHEMA, true) : null;
+    if (!schema && ext && ext.dir) {
+        const schemasDir = ext.dir.get_child('schemas');
+        if (schemasDir.query_exists(null)) {
+            const localSource = Gio.SettingsSchemaSource.new_from_directory(
+                schemasDir.get_path(),
+                schemaSource,
+                false
+            );
+            schema = localSource.lookup(LIVE_LOCKSCREEN_SCHEMA, true);
         }
-        if (schema) {
-            const settings = new Gio.Settings({ settings_schema: schema });
-            return settings.get_string('background-video-path') || null;
-        }
-    } catch (_) {}
+    }
+    if (schema) {
+        const settings = new Gio.Settings({ settings_schema: schema });
+        return settings.get_string('background-video-path') || null;
+    }
+
     return null;
 }
 
@@ -71,34 +73,36 @@ export function getLiveLockscreenVideoPath(liveExt = null) {
  */
 export function isLiveLockscreenVideoActive(dialog, extension) {
     // 1. If our custom wallpaper overlay is enabled and actively displaying, it covers the background
-    if (extension?._settings?.get_boolean('lockscreen-wallpaper-enable')) {
-        const overlay = extension._wallpaperManager?.customWallpaperOverlay;
+    if (extension && extension._settings && extension._settings.get_boolean('lockscreen-wallpaper-enable')) {
+        const overlay = extension._wallpaperManager && extension._wallpaperManager.customWallpaperOverlay;
         if (overlay && overlay.visible && overlay.get_n_children() > 0)
             return false;
     }
 
     // 2. Check if the LiveLockScreen extension is enabled
-    const liveExt = shellMain?.extensionManager?.lookup?.(LIVE_LOCKSCREEN_UUID);
+    if (!shellMain || !shellMain.extensionManager)
+        return false;
+    const liveExt = shellMain.extensionManager.lookup(LIVE_LOCKSCREEN_UUID);
     if (!liveExt || liveExt.state !== 1)
         return false;
 
     // 3. Check LiveLockScreen stateObj directly if initialized
     if (liveExt.stateObj) {
-        if (liveExt.stateObj._player?.pid && liveExt.stateObj._backgroundCreated)
+        if (liveExt.stateObj._player && liveExt.stateObj._player.pid && liveExt.stateObj._backgroundCreated)
             return true;
     }
 
     // 4. Check dialog._backgroundGroup for LiveLockScreen wrapper actors or video player windows
-    if (dialog?._backgroundGroup) {
+    if (dialog && dialog._backgroundGroup) {
         for (const child of dialog._backgroundGroup) {
-            if (child.get_effect?.('lockscreen-extension-blur'))
+            if (typeof child.get_effect === 'function' && child.get_effect('lockscreen-extension-blur'))
                 return true;
 
             // Check if wrapper contains a player window actor
             if (typeof child.get_children === 'function') {
                 for (const inner of child.get_children()) {
-                    const metaWin = inner.get_meta_window?.();
-                    const title = metaWin?.get_title?.() || '';
+                    const metaWin = typeof inner.get_meta_window === 'function' ? inner.get_meta_window() : null;
+                    const title = metaWin && typeof metaWin.get_title === 'function' ? metaWin.get_title() : '';
                     if (title.startsWith('LLS-Player-'))
                         return true;
                 }

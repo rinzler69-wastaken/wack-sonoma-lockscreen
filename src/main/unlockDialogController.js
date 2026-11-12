@@ -124,9 +124,11 @@ class UnlockSequenceController {
                 });
             }
 
-            const clockWrapper = this._extension._clockLayoutManager?.clockWrapper;
-            const hintContainer = this._extension._clockLayoutManager?.hintContainer;
-            const customOverlay = this._extension._wallpaperManager?.customWallpaperOverlay;
+            const clockLayoutMgr = this._extension._clockLayoutManager;
+            const clockWrapper = clockLayoutMgr ? clockLayoutMgr.clockWrapper : null;
+            const hintContainer = clockLayoutMgr ? clockLayoutMgr.hintContainer : null;
+            const wallpaperMgr = this._extension._wallpaperManager;
+            const customOverlay = wallpaperMgr ? wallpaperMgr.customWallpaperOverlay : null;
 
             // Collect LiveLockScreen video wrapper actors from _backgroundGroup.
             // Detection: actors that carry 'lockscreen-extension-blur' (LLS's own effect name)
@@ -134,12 +136,13 @@ class UnlockSequenceController {
             // We only fade opacity — GNOME session mode switching triggers LLS's disable()
             // which kills the player process and destroys the actors itself.
             const liveWrappers = [];
-            if (dialog?._backgroundGroup) {
+            if (dialog && dialog._backgroundGroup) {
                 for (const widget of dialog._backgroundGroup) {
-                    if (widget.get_effect?.('lockscreen-extension-blur') ||
-                        widget.get_children?.().some(child => {
-                            const metaWin = child.get_meta_window?.();
-                            return (metaWin?.get_title?.() ?? '').startsWith('LLS-Player-');
+                    if (widget.get_effect('lockscreen-extension-blur') ||
+                        widget.get_children().some(child => {
+                            const metaWin = child.get_meta_window ? child.get_meta_window() : null;
+                            return metaWin && metaWin.get_title &&
+                                metaWin.get_title().startsWith('LLS-Player-');
                         })) {
                         liveWrappers.push(widget);
                     }
@@ -175,7 +178,7 @@ class UnlockSequenceController {
                         this.windowFadeContainer = null;
                     }
 
-                    if (this._extension._wallpaperManager?.customWallpaperOverlay) {
+                    if (this._extension._wallpaperManager && this._extension._wallpaperManager.customWallpaperOverlay) {
                         this._extension._wallpaperManager.customWallpaperOverlay.destroy();
                         this._extension._wallpaperManager.customWallpaperOverlay = null;
                     }
@@ -241,7 +244,7 @@ export class UnlockDialogController {
     }
 
     _setupBackgroundGroupKawase(dialog) {
-        if (!dialog?._backgroundGroup)
+        if (!dialog || !dialog._backgroundGroup)
             return;
 
         const isLive = isLiveLockscreenVideoActive(dialog, this._extension);
@@ -262,11 +265,12 @@ export class UnlockDialogController {
             }
 
             if (!widget.get_effect('blur') && !widget.get_effect('lockscreen-extension-blur')) {
-                const hasPlayerWin = widget.get_children?.().some(child => {
-                    const metaWin = child.get_meta_window?.();
-                    const title = metaWin?.get_title?.() || '';
-                    return title.startsWith('LLS-Player-');
-                });
+                const hasPlayerWin = typeof widget.get_children === 'function' &&
+                    widget.get_children().some(child => {
+                        const metaWin = child.get_meta_window ? child.get_meta_window() : null;
+                        const title = metaWin && metaWin.get_title ? metaWin.get_title() : '';
+                        return title.startsWith('LLS-Player-');
+                    });
                 if (hasPlayerWin) {
                     const kawase = createKawaseBlurEffect({
                         radius: 0,
@@ -283,12 +287,13 @@ export class UnlockDialogController {
     _onBackgroundGroupChildAdded(dialog) {
         this._setupBackgroundGroupKawase(dialog);
         this.syncLiveBlur(dialog);
-        const progress = dialog._adjustment?.value ?? 0;
+        const adjustment = dialog._adjustment;
+        const progress = adjustment ? adjustment.value : 0;
         const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         const isCupertino = this._extension._lockscreenMode === 'cupertino';
         const globalBlur = isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor * progress;
         const globalBrightness = isCupertino ? 1.0 : 1.0 - (1.0 - BACKGROUND_BLURRING_BRIGHTNESS) * progress;
-        for (const widget of dialog._backgroundGroup ?? []) {
+        for (const widget of dialog._backgroundGroup) {
             for (const effectName of ['blur', 'lockscreen-extension-blur']) {
                 const effect = widget.get_effect(effectName);
                 if (effect) effect.set({ radius: globalBlur, brightness: globalBrightness });
@@ -297,12 +302,15 @@ export class UnlockDialogController {
     }
 
     syncLiveBlur(dialog, forceVal = null) {
+        const resolvedDialog = dialog !== null && dialog !== undefined
+            ? dialog
+            : this._extension._dialog;
         const isLive = forceVal !== null
             ? Boolean(forceVal)
-            : isLiveLockscreenVideoActive(dialog ?? this._extension?._dialog, this._extension);
+            : isLiveLockscreenVideoActive(resolvedDialog, this._extension);
 
-        const currentDialog = dialog ?? this._extension?._dialog;
-        if (currentDialog?._backgroundGroup) {
+        const currentDialog = resolvedDialog;
+        if (currentDialog && currentDialog._backgroundGroup) {
             for (const widget of currentDialog._backgroundGroup) {
                 const effect = widget.get_effect('lockscreen-extension-blur');
                 if (effect instanceof KawaseBlurEffect)
@@ -310,15 +318,15 @@ export class UnlockDialogController {
             }
         }
 
-        if (dialog?._clock?.setBlurLive)
+        if (dialog && dialog._clock && dialog._clock.setBlurLive)
             dialog._clock.setBlurLive(isLive);
-        else if (this._extension?._dialog?._clock?.setBlurLive)
+        else if (this._extension._dialog && this._extension._dialog._clock && this._extension._dialog._clock.setBlurLive)
             this._extension._dialog._clock.setBlurLive(isLive);
 
-        if (this._extension?._promptStyling?.setBlurLive)
+        if (this._extension._promptStyling && this._extension._promptStyling.setBlurLive)
             this._extension._promptStyling.setBlurLive(isLive);
 
-        if (this._extension?._notifManager?.setBlurLive)
+        if (this._extension._notifManager && this._extension._notifManager.setBlurLive)
             this._extension._notifManager.setBlurLive(isLive);
     }
 
@@ -355,11 +363,19 @@ export class UnlockDialogController {
 
     syncPasswordIndicators(authPrompt = null) {
         const dialog = this._extension._dialog;
-        authPrompt ??= dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+        if (authPrompt === null) {
+            if (dialog) {
+                authPrompt = dialog._authPrompt;
+                if (!authPrompt && dialog._promptBox)
+                    authPrompt = dialog._promptBox._authPrompt;
+            }
+        }
         if (!authPrompt)
             return;
 
-        const enabled = this._extension._settings?.get_boolean('password-indicators') ?? false;
+        const enabled = this._extension._settings
+            ? this._extension._settings.get_boolean('password-indicators')
+            : false;
         if (enabled && !authPrompt._wackIndicators) {
             authPrompt._wackIndicators = new PasswordIndicators(authPrompt);
         } else if (!enabled && authPrompt._wackIndicators) {
@@ -400,13 +416,13 @@ export class UnlockDialogController {
             this.origUpdateBgEffects = dialog._updateBackgroundEffects.bind(dialog);
             dialog._updateBackgroundEffects = () => {
                 this._setupBackgroundGroupKawase(dialog);
-                for (const widget of dialog._backgroundGroup ?? []) {
+                for (const widget of dialog._backgroundGroup) {
                     for (const effectName of ['blur', 'lockscreen-extension-blur']) {
                         const effect = widget.get_effect(effectName);
                         if (effect) effect.set({ brightness: 1.0, radius: 0 });
                     }
                 }
-                if (this._extension._wallpaperManager?.customWallpaperOverlay) {
+                if (this._extension._wallpaperManager && this._extension._wallpaperManager.customWallpaperOverlay) {
                     this._extension._wallpaperManager.setCustomWallpaperBlur(0, 1.0);
                 }
             };
@@ -473,7 +489,7 @@ export class UnlockDialogController {
             if (!this.origSetTransitionProgress) return;
             this.origSetTransitionProgress(progress);
 
-            if (dialog._clock?.setBlurEnabled) {
+            if (dialog._clock && dialog._clock.setBlurEnabled) {
                 // In Cupertino mode the clock stays visible at all times, so
                 // keep the blur effect enabled regardless of transition progress.
                 // For other modes, disable blur mid-swipe to avoid artefacts.
@@ -503,7 +519,7 @@ export class UnlockDialogController {
             const globalBlur = isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor * progress;
             const globalBrightness = isCupertino ? 1.0 : 1.0 - (1.0 - BACKGROUND_BLURRING_BRIGHTNESS) * progress;
 
-            for (const widget of dialog._backgroundGroup ?? []) {
+            for (const widget of dialog._backgroundGroup) {
                 for (const effectName of ['blur', 'lockscreen-extension-blur']) {
                     const effect = widget.get_effect(effectName);
                     if (effect) effect.set({ radius: globalBlur, brightness: globalBrightness });
@@ -538,18 +554,20 @@ export class UnlockDialogController {
             }
 
             const notifOpacity = hasNotifs ? Math.round(255 * (1 - progress)) : 0;
-            const hintContainer = this._extension._clockLayoutManager?.hintContainer;
+            const clockLayoutMgr = this._extension._clockLayoutManager;
+            const hintContainer = clockLayoutMgr ? clockLayoutMgr.hintContainer : null;
 
             if (hintContainer) {
                 hintContainer.opacity = isCupertino ? notifOpacity : (progress > 0 ? 0 : 255);
             }
 
             if (isCupertino) {
-                const authPrompt = dialog._authPrompt ?? dialog._promptBox?._authPrompt;
-                const mainBox = authPrompt?._mainBox;
+                const authPrompt = dialog._authPrompt ||
+                    (dialog._promptBox ? dialog._promptBox._authPrompt : null);
+                const mainBox = authPrompt ? authPrompt._mainBox : null;
                 const cupertinoMgr = this._extension._cupertinoPromptManager;
-                const restPromptContainer = cupertinoMgr?.restPromptContainer;
-                const restPrompt = cupertinoMgr?.restPrompt;
+                const restPromptContainer = cupertinoMgr ? cupertinoMgr.restPromptContainer : null;
+                const restPrompt = cupertinoMgr ? cupertinoMgr.restPrompt : null;
 
                 if (restPromptContainer && !restPromptContainer._isDestroyed) {
                     if (hasNotifs && progress === 0) {
@@ -564,7 +582,9 @@ export class UnlockDialogController {
                             if (restPrompt._hintBoxWrapper) {
                                 restPrompt._hintBoxWrapper.opacity = subOpacity;
                             }
-                            const nameLabel = restPrompt._userWell?.get_child()?._label;
+                            const nameLabel = restPrompt._userWell && restPrompt._userWell.get_child()
+                                ? restPrompt._userWell.get_child()._label
+                                : null;
                             if (nameLabel) nameLabel.opacity = subOpacity;
                         }
                     }
@@ -590,7 +610,9 @@ export class UnlockDialogController {
 
                 const messageActor = this._extension._getLockscreenMessageActor();
                 const messageManager = this._extension._messageManager;
-                const messageLabel = messageManager?.label ?? this._extension._lockscreenMessageLabel;
+                const messageLabel = (messageManager && messageManager.label)
+                    ? messageManager.label
+                    : this._extension._lockscreenMessageLabel;
                 if (messageActor && messageLabel) {
                     if (hasNotifs && progress === 0) {
                         _setActorVisible(messageActor, false, 0);
@@ -615,7 +637,7 @@ export class UnlockDialogController {
             } else {
                 applyClockAnimation(
                     this._extension._clockAnimation,
-                    this._extension._clockLayoutManager?.clockWrapper,
+                    clockLayoutMgr ? clockLayoutMgr.clockWrapper : null,
                     dialog._clock,
                     progress,
                     this._extension._getClockAnimationParams(),
@@ -640,7 +662,7 @@ export class UnlockDialogController {
             this.origUpdateBgEffects = null;
         }
 
-        if (dialog?._backgroundGroup) {
+        if (dialog && dialog._backgroundGroup) {
             dialog._backgroundGroup.disconnectObject(this);
             for (const widget of dialog._backgroundGroup) {
                 const effect = widget.get_effect('blur');
@@ -681,18 +703,21 @@ export class UnlockDialogController {
             this.origEnsureAuthPrompt = null;
         }
 
-        const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
-        if (authPrompt?._wackOrigSetMessage) {
+        const authPrompt = dialog
+            ? (dialog._authPrompt || (dialog._promptBox ? dialog._promptBox._authPrompt : null))
+            : null;
+        if (authPrompt && authPrompt._wackOrigSetMessage) {
             authPrompt.setMessage = authPrompt._wackOrigSetMessage;
             delete authPrompt._wackOrigSetMessage;
         }
-        authPrompt?._userVerifier?.disconnectObject(this);
-        if (authPrompt?._wackIndicators) {
+        if (authPrompt && authPrompt._userVerifier)
+            authPrompt._userVerifier.disconnectObject(this);
+        if (authPrompt && authPrompt._wackIndicators) {
             authPrompt._wackIndicators.destroy();
             delete authPrompt._wackIndicators;
         }
 
-        if (dialog?._notificationsBox) {
+        if (dialog && dialog._notificationsBox) {
             dialog._notificationsBox.disconnectObject(this);
         }
 

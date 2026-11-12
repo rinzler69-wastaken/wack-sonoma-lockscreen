@@ -50,7 +50,8 @@ export class PromptStyling {
         const dialog = this._extension._dialog;
         if (!dialog) return;
 
-        const authPrompt = dialog._authPrompt ?? dialog._promptBox?._authPrompt;
+        const authPrompt = dialog._authPrompt ||
+            (dialog._promptBox ? dialog._promptBox._authPrompt : null);
         const entry = this.findPromptEntry(authPrompt);
         const shouldBlink = (this._extension._cursorBlink !== false);
 
@@ -70,7 +71,8 @@ export class PromptStyling {
                 return GLib.SOURCE_REMOVE;
             }
 
-            const currentAuthPrompt = currentDialog._authPrompt ?? currentDialog._promptBox?._authPrompt;
+            const currentAuthPrompt = currentDialog._authPrompt ||
+                (currentDialog._promptBox ? currentDialog._promptBox._authPrompt : null);
             if (!currentAuthPrompt) {
                 return GLib.SOURCE_CONTINUE;
             }
@@ -80,7 +82,7 @@ export class PromptStyling {
                 return GLib.SOURCE_CONTINUE;
             }
 
-            const keyFocus = global.stage ? (global.stage.key_focus ?? global.stage.get_key_focus?.()) : null;
+            const keyFocus = global.stage ? global.stage.key_focus : null;
             const hasFocus = currentEntry.has_focus ||
                 keyFocus === currentEntry ||
                 keyFocus === currentEntry.clutter_text ||
@@ -105,9 +107,11 @@ export class PromptStyling {
             this.cursorBlinkTimeoutId = null;
         }
         const dialog = this._extension._dialog;
-        const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+        const authPrompt = dialog
+            ? (dialog._authPrompt || (dialog._promptBox ? dialog._promptBox._authPrompt : null))
+            : null;
         const entry = this.findPromptEntry(authPrompt);
-        if (entry?.clutter_text) {
+        if (entry && entry.clutter_text) {
             entry.clutter_text.cursor_blink = false;
             entry.clutter_text.cursor_visible = true;
         }
@@ -117,7 +121,7 @@ export class PromptStyling {
         if (!entry)
             return;
 
-        const isCupertino = this._extension?._lockscreenMode === 'cupertino';
+        const isCupertino = this._extension._lockscreenMode === 'cupertino';
         if (color && !isCupertino)
             color = null;
 
@@ -129,7 +133,9 @@ export class PromptStyling {
                 global.stage.disconnectObject(entry);
 
             const dialog = this._extension._dialog;
-            const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+            const authPrompt = dialog
+                ? (dialog._authPrompt || (dialog._promptBox ? dialog._promptBox._authPrompt : null))
+                : null;
             if (authPrompt)
                 authPrompt.disconnectObject(this);
 
@@ -224,7 +230,9 @@ export class PromptStyling {
             }
 
             const dialog = this._extension._dialog;
-            const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+            const authPrompt = dialog
+                ? (dialog._authPrompt || (dialog._promptBox ? dialog._promptBox._authPrompt : null))
+                : null;
             if (authPrompt) {
                 authPrompt.connectObject(
                     'reset', () => {
@@ -266,7 +274,11 @@ export class PromptStyling {
         const visualState = color.visualState ?? color;
         const veilAlpha = getPromptDimVeilAlpha(visualState);
 
-        const vibrancyMode = color.vibrancyMode ?? (this._extension?._settings?.get_string('prompt-vibrancy') ?? 'tonal');
+        const vibrancyMode = color.vibrancyMode !== undefined
+            ? color.vibrancyMode
+            : (this._extension._settings
+                ? this._extension._settings.get_string('prompt-vibrancy')
+                : 'tonal');
         const isSolid = (vibrancyMode === 'tonal' || vibrancyMode === 'less');
 
         let shadowStyle = '';
@@ -288,7 +300,7 @@ export class PromptStyling {
                 entry.add_effect(blur);
             } else {
                 blur.set_enabled(true);
-                blur.live = this._blurLive ?? false;
+                blur.live = this._blurLive;
             }
 
             const tintColor = getAcrylicChipBackground(color, isFocused);
@@ -337,13 +349,15 @@ export class PromptStyling {
 
     updatePromptMessageStyle(color = null, alpha = null) {
         const dialog = this._extension._dialog;
-        const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+        const authPrompt = dialog
+            ? (dialog._authPrompt || (dialog._promptBox ? dialog._promptBox._authPrompt : null))
+            : null;
         if (!authPrompt)
             return;
 
         const promptActor = this._extension ? this._extension._promptActor : null;
-        const isCupertino = this._extension?._lockscreenMode === 'cupertino' ||
-            this._extension?._selectedPromptMode === 'cupertino' ||
+        const isCupertino = this._extension._lockscreenMode === 'cupertino' ||
+            this._extension._selectedPromptMode === 'cupertino' ||
             authPrompt.has_style_class_name('wack-cupertino-prompt') ||
             (promptActor ? promptActor.has_style_class_name('wack-cupertino-prompt') : false);
 
@@ -358,7 +372,7 @@ export class PromptStyling {
         const effectiveColor = color
             ?? this._lastPromptColor
             ?? this._extension._lastPromptColor
-            ?? this._extension._avatarManager?._lastAvatarColor
+            ?? (this._extension._avatarManager ? this._extension._avatarManager._lastAvatarColor : null)
             ?? null;
 
         const effectiveAlpha = alpha
@@ -384,13 +398,13 @@ export class PromptStyling {
             return button._menu;
         if (button.menu)
             return button.menu;
-        if (button._authMenuButton?._menu)
+        if (button._authMenuButton && button._authMenuButton._menu)
             return button._authMenuButton._menu;
-        if (button._authMenuButton?.menu)
+        if (button._authMenuButton && button._authMenuButton.menu)
             return button._authMenuButton.menu;
-        if (button._sessionMenuButton?._menu)
+        if (button._sessionMenuButton && button._sessionMenuButton._menu)
             return button._sessionMenuButton._menu;
-        if (button._sessionMenuButton?.menu)
+        if (button._sessionMenuButton && button._sessionMenuButton.menu)
             return button._sessionMenuButton.menu;
         const parent = button.get_parent ? button.get_parent() : null;
         if (parent) {
@@ -398,18 +412,18 @@ export class PromptStyling {
                 return parent._menu;
             if (parent.menu)
                 return parent.menu;
-            if (parent._authMenuButton?._menu)
+            if (parent._authMenuButton && parent._authMenuButton._menu)
                 return parent._authMenuButton._menu;
-            if (parent._sessionMenuButton?._menu)
+            if (parent._sessionMenuButton && parent._sessionMenuButton._menu)
                 return parent._sessionMenuButton._menu;
         }
-        const dialog = this._extension?._dialog;
+        const dialog = this._extension._dialog;
         if (dialog) {
-            if (dialog._authMenuButton?._menu)
+            if (dialog._authMenuButton && dialog._authMenuButton._menu)
                 return dialog._authMenuButton._menu;
-            if (dialog._sessionMenuButton?._menu)
+            if (dialog._sessionMenuButton && dialog._sessionMenuButton._menu)
                 return dialog._sessionMenuButton._menu;
-            if (dialog._sessionMenuButton?.menu)
+            if (dialog._sessionMenuButton && dialog._sessionMenuButton.menu)
                 return dialog._sessionMenuButton.menu;
         }
         return null;
@@ -420,7 +434,7 @@ export class PromptStyling {
             return;
 
         if (buttonType === 'cancel' && color) {
-            const isCupertino = this._extension?._lockscreenMode === 'cupertino';
+            const isCupertino = this._extension._lockscreenMode === 'cupertino';
             if (!isCupertino)
                 color = null;
         }
@@ -619,7 +633,7 @@ export class PromptStyling {
     }
 
     applyCancelButtonBackground(button, color) {
-        const isCupertino = this._extension?._lockscreenMode === 'cupertino';
+        const isCupertino = this._extension._lockscreenMode === 'cupertino';
         this._setupChromeButton(button, isCupertino ? color : null, 'cancel');
     }
 
@@ -633,39 +647,55 @@ export class PromptStyling {
 
     clearCupertinoPromptBackground() {
         const dialog = this._extension._dialog;
-        const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+        const authPrompt = dialog
+            ? (dialog._authPrompt || (dialog._promptBox ? dialog._promptBox._authPrompt : null))
+            : null;
         const entry = this.findPromptEntry(authPrompt);
         if (entry)
             this.applyPromptEntryBackground(entry, null);
 
-        const cancelButton = authPrompt?.cancelButton;
+        const cancelButton = authPrompt ? authPrompt.cancelButton : null;
         if (cancelButton)
             this.applyCancelButtonBackground(cancelButton, null);
 
-        if (authPrompt?._message) {
+        if (authPrompt && authPrompt._message) {
             authPrompt._message.set_style(null);
             authPrompt._message.remove_style_class_name('wack-cupertino-message');
         }
-        if (authPrompt?._capsLockWarningLabel)
+        if (authPrompt && authPrompt._capsLockWarningLabel)
             authPrompt._capsLockWarningLabel.set_style(null);
     }
 
     clearBottomButtonsBackground() {
         const dialog = this._extension._dialog;
-        const a11yButton = dialog?._a11yMenuButton
-            ?? dialog?._bottomButtonGroup?._a11yMenuButton
-            ?? dialog?._bottomButtonGroup?.get_children().find(c => c.has_style_class_name('a11y-button'));
+        if (!dialog) return;
+
+        let a11yButton = dialog._a11yMenuButton;
+        if (!a11yButton && dialog._bottomButtonGroup) {
+            a11yButton = dialog._bottomButtonGroup._a11yMenuButton ||
+                dialog._bottomButtonGroup.get_children().find(c => c.has_style_class_name('a11y-button'));
+        }
         if (a11yButton)
             this.applyA11yButtonBackground(a11yButton, null);
 
-        const sessionButton = dialog?._authMenuButton
-            ?? dialog?._sessionMenuButton?._button
-            ?? dialog?._sessionMenuButton?.get_child()
-            ?? dialog?._sessionMenuButton
-            ?? dialog?._bottomButtonGroup?._authMenuButton
-            ?? dialog?._bottomButtonGroup?._sessionMenuButton?._button
-            ?? dialog?._bottomButtonGroup?._sessionMenuButton
-            ?? dialog?._bottomButtonGroup?.get_children().find(c => c.has_style_class_name('login-dialog-auth-menu-button') || c.has_style_class_name('login-dialog-session-list-button'));
+        let sessionButton = dialog._authMenuButton;
+        if (!sessionButton && dialog._sessionMenuButton) {
+            sessionButton = dialog._sessionMenuButton._button ||
+                dialog._sessionMenuButton.get_child() ||
+                dialog._sessionMenuButton;
+        }
+        if (!sessionButton && dialog._bottomButtonGroup) {
+            const bg = dialog._bottomButtonGroup;
+            sessionButton = bg._authMenuButton;
+            if (!sessionButton && bg._sessionMenuButton) {
+                sessionButton = bg._sessionMenuButton._button || bg._sessionMenuButton;
+            }
+            if (!sessionButton) {
+                sessionButton = bg.get_children().find(c =>
+                    c.has_style_class_name('login-dialog-auth-menu-button') ||
+                    c.has_style_class_name('login-dialog-session-list-button'));
+            }
+        }
         if (sessionButton)
             this.applySessionButtonBackground(sessionButton, null);
     }
@@ -675,8 +705,10 @@ export class PromptStyling {
             return;
 
         let wellH = 0;
-        const restPrompt = this._extension._cupertinoPromptManager?.restPrompt ?? this._extension._cupertinoRestPrompt;
-        if (restPrompt?._userWell) {
+        const restPrompt = (this._extension._cupertinoPromptManager
+            ? this._extension._cupertinoPromptManager.restPrompt
+            : null) || this._extension._cupertinoRestPrompt;
+        if (restPrompt && restPrompt._userWell) {
             const [, , , hSize] = restPrompt._userWell.get_preferred_size();
             wellH = hSize > 0 ? hSize : 0;
         }
@@ -684,13 +716,16 @@ export class PromptStyling {
         let yCenterFraction = null;
         let promptBounds = null;
         const dialog = this._extension._dialog;
-        const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
-        const entry = this.findPromptEntry(authPrompt) ?? restPrompt?._hintBox;
+        const authPrompt = dialog
+            ? (dialog._authPrompt || (dialog._promptBox ? dialog._promptBox._authPrompt : null))
+            : null;
+        const entry = this.findPromptEntry(authPrompt) ||
+            (restPrompt ? restPrompt._hintBox : null);
         if (entry) {
             const [xTrans, yTrans] = entry.get_transformed_position();
             const wTrans = entry.get_width() || 0;
             const hTrans = entry.get_height() || 0;
-            const monitor = Main.layoutManager?.primaryMonitor;
+            const monitor = Main.layoutManager.primaryMonitor;
             const monitorX = monitor ? monitor.x : 0;
             const monitorY = monitor ? monitor.y : 0;
             const monitorHeight = monitor ? monitor.height : 1080;
@@ -728,11 +763,13 @@ export class PromptStyling {
     setBlurLive(live) {
         const boolVal = Boolean(live);
         this._blurLive = boolVal;
-        const dialog = this._extension?._dialog;
+        const dialog = this._extension._dialog;
         if (!dialog) return;
-        const authPrompt = dialog._authPrompt ?? dialog._promptBox?._authPrompt;
+        const authPrompt = dialog._authPrompt ||
+            (dialog._promptBox ? dialog._promptBox._authPrompt : null);
         const entry = this.findPromptEntry(authPrompt);
-        const blur = entry?.get_effect?.('wack-prompt-acrylic-blur');
+        if (!entry) return;
+        const blur = entry.get_effect('wack-prompt-acrylic-blur');
         if (blur)
             blur.live = boolVal;
     }

@@ -48,7 +48,7 @@ export class WallpaperManager {
             return { file: path, nextChangeSec: null };
 
         const slide = await resolveSlideshowXml(path);
-        if (!slide?.filePath)
+        if (!slide || !slide.filePath)
             return null;
 
         // The slide flips at the midpoint of a transition and at the end of a static.
@@ -62,7 +62,9 @@ export class WallpaperManager {
         const seq = ++this._updateSeq;
         this._stopRefresh();
 
-        const enabled = this._extension._settings?.get_boolean('lockscreen-wallpaper-enable') ?? false;
+        const enabled = this._extension._settings
+            ? this._extension._settings.get_boolean('lockscreen-wallpaper-enable')
+            : false;
         const monitors = Main.layoutManager.monitors;
         const images = enabled
             ? await Promise.all(monitors.map(m => this._resolveDisplayImage(this.getPathForMonitor(m.index))))
@@ -77,7 +79,7 @@ export class WallpaperManager {
             return;
         }
 
-        if (this.customWallpaperOverlay?.get_n_children() !== monitors.length)
+        if (this.customWallpaperOverlay && this.customWallpaperOverlay.get_n_children() !== monitors.length)
             this._destroyOverlay();
 
         if (!this.customWallpaperOverlay) {
@@ -93,7 +95,9 @@ export class WallpaperManager {
                     height: monitor.height,
                     effect: blurEffect,
                 });
-                widget.get_effect('blur')?.set({ brightness: 1.0, radius: 0 });
+                const blurFx = widget.get_effect('blur');
+                if (blurFx)
+                    blurFx.set({ brightness: 1.0, radius: 0 });
                 this.customWallpaperOverlay.add_child(widget);
             }
 
@@ -101,7 +105,8 @@ export class WallpaperManager {
             if (dialog._backgroundGroup)
                 dialog.set_child_above_sibling(this.customWallpaperOverlay, dialog._backgroundGroup);
 
-            const progress = dialog._adjustment?.value ?? 0;
+            const adjustment = dialog._adjustment;
+            const progress = adjustment ? adjustment.value : 0;
             const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
             const isCupertino = this._extension._lockscreenMode === 'cupertino';
             this.setCustomWallpaperBlur(
@@ -120,9 +125,11 @@ export class WallpaperManager {
         });
         this.customWallpaperOverlay.opacity = 255;
         this.customWallpaperOverlay.visible = true;
-        this._extension?._unlockDialogController?.syncLiveBlur(dialog);
+        const unlockCtrl = this._extension._unlockDialogController;
+        if (unlockCtrl)
+            unlockCtrl.syncLiveBlur(dialog);
 
-        const changes = images.map(img => img?.nextChangeSec).filter(sec => sec != null);
+        const changes = images.map(img => img ? img.nextChangeSec : null).filter(sec => sec != null);
         if (changes.length > 0)
             this._armRefresh(Math.min(...changes));
     }
@@ -145,7 +152,8 @@ export class WallpaperManager {
     }
 
     setCustomWallpaperBlur(radius, brightness) {
-        for (const widget of this.customWallpaperOverlay?.get_children() ?? []) {
+        if (!this.customWallpaperOverlay) return;
+        for (const widget of this.customWallpaperOverlay.get_children()) {
             const effect = widget.get_effect('blur');
             if (effect)
                 effect.set({ radius, brightness });
@@ -163,6 +171,8 @@ export class WallpaperManager {
         this._updateSeq++;
         this._stopRefresh();
         this._destroyOverlay();
-        this._extension?._unlockDialogController?.syncLiveBlur(this._extension?._dialog);
+        const unlockCtrl = this._extension._unlockDialogController;
+        if (unlockCtrl)
+            unlockCtrl.syncLiveBlur(this._extension._dialog);
     }
 }

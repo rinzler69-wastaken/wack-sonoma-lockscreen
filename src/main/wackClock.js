@@ -235,14 +235,14 @@ export const WackClock = GObject.registerClass(
                 this._timeBlurEffect = createKawaseBlurEffect({
                     name: 'wack-clock-time-glyph-blur',
                     ...blurParams,
-                    live: this._blurLive ?? false,
+                    live: this._blurLive,
                 });
                 this._timeBlurEffect.set_enabled(this._blurEnabled);
                 this._time.add_effect(this._timeBlurEffect);
             } else {
                 this._timeBlurEffect.set({
                     ...blurParams,
-                    live: this._blurLive ?? false,
+                    live: this._blurLive,
                 });
                 this._timeBlurEffect.invalidate();
             }
@@ -251,14 +251,14 @@ export const WackClock = GObject.registerClass(
                 this._dateBlurEffect = createKawaseBlurEffect({
                     name: 'wack-clock-date-glyph-blur',
                     ...blurParams,
-                    live: this._blurLive ?? false,
+                    live: this._blurLive,
                 });
                 this._dateBlurEffect.set_enabled(this._blurEnabled);
                 this._dateOutput.add_effect(this._dateBlurEffect);
             } else {
                 this._dateBlurEffect.set({
                     ...blurParams,
-                    live: this._blurLive ?? false,
+                    live: this._blurLive,
                 });
                 this._dateBlurEffect.invalidate();
             }

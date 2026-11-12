@@ -35,7 +35,7 @@ export class NotificationManager {
         return createKawaseBlurEffect({
             name: NOTIF_BLUR_NAME,
             mode: 1,
-            live: this._blurLive ?? false,
+            live: this._blurLive,
             radius: NOTIF_BLUR_RADIUS,
             brightness: NOTIF_BLUR_BRIGHTNESS,
             corner_radius: NOTIF_CARD_RADIUS,
@@ -49,16 +49,18 @@ export class NotificationManager {
         if (!nb) return;
         if (nb._notificationBox) {
             for (let child = nb._notificationBox.get_first_child(); child !== null; child = child.get_next_sibling()) {
-                const effect = child.get_effect?.(NOTIF_BLUR_NAME);
+                const effect = child.get_effect(NOTIF_BLUR_NAME);
                 if (effect)
                     effect.live = boolVal;
             }
         }
         if (nb._players) {
             for (const msg of nb._players.values()) {
-                const effect = msg?.get_effect?.(NOTIF_BLUR_NAME);
-                if (effect)
-                    effect.live = boolVal;
+                if (msg) {
+                    const effect = msg.get_effect(NOTIF_BLUR_NAME);
+                    if (effect)
+                        effect.live = boolVal;
+                }
             }
         }
     }
@@ -81,8 +83,8 @@ export class NotificationManager {
         const nb = this._notifBox;
         if (!nb) return;
 
-        const vs = this._promptColor?.visualState ?? this._promptColor;
-        const isInv = this._useInverse || (vs?.useInverse ?? vs?.isBrightSample ?? false);
+        const vs = (this._promptColor && this._promptColor.visualState !== undefined) ? this._promptColor.visualState : this._promptColor;
+        const isInv = this._useInverse || (vs ? (vs.useInverse !== undefined ? vs.useInverse : (vs.isBrightSample || false)) : false);
         if (!isInv) return;
 
         const { style } = getNotifCardBackground(this._promptColor, this._useInverse, progress);
@@ -119,7 +121,8 @@ export class NotificationManager {
     }
 
     setNotifBlursEnabled(enabled) {
-        const nb = this._extension._dialog?._notificationsBox;
+        const dialog = this._extension._dialog;
+        const nb = dialog ? dialog._notificationsBox : null;
         if (!nb) return;
         for (const child of nb._notificationBox.get_children()) {
             const effect = child.get_effect(NOTIF_BLUR_NAME);
@@ -134,7 +137,7 @@ export class NotificationManager {
     setVibrancyInverse(useInverse, promptColor = null) {
         if (useInverse && (useInverse.visualState !== undefined || useInverse.useInverse !== undefined || useInverse.r !== undefined)) {
             this._promptColor = useInverse;
-            this._useInverse = useInverse.useInverse ?? useInverse.visualState?.useInverse ?? false;
+            this._useInverse = useInverse.useInverse !== undefined ? useInverse.useInverse : (useInverse.visualState ? (useInverse.visualState.useInverse || false) : false);
         } else {
             this._useInverse = Boolean(useInverse);
             if (promptColor)
@@ -239,7 +242,7 @@ export class NotificationManager {
         const nb = this._notifBox;
         if (!nb) return 0;
 
-        if (!this._extension?._notifShowInLockScreen) {
+        if (!this._extension || !this._extension._notifShowInLockScreen) {
             return 0;
         }
 
@@ -260,7 +263,7 @@ export class NotificationManager {
             }
         }
 
-        const children = nb._notificationBox?.get_children() ?? [];
+        const children = nb._notificationBox ? nb._notificationBox.get_children() : [];
         children.forEach(child => {
             if (child && !this._isMediaCard(nb, child) && shellVisible.has(child)) {
                 count++;
@@ -507,8 +510,9 @@ export class NotificationManager {
         const [, natWidth] = this._extension._overflowLabel.get_preferred_width(-1);
         const [, natHeight] = this._extension._overflowLabel.get_preferred_height(-1);
 
-        const notifBox = this._extension._dialog?._notificationsBox;
-        const notifHeight = notifBox?.visible ? notifBox.height : 0;
+        const dialog = this._extension._dialog;
+        const notifBox = dialog ? dialog._notificationsBox : null;
+        const notifHeight = (notifBox && notifBox.visible) ? notifBox.height : 0;
 
         const idealY = monitorY + Math.floor(monitorHeight * HINT_VERTICAL_FRACTION);
         const notifTop = monitorY + monitorHeight - notifHeight - HINT_NOTIF_MARGIN - natHeight;
@@ -520,7 +524,7 @@ export class NotificationManager {
 
     teardownNotifBlur() {
         const nb = this._notifBox;
-        const dialogGone = this._extension?._dialogDestroyed;
+        const dialogGone = this._extension ? this._extension._dialogDestroyed : true;
         if (nb && !dialogGone) {
             nb.opacity = 255;
 

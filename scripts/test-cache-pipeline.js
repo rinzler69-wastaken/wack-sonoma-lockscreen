@@ -983,7 +983,7 @@ print('\n[23] Testing LLS Video Overlay Fade-Out in UnlockSequenceController:');
 
 // Source-code structural checks: liveWrappers collection present
 assert(unlockCtrlText.includes('liveWrappers'), 'unlockDialogController declares liveWrappers for LLS fade');
-assert(unlockCtrlText.includes("get_effect?.('lockscreen-extension-blur')"), 'unlockDialogController detects LLS wrappers via lockscreen-extension-blur effect');
+assert(unlockCtrlText.includes("get_effect('lockscreen-extension-blur')"), 'unlockDialogController detects LLS wrappers via lockscreen-extension-blur effect');
 assert(unlockCtrlText.includes("'LLS-Player-'"), 'unlockDialogController detects LLS wrappers via LLS-Player window title');
 assert(unlockCtrlText.includes('...liveWrappers'), 'unlockDialogController spreads liveWrappers into actorsToFade');
 assert(!unlockCtrlText.includes('liveWrappers.forEach(actor => { actor.destroy()'), 'unlockDialogController does NOT destroy LLS wrapper actors — lets disable() handle cleanup');
