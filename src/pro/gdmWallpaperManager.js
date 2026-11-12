@@ -46,8 +46,10 @@ export class GdmWallpaperManager {
         this.setupSharedWallpaperMonitor();
 
         if (this.view && this.themeStore) {
-            const activeUser = this._gdm._dialog?._user?.get_user_name() ?? null;
-            if (activeUser === null && this._gdm._avatarManager?._getActiveSessionUsers) {
+            let activeUser = null;
+            if (this._gdm._dialog && this._gdm._dialog._user)
+                activeUser = this._gdm._dialog._user.get_user_name();
+            if (activeUser === null && this._gdm._avatarManager && this._gdm._avatarManager._getActiveSessionUsers) {
                 const activeSessions = this._gdm._avatarManager._getActiveSessionUsers();
                 for (const u of activeSessions) {
                     if (this.themeStore.hasUser(u)) {
@@ -179,11 +181,11 @@ export class GdmWallpaperManager {
 
         // If crossfading wallpapers, keep clock blur in live capture mode during the transition,
         // then settle to a clean static capture once the target wallpaper is at 100% opacity.
-        if (animate && this._gdm._clockManager?.setBlurLive)
+        if (animate && this._gdm._clockManager && this._gdm._clockManager.setBlurLive)
             this._gdm._clockManager.setBlurLive(true);
 
         const onTransitionComplete = () => {
-            if (this._gdm._clockManager?.settleStaticBlur)
+            if (this._gdm._clockManager && this._gdm._clockManager.settleStaticBlur)
                 this._gdm._clockManager.settleStaticBlur();
         };
 
@@ -195,9 +197,19 @@ export class GdmWallpaperManager {
 
         // Update clock alpha and presentation settings
         if (this._gdm._clockManager) {
-            const alphaToSet = theme.clockAlpha ?? theme.meta?.clockAlpha ?? 0.6;
-            const promptColorToSet = theme.palette ? theme.palette.value : (theme.meta?.promptColor ?? null);
-            this._gdm._clockManager.setWallpaperAlpha(alphaToSet, promptColorToSet);
+            let alphaToSet = 0.6;
+            if (theme.clockAlpha !== null && theme.clockAlpha !== undefined)
+                alphaToSet = theme.clockAlpha;
+            else if (theme.meta && theme.meta.clockAlpha !== null && theme.meta.clockAlpha !== undefined)
+                alphaToSet = theme.meta.clockAlpha;
+
+            let promptColorToSet = null;
+            if (theme.palette && theme.palette.value)
+                promptColorToSet = theme.palette.value;
+            else if (theme.meta && theme.meta.promptColor)
+                promptColorToSet = theme.meta.promptColor;
+
+            this._gdm._clockManager.setWallpaperAlpha(alphaToSet, promptColorToSet, animate, GDM_CROSSFADE_DURATION);
             if (this._gdm._clockManager.clock && theme.meta) {
                 if (theme.meta.clockFormat !== undefined)
                     this._gdm._clockManager.clock.setClockFormat(theme.meta.clockFormat);

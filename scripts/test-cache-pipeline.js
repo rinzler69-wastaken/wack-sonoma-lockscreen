@@ -881,7 +881,7 @@ assert(unlockCtrlText.includes('dialog._clock.setBlurEnabled(isCupertino || prog
 
 const gdmAnimSrc = Gio.File.new_for_path('src/pro/gdmAnimationController.js').load_contents(null)[1];
 const gdmAnimText = new TextDecoder().decode(gdmAnimSrc);
-assert(gdmAnimText.includes('clockInstance?.setBlurEnabled'), 'gdmAnimationController toggles clock blur during GDM prompt transitions');
+assert(gdmAnimText.includes('clockInstance && clockInstance.setBlurEnabled'), 'gdmAnimationController toggles clock blur during GDM prompt transitions');
 
 // 22. Test LiveLockScreen Video Wallpaper Compatibility & Live Blur Wiring
 print('\n[22] Testing LiveLockScreen Video Wallpaper Compatibility & Live Blur Wiring:');

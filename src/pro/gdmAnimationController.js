@@ -12,23 +12,24 @@ export class GdmAnimationController {
     }
 
     setLegacyPromptChrome(visible, animate = true) {
-        const clock = this._gdm._clockManager?.clockWrapper;
-        const clockInstance = this._gdm._clockManager?.clock;
-        const dateMenu = Main.panel?.statusArea?.dateMenu;
+        const clock = this._gdm._clockManager ? this._gdm._clockManager.clockWrapper : null;
+        const clockInstance = this._gdm._clockManager ? this._gdm._clockManager.clock : null;
+        const dateMenu = (Main.panel && Main.panel.statusArea) ? Main.panel.statusArea.dateMenu : null;
         this._gdm._legacyPromptChromeVisible = visible;
 
+        const currentMeta = this._gdm._currentWallpaperMetadata;
         const isCupertino = this._gdm._selectedPromptMode === 'cupertino' ||
-            this._gdm._currentWallpaperMetadata?.lockscreenMode !== 'wack';
+            (currentMeta && currentMeta.lockscreenMode !== 'wack');
 
         if (clock && !this._gdm._verificationSucceeded) {
             if (isCupertino && !visible && clock.opacity === 255 && clock.scale_x === 1.0 && clock.scale_y === 1.0) {
                 // In Cupertino mode with clock already presented at rest, keep the clock
                 // uninterrupted and ensure its blur stays enabled continuously.
-                if (clockInstance?.setBlurEnabled)
+                if (clockInstance && clockInstance.setBlurEnabled)
                     clockInstance.setBlurEnabled(true);
             } else {
                 clock.remove_all_transitions();
-                if (clockInstance?.setBlurEnabled)
+                if (clockInstance && clockInstance.setBlurEnabled)
                     clockInstance.setBlurEnabled(isCupertino || (!visible && !animate));
                 if (animate) {
                     clock.ease({
@@ -38,7 +39,7 @@ export class GdmAnimationController {
                         duration: GDM_CROSSFADE_DURATION,
                         mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                         onComplete: () => {
-                            if ((isCupertino || !visible) && clockInstance?.setBlurEnabled)
+                            if ((isCupertino || !visible) && clockInstance && clockInstance.setBlurEnabled)
                                 clockInstance.setBlurEnabled(true);
                         },
                     });
@@ -46,7 +47,7 @@ export class GdmAnimationController {
                     clock.opacity = visible ? 0 : 255;
                     clock.scale_x = visible ? 0.7 : 1.0;
                     clock.scale_y = visible ? 0.7 : 1.0;
-                    if (clockInstance?.setBlurEnabled)
+                    if (clockInstance && clockInstance.setBlurEnabled)
                         clockInstance.setBlurEnabled(isCupertino || !visible);
                 }
             }

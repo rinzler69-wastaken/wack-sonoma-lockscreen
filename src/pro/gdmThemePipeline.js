@@ -819,7 +819,7 @@ export class GdmWallpaperView {
 
     /** Click path: property writes only. No I/O, no decode, no sampling. */
     present(theme, animate, onComplete = null) {
-        const dim = Boolean(theme.meta?.backgroundDimmer);
+        const dim = Boolean(theme.meta && theme.meta.backgroundDimmer);
         this.setDimmer(dim, animate);
 
         if (theme.userName === this._presentedUser && theme.revision === this._presentedRevision) {
