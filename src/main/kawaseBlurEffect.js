@@ -888,6 +888,38 @@ export const KawaseBlurEffect = GObject.registerClass({
     }
 });
 
+let paintedStageView = null;
+let stageViewTrackingCount = 0;
+let stageBeforePaintId = 0;
+let stageAfterPaintId = 0;
+
+export function retainStageViewTracking() {
+    stageViewTrackingCount++;
+    if (stageViewTrackingCount === 1 && typeof global !== 'undefined' && global.stage) {
+        stageBeforePaintId = global.stage.connect('before-paint', (_, view) => {
+            paintedStageView = view;
+        });
+        stageAfterPaintId = global.stage.connect('after-paint', () => {
+            paintedStageView = null;
+        });
+    }
+}
+
+export function releaseStageViewTracking() {
+    stageViewTrackingCount = Math.max(0, stageViewTrackingCount - 1);
+    if (stageViewTrackingCount === 0 && typeof global !== 'undefined' && global.stage) {
+        if (stageBeforePaintId) {
+            global.stage.disconnect(stageBeforePaintId);
+            stageBeforePaintId = 0;
+        }
+        if (stageAfterPaintId) {
+            global.stage.disconnect(stageAfterPaintId);
+            stageAfterPaintId = 0;
+        }
+        paintedStageView = null;
+    }
+}
+
 export const ClockGlyphBlurEffect = GObject.registerClass({
     GTypeName: 'WackClockGlyphBlurEffect',
     Properties: {
@@ -935,6 +967,7 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
 }, class ClockGlyphBlurEffect extends Clutter.OffscreenEffect {
     _init(params = {}) {
         super._init();
+        retainStageViewTracking();
         this.downTargets = [];
         this.upTargets = [];
         this.downPipelines = [];
@@ -1260,8 +1293,9 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
             return;
         }
 
-        const framebuffer = paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null;
-        const context = framebuffer ? framebuffer.get_context() : this.context;
+        const stageView = paintedStageView;
+        const sourceFramebuffer = stageView?.get_framebuffer ? stageView.get_framebuffer() : (paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null);
+        const context = sourceFramebuffer ? sourceFramebuffer.get_context() : this.context;
         if (!context) {
             super.vfunc_paint_target(node, paintContext);
             return;
@@ -1283,27 +1317,36 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
 
         const [originX, originY] = actor.get_transformed_position();
         const [w, h] = actor.get_transformed_size();
-        const stageView = paintContext?.get_stage_view ? paintContext.get_stage_view() : null;
-        let viewX = Math.round(originX);
-        let viewY = Math.round(originY);
-        if (stageView) {
-            const layout = stageView.get_layout();
-            viewX -= layout.x;
-            viewY -= layout.y;
-        }
+        const layout = stageView?.get_layout ? stageView.get_layout() : { x: 0, y: 0 };
+        const viewScale = stageView?.get_scale ? stageView.get_scale() : scale;
+        let viewX = Math.round(originX - layout.x);
+        let viewY = Math.round(originY - layout.y);
 
         const positionChanged = (this._lastX !== viewX || this._lastY !== viewY ||
             this._lastW !== w || this._lastH !== h);
 
         const needsCapture = this._live || !this.blurValid || positionChanged;
 
-        if (needsCapture) {
-            this.addBlurPasses(node, actor, targetWidth, targetHeight, passes, blend, framebuffer);
-            this.blurValid = true;
-            this._lastX = viewX;
-            this._lastY = viewY;
-            this._lastW = w;
-            this._lastH = h;
+        if (needsCapture && sourceFramebuffer) {
+            const captured = this.addBlurPasses(
+                node,
+                actor,
+                targetWidth,
+                targetHeight,
+                passes,
+                blend,
+                sourceFramebuffer,
+                viewX,
+                viewY,
+                viewScale
+            );
+            if (captured) {
+                this.blurValid = true;
+                this._lastX = viewX;
+                this._lastY = viewY;
+                this._lastW = w;
+                this._lastH = h;
+            }
         }
 
         this.updateOutputUniforms(targetWidth, targetHeight, scale, this._tint_alpha);
@@ -1315,37 +1358,42 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
         node.add_child(outputNode);
     }
 
-    addBlurPasses(node, actor, targetWidth, targetHeight, passes, blend, sourceFramebuffer) {
-        if (sourceFramebuffer) {
-            const geom = captureGeometry(actor, sourceFramebuffer);
-            const blitSrcX = Math.max(0, Math.round(geom.sourceX));
-            const blitSrcY = Math.max(0, Math.round(geom.sourceY));
+    addBlurPasses(node, actor, targetWidth, targetHeight, passes, blend, sourceFramebuffer, viewX, viewY, viewScale) {
+        if (!sourceFramebuffer)
+            return false;
 
-            const fbW = sourceFramebuffer.get_width ? sourceFramebuffer.get_width() : 0;
-            const fbH = sourceFramebuffer.get_height ? sourceFramebuffer.get_height() : 0;
-            const maxW = fbW > 0 ? Math.max(0, fbW - blitSrcX) : targetWidth;
-            const maxH = fbH > 0 ? Math.max(0, fbH - blitSrcY) : targetHeight;
-            const blitW = Math.min(targetWidth, maxW);
-            const blitH = Math.min(targetHeight, maxH);
+        const fbW = sourceFramebuffer.get_width ? sourceFramebuffer.get_width() : 0;
+        const fbH = sourceFramebuffer.get_height ? sourceFramebuffer.get_height() : 0;
+        if (fbW <= 0 || fbH <= 0)
+            return false;
 
-            if (blitW > 0 && blitH > 0) {
-                if (sourceFramebuffer.blit) {
-                    sourceFramebuffer.blit(
-                        this.downTargets[0].framebuffer,
-                        blitSrcX, blitSrcY,
-                        0, 0,
-                        blitW, blitH
-                    );
-                } else if (Cogl.blit_framebuffer) {
-                    Cogl.blit_framebuffer(
-                        sourceFramebuffer,
-                        this.downTargets[0].framebuffer,
-                        blitSrcX, blitSrcY,
-                        0, 0,
-                        blitW, blitH
-                    );
-                }
-            }
+        const blitSrcX = Math.max(0, Math.round(viewX * viewScale));
+        const blitSrcY = Math.max(0, Math.round(viewY * viewScale));
+        const maxW = Math.max(0, fbW - blitSrcX);
+        const maxH = Math.max(0, fbH - blitSrcY);
+        const blitW = Math.min(targetWidth, maxW);
+        const blitH = Math.min(targetHeight, maxH);
+
+        if (blitW <= 0 || blitH <= 0)
+            return false;
+
+        this.downTargets[0].framebuffer.clear4f(Cogl.BufferBit.COLOR, 0, 0, 0, 0);
+
+        if (sourceFramebuffer.blit) {
+            sourceFramebuffer.blit(
+                this.downTargets[0].framebuffer,
+                blitSrcX, blitSrcY,
+                0, 0,
+                blitW, blitH
+            );
+        } else if (Cogl.blit_framebuffer) {
+            Cogl.blit_framebuffer(
+                sourceFramebuffer,
+                this.downTargets[0].framebuffer,
+                blitSrcX, blitSrcY,
+                0, 0,
+                blitW, blitH
+            );
         }
 
         const bounds = { x: 0, y: 0, width: targetWidth, height: targetHeight };
@@ -1370,6 +1418,8 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
                 `WackClockGlyph upsample ${level}`
             );
         }
+
+        return true;
     }
 
     releaseTargets() {
@@ -1394,6 +1444,7 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
 
     destroy() {
         this.releaseTargets();
+        releaseStageViewTracking();
     }
 });
 

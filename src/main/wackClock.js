@@ -40,11 +40,17 @@ export const WackClock = GObject.registerClass(
                 style_class: 'wack-date',
                 x_align: Clutter.ActorAlign.CENTER,
             });
+            this._dateOutput.connectObject('destroy', () => {
+                this._dateBlurEffect = null;
+            }, this);
 
             this._time = new St.Label({
                 style_class: 'unlock-dialog-clock-time wack-time',
                 x_align: Clutter.ActorAlign.CENTER,
             });
+            this._time.connectObject('destroy', () => {
+                this._timeBlurEffect = null;
+            }, this);
 
             this._timeBlurEffect = null;
             this._dateBlurEffect = null;
@@ -275,11 +281,13 @@ export const WackClock = GObject.registerClass(
          */
         destroy() {
             if (this._timeBlurEffect) {
-                this._time.remove_effect(this._timeBlurEffect);
+                if (this._time)
+                    this._time.remove_effect(this._timeBlurEffect);
                 this._timeBlurEffect = null;
             }
             if (this._dateBlurEffect) {
-                this._dateOutput.remove_effect(this._dateBlurEffect);
+                if (this._dateOutput)
+                    this._dateOutput.remove_effect(this._dateBlurEffect);
                 this._dateBlurEffect = null;
             }
 
