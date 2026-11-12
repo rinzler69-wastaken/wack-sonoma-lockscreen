@@ -205,8 +205,9 @@ export const WackClock = GObject.registerClass(
                 ? ''
                 : `color: rgba(${tint.r}, ${tint.g}, ${tint.b}, ${this._alpha});`;
             const weight = this._weight ? `font-weight: ${this._weight};` : '';
-            this._time.set_style(color + weight || null);
-            this._dateOutput.set_style(color || null);
+            const shadow = 'text-shadow: none;';
+            this._time.set_style((color + weight + shadow) || null);
+            this._dateOutput.set_style((color + shadow) || null);
             this._updateClockBlur();
         }
 

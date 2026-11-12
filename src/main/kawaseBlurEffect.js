@@ -154,10 +154,6 @@ uniform float opacity_factor;
 uniform float brightness;
 uniform float output_width;
 uniform float output_height;
-uniform float mask_x;
-uniform float mask_y;
-uniform float mask_width;
-uniform float mask_height;
 uniform float tint_r;
 uniform float tint_g;
 uniform float tint_b;
@@ -178,18 +174,18 @@ if (level_blend > 0.0) {
     filteredColor = mix(sourceColor, color, level_blend);
 }
 filteredColor.rgb *= brightness;
-cogl_color_out = mix(sourceColor, filteredColor, opacity_factor) * cogl_color_in.a;
+vec4 blurredColor = mix(sourceColor, filteredColor, opacity_factor);
 vec2 position = cogl_tex_coord_in[0].xy * vec2(output_width, output_height);
-cogl_color_out.rgb += dither(position * wack_resource_scale) * 2.0 / 255.0 * cogl_color_out.a;
+blurredColor.rgb += dither(position * wack_resource_scale) * 2.0 / 255.0 * blurredColor.a;
 
-vec2 actor_uv = (position - vec2(mask_x, mask_y)) / max(vec2(mask_width, mask_height), vec2(1.0));
-if (actor_uv.x >= 0.0 && actor_uv.x <= 1.0 && actor_uv.y >= 0.0 && actor_uv.y <= 1.0) {
-    vec4 mask = mask_sample(actor_uv);
-    cogl_color_out.rgb = mix(cogl_color_out.rgb, clock_tint, clock_tint_alpha);
-    cogl_color_out.a = mask.a * opacity_factor * cogl_color_in.a;
-} else {
-    cogl_color_out = vec4(0.0);
-}
+// Mix blurred background with clock tint
+blurredColor.rgb = mix(blurredColor.rgb, clock_tint, clock_tint_alpha);
+
+// Sample mask from screen-aligned text glyph pass
+vec4 mask = mask_sample(cogl_tex_coord_in[0].xy);
+
+// Mask output by glyph alpha, correctly premultiplied
+cogl_color_out = blurredColor * (mask.a * opacity_factor * cogl_color_in.a);
 `;
 
 const snippets = new Map();
@@ -793,6 +789,7 @@ export const KawaseBlurEffect = GObject.registerClass({
         }
 
         if (this._mode === 2 && this.maskTarget) {
+            this.maskTarget.framebuffer.clear4f(Cogl.BufferBit.COLOR, 0, 0, 0, 0);
             const maskLayer = Clutter.LayerNode.new_to_framebuffer(
                 this.maskTarget.framebuffer,
                 this.maskTarget.layerPipeline
