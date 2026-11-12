@@ -222,7 +222,7 @@ export const WackClock = GObject.registerClass(
             const tintAlpha = this._alpha != null ? this._alpha : 0.4;
             const blurParams = {
                 mode: 2,
-                radius: 40,
+                radius: 20,
                 brightness: 1.0,
                 tint_r: tint.r / 255.0,
                 tint_g: tint.g / 255.0,

@@ -760,7 +760,9 @@ export const KawaseBlurEffect = GObject.registerClass({
         let viewX = Math.round(originX);
         let viewY = Math.round(originY);
         if (stageView) {
-            const layout = stageView.get_layout();
+            // get_layout() requires an MtkRectangle* in-param in Mutter 18+.
+            // Access the GObject property directly instead.
+            const layout = stageView.layout;
             viewX -= layout.x;
             viewY -= layout.y;
         }
@@ -1293,8 +1295,12 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
             return;
         }
 
-        const stageView = paintedStageView;
-        const sourceFramebuffer = stageView?.get_framebuffer ? stageView.get_framebuffer() : (paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null);
+        // Prefer paintContext.get_stage_view() (GNOME 46+) so that the stage
+        // framebuffer is obtained reliably even in GDM and rest-lockscreen
+        // contexts where the module-level paintedStageView sentinel may still
+        // be null at the time vfunc_paint_target fires.
+        const stageView = (paintContext?.get_stage_view ? paintContext.get_stage_view() : null) ?? paintedStageView;
+        const sourceFramebuffer = stageView?.get_framebuffer ? stageView.get_framebuffer() : null;
         const context = sourceFramebuffer ? sourceFramebuffer.get_context() : this.context;
         if (!context) {
             super.vfunc_paint_target(node, paintContext);
@@ -1317,7 +1323,8 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
 
         const [originX, originY] = actor.get_transformed_position();
         const [w, h] = actor.get_transformed_size();
-        const layout = stageView?.get_layout ? stageView.get_layout() : { x: 0, y: 0 };
+        // get_layout() requires an MtkRectangle* in-param in Mutter 18+; use the GObject property.
+        const layout = stageView?.layout ?? { x: 0, y: 0 };
         const viewScale = stageView?.get_scale ? stageView.get_scale() : scale;
         let viewX = Math.round(originX - layout.x);
         let viewY = Math.round(originY - layout.y);
@@ -1347,6 +1354,14 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
                 this._lastW = w;
                 this._lastH = h;
             }
+        } else if (needsCapture && !sourceFramebuffer && !this.blurValid) {
+            // No stage framebuffer available yet (e.g. GDM or rest lockscreen first
+            // paint before the before-paint signal has fired) and no prior cached
+            // capture exists.  Rendering the output pipeline against an empty
+            // downTargets[0] would produce an invisible glyph, so fall back to the
+            // plain OffscreenEffect render which paints the text normally.
+            super.vfunc_paint_target(node, paintContext);
+            return;
         }
 
         this.updateOutputUniforms(targetWidth, targetHeight, scale, this._tint_alpha);

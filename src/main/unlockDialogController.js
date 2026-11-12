@@ -373,8 +373,13 @@ export class UnlockDialogController {
             if (!this.origSetTransitionProgress) return;
             this.origSetTransitionProgress(progress);
 
-            if (dialog._clock?.setBlurEnabled)
-                dialog._clock.setBlurEnabled(progress === 0);
+            if (dialog._clock?.setBlurEnabled) {
+                // In Cupertino mode the clock stays visible at all times, so
+                // keep the blur effect enabled regardless of transition progress.
+                // For other modes, disable blur mid-swipe to avoid artefacts.
+                const isCupertino = this._extension._lockscreenMode === 'cupertino';
+                dialog._clock.setBlurEnabled(isCupertino || progress === 0);
+            }
 
             const isNowActive = this._extension._promptActive;
 
