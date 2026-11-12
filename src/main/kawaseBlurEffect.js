@@ -159,6 +159,7 @@ uniform float tint_g;
 uniform float tint_b;
 #define clock_tint vec3(tint_r, tint_g, tint_b)
 uniform float clock_tint_alpha;
+uniform float text_alpha;
 uniform float wack_resource_scale;
 
 float dither(vec2 position) {
@@ -181,11 +182,12 @@ blurredColor.rgb += dither(position * wack_resource_scale) * 2.0 / 255.0 * blurr
 // Mix blurred background with clock tint
 blurredColor.rgb = mix(blurredColor.rgb, clock_tint, clock_tint_alpha);
 
-// Sample mask from screen-aligned text glyph pass
+// Sample mask from text glyph texture
 vec4 mask = mask_sample(cogl_tex_coord_in[0].xy);
+float glyphAlpha = clamp(mask.a / max(text_alpha, 0.01), 0.0, 1.0);
 
 // Mask output by glyph alpha, correctly premultiplied
-cogl_color_out = blurredColor * (mask.a * opacity_factor * cogl_color_in.a);
+cogl_color_out = blurredColor * (glyphAlpha * opacity_factor * cogl_color_in.a);
 `;
 
 const snippets = new Map();
@@ -255,11 +257,12 @@ function setVector2(pipeline, name, x, y) {
 }
 
 function captureGeometry(actor, framebuffer) {
+    const scale = actor.get_resource_scale();
     const mv = framebuffer?.get_modelview_matrix ? framebuffer.get_modelview_matrix() : null;
     const proj = framebuffer?.get_projection_matrix ? framebuffer.get_projection_matrix() : null;
     if (!mv || !proj) {
         const [originX, originY] = actor.get_transformed_position();
-        return { sourceX: Math.round(originX), sourceY: Math.round(originY) };
+        return { sourceX: Math.round(originX * scale), sourceY: Math.round(originY * scale) };
     }
 
     const m = mv.multiply(proj).to_float();
@@ -610,21 +613,11 @@ export const KawaseBlurEffect = GObject.registerClass({
         }
 
         if (!this.outputPipeline) {
-            if (this._mode === 2) {
-                if (!this.maskTarget)
-                    this.maskTarget = createRenderTarget(context, this.capacityWidth, this.capacityHeight);
-                this.outputPipeline = this.createPass(
-                    this.downTargets[1], context,
-                    GLYPH_OUTPUT_DECLARATIONS, GLYPH_OUTPUT_CODE,
-                    this.downTargets[0], true, this.maskTarget
-                );
-            } else {
-                this.outputPipeline = this.createPass(
-                    this.downTargets[1], context,
-                    UPSAMPLE_OUTPUT_DECLARATIONS, UPSAMPLE_OUTPUT_CODE,
-                    this.downTargets[0], true
-                );
-            }
+            this.outputPipeline = this.createPass(
+                this.downTargets[1], context,
+                UPSAMPLE_OUTPUT_DECLARATIONS, UPSAMPLE_OUTPUT_CODE,
+                this.downTargets[0], true
+            );
         }
 
         const resized = targetCount !== this.downTargets.length
@@ -777,7 +770,7 @@ export const KawaseBlurEffect = GObject.registerClass({
             this._lastW !== w || this._lastH !== h);
 
         const needsCapture = this._live
-            || ((this._mode === 1 || this._mode === 2) ? (!this.blurValid || positionChanged) : (!this.blurValid || isActorDirty || positionChanged));
+            || (this._mode === 1 ? (!this.blurValid || positionChanged) : (!this.blurValid || isActorDirty || positionChanged));
 
         if (needsCapture) {
             this.addBlurPasses(node, actor, inputBounds, passes, blend, paintContext);
@@ -786,17 +779,6 @@ export const KawaseBlurEffect = GObject.registerClass({
             this._lastY = viewY;
             this._lastW = w;
             this._lastH = h;
-        }
-
-        if (this._mode === 2 && this.maskTarget) {
-            this.maskTarget.framebuffer.clear4f(Cogl.BufferBit.COLOR, 0, 0, 0, 0);
-            const maskLayer = Clutter.LayerNode.new_to_framebuffer(
-                this.maskTarget.framebuffer,
-                this.maskTarget.layerPipeline
-            );
-            maskLayer.set_name('WackKawase glyph mask');
-            maskLayer.add_child(new Clutter.ActorNode(actor, 255));
-            node.add_child(maskLayer);
         }
 
         this.updateOutputUniforms(actor, inputBounds);
@@ -813,7 +795,7 @@ export const KawaseBlurEffect = GObject.registerClass({
 
     addBlurPasses(node, actor, bounds, passes, blend, paintContext) {
         const sourceFramebuffer = paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null;
-        if ((this._mode === 1 || this._mode === 2) && sourceFramebuffer) {
+        if (this._mode === 1 && sourceFramebuffer) {
             const geom = captureGeometry(actor, sourceFramebuffer);
             const scale = actor.get_resource_scale();
             const blitSrcX = Math.max(0, Math.round(geom.sourceX + bounds.x * scale));
@@ -906,9 +888,524 @@ export const KawaseBlurEffect = GObject.registerClass({
     }
 });
 
+export const ClockGlyphBlurEffect = GObject.registerClass({
+    GTypeName: 'WackClockGlyphBlurEffect',
+    Properties: {
+        'radius': GObject.ParamSpec.double(
+            'radius', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 200, 30
+        ),
+        'brightness': GObject.ParamSpec.double(
+            'brightness', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 0.6
+        ),
+        'opacity-factor': GObject.ParamSpec.double(
+            'opacity-factor', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 1.0
+        ),
+        'tint-r': GObject.ParamSpec.double(
+            'tint-r', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 1.0
+        ),
+        'tint-g': GObject.ParamSpec.double(
+            'tint-g', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 1.0
+        ),
+        'tint-b': GObject.ParamSpec.double(
+            'tint-b', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 1.0
+        ),
+        'tint-alpha': GObject.ParamSpec.double(
+            'tint-alpha', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 0.4
+        ),
+        'live': GObject.ParamSpec.boolean(
+            'live', null, null,
+            GObject.ParamFlags.READWRITE,
+            false
+        ),
+    },
+}, class ClockGlyphBlurEffect extends Clutter.OffscreenEffect {
+    _init(params = {}) {
+        super._init();
+        this.downTargets = [];
+        this.upTargets = [];
+        this.downPipelines = [];
+        this.upPipelines = [];
+        this.outputPipeline = null;
+        this.regions = new Map();
+        this.width = 0;
+        this.height = 0;
+        this.capacityWidth = 0;
+        this.capacityHeight = 0;
+        this.context = null;
+        this.appliedSampling = null;
+        this.blurValid = false;
+        this._lastX = null;
+        this._lastY = null;
+        this._lastW = null;
+        this._lastH = null;
+
+        this._radius = params.radius ?? 30;
+        this._brightness = params.brightness ?? 0.6;
+        this._opacity_factor = params.opacity_factor ?? 1.0;
+        this._live = params.live ?? false;
+        this._tint_r = params.tint_r ?? 1.0;
+        this._tint_g = params.tint_g ?? 1.0;
+        this._tint_b = params.tint_b ?? 1.0;
+        this._tint_alpha = params.tint_alpha ?? 0.4;
+    }
+
+    get mode() { return 2; }
+    set mode(_) {}
+
+    get tint_r() { return this._tint_r; }
+    set tint_r(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._tint_r === clamped) return;
+        this._tint_r = clamped;
+        if (this.outputPipeline)
+            setFloat(this.outputPipeline, 'tint_r', clamped);
+        this.queue_repaint();
+        this.notify('tint-r');
+    }
+
+    get tint_g() { return this._tint_g; }
+    set tint_g(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._tint_g === clamped) return;
+        this._tint_g = clamped;
+        if (this.outputPipeline)
+            setFloat(this.outputPipeline, 'tint_g', clamped);
+        this.queue_repaint();
+        this.notify('tint-g');
+    }
+
+    get tint_b() { return this._tint_b; }
+    set tint_b(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._tint_b === clamped) return;
+        this._tint_b = clamped;
+        if (this.outputPipeline)
+            setFloat(this.outputPipeline, 'tint_b', clamped);
+        this.queue_repaint();
+        this.notify('tint-b');
+    }
+
+    get tint_alpha() { return this._tint_alpha; }
+    set tint_alpha(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._tint_alpha === clamped) return;
+        this._tint_alpha = clamped;
+        if (this.outputPipeline) {
+            setFloat(this.outputPipeline, 'clock_tint_alpha', clamped);
+            setFloat(this.outputPipeline, 'text_alpha', clamped);
+        }
+        this.queue_repaint();
+        this.notify('tint-alpha');
+    }
+
+    get live() { return this._live; }
+    set live(val) {
+        const boolVal = Boolean(val);
+        if (this._live === boolVal) return;
+        this._live = boolVal;
+        this.blurValid = false;
+        this.queue_repaint();
+        this.notify('live');
+    }
+
+    get radius() { return this._radius; }
+    set radius(val) {
+        const clamped = Math.max(0, Math.min(200, val));
+        if (this._radius === clamped) return;
+        this._radius = clamped;
+        this.blurValid = false;
+        this.queue_repaint();
+        this.notify('radius');
+    }
+
+    get brightness() { return this._brightness; }
+    set brightness(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._brightness === clamped) return;
+        this._brightness = clamped;
+        if (this.outputPipeline)
+            setFloat(this.outputPipeline, 'brightness', clamped);
+        this.queue_repaint();
+        this.notify('brightness');
+    }
+
+    get opacity_factor() { return this._opacity_factor; }
+    set opacity_factor(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._opacity_factor === clamped) return;
+        this._opacity_factor = clamped;
+        if (this.outputPipeline)
+            setFloat(this.outputPipeline, 'opacity_factor', clamped);
+        this.queue_repaint();
+        this.notify('opacity-factor');
+    }
+
+    set(params = {}) {
+        for (const [key, value] of Object.entries(params)) {
+            if (key in this)
+                this[key] = value;
+            else if (key === 'opacity_factor' || key === 'opacity-factor')
+                this.opacity_factor = value;
+            else if (key === 'tint_r' || key === 'tint-r')
+                this.tint_r = value;
+            else if (key === 'tint_g' || key === 'tint-g')
+                this.tint_g = value;
+            else if (key === 'tint_b' || key === 'tint-b')
+                this.tint_b = value;
+            else if (key === 'tint_alpha' || key === 'tint-alpha')
+                this.tint_alpha = value;
+        }
+    }
+
+    updateOutputUniforms(width, height, resourceScale, textAlpha) {
+        const pipeline = this.outputPipeline;
+        setFloat(pipeline, 'brightness', this._brightness);
+        setFloat(pipeline, 'opacity_factor', this._opacity_factor);
+        setFloat(pipeline, 'output_width', width);
+        setFloat(pipeline, 'output_height', height);
+        setFloat(pipeline, 'tint_r', this._tint_r);
+        setFloat(pipeline, 'tint_g', this._tint_g);
+        setFloat(pipeline, 'tint_b', this._tint_b);
+        setFloat(pipeline, 'clock_tint_alpha', this._tint_alpha);
+        setFloat(pipeline, 'text_alpha', textAlpha);
+        setFloat(pipeline, 'wack_resource_scale', resourceScale);
+    }
+
+    ensureTargets(context, width, height, passes, glyphTexture) {
+        if (this.context !== context || width > this.capacityWidth || height > this.capacityHeight) {
+            this.releaseTargets();
+            this.capacityWidth = Math.ceil(width * 1.25);
+            this.capacityHeight = Math.ceil(height * 1.25);
+            this.context = context;
+        }
+
+        for (let level = this.downTargets.length; level <= passes; level++) {
+            this.downTargets.push(createRenderTarget(
+                context,
+                levelSize(this.capacityWidth, level),
+                levelSize(this.capacityHeight, level)
+            ));
+        }
+
+        for (let level = Math.max(1, this.downPipelines.length); level <= passes; level++) {
+            this.downPipelines[level] = this.createPass(
+                this.downTargets[level - 1],
+                context,
+                DOWNSAMPLE_DECLARATIONS,
+                DOWNSAMPLE_CODE
+            );
+        }
+
+        for (let level = Math.max(1, this.upTargets.length); level < passes; level++) {
+            this.upTargets[level] = createRenderTarget(
+                context,
+                levelSize(this.capacityWidth, level),
+                levelSize(this.capacityHeight, level)
+            );
+            this.upPipelines[level] = this.createPass(
+                this.downTargets[level + 1],
+                context,
+                UPSAMPLE_DECLARATIONS,
+                UPSAMPLE_CODE,
+                this.downTargets[level]
+            );
+        }
+
+        if (!this.outputPipeline) {
+            this.outputPipeline = this.createPass(
+                this.downTargets[1],
+                context,
+                GLYPH_OUTPUT_DECLARATIONS,
+                GLYPH_OUTPUT_CODE,
+                this.downTargets[0],
+                true,
+                glyphTexture
+            );
+        } else if (glyphTexture) {
+            this.outputPipeline.set_layer_texture(2, glyphTexture);
+        }
+
+        const resized = this.width !== width || this.height !== height;
+        if (!resized)
+            return;
+
+        this.blurValid = false;
+
+        this.downTargets.forEach((target, level) =>
+            resizeRenderTarget(target, level, width, height));
+        this.upTargets.forEach((target, level) =>
+            resizeRenderTarget(target, level, width, height));
+
+        this.updateRegions(glyphTexture, width, height, passes);
+
+        const bounds = { x: 0, y: 0, width, height };
+        this.downTargets.forEach(target => projectRenderTarget(target, bounds));
+        this.upTargets.forEach(target => projectRenderTarget(target, bounds));
+
+        this.width = width;
+        this.height = height;
+    }
+
+    updateRegions(glyphTexture, width, height, passes) {
+        this.downPipelines.forEach((pipeline, level) =>
+            this.regions.get(pipeline).source.update(this.downTargets[level - 1]));
+        this.upPipelines.forEach((pipeline, level) => {
+            const regs = this.regions.get(pipeline);
+            regs.source.update(this.downTargets[level + 1]);
+            regs.original.update(this.downTargets[level]);
+        });
+        const outputRegions = this.regions.get(this.outputPipeline);
+        if (outputRegions) {
+            const source = passes === 1 ? this.downTargets[1] : (this.upTargets[1] ?? this.downTargets[1]);
+            outputRegions.source.update(source);
+            outputRegions.original.update(this.downTargets[0]);
+            if (outputRegions.mask && glyphTexture) {
+                outputRegions.mask.update({
+                    usedWidth: width,
+                    usedHeight: height,
+                    width,
+                    height,
+                });
+            }
+        }
+    }
+
+    createPass(source, context, declarations, code, original = null, outputPass = false, mask = null) {
+        const pipeline = createPassPipeline(context, source.texture, declarations, code);
+        this.regions.set(pipeline, {
+            source: new TextureRegion(pipeline, SOURCE_REGION),
+            original: original ? new TextureRegion(pipeline, ORIGINAL_REGION) : null,
+            mask: mask ? new TextureRegion(pipeline, MASK_REGION) : null,
+        });
+        setVector2(pipeline, 'halfpixel', 0.5 / source.width, 0.5 / source.height);
+        if (original) {
+            pipeline.set_layer_texture(1, original.texture);
+            pipeline.set_layer_filters(1, Cogl.PipelineFilter.LINEAR, Cogl.PipelineFilter.LINEAR);
+            pipeline.set_layer_wrap_mode(1, Cogl.PipelineWrapMode.CLAMP_TO_EDGE);
+            setFloat(pipeline, 'level_blend', 1);
+        }
+        if (mask) {
+            pipeline.set_layer_texture(2, mask);
+            pipeline.set_layer_filters(2, Cogl.PipelineFilter.LINEAR, Cogl.PipelineFilter.LINEAR);
+            pipeline.set_layer_wrap_mode(2, Cogl.PipelineWrapMode.CLAMP_TO_EDGE);
+        }
+        if (outputPass) {
+            setFloat(pipeline, 'brightness', this._brightness);
+            setFloat(pipeline, 'opacity_factor', this._opacity_factor);
+        }
+        return pipeline;
+    }
+
+    configureUpsample(pipeline, level, passes, blend) {
+        const source = level === passes - 1
+            ? this.downTargets[level + 1] : this.upTargets[level + 1];
+        pipeline.set_layer_texture(0, source.texture);
+        setFloat(pipeline, 'level_blend', level === passes - 1 ? blend : 1);
+    }
+
+    updateSampling(passes, blend, glyphTexture, width, height) {
+        if (this.appliedSampling?.passes === passes
+            && this.appliedSampling.blend === blend)
+            return;
+
+        for (let level = passes - 1; level >= 1; level--)
+            this.configureUpsample(this.upPipelines[level], level, passes, blend);
+        this.configureUpsample(this.outputPipeline, 0, passes, blend);
+        this.updateRegions(glyphTexture, width, height, passes);
+        this.appliedSampling = { passes, blend };
+        this.blurValid = false;
+    }
+
+    invalidate() {
+        this.blurValid = false;
+        this._lastX = null;
+        this._lastY = null;
+        this._lastW = null;
+        this._lastH = null;
+        this.queue_repaint();
+    }
+
+    vfunc_paint_target(node, paintContext) {
+        const actor = this.get_actor();
+        if (!actor || actor.width <= 0 || actor.height <= 0)
+            return;
+
+        const paintOpacity = actor.get_paint_opacity();
+        if (paintOpacity === 0)
+            return;
+
+        if (this._radius === 0 || this._opacity_factor === 0) {
+            super.vfunc_paint_target(node, paintContext);
+            this.blurValid = false;
+            return;
+        }
+
+        const targetTexture = this.get_texture();
+        if (!targetTexture) {
+            super.vfunc_paint_target(node, paintContext);
+            return;
+        }
+
+        const framebuffer = paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null;
+        const context = framebuffer ? framebuffer.get_context() : this.context;
+        if (!context) {
+            super.vfunc_paint_target(node, paintContext);
+            return;
+        }
+
+        const targetWidth = targetTexture.get_width();
+        const targetHeight = targetTexture.get_height();
+        if (targetWidth <= 0 || targetHeight <= 0) {
+            super.vfunc_paint_target(node, paintContext);
+            return;
+        }
+
+        const scale = actor.get_resource_scale();
+        const themeScale = St.ThemeContext.get_for_stage(actor.get_stage()).scale_factor;
+        const { passes, blend } = getKawaseConfiguration(this._radius * themeScale * scale);
+
+        this.ensureTargets(context, targetWidth, targetHeight, passes, targetTexture);
+        this.updateSampling(passes, blend, targetTexture, targetWidth, targetHeight);
+
+        const [originX, originY] = actor.get_transformed_position();
+        const [w, h] = actor.get_transformed_size();
+        const stageView = paintContext?.get_stage_view ? paintContext.get_stage_view() : null;
+        let viewX = Math.round(originX);
+        let viewY = Math.round(originY);
+        if (stageView) {
+            const layout = stageView.get_layout();
+            viewX -= layout.x;
+            viewY -= layout.y;
+        }
+
+        const positionChanged = (this._lastX !== viewX || this._lastY !== viewY ||
+            this._lastW !== w || this._lastH !== h);
+
+        const needsCapture = this._live || !this.blurValid || positionChanged;
+
+        if (needsCapture) {
+            this.addBlurPasses(node, actor, targetWidth, targetHeight, passes, blend, framebuffer);
+            this.blurValid = true;
+            this._lastX = viewX;
+            this._lastY = viewY;
+            this._lastW = w;
+            this._lastH = h;
+        }
+
+        this.updateOutputUniforms(targetWidth, targetHeight, scale, this._tint_alpha);
+        setPaintOpacity(this.outputPipeline, paintOpacity / 255);
+
+        const outputNode = new Clutter.PipelineNode(this.outputPipeline);
+        outputNode.set_name('WackClockGlyph output');
+        addRectangle(outputNode, 0, 0, targetWidth, targetHeight);
+        node.add_child(outputNode);
+    }
+
+    addBlurPasses(node, actor, targetWidth, targetHeight, passes, blend, sourceFramebuffer) {
+        if (sourceFramebuffer) {
+            const geom = captureGeometry(actor, sourceFramebuffer);
+            const blitSrcX = Math.max(0, Math.round(geom.sourceX));
+            const blitSrcY = Math.max(0, Math.round(geom.sourceY));
+
+            const fbW = sourceFramebuffer.get_width ? sourceFramebuffer.get_width() : 0;
+            const fbH = sourceFramebuffer.get_height ? sourceFramebuffer.get_height() : 0;
+            const maxW = fbW > 0 ? Math.max(0, fbW - blitSrcX) : targetWidth;
+            const maxH = fbH > 0 ? Math.max(0, fbH - blitSrcY) : targetHeight;
+            const blitW = Math.min(targetWidth, maxW);
+            const blitH = Math.min(targetHeight, maxH);
+
+            if (blitW > 0 && blitH > 0) {
+                if (sourceFramebuffer.blit) {
+                    sourceFramebuffer.blit(
+                        this.downTargets[0].framebuffer,
+                        blitSrcX, blitSrcY,
+                        0, 0,
+                        blitW, blitH
+                    );
+                } else if (Cogl.blit_framebuffer) {
+                    Cogl.blit_framebuffer(
+                        sourceFramebuffer,
+                        this.downTargets[0].framebuffer,
+                        blitSrcX, blitSrcY,
+                        0, 0,
+                        blitW, blitH
+                    );
+                }
+            }
+        }
+
+        const bounds = { x: 0, y: 0, width: targetWidth, height: targetHeight };
+        for (let level = 1; level <= passes; level++) {
+            if (passes === 1 && blend === 0)
+                break;
+            addPassNode(
+                node,
+                this.downTargets[level],
+                this.downPipelines[level],
+                bounds,
+                `WackClockGlyph downsample ${level}`
+            );
+        }
+
+        for (let level = passes - 1; level >= 1; level--) {
+            addPassNode(
+                node,
+                this.upTargets[level],
+                this.upPipelines[level],
+                bounds,
+                `WackClockGlyph upsample ${level}`
+            );
+        }
+    }
+
+    releaseTargets() {
+        this.downTargets = [];
+        this.upTargets = [];
+        this.downPipelines = [];
+        this.upPipelines = [];
+        this.outputPipeline = null;
+        this.regions.clear();
+        this.width = 0;
+        this.height = 0;
+        this.capacityWidth = 0;
+        this.capacityHeight = 0;
+        this.context = null;
+        this.appliedSampling = null;
+        this.blurValid = false;
+        this._lastX = null;
+        this._lastY = null;
+        this._lastW = null;
+        this._lastH = null;
+    }
+
+    destroy() {
+        this.releaseTargets();
+    }
+});
+
 export function createKawaseBlurEffect(params = {}) {
-    const effect = new KawaseBlurEffect(params);
+    const effect = params.mode === 2
+        ? new ClockGlyphBlurEffect(params)
+        : new KawaseBlurEffect(params);
     if (params.name)
         effect.name = params.name;
     return effect;
+}
+
+export function createClockGlyphBlurEffect(params = {}) {
+    return createKawaseBlurEffect({ ...params, mode: 2 });
 }

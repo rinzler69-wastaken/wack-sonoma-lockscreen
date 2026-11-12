@@ -1,5 +1,6 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import Clutter from 'gi://Clutter';
 
 import {
     createClockAlphaIdentity,
@@ -847,6 +848,7 @@ assert(alphaManagerText.includes('useInverse: promptVisualState?.useInverse'), '
 // 21. Lockscreen Clock Frosted Glass Glyphs Blur Integration
 print('\n[21] Testing Lockscreen Clock Frosted Glass Glyphs Blur Integration:');
 const { WackClock } = await import('../src/main/wackClock.js');
+const { ClockGlyphBlurEffect, createClockGlyphBlurEffect } = await import('../src/main/kawaseBlurEffect.js');
 
 const clockGlyphEffect = makeKawaseEffect({
     mode: 2,
@@ -857,11 +859,14 @@ const clockGlyphEffect = makeKawaseEffect({
     tint_b: 0.7,
     tint_alpha: 0.5,
 });
-assert(clockGlyphEffect.mode === 2, 'KawaseBlurEffect accepts mode: 2 for glyph masking');
-assert(clockGlyphEffect.tint_r === 0.9, 'KawaseBlurEffect stores tint_r');
-assert(clockGlyphEffect.tint_g === 0.8, 'KawaseBlurEffect stores tint_g');
-assert(clockGlyphEffect.tint_b === 0.7, 'KawaseBlurEffect stores tint_b');
-assert(clockGlyphEffect.tint_alpha === 0.5, 'KawaseBlurEffect stores tint_alpha');
+assert(clockGlyphEffect instanceof ClockGlyphBlurEffect, 'Mode 2 returns ClockGlyphBlurEffect instance');
+assert(clockGlyphEffect instanceof Clutter.OffscreenEffect, 'ClockGlyphBlurEffect subclasses Clutter.OffscreenEffect');
+assert(clockGlyphEffect.mode === 2, 'ClockGlyphBlurEffect mode is 2');
+assert(clockGlyphEffect.tint_r === 0.9, 'ClockGlyphBlurEffect stores tint_r');
+assert(clockGlyphEffect.tint_g === 0.8, 'ClockGlyphBlurEffect stores tint_g');
+assert(clockGlyphEffect.tint_b === 0.7, 'ClockGlyphBlurEffect stores tint_b');
+assert(clockGlyphEffect.tint_alpha === 0.5, 'ClockGlyphBlurEffect stores tint_alpha');
+assert(typeof createClockGlyphBlurEffect === 'function', 'createClockGlyphBlurEffect exported');
 
 const wackClockSrc = Gio.File.new_for_path('src/main/wackClock.js').load_contents(null)[1];
 const wackClockText = new TextDecoder().decode(wackClockSrc);
