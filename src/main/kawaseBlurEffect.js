@@ -24,6 +24,7 @@ function setPaintOpacity(pipeline, opacity) {
 const REGION_COMPONENTS = ['scale_x', 'scale_y', 'max_x', 'max_y'];
 const SOURCE_REGION = 'wack_source_region';
 const ORIGINAL_REGION = 'wack_original_region';
+const MASK_REGION = 'wack_mask_region';
 
 function textureRegionDeclarations(name) {
     const uniforms = REGION_COMPONENTS
@@ -50,6 +51,11 @@ ${TEXTURE_REGION_SOURCE}
 const ORIGINAL_SAMPLING_DECLARATIONS = `
 ${textureRegionDeclarations(ORIGINAL_REGION)}
 #define original_sample() wack_sample_region(cogl_sampler1, cogl_tex_coord1_in.xy * ${ORIGINAL_REGION}.xy, ${ORIGINAL_REGION})
+`;
+
+const MASK_SAMPLING_DECLARATIONS = `
+${textureRegionDeclarations(MASK_REGION)}
+#define mask_sample(uv) wack_sample_region(cogl_sampler2, (uv) * ${MASK_REGION}.xy, ${MASK_REGION})
 `;
 
 const DOWNSAMPLE_DECLARATIONS = `
@@ -140,6 +146,50 @@ vec2 position = cogl_tex_coord_in[0].xy * vec2(output_width, output_height);
 cogl_color_out.rgb += dither(position * wack_resource_scale) * 2.0 / 255.0 * cogl_color_out.a;
 if (corner_radius > 0.0)
     cogl_color_out *= corner_coverage(position);
+`;
+
+const GLYPH_OUTPUT_DECLARATIONS = `${UPSAMPLE_DECLARATIONS}
+${MASK_SAMPLING_DECLARATIONS}
+uniform float opacity_factor;
+uniform float brightness;
+uniform float output_width;
+uniform float output_height;
+uniform float mask_x;
+uniform float mask_y;
+uniform float mask_width;
+uniform float mask_height;
+uniform float tint_r;
+uniform float tint_g;
+uniform float tint_b;
+#define clock_tint vec3(tint_r, tint_g, tint_b)
+uniform float clock_tint_alpha;
+uniform float wack_resource_scale;
+
+float dither(vec2 position) {
+    return fract(52.9829189 * fract(dot(position, vec2(0.06711056, 0.00583715)))) - 0.5;
+}
+`;
+
+const GLYPH_OUTPUT_CODE = `
+vec4 sourceColor = original_sample();
+vec4 filteredColor = sourceColor;
+if (level_blend > 0.0) {
+    vec4 color = source_sample(cogl_tex_coord_in[0].xy * ${SOURCE_REGION}.xy);
+    filteredColor = mix(sourceColor, color, level_blend);
+}
+filteredColor.rgb *= brightness;
+cogl_color_out = mix(sourceColor, filteredColor, opacity_factor) * cogl_color_in.a;
+vec2 position = cogl_tex_coord_in[0].xy * vec2(output_width, output_height);
+cogl_color_out.rgb += dither(position * wack_resource_scale) * 2.0 / 255.0 * cogl_color_out.a;
+
+vec2 actor_uv = (position - vec2(mask_x, mask_y)) / max(vec2(mask_width, mask_height), vec2(1.0));
+if (actor_uv.x >= 0.0 && actor_uv.x <= 1.0 && actor_uv.y >= 0.0 && actor_uv.y <= 1.0) {
+    vec4 mask = mask_sample(actor_uv);
+    cogl_color_out.rgb = mix(cogl_color_out.rgb, clock_tint, clock_tint_alpha);
+    cogl_color_out.a = mask.a * opacity_factor * cogl_color_in.a;
+} else {
+    cogl_color_out = vec4(0.0);
+}
 `;
 
 const snippets = new Map();
@@ -297,12 +347,32 @@ export const KawaseBlurEffect = GObject.registerClass({
         'mode': GObject.ParamSpec.int(
             'mode', null, null,
             GObject.ParamFlags.READWRITE,
-            0, 1, 0
+            0, 2, 0
         ),
         'live': GObject.ParamSpec.boolean(
             'live', null, null,
             GObject.ParamFlags.READWRITE,
             false
+        ),
+        'tint-r': GObject.ParamSpec.double(
+            'tint-r', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 1.0
+        ),
+        'tint-g': GObject.ParamSpec.double(
+            'tint-g', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 1.0
+        ),
+        'tint-b': GObject.ParamSpec.double(
+            'tint-b', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 1.0
+        ),
+        'tint-alpha': GObject.ParamSpec.double(
+            'tint-alpha', null, null,
+            GObject.ParamFlags.READWRITE,
+            0, 1, 0.4
         ),
     },
 }, class KawaseBlurEffect extends Clutter.Effect {
@@ -313,6 +383,7 @@ export const KawaseBlurEffect = GObject.registerClass({
         this.downPipelines = [];
         this.upPipelines = [];
         this.outputPipeline = null;
+        this.maskTarget = null;
         this.regions = new Map();
         this.width = 0;
         this.height = 0;
@@ -337,6 +408,50 @@ export const KawaseBlurEffect = GObject.registerClass({
         this._corner_radius = params.corner_radius ?? 0;
         this._mode = params.mode ?? 0;
         this._live = params.live ?? false;
+        this._tint_r = params.tint_r ?? 1.0;
+        this._tint_g = params.tint_g ?? 1.0;
+        this._tint_b = params.tint_b ?? 1.0;
+        this._tint_alpha = params.tint_alpha ?? 0.4;
+    }
+
+    get tint_r() { return this._tint_r; }
+    set tint_r(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._tint_r === clamped) return;
+        this._tint_r = clamped;
+        this.appliedOutputUniforms = null;
+        this.queue_repaint();
+        this.notify('tint-r');
+    }
+
+    get tint_g() { return this._tint_g; }
+    set tint_g(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._tint_g === clamped) return;
+        this._tint_g = clamped;
+        this.appliedOutputUniforms = null;
+        this.queue_repaint();
+        this.notify('tint-g');
+    }
+
+    get tint_b() { return this._tint_b; }
+    set tint_b(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._tint_b === clamped) return;
+        this._tint_b = clamped;
+        this.appliedOutputUniforms = null;
+        this.queue_repaint();
+        this.notify('tint-b');
+    }
+
+    get tint_alpha() { return this._tint_alpha; }
+    set tint_alpha(val) {
+        const clamped = Math.max(0, Math.min(1, val));
+        if (this._tint_alpha === clamped) return;
+        this._tint_alpha = clamped;
+        this.appliedOutputUniforms = null;
+        this.queue_repaint();
+        this.notify('tint-alpha');
     }
 
     get live() { return this._live; }
@@ -407,6 +522,14 @@ export const KawaseBlurEffect = GObject.registerClass({
                 this.corner_radius = value;
             else if (key === 'opacity_factor' || key === 'opacity-factor')
                 this.opacity_factor = value;
+            else if (key === 'tint_r' || key === 'tint-r')
+                this.tint_r = value;
+            else if (key === 'tint_g' || key === 'tint-g')
+                this.tint_g = value;
+            else if (key === 'tint_b' || key === 'tint-b')
+                this.tint_b = value;
+            else if (key === 'tint_alpha' || key === 'tint-alpha')
+                this.tint_alpha = value;
         }
     }
 
@@ -422,6 +545,7 @@ export const KawaseBlurEffect = GObject.registerClass({
             radius, outputBounds.width, outputBounds.height, outputBounds.x, outputBounds.y,
             surface.x - outputBounds.x, surface.y - outputBounds.y, surface.width, surface.height,
             resourceScale,
+            this._tint_r, this._tint_g, this._tint_b, this._tint_alpha,
         ];
         if (this.appliedOutputUniforms?.every((v, i) => v === uniforms[i]))
             return;
@@ -435,6 +559,12 @@ export const KawaseBlurEffect = GObject.registerClass({
         setFloat(pipeline, 'mask_width', surface.width);
         setFloat(pipeline, 'mask_height', surface.height);
         setFloat(pipeline, 'wack_resource_scale', resourceScale);
+        if (this._mode === 2) {
+            setFloat(pipeline, 'tint_r', this._tint_r);
+            setFloat(pipeline, 'tint_g', this._tint_g);
+            setFloat(pipeline, 'tint_b', this._tint_b);
+            setFloat(pipeline, 'clock_tint_alpha', this._tint_alpha);
+        }
         this.appliedOutputUniforms = uniforms;
     }
 
@@ -484,11 +614,21 @@ export const KawaseBlurEffect = GObject.registerClass({
         }
 
         if (!this.outputPipeline) {
-            this.outputPipeline = this.createPass(
-                this.downTargets[1], context,
-                UPSAMPLE_OUTPUT_DECLARATIONS, UPSAMPLE_OUTPUT_CODE,
-                this.downTargets[0], true
-            );
+            if (this._mode === 2) {
+                if (!this.maskTarget)
+                    this.maskTarget = createRenderTarget(context, this.capacityWidth, this.capacityHeight);
+                this.outputPipeline = this.createPass(
+                    this.downTargets[1], context,
+                    GLYPH_OUTPUT_DECLARATIONS, GLYPH_OUTPUT_CODE,
+                    this.downTargets[0], true, this.maskTarget
+                );
+            } else {
+                this.outputPipeline = this.createPass(
+                    this.downTargets[1], context,
+                    UPSAMPLE_OUTPUT_DECLARATIONS, UPSAMPLE_OUTPUT_CODE,
+                    this.downTargets[0], true
+                );
+            }
         }
 
         const resized = targetCount !== this.downTargets.length
@@ -504,10 +644,14 @@ export const KawaseBlurEffect = GObject.registerClass({
                 resizeRenderTarget(target, level, width, height));
             this.upTargets.forEach((target, level) =>
                 resizeRenderTarget(target, level, width, height));
+            if (this.maskTarget)
+                resizeRenderTarget(this.maskTarget, 0, width, height);
             this.updateRegions();
         }
         this.downTargets.forEach(target => projectRenderTarget(target, bounds));
         this.upTargets.forEach(target => projectRenderTarget(target, bounds));
+        if (this.maskTarget)
+            projectRenderTarget(this.maskTarget, bounds);
         this.width = width;
         this.height = height;
         this.logicalWidth = logicalWidth;
@@ -525,15 +669,20 @@ export const KawaseBlurEffect = GObject.registerClass({
             regs.original.update(this.downTargets[level]);
         });
         const outputRegions = this.regions.get(this.outputPipeline);
-        outputRegions.source.update(this.downTargets[1]);
-        outputRegions.original.update(this.downTargets[0]);
+        if (outputRegions) {
+            outputRegions.source.update(this.downTargets[1]);
+            outputRegions.original.update(this.downTargets[0]);
+            if (outputRegions.mask && this.maskTarget)
+                outputRegions.mask.update(this.maskTarget);
+        }
     }
 
-    createPass(source, context, declarations, code, original = null, outputPass = false) {
+    createPass(source, context, declarations, code, original = null, outputPass = false, mask = null) {
         const pipeline = createPassPipeline(context, source.texture, declarations, code);
         this.regions.set(pipeline, {
             source: new TextureRegion(pipeline, SOURCE_REGION),
             original: original ? new TextureRegion(pipeline, ORIGINAL_REGION) : null,
+            mask: mask ? new TextureRegion(pipeline, MASK_REGION) : null,
         });
         setVector2(pipeline, 'halfpixel', 0.5 / source.width, 0.5 / source.height);
         if (original) {
@@ -541,6 +690,11 @@ export const KawaseBlurEffect = GObject.registerClass({
             pipeline.set_layer_filters(1, Cogl.PipelineFilter.LINEAR, Cogl.PipelineFilter.LINEAR);
             pipeline.set_layer_wrap_mode(1, Cogl.PipelineWrapMode.CLAMP_TO_EDGE);
             setFloat(pipeline, 'level_blend', 1);
+        }
+        if (mask) {
+            pipeline.set_layer_texture(2, mask.texture);
+            pipeline.set_layer_filters(2, Cogl.PipelineFilter.LINEAR, Cogl.PipelineFilter.LINEAR);
+            pipeline.set_layer_wrap_mode(2, Cogl.PipelineWrapMode.CLAMP_TO_EDGE);
         }
         if (outputPass) {
             setFloat(pipeline, 'brightness', this._brightness);
@@ -627,7 +781,7 @@ export const KawaseBlurEffect = GObject.registerClass({
             this._lastW !== w || this._lastH !== h);
 
         const needsCapture = this._live
-            || (this._mode === 1 ? (!this.blurValid || positionChanged) : (!this.blurValid || isActorDirty || positionChanged));
+            || ((this._mode === 1 || this._mode === 2) ? (!this.blurValid || positionChanged) : (!this.blurValid || isActorDirty || positionChanged));
 
         if (needsCapture) {
             this.addBlurPasses(node, actor, inputBounds, passes, blend, paintContext);
@@ -636,6 +790,16 @@ export const KawaseBlurEffect = GObject.registerClass({
             this._lastY = viewY;
             this._lastW = w;
             this._lastH = h;
+        }
+
+        if (this._mode === 2 && this.maskTarget) {
+            const maskLayer = Clutter.LayerNode.new_to_framebuffer(
+                this.maskTarget.framebuffer,
+                this.maskTarget.layerPipeline
+            );
+            maskLayer.set_name('WackKawase glyph mask');
+            maskLayer.add_child(new Clutter.ActorNode(actor, 255));
+            node.add_child(maskLayer);
         }
 
         this.updateOutputUniforms(actor, inputBounds);
@@ -652,7 +816,7 @@ export const KawaseBlurEffect = GObject.registerClass({
 
     addBlurPasses(node, actor, bounds, passes, blend, paintContext) {
         const sourceFramebuffer = paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null;
-        if (this._mode === 1 && sourceFramebuffer) {
+        if ((this._mode === 1 || this._mode === 2) && sourceFramebuffer) {
             const geom = captureGeometry(actor, sourceFramebuffer);
             const scale = actor.get_resource_scale();
             const blitSrcX = Math.max(0, Math.round(geom.sourceX + bounds.x * scale));
@@ -722,6 +886,7 @@ export const KawaseBlurEffect = GObject.registerClass({
         this.downPipelines = [];
         this.upPipelines = [];
         this.outputPipeline = null;
+        this.maskTarget = null;
         this.regions.clear();
         this.width = 0;
         this.height = 0;

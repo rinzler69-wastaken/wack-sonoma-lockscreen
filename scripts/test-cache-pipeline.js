@@ -844,6 +844,40 @@ assert(alphaManagerText.includes('PROMPT_BLUR_BRIGHTNESS'), 'alphaManager import
 assert(alphaManagerText.includes('isBrightHue: promptVisualState?.isBrightHue'), 'alphaManager result contract includes isBrightHue');
 assert(alphaManagerText.includes('useInverse: promptVisualState?.useInverse'), 'alphaManager result contract includes useInverse');
 
+// 21. Lockscreen Clock Frosted Glass Glyphs Blur Integration
+print('\n[21] Testing Lockscreen Clock Frosted Glass Glyphs Blur Integration:');
+const { WackClock } = await import('../src/main/wackClock.js');
+
+const clockGlyphEffect = makeKawaseEffect({
+    mode: 2,
+    radius: 40,
+    brightness: 1.0,
+    tint_r: 0.9,
+    tint_g: 0.8,
+    tint_b: 0.7,
+    tint_alpha: 0.5,
+});
+assert(clockGlyphEffect.mode === 2, 'KawaseBlurEffect accepts mode: 2 for glyph masking');
+assert(clockGlyphEffect.tint_r === 0.9, 'KawaseBlurEffect stores tint_r');
+assert(clockGlyphEffect.tint_g === 0.8, 'KawaseBlurEffect stores tint_g');
+assert(clockGlyphEffect.tint_b === 0.7, 'KawaseBlurEffect stores tint_b');
+assert(clockGlyphEffect.tint_alpha === 0.5, 'KawaseBlurEffect stores tint_alpha');
+
+const wackClockSrc = Gio.File.new_for_path('src/main/wackClock.js').load_contents(null)[1];
+const wackClockText = new TextDecoder().decode(wackClockSrc);
+assert(wackClockText.includes('createKawaseBlurEffect'), 'wackClock imports createKawaseBlurEffect');
+assert(wackClockText.includes('wack-clock-time-glyph-blur'), 'wackClock initializes time glyph blur');
+assert(wackClockText.includes('wack-clock-date-glyph-blur'), 'wackClock initializes date glyph blur');
+assert(typeof WackClock.prototype.setBlurEnabled === 'function', 'WackClock declares setBlurEnabled');
+
+const unlockCtrlSrc = Gio.File.new_for_path('src/main/unlockDialogController.js').load_contents(null)[1];
+const unlockCtrlText = new TextDecoder().decode(unlockCtrlSrc);
+assert(unlockCtrlText.includes('dialog._clock.setBlurEnabled(progress === 0)'), 'unlockDialogController toggles clock blur during swipe transition');
+
+const gdmAnimSrc = Gio.File.new_for_path('src/pro/gdmAnimationController.js').load_contents(null)[1];
+const gdmAnimText = new TextDecoder().decode(gdmAnimSrc);
+assert(gdmAnimText.includes('clockInstance?.setBlurEnabled'), 'gdmAnimationController toggles clock blur during GDM prompt transitions');
+
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
 print(`========================================\n`);

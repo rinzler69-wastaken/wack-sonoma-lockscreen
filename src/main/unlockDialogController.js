@@ -373,6 +373,9 @@ export class UnlockDialogController {
             if (!this.origSetTransitionProgress) return;
             this.origSetTransitionProgress(progress);
 
+            if (dialog._clock?.setBlurEnabled)
+                dialog._clock.setBlurEnabled(progress === 0);
+
             const isNowActive = this._extension._promptActive;
 
             if (isNowActive && !this._extension._wasPromptActive) {

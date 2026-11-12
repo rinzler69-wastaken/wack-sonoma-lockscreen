@@ -13,11 +13,14 @@ export class GdmAnimationController {
 
     setLegacyPromptChrome(visible, animate = true) {
         const clock = this._gdm._clockManager?.clockWrapper;
+        const clockInstance = this._gdm._clockManager?.clock;
         const dateMenu = Main.panel?.statusArea?.dateMenu;
         this._gdm._legacyPromptChromeVisible = visible;
 
         if (clock && !this._gdm._verificationSucceeded) {
             clock.remove_all_transitions();
+            if (clockInstance?.setBlurEnabled)
+                clockInstance.setBlurEnabled(!visible && !animate);
             if (animate) {
                 clock.ease({
                     opacity: visible ? 0 : 255,
@@ -25,11 +28,17 @@ export class GdmAnimationController {
                     scale_y: visible ? 0.7 : 1.0,
                     duration: GDM_CROSSFADE_DURATION,
                     mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        if (!visible && clockInstance?.setBlurEnabled)
+                            clockInstance.setBlurEnabled(true);
+                    },
                 });
             } else {
                 clock.opacity = visible ? 0 : 255;
                 clock.scale_x = visible ? 0.7 : 1.0;
                 clock.scale_y = visible ? 0.7 : 1.0;
+                if (clockInstance?.setBlurEnabled)
+                    clockInstance.setBlurEnabled(!visible);
             }
         }
 

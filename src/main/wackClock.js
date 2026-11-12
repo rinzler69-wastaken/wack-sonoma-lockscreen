@@ -9,6 +9,7 @@ import Gettext from 'gettext';
 import { HINT_TIMEOUT, CROSSFADE_TIME, getPrettyDate } from './constants.js';
 import { VERTICAL_BOX } from './mainUtils.js';
 import { getClockTintColor, getHintTextStyle } from './colorUtils.js';
+import { createKawaseBlurEffect } from './kawaseBlurEffect.js';
 
 const shellGettext = Gettext.domain('gnome-shell').gettext.bind(Gettext.domain('gnome-shell'));
 
@@ -44,6 +45,10 @@ export const WackClock = GObject.registerClass(
                 style_class: 'unlock-dialog-clock-time wack-time',
                 x_align: Clutter.ActorAlign.CENTER,
             });
+
+            this._timeBlurEffect = null;
+            this._dateBlurEffect = null;
+            this._blurEnabled = true;
 
             this._hint = new St.Label({
                 style_class: 'unlock-dialog-clock-hint',
@@ -141,10 +146,14 @@ export const WackClock = GObject.registerClass(
             } else {
                 this._time.text = now.format('%H:%M');
             }
+            if (this._timeBlurEffect)
+                this._timeBlurEffect.invalidate();
         }
 
         _updateDate() {
             this._dateOutput.text = getPrettyDate(this._dateStyle, this._wallClock, this._locale);
+            if (this._dateBlurEffect)
+                this._dateBlurEffect.invalidate();
         }
 
         /**
@@ -198,14 +207,81 @@ export const WackClock = GObject.registerClass(
             const weight = this._weight ? `font-weight: ${this._weight};` : '';
             this._time.set_style(color + weight || null);
             this._dateOutput.set_style(color || null);
+            this._updateClockBlur();
         }
 
+        _updateClockBlur() {
+            const tint = (this._tint && getClockTintColor(this._promptColor)) || { r: 255, g: 255, b: 255 };
+            const tintAlpha = this._alpha != null ? this._alpha : 0.4;
+            const blurParams = {
+                mode: 2,
+                radius: 40,
+                brightness: 1.0,
+                tint_r: tint.r / 255.0,
+                tint_g: tint.g / 255.0,
+                tint_b: tint.b / 255.0,
+                tint_alpha: tintAlpha,
+            };
 
+            if (!this._timeBlurEffect) {
+                this._timeBlurEffect = createKawaseBlurEffect({
+                    name: 'wack-clock-time-glyph-blur',
+                    ...blurParams,
+                });
+                this._timeBlurEffect.set_enabled(this._blurEnabled);
+                this._time.add_effect(this._timeBlurEffect);
+            } else {
+                this._timeBlurEffect.set(blurParams);
+                this._timeBlurEffect.invalidate();
+            }
+
+            if (!this._dateBlurEffect) {
+                this._dateBlurEffect = createKawaseBlurEffect({
+                    name: 'wack-clock-date-glyph-blur',
+                    ...blurParams,
+                });
+                this._dateBlurEffect.set_enabled(this._blurEnabled);
+                this._dateOutput.add_effect(this._dateBlurEffect);
+            } else {
+                this._dateBlurEffect.set(blurParams);
+                this._dateBlurEffect.invalidate();
+            }
+        }
+
+        /**
+         * Toggle clock blur on/off during motion/swipe transitions.
+         * @param {boolean} enabled
+         */
+        setBlurEnabled(enabled) {
+            const boolVal = Boolean(enabled);
+            if (this._blurEnabled === boolVal)
+                return;
+            this._blurEnabled = boolVal;
+            if (this._timeBlurEffect) {
+                this._timeBlurEffect.set_enabled(boolVal);
+                if (boolVal)
+                    this._timeBlurEffect.invalidate();
+            }
+            if (this._dateBlurEffect) {
+                this._dateBlurEffect.set_enabled(boolVal);
+                if (boolVal)
+                    this._dateBlurEffect.invalidate();
+            }
+        }
 
         /**
          * Clean up timers, monitors, and signal handlers.
          */
         destroy() {
+            if (this._timeBlurEffect) {
+                this._time.remove_effect(this._timeBlurEffect);
+                this._timeBlurEffect = null;
+            }
+            if (this._dateBlurEffect) {
+                this._dateOutput.remove_effect(this._dateBlurEffect);
+                this._dateBlurEffect = null;
+            }
+
             this._wallClock.disconnectObject(this);
             this._wallClock = null;
 
