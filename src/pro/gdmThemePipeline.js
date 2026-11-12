@@ -818,15 +818,27 @@ export class GdmWallpaperView {
     }
 
     /** Click path: property writes only. No I/O, no decode, no sampling. */
-    present(theme, animate) {
+    present(theme, animate, onComplete = null) {
         const dim = Boolean(theme.meta?.backgroundDimmer);
         this.setDimmer(dim, animate);
 
-        if (theme.userName === this._presentedUser && theme.revision === this._presentedRevision)
+        if (theme.userName === this._presentedUser && theme.revision === this._presentedRevision) {
+            if (onComplete)
+                onComplete();
             return;   // idempotent: return-to-picker + onReset both call this safely
+        }
         this._presentedUser = theme.userName;
         this._presentedRevision = theme.revision;
 
+        let completedCalled = false;
+        const triggerComplete = () => {
+            if (!completedCalled && onComplete) {
+                completedCalled = true;
+                onComplete();
+            }
+        };
+
+        let anyAnimated = false;
         for (const m of this._monitors) {
             const key = this._stackKey(theme);
             let stack = m.stacks.get(key);
@@ -846,15 +858,23 @@ export class GdmWallpaperView {
             if (m.dimmer)
                 m.container.set_child_above_sibling(m.dimmer, null);
             if (animate) {
+                anyAnimated = true;
                 stack.root.opacity = 0;
                 stack.root.ease({
                     opacity: 255, duration: 250, mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        if (m === this._monitors[0])
+                            triggerComplete();
+                    },
                 });
             } else {
                 stack.root.opacity = 255;
             }
             m.topKey = key;
         }
+
+        if (!anyAnimated)
+            triggerComplete();
     }
 
     setDimmer(enabled, animate = true) {

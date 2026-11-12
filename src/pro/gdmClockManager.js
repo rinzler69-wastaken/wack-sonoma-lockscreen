@@ -374,6 +374,20 @@ export class GdmClockManager {
         }
     }
 
+    setBlurLive(live) {
+        if (this.clock?.setBlurLive)
+            this.clock.setBlurLive(live);
+    }
+
+    settleStaticBlur() {
+        if (this.clock?.setBlurLive)
+            this.clock.setBlurLive(false);
+        if (this.clock?._timeBlurEffect)
+            this.clock._timeBlurEffect.invalidate();
+        if (this.clock?._dateBlurEffect)
+            this.clock._dateBlurEffect.invalidate();
+    }
+
     setWallpaperAlpha(alpha, promptColor = null) {
         if (this.clock) {
             this.clock.setWallpaperAlpha(alpha, promptColor);

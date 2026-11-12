@@ -277,6 +277,19 @@ export const WackClock = GObject.registerClass(
         }
 
         /**
+         * Set whether the clock blur effects dynamically re-sample each frame (live mode).
+         * Used during crossfades to continuously follow animated backgrounds.
+         * @param {boolean} live
+         */
+        setBlurLive(live) {
+            const boolVal = Boolean(live);
+            if (this._timeBlurEffect)
+                this._timeBlurEffect.live = boolVal;
+            if (this._dateBlurEffect)
+                this._dateBlurEffect.live = boolVal;
+        }
+
+        /**
          * Clean up timers, monitors, and signal handlers.
          */
         destroy() {
