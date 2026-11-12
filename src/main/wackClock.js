@@ -55,6 +55,7 @@ export const WackClock = GObject.registerClass(
             this._timeBlurEffect = null;
             this._dateBlurEffect = null;
             this._blurEnabled = true;
+            this._blurLive = false;
 
             this._hint = new St.Label({
                 style_class: 'unlock-dialog-clock-hint',
@@ -234,11 +235,15 @@ export const WackClock = GObject.registerClass(
                 this._timeBlurEffect = createKawaseBlurEffect({
                     name: 'wack-clock-time-glyph-blur',
                     ...blurParams,
+                    live: this._blurLive ?? false,
                 });
                 this._timeBlurEffect.set_enabled(this._blurEnabled);
                 this._time.add_effect(this._timeBlurEffect);
             } else {
-                this._timeBlurEffect.set(blurParams);
+                this._timeBlurEffect.set({
+                    ...blurParams,
+                    live: this._blurLive ?? false,
+                });
                 this._timeBlurEffect.invalidate();
             }
 
@@ -246,11 +251,15 @@ export const WackClock = GObject.registerClass(
                 this._dateBlurEffect = createKawaseBlurEffect({
                     name: 'wack-clock-date-glyph-blur',
                     ...blurParams,
+                    live: this._blurLive ?? false,
                 });
                 this._dateBlurEffect.set_enabled(this._blurEnabled);
                 this._dateOutput.add_effect(this._dateBlurEffect);
             } else {
-                this._dateBlurEffect.set(blurParams);
+                this._dateBlurEffect.set({
+                    ...blurParams,
+                    live: this._blurLive ?? false,
+                });
                 this._dateBlurEffect.invalidate();
             }
         }
@@ -283,6 +292,7 @@ export const WackClock = GObject.registerClass(
          */
         setBlurLive(live) {
             const boolVal = Boolean(live);
+            this._blurLive = boolVal;
             if (this._timeBlurEffect)
                 this._timeBlurEffect.live = boolVal;
             if (this._dateBlurEffect)

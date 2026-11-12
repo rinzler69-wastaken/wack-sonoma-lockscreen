@@ -16,6 +16,7 @@ import { applyClockAnimation, applyPromptAnimation } from './anims.js';
 import { _setActorVisible } from './mainUtils.js';
 import { PasswordIndicators, connectFailureShake } from './passwordField.js';
 import { createKawaseBlurEffect, KawaseBlurEffect } from './kawaseBlurEffect.js';
+import { isLiveLockscreenVideoActive } from './liveLockscreenHelper.js';
 
 export { UnlockSequenceState };
 
@@ -224,15 +225,82 @@ export class UnlockDialogController {
         if (!dialog?._backgroundGroup)
             return;
 
+        const isLive = isLiveLockscreenVideoActive(dialog, this._extension);
+
         for (const widget of dialog._backgroundGroup) {
-            const effect = widget.get_effect('blur');
-            if (effect && !(effect instanceof KawaseBlurEffect)) {
-                widget.remove_effect(effect);
-                const kawase = createKawaseBlurEffect({ radius: 0, brightness: 1.0 });
-                kawase.name = 'blur';
-                widget.add_effect(kawase);
+            for (const effectName of ['blur', 'lockscreen-extension-blur']) {
+                const effect = widget.get_effect(effectName);
+                if (effect && !(effect instanceof KawaseBlurEffect)) {
+                    widget.remove_effect(effect);
+                    const kawase = createKawaseBlurEffect({
+                        radius: 0,
+                        brightness: 1.0,
+                        live: effectName === 'lockscreen-extension-blur' ? isLive : false,
+                    });
+                    kawase.name = effectName;
+                    widget.add_effect(kawase);
+                }
+            }
+
+            if (!widget.get_effect('blur') && !widget.get_effect('lockscreen-extension-blur')) {
+                const hasPlayerWin = widget.get_children?.().some(child => {
+                    const metaWin = child.get_meta_window?.();
+                    const title = metaWin?.get_title?.() || '';
+                    return title.startsWith('LLS-Player-');
+                });
+                if (hasPlayerWin) {
+                    const kawase = createKawaseBlurEffect({
+                        radius: 0,
+                        brightness: 1.0,
+                        live: isLive,
+                    });
+                    kawase.name = 'lockscreen-extension-blur';
+                    widget.add_effect(kawase);
+                }
             }
         }
+    }
+
+    _onBackgroundGroupChildAdded(dialog) {
+        this._setupBackgroundGroupKawase(dialog);
+        this.syncLiveBlur(dialog);
+        const progress = dialog._adjustment?.value ?? 0;
+        const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        const isCupertino = this._extension._lockscreenMode === 'cupertino';
+        const globalBlur = isCupertino ? 0 : PROMPT_BLUR_RADIUS * scaleFactor * progress;
+        const globalBrightness = isCupertino ? 1.0 : 1.0 - (1.0 - BACKGROUND_BLURRING_BRIGHTNESS) * progress;
+        for (const widget of dialog._backgroundGroup ?? []) {
+            for (const effectName of ['blur', 'lockscreen-extension-blur']) {
+                const effect = widget.get_effect(effectName);
+                if (effect) effect.set({ radius: globalBlur, brightness: globalBrightness });
+            }
+        }
+    }
+
+    syncLiveBlur(dialog, forceVal = null) {
+        const isLive = forceVal !== null
+            ? Boolean(forceVal)
+            : isLiveLockscreenVideoActive(dialog ?? this._extension?._dialog, this._extension);
+
+        const currentDialog = dialog ?? this._extension?._dialog;
+        if (currentDialog?._backgroundGroup) {
+            for (const widget of currentDialog._backgroundGroup) {
+                const effect = widget.get_effect('lockscreen-extension-blur');
+                if (effect instanceof KawaseBlurEffect)
+                    effect.live = isLive;
+            }
+        }
+
+        if (dialog?._clock?.setBlurLive)
+            dialog._clock.setBlurLive(isLive);
+        else if (this._extension?._dialog?._clock?.setBlurLive)
+            this._extension._dialog._clock.setBlurLive(isLive);
+
+        if (this._extension?._promptStyling?.setBlurLive)
+            this._extension._promptStyling.setBlurLive(isLive);
+
+        if (this._extension?._notifManager?.setBlurLive)
+            this._extension._notifManager.setBlurLive(isLive);
     }
 
     get finishTimeoutId() { return this._unlockSequence.finishTimeoutId; }
@@ -303,6 +371,7 @@ export class UnlockDialogController {
             dialog._updateBackgrounds = () => {
                 this.origUpdateBackgrounds();
                 this._setupBackgroundGroupKawase(dialog);
+                this.syncLiveBlur(dialog);
                 if (dialog._updateBackgroundEffects)
                     dialog._updateBackgroundEffects();
             };
@@ -313,8 +382,10 @@ export class UnlockDialogController {
             dialog._updateBackgroundEffects = () => {
                 this._setupBackgroundGroupKawase(dialog);
                 for (const widget of dialog._backgroundGroup ?? []) {
-                    const effect = widget.get_effect('blur');
-                    if (effect) effect.set({ brightness: 1.0, radius: 0 });
+                    for (const effectName of ['blur', 'lockscreen-extension-blur']) {
+                        const effect = widget.get_effect(effectName);
+                        if (effect) effect.set({ brightness: 1.0, radius: 0 });
+                    }
                 }
                 if (this._extension._wallpaperManager?.customWallpaperOverlay) {
                     this._extension._wallpaperManager.setCustomWallpaperBlur(0, 1.0);
@@ -322,6 +393,16 @@ export class UnlockDialogController {
             };
             dialog._updateBackgroundEffects();
         }
+
+        if (dialog._backgroundGroup) {
+            dialog._backgroundGroup.connectObject(
+                'child-added', () => this._onBackgroundGroupChildAdded(dialog),
+                'child-removed', () => this.syncLiveBlur(dialog),
+                this
+            );
+        }
+        this._setupBackgroundGroupKawase(dialog);
+        this.syncLiveBlur(dialog);
 
         // User switch visibility override
         this.origUpdateUserSwitchVisibility = dialog._updateUserSwitchVisibility.bind(dialog);
@@ -404,8 +485,10 @@ export class UnlockDialogController {
             const globalBrightness = isCupertino ? 1.0 : 1.0 - (1.0 - BACKGROUND_BLURRING_BRIGHTNESS) * progress;
 
             for (const widget of dialog._backgroundGroup ?? []) {
-                const effect = widget.get_effect('blur');
-                if (effect) effect.set({ radius: globalBlur, brightness: globalBrightness });
+                for (const effectName of ['blur', 'lockscreen-extension-blur']) {
+                    const effect = widget.get_effect(effectName);
+                    if (effect) effect.set({ radius: globalBlur, brightness: globalBrightness });
+                }
             }
             if (this._extension._wallpaperManager) {
                 this._extension._wallpaperManager.setCustomWallpaperBlur(globalBlur, globalBrightness);
@@ -539,6 +622,7 @@ export class UnlockDialogController {
         }
 
         if (dialog?._backgroundGroup) {
+            dialog._backgroundGroup.disconnectObject(this);
             for (const widget of dialog._backgroundGroup) {
                 const effect = widget.get_effect('blur');
                 if (effect instanceof KawaseBlurEffect) {
@@ -546,10 +630,17 @@ export class UnlockDialogController {
                     const nativeBlur = new Shell.BlurEffect({ name: 'blur' });
                     widget.add_effect(nativeBlur);
                 }
+                const liveEffect = widget.get_effect('lockscreen-extension-blur');
+                if (liveEffect instanceof KawaseBlurEffect) {
+                    widget.remove_effect(liveEffect);
+                    const nativeBlur = new Shell.BlurEffect({ name: 'lockscreen-extension-blur' });
+                    widget.add_effect(nativeBlur);
+                }
             }
             if (dialog._updateBackgroundEffects)
                 dialog._updateBackgroundEffects();
         }
+        this.syncLiveBlur(dialog, false);
 
         if (dialog && this.origUpdateUserSwitchVisibility) {
             dialog._updateUserSwitchVisibility = this.origUpdateUserSwitchVisibility;

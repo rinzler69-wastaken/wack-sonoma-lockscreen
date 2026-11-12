@@ -120,6 +120,7 @@ export class WallpaperManager {
         });
         this.customWallpaperOverlay.opacity = 255;
         this.customWallpaperOverlay.visible = true;
+        this._extension?._unlockDialogController?.syncLiveBlur(dialog);
 
         const changes = images.map(img => img?.nextChangeSec).filter(sec => sec != null);
         if (changes.length > 0)
@@ -162,5 +163,6 @@ export class WallpaperManager {
         this._updateSeq++;
         this._stopRefresh();
         this._destroyOverlay();
+        this._extension?._unlockDialogController?.syncLiveBlur(this._extension?._dialog);
     }
 }

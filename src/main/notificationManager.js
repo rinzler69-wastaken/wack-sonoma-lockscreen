@@ -28,16 +28,39 @@ export class NotificationManager {
         this._origUpdateVisibility = null;
         this._useInverse = false;
         this._promptColor = null;
+        this._blurLive = false;
     }
 
     _makeCardBlur() {
         return createKawaseBlurEffect({
             name: NOTIF_BLUR_NAME,
             mode: 1,
+            live: this._blurLive ?? false,
             radius: NOTIF_BLUR_RADIUS,
             brightness: NOTIF_BLUR_BRIGHTNESS,
             corner_radius: NOTIF_CARD_RADIUS,
         });
+    }
+
+    setBlurLive(live) {
+        const boolVal = Boolean(live);
+        this._blurLive = boolVal;
+        const nb = this._notifBox;
+        if (!nb) return;
+        if (nb._notificationBox) {
+            for (let child = nb._notificationBox.get_first_child(); child !== null; child = child.get_next_sibling()) {
+                const effect = child.get_effect?.(NOTIF_BLUR_NAME);
+                if (effect)
+                    effect.live = boolVal;
+            }
+        }
+        if (nb._players) {
+            for (const msg of nb._players.values()) {
+                const effect = msg?.get_effect?.(NOTIF_BLUR_NAME);
+                if (effect)
+                    effect.live = boolVal;
+            }
+        }
     }
 
     _applyCardStyle(actor) {

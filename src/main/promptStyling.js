@@ -21,6 +21,7 @@ export class PromptStyling {
         this._lastPromptColor = null;
         this._lastClockAlpha = null;
         this._entryFocusIdleId = null;
+        this._blurLive = false;
     }
 
     findPromptEntry(actor) {
@@ -282,9 +283,12 @@ export class PromptStyling {
                     brightness: 1.0,
                     corner_radius: 999,
                 });
+                if (this._blurLive)
+                    blur.live = true;
                 entry.add_effect(blur);
             } else {
                 blur.set_enabled(true);
+                blur.live = this._blurLive ?? false;
             }
 
             const tintColor = getAcrylicChipBackground(color, isFocused);
@@ -719,6 +723,18 @@ export class PromptStyling {
                 _logError('[WACK/Extension] Failed to update prompt background in allocation: ' + e);
             });
         }
+    }
+
+    setBlurLive(live) {
+        const boolVal = Boolean(live);
+        this._blurLive = boolVal;
+        const dialog = this._extension?._dialog;
+        if (!dialog) return;
+        const authPrompt = dialog._authPrompt ?? dialog._promptBox?._authPrompt;
+        const entry = this.findPromptEntry(authPrompt);
+        const blur = entry?.get_effect?.('wack-prompt-acrylic-blur');
+        if (blur)
+            blur.live = boolVal;
     }
 
     teardown() {

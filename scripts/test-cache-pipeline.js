@@ -877,11 +877,106 @@ assert(typeof WackClock.prototype.setBlurEnabled === 'function', 'WackClock decl
 
 const unlockCtrlSrc = Gio.File.new_for_path('src/main/unlockDialogController.js').load_contents(null)[1];
 const unlockCtrlText = new TextDecoder().decode(unlockCtrlSrc);
-assert(unlockCtrlText.includes('dialog._clock.setBlurEnabled(progress === 0)'), 'unlockDialogController toggles clock blur during swipe transition');
+assert(unlockCtrlText.includes('dialog._clock.setBlurEnabled(isCupertino || progress === 0)'), 'unlockDialogController toggles clock blur during swipe transition');
 
 const gdmAnimSrc = Gio.File.new_for_path('src/pro/gdmAnimationController.js').load_contents(null)[1];
 const gdmAnimText = new TextDecoder().decode(gdmAnimSrc);
 assert(gdmAnimText.includes('clockInstance?.setBlurEnabled'), 'gdmAnimationController toggles clock blur during GDM prompt transitions');
+
+// 22. Test LiveLockScreen Video Wallpaper Compatibility & Live Blur Wiring
+print('\n[22] Testing LiveLockScreen Video Wallpaper Compatibility & Live Blur Wiring:');
+const {
+    isLiveLockscreenVideoActive,
+    getLiveLockscreenVideoPath,
+    _setShellMain,
+    LIVE_LOCKSCREEN_UUID,
+    LIVE_LOCKSCREEN_SCHEMA,
+} = await import('../src/main/liveLockscreenHelper.js');
+assert(typeof isLiveLockscreenVideoActive === 'function', 'isLiveLockscreenVideoActive exported cleanly');
+assert(typeof getLiveLockscreenVideoPath === 'function', 'getLiveLockscreenVideoPath exported cleanly');
+assert(LIVE_LOCKSCREEN_UUID === 'live-lockscreen@nick-redwill', 'LIVE_LOCKSCREEN_UUID matches upstream extension id');
+assert(LIVE_LOCKSCREEN_SCHEMA === 'org.gnome.shell.extensions.live-lockscreen', 'LIVE_LOCKSCREEN_SCHEMA matches upstream gschema id');
+
+// Test isLiveLockscreenVideoActive detection states
+const mockInactiveExt = { _settings: { get_boolean: () => false }, _wallpaperManager: { customWallpaperOverlay: null } };
+const mockDialog = { _backgroundGroup: [] };
+assert(isLiveLockscreenVideoActive(mockDialog, mockInactiveExt) === false, 'isLiveLockscreenVideoActive returns false when LiveLockScreen not enabled');
+
+// Test custom wallpaper override priority: when custom wallpaper overlay is active, video is covered
+const mockCustomActiveExt = {
+    _settings: { get_boolean: (k) => k === 'lockscreen-wallpaper-enable' },
+    _wallpaperManager: {
+        customWallpaperOverlay: { visible: true, get_n_children: () => 1 },
+    },
+};
+assert(isLiveLockscreenVideoActive(mockDialog, mockCustomActiveExt) === false, 'custom wallpaper overlay overrides live video background');
+
+// Test detection via wrapper actor effect in _backgroundGroup
+const mockLiveDialogWithEffect = {
+    _backgroundGroup: [
+        {
+            get_effect: (name) => (name === 'lockscreen-extension-blur' ? {} : null),
+            get_children: () => [],
+        },
+    ],
+};
+_setShellMain({
+    extensionManager: {
+        lookup: (uuid) => (uuid === LIVE_LOCKSCREEN_UUID ? { state: 1 } : null),
+    },
+});
+
+assert(isLiveLockscreenVideoActive(mockLiveDialogWithEffect, mockInactiveExt) === true, 'detects LiveLockScreen via lockscreen-extension-blur effect');
+
+// Test detection via player process window title
+const mockLiveDialogWithWinTitle = {
+    _backgroundGroup: [
+        {
+            get_effect: () => null,
+            get_children: () => [
+                {
+                    get_meta_window: () => ({ get_title: () => 'LLS-Player-DP-1' }),
+                },
+            ],
+        },
+    ],
+};
+assert(isLiveLockscreenVideoActive(mockLiveDialogWithWinTitle, mockInactiveExt) === true, 'detects LiveLockScreen via LLS-Player window actor');
+
+// Test detection via active stateObj player PID
+_setShellMain({
+    extensionManager: {
+        lookup: (uuid) => (uuid === LIVE_LOCKSCREEN_UUID ? {
+            state: 1,
+            stateObj: {
+                _backgroundCreated: true,
+                _player: { pid: 4242 },
+            },
+        } : null),
+    },
+});
+assert(isLiveLockscreenVideoActive(mockDialog, mockInactiveExt) === true, 'detects LiveLockScreen via active player PID in stateObj');
+
+// Reset mock
+_setShellMain(null);
+
+// Test setBlurLive wiring across components
+assert(typeof WackClock.prototype.setBlurLive === 'function', 'WackClock declares setBlurLive');
+assert(psText.includes('setBlurLive(live)'), 'promptStyling declares setBlurLive');
+assert(notifText.includes('setBlurLive(live)'), 'notificationManager declares setBlurLive');
+assert(unlockCtrlText.includes('syncLiveBlur(dialog'), 'unlockDialogController declares syncLiveBlur');
+
+// Test unlockDialogController source code wiring
+assert(unlockCtrlText.includes("import { isLiveLockscreenVideoActive } from './liveLockscreenHelper.js'"), 'unlockDialogController imports isLiveLockscreenVideoActive');
+assert(unlockCtrlText.includes('this.syncLiveBlur(dialog)'), 'unlockDialogController syncs live blur during install & background updates');
+assert(unlockCtrlText.includes("child-added', () => this._onBackgroundGroupChildAdded(dialog)"), 'unlockDialogController tracks background group child additions');
+assert(unlockCtrlText.includes("effectName of ['blur', 'lockscreen-extension-blur']"), 'unlockDialogController applies full background blur to LiveLockScreen video wrappers');
+assert(unlockCtrlText.includes('this.syncLiveBlur(dialog, false)'), 'unlockDialogController resets live blur on uninstall');
+
+// Test wackClock source code wiring
+assert(wackClockText.includes('this._blurLive = boolVal'), 'WackClock stores and propagates blurLive state');
+assert(wackClockText.includes('this._timeBlurEffect.live = boolVal'), 'WackClock updates time blur effect live mode');
+assert(wackClockText.includes('this._dateBlurEffect.live = boolVal'), 'WackClock updates date blur effect live mode');
 
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
