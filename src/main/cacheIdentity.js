@@ -158,35 +158,3 @@ export function serializePromptVibrancyIdentity(id) {
     return `prompt_grad_${id.targetUri}_${id.mtime}_${id.size}_${id.isColor}_${id.primaryColor}_${id.secondaryColor}_${id.shadingType}_${id.pictureOptions}_${id.monitorWidth}x${id.monitorHeight}_${id.boundsKey}_cb${id.cancelBoundsKey}_av${id.avatarBoundsKey}_a11y${id.a11yBoundsKey}_sess${id.sessionBoundsKey}${csaKey}_b${id.blurRadius}_pbr${id.blurBrightness}_chov${id.cancelHoverAlpha}_cact${id.cancelActiveAlpha}_cover_vis${id.algorithmVersion}_vm${id.vibrancyMode}${id.progressKey}`;
 }
 
-/**
- * Computes an 8-character cryptographic checksum hash for an identity or cache key.
- *
- * @param {string} cacheKey
- * @returns {string}
- */
-export function computeSliceHash(cacheKey) {
-    return GLib.compute_checksum_for_string(GLib.ChecksumType.MD5, cacheKey, -1).substring(0, 8);
-}
-
-/**
- * Resolves the destination directory and filename for a blurred PNG slice.
- *
- * @param {string} userName
- * @param {string} sliceHash
- * @param {boolean} isXml
- * @param {string|null} xmlName
- * @returns {{targetDir: string, filePath: string}}
- */
-export function resolveSlicePath(userName, sliceHash, isXml = false, xmlName = null) {
-    const BASE_VIBRANCY_DIR = '/var/tmp/wack/vibrancy';
-    const GENERAL_DIR = `${BASE_VIBRANCY_DIR}/general`;
-
-    let targetDir = GENERAL_DIR;
-    if (isXml && xmlName) {
-        const safeXmlName = xmlName.replace(/[^a-zA-Z0-9_\-\.]/g, '_');
-        targetDir = `${BASE_VIBRANCY_DIR}/${safeXmlName}`;
-    }
-
-    const filePath = `${targetDir}/wack-prompt-blur-${userName}-${sliceHash}.png`;
-    return { targetDir, filePath };
-}

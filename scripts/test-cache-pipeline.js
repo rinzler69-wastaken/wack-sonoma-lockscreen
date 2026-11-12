@@ -6,8 +6,6 @@ import {
     serializeClockAlphaIdentity,
     createPromptVibrancyIdentity,
     serializePromptVibrancyIdentity,
-    computeSliceHash,
-    resolveSlicePath,
     formatBoundsKey,
     formatProgressKey,
 } from '../src/main/cacheIdentity.js';
@@ -75,15 +73,7 @@ const vId1 = createPromptVibrancyIdentity({
     vibrancyMode: 'acrylic',
 });
 const vKey1 = serializePromptVibrancyIdentity(vId1);
-const sliceHash1 = computeSliceHash(vKey1);
-assert(sliceHash1.length === 8, 'Slice hash is 8 characters hex');
-
-const slicePath1 = resolveSlicePath('testuser', sliceHash1, false, null);
-assert(slicePath1.targetDir === '/var/tmp/wack/vibrancy/general', 'Static slice target dir is general');
-assert(slicePath1.filePath.endsWith(`wack-prompt-blur-testuser-${sliceHash1}.png`), 'Static slice path formatted correctly');
-
-const xmlSlicePath = resolveSlicePath('testuser', sliceHash1, true, 'adwaita-d.xml');
-assert(xmlSlicePath.targetDir === '/var/tmp/wack/vibrancy/adwaita-d.xml', 'Dynamic XML slice target dir sanitized');
+assert(vKey1.includes('vmacrylic'), 'Prompt vibrancy key contains vibrancy mode');
 
 const progKey = formatProgressKey({ isTransition: true, progress: 0.456 });
 assert(progKey === '_prog0.46', 'Transition progress rounded to 2 decimal places');
