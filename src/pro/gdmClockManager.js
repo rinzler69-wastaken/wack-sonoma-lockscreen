@@ -20,6 +20,8 @@ export class GdmClockManager {
         this.clockPressed = false;
         this.menuWasOpenOnPress = false;
         this.dateMenuOpenStateId = 0;
+        this._alphaTransitionActive = false;
+        this._targetTint = null;
     }
 
     setup(dialog, dialogParent) {
@@ -390,22 +392,58 @@ export class GdmClockManager {
             this.clock._dateBlurEffect.invalidate();
     }
 
-    setWallpaperAlpha(alpha, promptColor = null, animate = false, duration = 250) {
+    setWallpaperAlpha(alpha, promptColor = null, tintEnabled = null, animate = false, duration = 250) {
         if (!this.clock)
             return;
 
         const timeEffect = this.clock._timeBlurEffect;
         const dateEffect = this.clock._dateBlurEffect;
-        const startAlpha = this.clock._alpha;
 
-        if (!animate || !timeEffect || !dateEffect || startAlpha === null || Math.abs(startAlpha - alpha) < 0.001) {
+        let targetTintEnabled = false;
+        if (tintEnabled !== null && tintEnabled !== undefined)
+            targetTintEnabled = Boolean(tintEnabled);
+        else if (this._targetTint !== null && this._targetTint !== undefined)
+            targetTintEnabled = Boolean(this._targetTint);
+        else if (this.clock._tint)
+            targetTintEnabled = true;
+
+        this._targetTint = targetTintEnabled;
+
+        let targetR = 1.0;
+        let targetG = 1.0;
+        let targetB = 1.0;
+        if (targetTintEnabled && promptColor) {
+            const computedTint = getClockTintColor(promptColor);
+            if (computedTint) {
+                targetR = computedTint.r / 255.0;
+                targetG = computedTint.g / 255.0;
+                targetB = computedTint.b / 255.0;
+            }
+        }
+
+        const startAlpha = (timeEffect && timeEffect.tint_alpha !== undefined)
+            ? timeEffect.tint_alpha
+            : this.clock._alpha;
+        const startR = (timeEffect && timeEffect.tint_r !== undefined) ? timeEffect.tint_r : 1.0;
+        const startG = (timeEffect && timeEffect.tint_g !== undefined) ? timeEffect.tint_g : 1.0;
+        const startB = (timeEffect && timeEffect.tint_b !== undefined) ? timeEffect.tint_b : 1.0;
+
+        const diffAlpha = startAlpha !== null ? Math.abs(startAlpha - alpha) : 1.0;
+        const diffR = Math.abs(startR - targetR);
+        const diffG = Math.abs(startG - targetG);
+        const diffB = Math.abs(startB - targetB);
+        const needsAnimation = animate && timeEffect && dateEffect && startAlpha !== null &&
+            (diffAlpha >= 0.001 || diffR >= 0.001 || diffG >= 0.001 || diffB >= 0.001);
+
+        if (!needsAnimation) {
             this._stopAlphaTransition();
+            this.clock.setTint(targetTintEnabled);
             this.clock.setWallpaperAlpha(alpha, promptColor);
             return;
         }
 
         this._stopAlphaTransition();
-
+        this._alphaTransitionActive = true;
         this.clock._promptColor = promptColor;
 
         timeEffect.connectObject('notify::tint-alpha', () => {
@@ -419,62 +457,40 @@ export class GdmClockManager {
 
         if (this.timeLabel) {
             this.timeLabel.remove_transition('@effects.wack-clock-time-glyph-blur.tint-alpha');
-            this.timeLabel.ease_property(
-                '@effects.wack-clock-time-glyph-blur.tint-alpha',
-                alpha,
-                {
-                    duration,
-                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                    onComplete: () => {
-                        this._stopAlphaTransition();
-                        this.clock.setWallpaperAlpha(alpha, promptColor);
-                    },
-                }
-            );
+            this.timeLabel.remove_transition('@effects.wack-clock-time-glyph-blur.tint-r');
+            this.timeLabel.remove_transition('@effects.wack-clock-time-glyph-blur.tint-g');
+            this.timeLabel.remove_transition('@effects.wack-clock-time-glyph-blur.tint-b');
+
+            this.timeLabel.ease_property('@effects.wack-clock-time-glyph-blur.tint-alpha', alpha, {
+                duration,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => {
+                    this._stopAlphaTransition();
+                    this.clock.setTint(targetTintEnabled);
+                    this.clock.setWallpaperAlpha(alpha, promptColor);
+                },
+            });
+            this.timeLabel.ease_property('@effects.wack-clock-time-glyph-blur.tint-r', targetR, easeParams);
+            this.timeLabel.ease_property('@effects.wack-clock-time-glyph-blur.tint-g', targetG, easeParams);
+            this.timeLabel.ease_property('@effects.wack-clock-time-glyph-blur.tint-b', targetB, easeParams);
         }
 
         const dateLabel = this.clock._dateOutput;
         if (dateLabel) {
             dateLabel.remove_transition('@effects.wack-clock-date-glyph-blur.tint-alpha');
-            dateLabel.ease_property(
-                '@effects.wack-clock-date-glyph-blur.tint-alpha',
-                alpha,
-                easeParams
-            );
-        }
+            dateLabel.remove_transition('@effects.wack-clock-date-glyph-blur.tint-r');
+            dateLabel.remove_transition('@effects.wack-clock-date-glyph-blur.tint-g');
+            dateLabel.remove_transition('@effects.wack-clock-date-glyph-blur.tint-b');
 
-        if (this.clock._tint) {
-            let targetTint = { r: 255, g: 255, b: 255 };
-            if (promptColor) {
-                const computedTint = getClockTintColor(promptColor);
-                if (computedTint)
-                    targetTint = computedTint;
-            }
-            const r = targetTint.r / 255.0;
-            const g = targetTint.g / 255.0;
-            const b = targetTint.b / 255.0;
-
-            if (this.timeLabel) {
-                this.timeLabel.remove_transition('@effects.wack-clock-time-glyph-blur.tint-r');
-                this.timeLabel.remove_transition('@effects.wack-clock-time-glyph-blur.tint-g');
-                this.timeLabel.remove_transition('@effects.wack-clock-time-glyph-blur.tint-b');
-                this.timeLabel.ease_property('@effects.wack-clock-time-glyph-blur.tint-r', r, easeParams);
-                this.timeLabel.ease_property('@effects.wack-clock-time-glyph-blur.tint-g', g, easeParams);
-                this.timeLabel.ease_property('@effects.wack-clock-time-glyph-blur.tint-b', b, easeParams);
-            }
-
-            if (dateLabel) {
-                dateLabel.remove_transition('@effects.wack-clock-date-glyph-blur.tint-r');
-                dateLabel.remove_transition('@effects.wack-clock-date-glyph-blur.tint-g');
-                dateLabel.remove_transition('@effects.wack-clock-date-glyph-blur.tint-b');
-                dateLabel.ease_property('@effects.wack-clock-date-glyph-blur.tint-r', r, easeParams);
-                dateLabel.ease_property('@effects.wack-clock-date-glyph-blur.tint-g', g, easeParams);
-                dateLabel.ease_property('@effects.wack-clock-date-glyph-blur.tint-b', b, easeParams);
-            }
+            dateLabel.ease_property('@effects.wack-clock-date-glyph-blur.tint-alpha', alpha, easeParams);
+            dateLabel.ease_property('@effects.wack-clock-date-glyph-blur.tint-r', targetR, easeParams);
+            dateLabel.ease_property('@effects.wack-clock-date-glyph-blur.tint-g', targetG, easeParams);
+            dateLabel.ease_property('@effects.wack-clock-date-glyph-blur.tint-b', targetB, easeParams);
         }
     }
 
     _stopAlphaTransition() {
+        this._alphaTransitionActive = false;
         if (this.clock && this.clock._timeBlurEffect)
             this.clock._timeBlurEffect.disconnectObject(this);
         if (this.timeLabel) {
@@ -511,11 +527,14 @@ export class GdmClockManager {
     _syncClockGlowWeight() {
         if (!this.clockGlowTime)
             return;
-        const weight = this.clock?._weight;
+        const weight = this.clock ? this.clock._weight : null;
         this.clockGlowTime.set_style(weight ? `font-weight: ${weight};` : null);
     }
 
     setTint(tint) {
+        this._targetTint = Boolean(tint);
+        if (this._alphaTransitionActive)
+            return;
         if (this.clock) {
             this.clock.setTint(tint);
         }

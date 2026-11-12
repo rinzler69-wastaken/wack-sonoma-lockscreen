@@ -209,7 +209,13 @@ export class GdmWallpaperManager {
             else if (theme.meta && theme.meta.promptColor)
                 promptColorToSet = theme.meta.promptColor;
 
-            this._gdm._clockManager.setWallpaperAlpha(alphaToSet, promptColorToSet, animate, GDM_CROSSFADE_DURATION);
+            let clockTintToSet = false;
+            if (theme.meta && theme.meta.clockTint !== undefined && theme.meta.clockTint !== null)
+                clockTintToSet = Boolean(theme.meta.clockTint);
+            else if (this._gdm._settings)
+                clockTintToSet = this._gdm._settings.get_boolean('clock-tint');
+
+            this._gdm._clockManager.setWallpaperAlpha(alphaToSet, promptColorToSet, clockTintToSet, animate, GDM_CROSSFADE_DURATION);
             if (this._gdm._clockManager.clock && theme.meta) {
                 if (theme.meta.clockFormat !== undefined)
                     this._gdm._clockManager.clock.setClockFormat(theme.meta.clockFormat);

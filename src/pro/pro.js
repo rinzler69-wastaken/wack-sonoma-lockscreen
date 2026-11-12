@@ -696,26 +696,42 @@ export class GdmManager {
             this._passwordIndicators = null;
         }
 
-        const clock = this._clockManager?.clock;
+        const clock = this._clockManager ? this._clockManager.clock : null;
         if (clock) {
-            const clockWeight = meta?.clockWeight ?? (this._settings ? this._settings.get_string('clock-weight') : 'semibold');
+            let clockWeight = 'semibold';
+            if (meta && meta.clockWeight)
+                clockWeight = meta.clockWeight;
+            else if (this._settings)
+                clockWeight = this._settings.get_string('clock-weight');
             this._clockManager.setWeight(clockWeight);
 
-            if (meta?.clockFormat !== undefined) {
+            if (meta && meta.clockFormat !== undefined) {
                 clock.setClockFormat(meta.clockFormat);
             } else {
-                const override = this._settings?.get_string('clock-format') ?? 'system';
-                const ifaceFormat = this._interfaceSettings?.get_string('clock-format') ?? '24h';
+                let override = 'system';
+                if (this._settings)
+                    override = this._settings.get_string('clock-format');
+                let ifaceFormat = '24h';
+                if (this._interfaceSettings)
+                    ifaceFormat = this._interfaceSettings.get_string('clock-format');
                 clock.setClockFormat(override === 'system' ? ifaceFormat : override);
             }
 
-            if (meta?.dateStyle !== undefined)
+            if (meta && meta.dateStyle !== undefined)
                 clock.setDateStyle(meta.dateStyle);
-            if (meta?.userLocale !== undefined)
+            if (meta && meta.userLocale !== undefined)
                 clock.setLocale(meta.userLocale);
 
-            const clockTint = meta?.clockTint ?? (this._settings ? this._settings.get_boolean('clock-tint') : false);
-            clock.setTint(clockTint);
+            let clockTint = false;
+            if (meta && meta.clockTint !== undefined && meta.clockTint !== null)
+                clockTint = meta.clockTint;
+            else if (this._settings)
+                clockTint = this._settings.get_boolean('clock-tint');
+
+            if (this._clockManager)
+                this._clockManager.setTint(clockTint);
+            else
+                clock.setTint(clockTint);
         }
     }
 
