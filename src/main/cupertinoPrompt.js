@@ -84,7 +84,6 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
         }
 
         setUser(user) {
-            if (!this.get_stage()) return;
             if (this._user) {
                 this._user.disconnectObject(this);
                 this._user = null;
@@ -132,7 +131,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
                     avatar._wackOrigUpdate = avatar.update.bind(avatar);
                     avatar.update = () => {
                         avatar._wackOrigUpdate();
-                        if (this.get_stage())
+                        if (this._avatarButton)
                             this.updateAvatarVibrancy();
                     };
                 }
@@ -152,7 +151,6 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
         }
 
         _applyUserLabelStyle() {
-            if (!this.get_stage()) return;
             const userWidget = this._userWell ? this._userWell.get_child() : null;
             const label = userWidget ? userWidget._label : null;
             if (!label) return;
@@ -164,14 +162,13 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
         }
 
         _applyHintLabelStyle() {
-            if (!this.get_stage() || !this._hintLabel) return;
+            if (!this._hintLabel) return;
             if (this._lastVisualState || this._lastClockAlpha != null) {
                 this._hintLabel.set_style(getHintTextStyle(this._lastVisualState, this._lastClockAlpha));
             }
         }
 
         updateVisuals(promptColor, alpha = null) {
-            if (!this.get_stage()) return;
             if (promptColor)
                 this._lastVisualState = promptColor;
             if (alpha != null)
@@ -192,7 +189,6 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
         }
 
         updateAvatarVibrancy(avatarColor) {
-            if (!this.get_stage()) return;
             if (avatarColor)
                 this._lastAvatarColor = avatarColor;
             const color = this._lastAvatarColor;
@@ -239,26 +235,23 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
 
 
         setHintText(text) {
-            if (!this.get_stage()) return;
             this._currentText = text ?? '';
             this._updateHintLabel();
         }
 
         setNotifCount(count) {
-            if (!this.get_stage()) return;
             this._currentCount = count ?? 0;
             this._updateHintLabel();
         }
 
         setHint(text, count = 0) {
-            if (!this.get_stage()) return;
             this._currentText = text ?? '';
             this._currentCount = count ?? 0;
             this._updateHintLabel();
         }
 
         _updateHintLabel() {
-            if (!this.get_stage() || !this._hintLabel) return;
+            if (!this._hintLabel) return;
 
             // Invalidate StLabel's cached shadow pipeline (st_label_set_text clears text_shadow_pipeline)
             this._hintLabel.text = '';

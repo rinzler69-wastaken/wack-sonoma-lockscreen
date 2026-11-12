@@ -92,7 +92,7 @@ export class CupertinoPromptManager {
 
         const clockManager = this._extension._clockLayoutManager;
         const wackActor = clockManager.overflowActive ? clockManager.overflowLabel : clockManager.hint;
-        const cupertinoActor = (this._extension._lockscreenMode === 'cupertino' && this.restPrompt && this.restPrompt.get_stage())
+        const cupertinoActor = (this._extension._lockscreenMode === 'cupertino' && this.restPrompt)
             ? this.restPrompt._hintBox : null;
 
         this.showingInhibitHint = true;
@@ -121,7 +121,7 @@ export class CupertinoPromptManager {
             }
         }
 
-        if (this.restPrompt && this.restPrompt.get_stage()) {
+        if (this.restPrompt) {
             if (cupertinoActor) {
                 cupertinoActor.opacity = 255;
                 cupertinoActor.visible = true;
@@ -278,7 +278,7 @@ export class CupertinoPromptManager {
 
         if (this.restPromptContainer) {
             const restPrompt = this.restPrompt;
-            if (restPrompt && restPrompt.get_stage() && restPrompt._avatarButton) {
+            if (restPrompt && restPrompt._avatarButton) {
                 restPrompt._avatarButton.reactive = this._extension._promptActive;
                 if (!this._extension._promptActive) restPrompt._avatarButton.hover = false;
             }
@@ -310,10 +310,10 @@ export class CupertinoPromptManager {
                     this.restPromptContainer.visible = false;
                 }
             } else {
-                if (restPrompt && restPrompt.get_stage())
+                if (restPrompt)
                     restPrompt.setNotifCount(nextCount);
-                const hintBoxWrapper = (restPrompt && restPrompt.get_stage()) ? restPrompt._hintBoxWrapper : null;
-                const nameLabel = (restPrompt && restPrompt.get_stage()) ? (restPrompt._userWell && restPrompt._userWell.get_child() ? restPrompt._userWell.get_child()._label : null) : null;
+                const hintBoxWrapper = restPrompt ? restPrompt._hintBoxWrapper : null;
+                const nameLabel = restPrompt ? (restPrompt._userWell && restPrompt._userWell.get_child() ? restPrompt._userWell.get_child()._label : null) : null;
 
                 if (animate && !this._extension._promptActive) {
                     this.restPromptContainer.remove_all_transitions();

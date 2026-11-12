@@ -765,6 +765,9 @@ export class GdmThemeStore {
 export class GdmWallpaperView {
     constructor(parent, sibling) {
         this._group = new Clutter.Actor();
+        this._group.connectObject('destroy', () => {
+            this._group = null;
+        }, this);
         parent.add_child(this._group);
         parent.set_child_below_sibling(this._group, sibling);
         this._monitors = [];   // { container, stacks: Map(stackKey -> {root, base, overlay}), topKey, dimmer }
@@ -990,9 +993,9 @@ export class GdmWallpaperView {
 
     destroy() {
         if (this._group) {
-            if (this._group.get_stage())
-                this._group.destroy();   // destroys containers, stacks and effects with it
+            const group = this._group;
             this._group = null;
+            group.destroy();   // destroys containers, stacks and effects with it
         }
         this._monitors = [];
     }

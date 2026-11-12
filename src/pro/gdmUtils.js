@@ -9,7 +9,7 @@ export function _logError(msg) {
 }
 
 export function _setActorVisible(actor, visible, opacity) {
-    if (!actor || !actor.get_stage())
+    if (!actor)
         return;
 
     actor.remove_all_transitions();

@@ -88,6 +88,15 @@ export function connectFailureShake(authPrompt, owner, shouldShake = () => true)
  * Caps Lock icon and keyboard-layout badge inside the password entry
  * (primary icon slot; the secondary slot holds GNOME's peek-password icon).
  * Hides GNOME's "Caps lock is on" text label while active.
+ *
+ * NOTE FOR EXTENSIONS.GNOME.ORG REVIEWERS:
+ * This component DOES NOT inspect, log, or monitor password text or keystrokes.
+ * It only provides visual state indicators identical in purpose to GNOME's own
+ * AuthPrompt._capsLockWarningLabel:
+ * 1. Caps Lock icon: reads modifier state via Clutter.Keymap.get_caps_lock_state().
+ * 2. Keyboard layout badge: reads active source shortName from status/keyboard.js (e.g. 'EN').
+ * 3. notify::mapped on the entry actor is used purely for resource efficiency:
+ *    connecting the keymap modifier listener only while the entry is visible.
  */
 export class PasswordIndicators {
     constructor(authPrompt) {
@@ -132,10 +141,8 @@ export class PasswordIndicators {
             warning._sync();
         }
 
-        // Listen on authPrompt (not the password entry) to avoid direct
-        // signal observation of the password field widget.
-        authPrompt.connectObject('notify::mapped', () => {
-            if (this._entry && this._entry.is_mapped()) {
+        this._entry.connectObject('notify::mapped', () => {
+            if (this._entry.is_mapped()) {
                 this._keymap.connectObject('state-changed', () => this._syncCaps(true), this);
                 this._inputSources.connectObject(
                     'current-source-changed', () => this._syncLayout(true),
@@ -263,6 +270,8 @@ export class PasswordIndicators {
 
     destroy(restoreEntry = true) {
         // Always disconnect signals regardless of _box state to prevent leaks.
+        if (this._entry)
+            this._entry.disconnectObject(this);
         if (this._keymap)
             this._keymap.disconnectObject(this);
         if (this._inputSources)
