@@ -8,17 +8,21 @@ import { getKawaseConfiguration, getKawaseInputBounds } from './kawaseSampling.j
 
 export { getKawaseConfiguration, getKawaseInputBounds };
 
-const box = new Clutter.ActorBox();
-const color = new Cogl.Color();
+let _box = null;
+let _color = null;
 
 function addRectangle(node, x, y, width, height) {
-    box.init(x, y, x + width, y + height);
-    node.add_rectangle(box);
+    if (!_box)
+        _box = new Clutter.ActorBox();
+    _box.init(x, y, x + width, y + height);
+    node.add_rectangle(_box);
 }
 
 function setPaintOpacity(pipeline, opacity) {
-    color.init_from_4f(opacity, opacity, opacity, opacity);
-    pipeline.set_color(color);
+    if (!_color)
+        _color = new Cogl.Color();
+    _color.init_from_4f(opacity, opacity, opacity, opacity);
+    pipeline.set_color(_color);
 }
 
 const REGION_COMPONENTS = ['scale_x', 'scale_y', 'max_x', 'max_y'];
