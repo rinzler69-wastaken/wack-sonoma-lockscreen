@@ -127,7 +127,26 @@ class UnlockSequenceController {
             const clockWrapper = this._extension._clockLayoutManager?.clockWrapper;
             const hintContainer = this._extension._clockLayoutManager?.hintContainer;
             const customOverlay = this._extension._wallpaperManager?.customWallpaperOverlay;
-            const actorsToFade = [clockWrapper, hintContainer, this._extension._mainBox, customOverlay].filter(a => a != null);
+
+            // Collect LiveLockScreen video wrapper actors from _backgroundGroup.
+            // Detection: actors that carry 'lockscreen-extension-blur' (LLS's own effect name)
+            // or whose window children are titled 'LLS-Player-*'.
+            // We only fade opacity — GNOME session mode switching triggers LLS's disable()
+            // which kills the player process and destroys the actors itself.
+            const liveWrappers = [];
+            if (dialog?._backgroundGroup) {
+                for (const widget of dialog._backgroundGroup) {
+                    if (widget.get_effect?.('lockscreen-extension-blur') ||
+                        widget.get_children?.().some(child => {
+                            const metaWin = child.get_meta_window?.();
+                            return (metaWin?.get_title?.() ?? '').startsWith('LLS-Player-');
+                        })) {
+                        liveWrappers.push(widget);
+                    }
+                }
+            }
+
+            const actorsToFade = [clockWrapper, hintContainer, this._extension._mainBox, customOverlay, ...liveWrappers].filter(a => a != null);
             actorsToFade.forEach(actor => {
                 actor.ease({ opacity: 0, duration, mode });
             });

@@ -978,6 +978,117 @@ assert(wackClockText.includes('this._blurLive = boolVal'), 'WackClock stores and
 assert(wackClockText.includes('this._timeBlurEffect.live = boolVal'), 'WackClock updates time blur effect live mode');
 assert(wackClockText.includes('this._dateBlurEffect.live = boolVal'), 'WackClock updates date blur effect live mode');
 
+// 23. Test LLS Video Overlay Fade-Out in UnlockSequenceController
+print('\n[23] Testing LLS Video Overlay Fade-Out in UnlockSequenceController:');
+
+// Source-code structural checks: liveWrappers collection present
+assert(unlockCtrlText.includes('liveWrappers'), 'unlockDialogController declares liveWrappers for LLS fade');
+assert(unlockCtrlText.includes("get_effect?.('lockscreen-extension-blur')"), 'unlockDialogController detects LLS wrappers via lockscreen-extension-blur effect');
+assert(unlockCtrlText.includes("'LLS-Player-'"), 'unlockDialogController detects LLS wrappers via LLS-Player window title');
+assert(unlockCtrlText.includes('...liveWrappers'), 'unlockDialogController spreads liveWrappers into actorsToFade');
+assert(!unlockCtrlText.includes('liveWrappers.forEach(actor => { actor.destroy()'), 'unlockDialogController does NOT destroy LLS wrapper actors — lets disable() handle cleanup');
+
+// Runtime simulation: mock _backgroundGroup with LLS wrapper (effect-based detection)
+const mockLLSWrapperEffect = {
+    _opacity: 255,
+    ease(params) { if (params.opacity !== undefined) this._opacity = params.opacity; },
+    get_effect: (name) => name === 'lockscreen-extension-blur' ? { live: false } : null,
+    get_children: () => [],
+};
+const mockLLSDialog = {
+    _backgroundGroup: [mockLLSWrapperEffect],
+};
+
+// Simulate the liveWrappers collection logic from unlockDialogController
+const liveWrappersResult = [];
+if (mockLLSDialog?._backgroundGroup) {
+    for (const widget of mockLLSDialog._backgroundGroup) {
+        if (widget.get_effect?.('lockscreen-extension-blur') ||
+            widget.get_children?.().some(child => {
+                const metaWin = child.get_meta_window?.();
+                return (metaWin?.get_title?.() ?? '').startsWith('LLS-Player-');
+            })) {
+            liveWrappersResult.push(widget);
+        }
+    }
+}
+assert(liveWrappersResult.length === 1, 'liveWrappers collection picks up effect-detected LLS wrapper');
+
+// Simulate fade
+liveWrappersResult.forEach(actor => actor.ease({ opacity: 0, duration: 400, mode: 1 }));
+assert(mockLLSWrapperEffect._opacity === 0, 'LLS wrapper actor opacity faded to 0 during crossfade');
+
+// Runtime simulation: window-title-based detection
+const mockLLSWrapperWinTitle = {
+    _opacity: 255,
+    ease(params) { if (params.opacity !== undefined) this._opacity = params.opacity; },
+    get_effect: () => null,
+    get_children: () => [
+        { get_meta_window: () => ({ get_title: () => 'LLS-Player-HDMI-1' }) },
+    ],
+};
+const mockLLSDialogWinTitle = { _backgroundGroup: [mockLLSWrapperWinTitle] };
+const liveWrappersWinTitle = [];
+for (const widget of mockLLSDialogWinTitle._backgroundGroup) {
+    if (widget.get_effect?.('lockscreen-extension-blur') ||
+        widget.get_children?.().some(child => {
+            const metaWin = child.get_meta_window?.();
+            return (metaWin?.get_title?.() ?? '').startsWith('LLS-Player-');
+        })) {
+        liveWrappersWinTitle.push(widget);
+    }
+}
+assert(liveWrappersWinTitle.length === 1, 'liveWrappers collection picks up window-title-detected LLS wrapper');
+liveWrappersWinTitle.forEach(actor => actor.ease({ opacity: 0, duration: 400, mode: 1 }));
+assert(mockLLSWrapperWinTitle._opacity === 0, 'LLS window-title-detected wrapper opacity faded to 0');
+
+// Multi-monitor: two wrappers, both should be collected and faded
+const mockMultiMonitorGroup = [
+    {
+        _opacity: 255,
+        ease(params) { if (params.opacity !== undefined) this._opacity = params.opacity; },
+        get_effect: (name) => name === 'lockscreen-extension-blur' ? {} : null,
+        get_children: () => [],
+    },
+    {
+        _opacity: 255,
+        ease(params) { if (params.opacity !== undefined) this._opacity = params.opacity; },
+        get_effect: (name) => name === 'lockscreen-extension-blur' ? {} : null,
+        get_children: () => [],
+    },
+];
+const multiMonLive = [];
+for (const widget of mockMultiMonitorGroup) {
+    if (widget.get_effect?.('lockscreen-extension-blur') ||
+        widget.get_children?.().some(c => (c.get_meta_window?.()?.get_title?.() ?? '').startsWith('LLS-Player-'))) {
+        multiMonLive.push(widget);
+    }
+}
+multiMonLive.forEach(a => a.ease({ opacity: 0, duration: 400, mode: 1 }));
+assert(multiMonLive.length === 2, 'multi-monitor: both LLS wrappers collected');
+assert(mockMultiMonitorGroup.every(w => w._opacity === 0), 'multi-monitor: all LLS wrapper actors faded to 0');
+
+// No-LLS case: empty _backgroundGroup → liveWrappers is empty → no crash
+const mockNoLLSDialog = { _backgroundGroup: [] };
+const noLLSWrappers = [];
+for (const widget of mockNoLLSDialog._backgroundGroup) {
+    if (widget.get_effect?.('lockscreen-extension-blur') ||
+        widget.get_children?.().some(c => (c.get_meta_window?.()?.get_title?.() ?? '').startsWith('LLS-Player-'))) {
+        noLLSWrappers.push(widget);
+    }
+}
+assert(noLLSWrappers.length === 0, 'no-LLS case: liveWrappers is empty when no LLS wrappers present');
+
+// Null dialog guard: dialog is null/undefined → liveWrappers stays empty
+const noDialogWrappers = [];
+const nullDialog = null;
+if (nullDialog?._backgroundGroup) {
+    for (const widget of nullDialog._backgroundGroup) {
+        noDialogWrappers.push(widget);
+    }
+}
+assert(noDialogWrappers.length === 0, 'null dialog guard: liveWrappers safely empty when dialog is null');
+
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
 print(`========================================\n`);
