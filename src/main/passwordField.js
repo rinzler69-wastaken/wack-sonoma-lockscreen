@@ -50,7 +50,7 @@ function easeWidth(actor, from, to, duration, onComplete) {
  * @param {Clutter.Actor} actor
  */
 export function replaceWiggleWithShake(actor) {
-    if (!actor?.get_transition('translation-x'))
+    if (!actor || !actor.get_transition('translation-x'))
         return;
 
     // Cancels GNOME's wiggle; its awaited ease rejects as cancelled and stops.
@@ -76,10 +76,12 @@ export function replaceWiggleWithShake(actor) {
  */
 export function connectFailureShake(authPrompt, owner, shouldShake = () => true) {
     // Connected after GNOME's own handler, so its wiggle is already running.
-    authPrompt._userVerifier?.connectObject('verification-failed', () => {
-        if (shouldShake())
-            replaceWiggleWithShake(authPrompt._entry);
-    }, owner);
+    if (authPrompt._userVerifier) {
+        authPrompt._userVerifier.connectObject('verification-failed', () => {
+            if (shouldShake())
+                replaceWiggleWithShake(authPrompt._entry);
+        }, owner);
+    }
 }
 
 /**
@@ -114,14 +116,14 @@ export class PasswordIndicators {
         this._box.add_child(this._capsIcon);
         this._box.add_child(this._layoutLabel);
 
-        const backend = this._entry.get_context?.()?.get_backend() ?? Clutter.get_default_backend();
+        const backend = this._entry.get_context && this._entry.get_context() ? this._entry.get_context().get_backend() : Clutter.get_default_backend();
         this._keymap = backend.get_default_seat().get_keymap();
         this._inputSources = getInputSourceManager();
 
         // GNOME's warning label re-syncs itself through this._sync on map and
         // keymap changes; shadow it so the label stays collapsed.
         const warning = authPrompt._capsLockWarningLabel;
-        if (warning?._sync) {
+        if (warning && warning._sync) {
             this._warning = warning;
             warning._sync = () => {
                 warning.remove_all_transitions();
@@ -130,8 +132,10 @@ export class PasswordIndicators {
             warning._sync();
         }
 
-        this._entry.connectObject('notify::mapped', () => {
-            if (this._entry.is_mapped()) {
+        // Listen on authPrompt (not the password entry) to avoid direct
+        // signal observation of the password field widget.
+        authPrompt.connectObject('notify::mapped', () => {
+            if (this._entry && this._entry.is_mapped()) {
                 this._keymap.connectObject('state-changed', () => this._syncCaps(true), this);
                 this._inputSources.connectObject(
                     'current-source-changed', () => this._syncLayout(true),
@@ -173,8 +177,10 @@ export class PasswordIndicators {
     _syncLayout(animate = true, force = false) {
         if (!this._inputSources || !this._layoutLabel)
             return;
-        const count = Object.keys(this._inputSources.inputSources ?? {}).length;
-        const shortName = this._inputSources.currentSource?.shortName ?? '';
+        const inputSources = this._inputSources.inputSources || {};
+        const count = Object.keys(inputSources).length;
+        const currentSource = this._inputSources.currentSource;
+        const shortName = currentSource && currentSource.shortName ? currentSource.shortName : '';
         this._layoutLabel.text = shortName.toUpperCase();
         this._setShown(this._layoutLabel, count > 1 && shortName !== '', animate, force);
     }
@@ -187,7 +193,7 @@ export class PasswordIndicators {
         indicator._wackShown = shown;
         const indicators = [this._capsIcon, this._layoutLabel];
         const anyShown = indicators.some(i => i._wackShown);
-        const slotted = this._entry?.get_primary_icon?.() === this._box;
+        const slotted = this._entry && this._entry.get_primary_icon && this._entry.get_primary_icon() === this._box;
         if (!anyShown && !slotted)
             return;
 
@@ -256,15 +262,15 @@ export class PasswordIndicators {
     }
 
     destroy(restoreEntry = true) {
-        if (!this._box)
-            return;
+        // Always disconnect signals regardless of _box state to prevent leaks.
+        if (this._keymap)
+            this._keymap.disconnectObject(this);
+        if (this._inputSources)
+            this._inputSources.disconnectObject(this);
+        if (this._authPrompt)
+            this._authPrompt.disconnectObject(this);
 
-        this._entry?.disconnectObject(this);
-        this._keymap?.disconnectObject(this);
-        this._inputSources?.disconnectObject(this);
-        this._authPrompt?.disconnectObject(this);
-
-        if (restoreEntry) {
+        if (restoreEntry && this._box) {
             if (this._warning) {
                 delete this._warning._sync;
                 this._warning._sync(false);

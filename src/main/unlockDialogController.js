@@ -569,7 +569,7 @@ export class UnlockDialogController {
                 const restPromptContainer = cupertinoMgr ? cupertinoMgr.restPromptContainer : null;
                 const restPrompt = cupertinoMgr ? cupertinoMgr.restPrompt : null;
 
-                if (restPromptContainer && !restPromptContainer._isDestroyed) {
+                if (restPromptContainer && restPromptContainer.get_stage()) {
                     if (hasNotifs && progress === 0) {
                         restPromptContainer.opacity = 0;
                         restPromptContainer.visible = false;
@@ -578,7 +578,7 @@ export class UnlockDialogController {
                         restPromptContainer.opacity = targetOpacity;
                         restPromptContainer.visible = targetOpacity > 0;
                         const subOpacity = Math.round(255 * (1 - progress));
-                        if (restPrompt && !restPrompt._isDestroyed) {
+                        if (restPrompt && restPrompt.get_stage()) {
                             if (restPrompt._hintBoxWrapper) {
                                 restPrompt._hintBoxWrapper.opacity = subOpacity;
                             }
@@ -590,7 +590,7 @@ export class UnlockDialogController {
                     }
                 }
 
-                if (restPrompt && !restPrompt._isDestroyed && restPrompt._avatarButton) {
+                if (restPrompt && restPrompt.get_stage() && restPrompt._avatarButton) {
                     const shouldBeClickable = progress > 0;
                     if (shouldBeClickable) {
                         restPrompt._avatarButton.add_style_class_name('wack-avatar-clickable');
@@ -601,12 +601,12 @@ export class UnlockDialogController {
                     if (!shouldBeClickable) restPrompt._avatarButton.hover = false;
                 }
 
-                if (this._extension._promptActor && !this._extension._promptActor._isDestroyed && this._extension._promptActor.get_stage && this._extension._promptActor.get_stage()) {
+                if (this._extension._promptActor && this._extension._promptActor.get_stage && this._extension._promptActor.get_stage()) {
                     this._extension._promptActor.set({ opacity: Math.round(255 * progress), scale_x: 1, scale_y: 1, translation_y: 0 });
                     this._extension._promptActor.visible = progress > 0;
                 }
 
-                if (mainBox && !mainBox._isDestroyed && mainBox.get_stage && mainBox.get_stage()) mainBox.opacity = Math.round(255 * progress);
+                if (mainBox && mainBox.get_stage && mainBox.get_stage()) mainBox.opacity = Math.round(255 * progress);
 
                 const messageActor = this._extension._getLockscreenMessageActor();
                 const messageManager = this._extension._messageManager;

@@ -76,7 +76,7 @@ export class CupertinoPromptManager {
     }
 
     syncCupertinoHint() {
-        const touchMode = this.seat?.touch_mode ?? false;
+        const touchMode = this.seat ? this.seat.touch_mode : false;
         this.baseHintText = touchMode
             ? shellGettext('Swipe up to unlock')
             : shellGettext('Click or press a key to unlock');
@@ -92,7 +92,7 @@ export class CupertinoPromptManager {
 
         const clockManager = this._extension._clockLayoutManager;
         const wackActor = clockManager.overflowActive ? clockManager.overflowLabel : clockManager.hint;
-        const cupertinoActor = (this._extension._lockscreenMode === 'cupertino' && this.restPrompt && !this.restPrompt._isDestroyed)
+        const cupertinoActor = (this._extension._lockscreenMode === 'cupertino' && this.restPrompt && this.restPrompt.get_stage())
             ? this.restPrompt._hintBox : null;
 
         this.showingInhibitHint = true;
@@ -121,7 +121,7 @@ export class CupertinoPromptManager {
             }
         }
 
-        if (this.restPrompt && !this.restPrompt._isDestroyed) {
+        if (this.restPrompt && this.restPrompt.get_stage()) {
             if (cupertinoActor) {
                 cupertinoActor.opacity = 255;
                 cupertinoActor.visible = true;
@@ -278,7 +278,7 @@ export class CupertinoPromptManager {
 
         if (this.restPromptContainer) {
             const restPrompt = this.restPrompt;
-            if (restPrompt && !restPrompt._isDestroyed && restPrompt._avatarButton) {
+            if (restPrompt && restPrompt.get_stage() && restPrompt._avatarButton) {
                 restPrompt._avatarButton.reactive = this._extension._promptActive;
                 if (!this._extension._promptActive) restPrompt._avatarButton.hover = false;
             }
@@ -310,10 +310,10 @@ export class CupertinoPromptManager {
                     this.restPromptContainer.visible = false;
                 }
             } else {
-                if (restPrompt && !restPrompt._isDestroyed)
+                if (restPrompt && restPrompt.get_stage())
                     restPrompt.setNotifCount(nextCount);
-                const hintBoxWrapper = (restPrompt && !restPrompt._isDestroyed) ? restPrompt._hintBoxWrapper : null;
-                const nameLabel = (restPrompt && !restPrompt._isDestroyed) ? restPrompt._userWell?.get_child()?._label : null;
+                const hintBoxWrapper = (restPrompt && restPrompt.get_stage()) ? restPrompt._hintBoxWrapper : null;
+                const nameLabel = (restPrompt && restPrompt.get_stage()) ? (restPrompt._userWell && restPrompt._userWell.get_child() ? restPrompt._userWell.get_child()._label : null) : null;
 
                 if (animate && !this._extension._promptActive) {
                     this.restPromptContainer.remove_all_transitions();
@@ -384,7 +384,7 @@ export class CupertinoPromptManager {
             }
         }
 
-        const hintContainer = this._extension._clockLayoutManager?.hintContainer ?? this._extension._hintContainer;
+        const hintContainer = (this._extension._clockLayoutManager ? this._extension._clockLayoutManager.hintContainer : null) || this._extension._hintContainer;
         if (hintContainer) {
             const targetHintOpacity = (!this._extension._promptActive && hasNotifs) ? 255 : 0;
             if (animate) {
@@ -397,7 +397,7 @@ export class CupertinoPromptManager {
 
         const messageActor = this._extension._getLockscreenMessageActor();
         const messageManager = this._extension._messageManager;
-        const messageLabel = messageManager?.label ?? this._extension._lockscreenMessageLabel;
+        const messageLabel = (messageManager && messageManager.label) ? messageManager.label : this._extension._lockscreenMessageLabel;
         if (messageActor && messageLabel && messageLabel.text !== '') {
             const targetMessageOpacity = hasNotifs ? 0 : 255;
             if (animate) {
@@ -429,7 +429,7 @@ export class CupertinoPromptManager {
 
         const isCupertino = this._extension._lockscreenMode === 'cupertino';
         const dialog = this._extension._dialog;
-        const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+        const authPrompt = dialog ? (dialog._authPrompt || (dialog._promptBox ? dialog._promptBox._authPrompt : null)) : null;
 
         if (isCupertino) {
             this.createCupertinoRestPrompt();
@@ -497,7 +497,7 @@ export class CupertinoPromptManager {
         this.restPrompt = null;
         if (prompt) {
             prompt.disconnectObject(this);
-            if (!prompt._isDestroyed)
+            if (prompt.get_stage())
                 prompt.destroy();
         }
         const container = this.restPromptContainer;
@@ -515,7 +515,7 @@ export class CupertinoPromptManager {
         }
         if (this._authPromptAllocationId) {
             const dialog = this._extension._dialog;
-            const authPrompt = dialog?._authPrompt ?? dialog?._promptBox?._authPrompt;
+            const authPrompt = dialog ? (dialog._authPrompt || (dialog._promptBox ? dialog._promptBox._authPrompt : null)) : null;
             if (authPrompt) {
                 authPrompt.disconnect(this._authPromptAllocationId);
             }

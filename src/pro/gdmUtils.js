@@ -9,7 +9,7 @@ export function _logError(msg) {
 }
 
 export function _setActorVisible(actor, visible, opacity) {
-    if (!actor || actor._isDestroyed)
+    if (!actor || !actor.get_stage())
         return;
 
     actor.remove_all_transitions();
@@ -29,7 +29,7 @@ export function _setActorVisible(actor, visible, opacity) {
 // The login dialog's UserList keeps `_items` as an object keyed by user name
 // on GNOME 46 and as a Map on later versions.
 export function userListItems(userList) {
-    const items = userList?._items;
+    const items = userList ? userList._items : null;
     if (!items)
         return [];
     return items instanceof Map ? [...items.values()] : Object.values(items);

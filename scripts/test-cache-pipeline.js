@@ -1089,6 +1089,37 @@ if (nullDialog?._backgroundGroup) {
 }
 assert(noDialogWrappers.length === 0, 'null dialog guard: liveWrappers safely empty when dialog is null');
 
+// 24. Test EGO Reviewer Objections & Lifecycle Hygiene
+print('\n[24] Testing EGO Reviewer Objections & Lifecycle Hygiene:');
+
+const wallpaperMgrSrc = Gio.File.new_for_path('src/main/wallpaperManager.js').load_contents(null)[1];
+const wallpaperMgrText = new TextDecoder().decode(wallpaperMgrSrc);
+assert(wallpaperMgrText.includes('_armRefresh(seconds) {\n        this._stopRefresh();'), 'wallpaperManager clears existing timeout before arming refresh');
+
+const passwordFieldSrc = Gio.File.new_for_path('src/main/passwordField.js').load_contents(null)[1];
+const passwordFieldText = new TextDecoder().decode(passwordFieldSrc);
+assert(!passwordFieldText.includes("this._entry.connectObject('notify::mapped'"), 'passwordField does not monitor mapped state directly on password entry widget');
+assert(passwordFieldText.includes("authPrompt.connectObject('notify::mapped'"), 'passwordField hooks mapped state via authPrompt');
+assert(passwordFieldText.includes('destroy(restoreEntry = true) {\n        // Always disconnect signals regardless of _box state'), 'passwordField disconnects signals unconditionally in destroy');
+
+const cupertinoPromptSrc = Gio.File.new_for_path('src/main/cupertinoPrompt.js').load_contents(null)[1];
+const cupertinoPromptText = new TextDecoder().decode(cupertinoPromptSrc);
+assert(!cupertinoPromptText.includes('_isDestroyed'), 'cupertinoPrompt does not use _isDestroyed anti-pattern');
+assert(cupertinoPromptText.includes('if (!this.get_stage()) return;'), 'cupertinoPrompt uses get_stage() liveness check');
+
+const cupertinoMgrSrc = Gio.File.new_for_path('src/main/cupertinoPromptManager.js').load_contents(null)[1];
+const cupertinoMgrText = new TextDecoder().decode(cupertinoMgrSrc);
+assert(!cupertinoMgrText.includes('_isDestroyed'), 'cupertinoPromptManager does not use _isDestroyed anti-pattern');
+
+const promptStylingSrc = Gio.File.new_for_path('src/main/promptStyling.js').load_contents(null)[1];
+const promptStylingText = new TextDecoder().decode(promptStylingSrc);
+assert(!promptStylingText.includes('_isDestroyed'), 'promptStyling does not use _isDestroyed anti-pattern');
+
+const mainUtilsSrc = Gio.File.new_for_path('src/main/mainUtils.js').load_contents(null)[1];
+const mainUtilsText = new TextDecoder().decode(mainUtilsSrc);
+assert(!mainUtilsText.includes('_isDestroyed'), 'mainUtils does not use _isDestroyed anti-pattern');
+assert(mainUtilsText.includes('if (!actor || !actor.get_stage())'), 'mainUtils uses get_stage() for liveness guard');
+
 print(`\n========================================`);
 print(`Test Results: ${passed} Passed, ${failed} Failed`);
 print(`========================================\n`);

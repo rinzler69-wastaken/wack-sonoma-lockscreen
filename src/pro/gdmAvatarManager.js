@@ -23,7 +23,7 @@ export class GdmAvatarManager {
     }
 
     _classifyAvatar(avatar) {
-        if (!avatar || avatar._isDestroyed)
+        if (!avatar || !avatar.get_stage())
             return null;
         if (this._hasImageAvatar(avatar))
             return AvatarType.IMAGE;
@@ -136,7 +136,7 @@ export class GdmAvatarManager {
 
         if (avatar) {
             avatar.disconnectObject(this);
-            if (!avatar._isDestroyed) {
+            if (avatar.get_stage()) {
                 if (avatar._wackOrigUpdate) {
                     avatar.update = avatar._wackOrigUpdate;
                     delete avatar._wackOrigUpdate;
@@ -267,7 +267,7 @@ export class GdmAvatarManager {
         const badge = userWidget._wackSessionBadge;
         const itemUserName = user ? user.get_user_name() : null;
         const updateBadge = () => {
-            if (badge && !badge._isDestroyed) {
+            if (badge && badge.get_stage()) {
                 const activeUsers = this._getActiveSessionUsers();
                 if (activeUsers.size === 0) {
                     badge.visible = false;
@@ -292,7 +292,7 @@ export class GdmAvatarManager {
         if (!avatar._wackOrigUpdate) {
             avatar._wackOrigUpdate = avatar.update.bind(avatar);
             avatar.update = () => {
-                if (avatar._isDestroyed || avatar._wackSettingStyle || avatar._wackUpdating)
+                if (!avatar.get_stage() || avatar._wackSettingStyle || avatar._wackUpdating)
                     return;
                 avatar._wackUpdating = true;
                 try {
@@ -305,7 +305,6 @@ export class GdmAvatarManager {
             };
 
             avatar.connectObject('destroy', () => {
-                avatar._isDestroyed = true;
                 this._teardownUserListItem(item);
             }, this);
 
@@ -327,7 +326,7 @@ export class GdmAvatarManager {
     }
 
     _applyStyleToUserListItemAvatar(avatar) {
-        if (!avatar || avatar._isDestroyed || avatar._wackSettingStyle) return;
+        if (!avatar || !avatar.get_stage() || avatar._wackSettingStyle) return;
 
         const classification = this._classifyAvatar(avatar);
         if (classification === AvatarType.IMAGE) {

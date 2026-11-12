@@ -59,10 +59,8 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
             });
             this.add_child(this._hintBoxWrapper);
 
-            this._isDestroyed = false;
             this._user = null;
             this.connectObject('destroy', () => {
-                this._isDestroyed = true;
                 if (this._user) {
                     this._user.disconnectObject(this);
                     this._user = null;
@@ -86,7 +84,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
         }
 
         setUser(user) {
-            if (this._isDestroyed) return;
+            if (!this.get_stage()) return;
             if (this._user) {
                 this._user.disconnectObject(this);
                 this._user = null;
@@ -100,7 +98,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
                 );
             }
 
-            const oldChild = this._userWell?.get_child();
+            const oldChild = this._userWell ? this._userWell.get_child() : null;
             if (oldChild) {
                 if (this._avatarButton) {
                     const oldAvatar = this._avatarButton.get_child();
@@ -134,7 +132,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
                     avatar._wackOrigUpdate = avatar.update.bind(avatar);
                     avatar.update = () => {
                         avatar._wackOrigUpdate();
-                        if (!this._isDestroyed)
+                        if (this.get_stage())
                             this.updateAvatarVibrancy();
                     };
                 }
@@ -146,31 +144,34 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
                 }, this);
             }
 
-            this._userWell?.set_child(userWidget);
+            if (this._userWell)
+                this._userWell.set_child(userWidget);
             this._applyUserLabelStyle();
             this._applyHintLabelStyle();
             this.updateAvatarVibrancy();
         }
 
         _applyUserLabelStyle() {
-            if (this._isDestroyed) return;
-            const userWidget = this._userWell?.get_child();
-            const label = userWidget?._label;
+            if (!this.get_stage()) return;
+            const userWidget = this._userWell ? this._userWell.get_child() : null;
+            const label = userWidget ? userWidget._label : null;
             if (!label) return;
             if (this._lastVisualState || this._lastClockAlpha != null) {
-                label.set_style(getUserLabelStyle(this._lastVisualState ?? this._lastClockAlpha));
+                const styleArg = this._lastVisualState !== null && this._lastVisualState !== undefined
+                    ? this._lastVisualState : this._lastClockAlpha;
+                label.set_style(getUserLabelStyle(styleArg));
             }
         }
 
         _applyHintLabelStyle() {
-            if (this._isDestroyed || !this._hintLabel) return;
+            if (!this.get_stage() || !this._hintLabel) return;
             if (this._lastVisualState || this._lastClockAlpha != null) {
                 this._hintLabel.set_style(getHintTextStyle(this._lastVisualState, this._lastClockAlpha));
             }
         }
 
         updateVisuals(promptColor, alpha = null) {
-            if (this._isDestroyed) return;
+            if (!this.get_stage()) return;
             if (promptColor)
                 this._lastVisualState = promptColor;
             if (alpha != null)
@@ -179,7 +180,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
             this._applyUserLabelStyle();
             this._applyHintLabelStyle();
 
-            const avColor = promptColor?.avatarColor ?? promptColor;
+            const avColor = promptColor ? (promptColor.avatarColor || promptColor) : null;
             if (avColor)
                 this.updateAvatarVibrancy(avColor);
         }
@@ -191,7 +192,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
         }
 
         updateAvatarVibrancy(avatarColor) {
-            if (this._isDestroyed) return;
+            if (!this.get_stage()) return;
             if (avatarColor)
                 this._lastAvatarColor = avatarColor;
             const color = this._lastAvatarColor;
@@ -225,7 +226,7 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
                     avatar.clip_to_allocation = true;
                 if (this._avatarButton)
                     this._avatarButton.clip_to_allocation = true;
-                const child = avatar?.get_child();
+                const child = avatar ? avatar.get_child() : null;
                 if (child) {
                     const iconStyle = 'background-color: transparent !important; border-radius: 999px !important;';
                     if (child.get_style() !== iconStyle)
@@ -238,26 +239,26 @@ export const WackCupertinoRestPrompt = GObject.registerClass(
 
 
         setHintText(text) {
-            if (this._isDestroyed) return;
+            if (!this.get_stage()) return;
             this._currentText = text ?? '';
             this._updateHintLabel();
         }
 
         setNotifCount(count) {
-            if (this._isDestroyed) return;
+            if (!this.get_stage()) return;
             this._currentCount = count ?? 0;
             this._updateHintLabel();
         }
 
         setHint(text, count = 0) {
-            if (this._isDestroyed) return;
+            if (!this.get_stage()) return;
             this._currentText = text ?? '';
             this._currentCount = count ?? 0;
             this._updateHintLabel();
         }
 
         _updateHintLabel() {
-            if (this._isDestroyed || !this._hintLabel) return;
+            if (!this.get_stage() || !this._hintLabel) return;
 
             // Invalidate StLabel's cached shadow pipeline (st_label_set_text clears text_shadow_pipeline)
             this._hintLabel.text = '';

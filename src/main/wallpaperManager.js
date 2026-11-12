@@ -136,6 +136,7 @@ export class WallpaperManager {
 
     // ponytail: slides snap at the transition midpoint instead of cross-blending.
     _armRefresh(seconds) {
+        this._stopRefresh();
         const delayMs = Math.round(Math.max(1, Math.min(3600, seconds + 0.5)) * 1000);
         this._refreshId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delayMs, () => {
             this._refreshId = 0;

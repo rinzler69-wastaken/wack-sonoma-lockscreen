@@ -990,7 +990,7 @@ export class GdmWallpaperView {
 
     destroy() {
         if (this._group) {
-            if (!this._group._isDestroyed)
+            if (this._group.get_stage())
                 this._group.destroy();   // destroys containers, stacks and effects with it
             this._group = null;
         }
