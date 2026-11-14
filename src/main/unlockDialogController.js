@@ -322,10 +322,11 @@ export class UnlockDialogController {
             }
         }
 
-        if (dialog && dialog._clock && dialog._clock.setBlurLive)
-            dialog._clock.setBlurLive(isLive);
-        else if (this._extension._dialog && this._extension._dialog._clock && this._extension._dialog._clock.setBlurLive)
-            this._extension._dialog._clock.setBlurLive(isLive);
+        const clock = (dialog && dialog._clock) ||
+            (this._extension._dialog && this._extension._dialog._clock) ||
+            this._extension._clock;
+        if (clock && clock.setBlurLive)
+            clock.setBlurLive(isLive);
 
         if (this._extension._promptStyling && this._extension._promptStyling.setBlurLive)
             this._extension._promptStyling.setBlurLive(isLive);
