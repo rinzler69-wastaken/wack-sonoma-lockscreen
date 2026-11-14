@@ -45,6 +45,7 @@ import { ClockLayoutManager } from './src/main/clockLayoutManager.js';
 import { ThemeManager } from './src/main/themeManager.js';
 import { CupertinoPromptManager } from './src/main/cupertinoPromptManager.js';
 import { UnlockDialogController } from './src/main/unlockDialogController.js';
+import { _setShellMain } from './src/main/liveLockscreenHelper.js';
 
 export default class WackLockscreenClockExtension extends Extension {
     get _promptActive() {
@@ -112,6 +113,9 @@ export default class WackLockscreenClockExtension extends Extension {
         const dialog = Main.screenShield._dialog;
         _log(`[WACK] enable() called, dialog=${!!dialog}`);
         if (!dialog) return;
+
+        this._main = Main;
+        _setShellMain(Main);
 
         // Subsystem instantiations
         this._themeManager = new ThemeManager(this);
@@ -1089,5 +1093,7 @@ export default class WackLockscreenClockExtension extends Extension {
         this._animationState = null;
         this._wasPromptActive = false;
         this._lastPromptColor = null;
+        _setShellMain(null);
+        this._main = null;
     }
 }

@@ -1,9 +1,19 @@
 import Gio from 'gi://Gio';
 
-let shellMain = globalThis.Main ?? null;
+let shellMain = (typeof globalThis !== 'undefined' && globalThis.Main) ? globalThis.Main : null;
 
 export function _setShellMain(main) {
     shellMain = main;
+}
+
+export function getShellMain(extension = null) {
+    if (shellMain && shellMain.extensionManager)
+        return shellMain;
+    if (extension && extension._main && extension._main.extensionManager)
+        return extension._main;
+    if (typeof globalThis !== 'undefined' && globalThis.Main && globalThis.Main.extensionManager)
+        return globalThis.Main;
+    return null;
 }
 
 export const LIVE_LOCKSCREEN_UUID = 'live-lockscreen@nick-redwill';
@@ -11,12 +21,14 @@ export const LIVE_LOCKSCREEN_SCHEMA = 'org.gnome.shell.extensions.live-lockscree
 
 /**
  * Checks whether the LiveLockScreen extension is currently installed and enabled.
+ * @param {object} [extension]
  * @returns {boolean}
  */
-export function isLiveLockscreenEnabled() {
-    if (!shellMain || !shellMain.extensionManager)
+export function isLiveLockscreenEnabled(extension = null) {
+    const activeMain = getShellMain(extension);
+    if (!activeMain || !activeMain.extensionManager)
         return false;
-    const liveExt = shellMain.extensionManager.lookup(LIVE_LOCKSCREEN_UUID);
+    const liveExt = activeMain.extensionManager.lookup(LIVE_LOCKSCREEN_UUID);
     // ExtensionState.ENABLED is 1
     return Boolean(liveExt && liveExt.state === 1);
 }
@@ -24,14 +36,16 @@ export function isLiveLockscreenEnabled() {
 /**
  * Retrieves the configured video path from LiveLockScreen if set.
  * @param {object} [liveExt]
+ * @param {object} [extension]
  * @returns {string|null}
  */
-export function getLiveLockscreenVideoPath(liveExt = null) {
+export function getLiveLockscreenVideoPath(liveExt = null, extension = null) {
     let ext = liveExt;
     if (!ext) {
-        if (!shellMain || !shellMain.extensionManager)
+        const activeMain = getShellMain(extension);
+        if (!activeMain || !activeMain.extensionManager)
             return null;
-        ext = shellMain.extensionManager.lookup(LIVE_LOCKSCREEN_UUID);
+        ext = activeMain.extensionManager.lookup(LIVE_LOCKSCREEN_UUID);
     }
 
     if (ext && ext.stateObj && ext.stateObj._settings)
@@ -79,17 +93,19 @@ export function isLiveLockscreenVideoActive(dialog, extension) {
             return false;
     }
 
-    // 2. Check if the LiveLockScreen extension is enabled
-    if (!shellMain || !shellMain.extensionManager)
-        return false;
-    const liveExt = shellMain.extensionManager.lookup(LIVE_LOCKSCREEN_UUID);
-    if (!liveExt || liveExt.state !== 1)
-        return false;
+    const activeMain = getShellMain(extension);
 
-    // 3. Check LiveLockScreen stateObj directly if initialized
-    if (liveExt.stateObj) {
-        if (liveExt.stateObj._player && liveExt.stateObj._player.pid && liveExt.stateObj._backgroundCreated)
-            return true;
+    // 2. Check if the LiveLockScreen extension is enabled via extensionManager
+    if (activeMain && activeMain.extensionManager) {
+        const liveExt = activeMain.extensionManager.lookup(LIVE_LOCKSCREEN_UUID);
+        if (!liveExt || liveExt.state !== 1)
+            return false;
+
+        // 3. Check LiveLockScreen stateObj directly if initialized
+        if (liveExt.stateObj) {
+            if (liveExt.stateObj._player && liveExt.stateObj._player.pid && liveExt.stateObj._backgroundCreated)
+                return true;
+        }
     }
 
     // 4. Check dialog._backgroundGroup for LiveLockScreen wrapper actors or video player windows

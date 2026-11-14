@@ -17,6 +17,7 @@ import { _setActorVisible } from './mainUtils.js';
 import { PasswordIndicators, connectFailureShake } from './passwordField.js';
 import { createKawaseBlurEffect, KawaseBlurEffect } from './kawaseBlurEffect.js';
 import { isLiveLockscreenVideoActive } from './liveLockscreenHelper.js';
+import { _setShellMain } from './liveLockscreenHelper.js';
 
 export { UnlockSequenceState };
 
@@ -234,6 +235,7 @@ class UnlockSequenceController {
 export class UnlockDialogController {
     constructor(extension) {
         this._extension = extension;
+        _setShellMain(Main);
         this.origUpdateBgEffects = null;
         this.origUpdateBackgrounds = null;
         this.origUpdateUserSwitchVisibility = null;
@@ -247,6 +249,7 @@ export class UnlockDialogController {
         if (!dialog || !dialog._backgroundGroup)
             return;
 
+        _setShellMain(Main);
         const isLive = isLiveLockscreenVideoActive(dialog, this._extension);
 
         for (const widget of dialog._backgroundGroup) {
@@ -302,6 +305,7 @@ export class UnlockDialogController {
     }
 
     syncLiveBlur(dialog, forceVal = null) {
+        _setShellMain(Main);
         const resolvedDialog = dialog !== null && dialog !== undefined
             ? dialog
             : this._extension._dialog;
@@ -385,6 +389,7 @@ export class UnlockDialogController {
     }
 
     install(dialog, lockDialogGroup) {
+        _setShellMain(Main);
         // AuthPrompt lifecycle & PAM message intercept
         if (dialog._ensureAuthPrompt) {
             this.origEnsureAuthPrompt = dialog._ensureAuthPrompt.bind(dialog);

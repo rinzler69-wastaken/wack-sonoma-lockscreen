@@ -762,7 +762,7 @@ export class PromptStyling {
     setBlurLive(live) {
         const boolVal = Boolean(live);
         this._blurLive = boolVal;
-        const dialog = this._extension._dialog;
+        const dialog = this._extension ? this._extension._dialog : null;
         if (!dialog) return;
         const authPrompt = dialog._authPrompt ||
             (dialog._promptBox ? dialog._promptBox._authPrompt : null);

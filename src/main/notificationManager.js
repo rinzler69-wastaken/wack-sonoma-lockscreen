@@ -45,13 +45,22 @@ export class NotificationManager {
     setBlurLive(live) {
         const boolVal = Boolean(live);
         this._blurLive = boolVal;
-        const nb = this._notifBox;
+        const dialog = this._extension ? this._extension._dialog : null;
+        const nb = this._notifBox || (dialog ? dialog._notificationsBox : null);
         if (!nb) return;
         if (nb._notificationBox) {
-            for (let child = nb._notificationBox.get_first_child(); child !== null; child = child.get_next_sibling()) {
-                const effect = child.get_effect(NOTIF_BLUR_NAME);
-                if (effect)
-                    effect.live = boolVal;
+            if (typeof nb._notificationBox.get_children === 'function') {
+                for (const child of nb._notificationBox.get_children()) {
+                    const effect = child.get_effect(NOTIF_BLUR_NAME);
+                    if (effect)
+                        effect.live = boolVal;
+                }
+            } else {
+                for (let child = nb._notificationBox.get_first_child(); child !== null; child = child.get_next_sibling()) {
+                    const effect = child.get_effect(NOTIF_BLUR_NAME);
+                    if (effect)
+                        effect.live = boolVal;
+                }
             }
         }
         if (nb._players) {
