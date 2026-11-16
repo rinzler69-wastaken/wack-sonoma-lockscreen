@@ -155,6 +155,8 @@ export default class WackLockscreenClockExtension extends Extension {
                 if (Main.screenShield.active) {
                     this._updateCustomWallpaperOverlay();
                     this._updateClockAlphaAndPromptColor();
+                    if (this._unlockDialogController)
+                        this._unlockDialogController.syncLiveBlur(this._dialog);
                 } else {
                     this._stopSlideClock();
                 }

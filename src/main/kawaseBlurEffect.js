@@ -262,8 +262,8 @@ function setVector2(pipeline, name, x, y) {
 
 function captureGeometry(actor, framebuffer) {
     const scale = actor.get_resource_scale();
-    const mv = framebuffer?.get_modelview_matrix ? framebuffer.get_modelview_matrix() : null;
-    const proj = framebuffer?.get_projection_matrix ? framebuffer.get_projection_matrix() : null;
+    const mv = framebuffer && framebuffer.get_modelview_matrix ? framebuffer.get_modelview_matrix() : null;
+    const proj = framebuffer && framebuffer.get_projection_matrix ? framebuffer.get_projection_matrix() : null;
     if (!mv || !proj) {
         const [originX, originY] = actor.get_transformed_position();
         return { sourceX: Math.round(originX * scale), sourceY: Math.round(originY * scale) };
@@ -405,16 +405,16 @@ export const KawaseBlurEffect = GObject.registerClass({
         this._lastW = null;
         this._lastH = null;
 
-        this._radius = params.radius ?? 30;
-        this._brightness = params.brightness ?? 0.6;
-        this._opacity_factor = params.opacity_factor ?? 1.0;
-        this._corner_radius = params.corner_radius ?? 0;
-        this._mode = params.mode ?? 0;
-        this._live = params.live ?? false;
-        this._tint_r = params.tint_r ?? 1.0;
-        this._tint_g = params.tint_g ?? 1.0;
-        this._tint_b = params.tint_b ?? 1.0;
-        this._tint_alpha = params.tint_alpha ?? 0.4;
+        this._radius = params.radius !== undefined ? params.radius : 30;
+        this._brightness = params.brightness !== undefined ? params.brightness : 0.6;
+        this._opacity_factor = params.opacity_factor !== undefined ? params.opacity_factor : 1.0;
+        this._corner_radius = params.corner_radius !== undefined ? params.corner_radius : 0;
+        this._mode = params.mode !== undefined ? params.mode : 0;
+        this._live = params.live !== undefined ? Boolean(params.live) : false;
+        this._tint_r = params.tint_r !== undefined ? params.tint_r : 1.0;
+        this._tint_g = params.tint_g !== undefined ? params.tint_g : 1.0;
+        this._tint_b = params.tint_b !== undefined ? params.tint_b : 1.0;
+        this._tint_alpha = params.tint_alpha !== undefined ? params.tint_alpha : 0.4;
     }
 
     get tint_r() { return this._tint_r; }
@@ -550,7 +550,7 @@ export const KawaseBlurEffect = GObject.registerClass({
             resourceScale,
             this._tint_r, this._tint_g, this._tint_b, this._tint_alpha,
         ];
-        if (this.appliedOutputUniforms?.every((v, i) => v === uniforms[i]))
+        if (this.appliedOutputUniforms && this.appliedOutputUniforms.every((v, i) => v === uniforms[i]))
             return;
 
         const pipeline = this.outputPipeline;
@@ -704,7 +704,7 @@ export const KawaseBlurEffect = GObject.registerClass({
     }
 
     updateSampling(passes, blend) {
-        if (this.appliedSampling?.passes === passes
+        if (this.appliedSampling && this.appliedSampling.passes === passes
             && this.appliedSampling.blend === blend)
             return;
 
@@ -739,7 +739,7 @@ export const KawaseBlurEffect = GObject.registerClass({
             return;
         }
 
-        const framebuffer = paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null;
+        const framebuffer = paintContext && paintContext.get_framebuffer ? paintContext.get_framebuffer() : null;
         const context = framebuffer ? framebuffer.get_context() : this.context;
         if (!context) {
             node.add_child(new Clutter.ActorNode(actor, -1));
@@ -760,7 +760,7 @@ export const KawaseBlurEffect = GObject.registerClass({
 
         const [originX, originY] = actor.get_transformed_position();
         const [w, h] = actor.get_transformed_size();
-        const stageView = paintContext?.get_stage_view ? paintContext.get_stage_view() : null;
+        const stageView = paintContext && paintContext.get_stage_view ? paintContext.get_stage_view() : null;
         let viewX = Math.round(originX);
         let viewY = Math.round(originY);
         if (stageView) {
@@ -800,7 +800,7 @@ export const KawaseBlurEffect = GObject.registerClass({
     }
 
     addBlurPasses(node, actor, bounds, passes, blend, paintContext) {
-        const sourceFramebuffer = paintContext?.get_framebuffer ? paintContext.get_framebuffer() : null;
+        const sourceFramebuffer = paintContext && paintContext.get_framebuffer ? paintContext.get_framebuffer() : null;
         if (this._mode === 1 && sourceFramebuffer) {
             const geom = captureGeometry(actor, sourceFramebuffer);
             const scale = actor.get_resource_scale();
@@ -992,14 +992,14 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
         this._lastW = null;
         this._lastH = null;
 
-        this._radius = params.radius ?? 30;
-        this._brightness = params.brightness ?? 0.6;
-        this._opacity_factor = params.opacity_factor ?? 1.0;
-        this._live = params.live ?? false;
-        this._tint_r = params.tint_r ?? 1.0;
-        this._tint_g = params.tint_g ?? 1.0;
-        this._tint_b = params.tint_b ?? 1.0;
-        this._tint_alpha = params.tint_alpha ?? 0.4;
+        this._radius = params.radius !== undefined ? params.radius : 30;
+        this._brightness = params.brightness !== undefined ? params.brightness : 0.6;
+        this._opacity_factor = params.opacity_factor !== undefined ? params.opacity_factor : 1.0;
+        this._live = params.live !== undefined ? Boolean(params.live) : false;
+        this._tint_r = params.tint_r !== undefined ? params.tint_r : 1.0;
+        this._tint_g = params.tint_g !== undefined ? params.tint_g : 1.0;
+        this._tint_b = params.tint_b !== undefined ? params.tint_b : 1.0;
+        this._tint_alpha = params.tint_alpha !== undefined ? params.tint_alpha : 0.4;
     }
 
     get mode() { return 2; }
@@ -1209,7 +1209,7 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
         });
         const outputRegions = this.regions.get(this.outputPipeline);
         if (outputRegions) {
-            const source = passes === 1 ? this.downTargets[1] : (this.upTargets[1] ?? this.downTargets[1]);
+            const source = passes === 1 ? this.downTargets[1] : (this.upTargets[1] ? this.upTargets[1] : this.downTargets[1]);
             outputRegions.source.update(source);
             outputRegions.original.update(this.downTargets[0]);
             if (outputRegions.mask && glyphTexture) {
@@ -1257,7 +1257,7 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
     }
 
     updateSampling(passes, blend, glyphTexture, width, height) {
-        if (this.appliedSampling?.passes === passes
+        if (this.appliedSampling && this.appliedSampling.passes === passes
             && this.appliedSampling.blend === blend)
             return;
 
@@ -1303,8 +1303,9 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
         // framebuffer is obtained reliably even in GDM and rest-lockscreen
         // contexts where the module-level paintedStageView sentinel may still
         // be null at the time vfunc_paint_target fires.
-        const stageView = (paintContext?.get_stage_view ? paintContext.get_stage_view() : null) ?? paintedStageView;
-        const sourceFramebuffer = stageView?.get_framebuffer ? stageView.get_framebuffer() : null;
+        const stageView = (paintContext && paintContext.get_stage_view ? paintContext.get_stage_view() : null) || paintedStageView;
+        const sourceFramebuffer = (stageView && stageView.get_framebuffer ? stageView.get_framebuffer() : null) ||
+            (paintContext && paintContext.get_framebuffer ? paintContext.get_framebuffer() : null);
         const context = sourceFramebuffer ? sourceFramebuffer.get_context() : this.context;
         if (!context) {
             super.vfunc_paint_target(node, paintContext);
@@ -1325,13 +1326,11 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
         this.ensureTargets(context, targetWidth, targetHeight, passes, targetTexture);
         this.updateSampling(passes, blend, targetTexture, targetWidth, targetHeight);
 
+        const geom = sourceFramebuffer ? captureGeometry(actor, sourceFramebuffer) : null;
         const [originX, originY] = actor.get_transformed_position();
         const [w, h] = actor.get_transformed_size();
-        // get_layout() requires an MtkRectangle* in-param in Mutter 18+; use the GObject property.
-        const layout = stageView?.layout ?? { x: 0, y: 0 };
-        const viewScale = stageView?.get_scale ? stageView.get_scale() : scale;
-        let viewX = Math.round(originX - layout.x);
-        let viewY = Math.round(originY - layout.y);
+        const viewX = geom ? geom.sourceX : Math.round(originX * scale);
+        const viewY = geom ? geom.sourceY : Math.round(originY * scale);
 
         const positionChanged = (this._lastX !== viewX || this._lastY !== viewY ||
             this._lastW !== w || this._lastH !== h);
@@ -1348,8 +1347,7 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
                 blend,
                 sourceFramebuffer,
                 viewX,
-                viewY,
-                viewScale
+                viewY
             );
             if (captured) {
                 this.blurValid = true;
@@ -1375,9 +1373,12 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
         outputNode.set_name('WackClockGlyph output');
         addRectangle(outputNode, 0, 0, targetWidth, targetHeight);
         node.add_child(outputNode);
+
+        if (this._live)
+            this.queue_repaint();
     }
 
-    addBlurPasses(node, actor, targetWidth, targetHeight, passes, blend, sourceFramebuffer, viewX, viewY, viewScale) {
+    addBlurPasses(node, actor, targetWidth, targetHeight, passes, blend, sourceFramebuffer, viewX, viewY) {
         if (!sourceFramebuffer)
             return false;
 
@@ -1386,10 +1387,10 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
         if (fbW <= 0 || fbH <= 0)
             return false;
 
-        const blitSrcX = Math.max(0, Math.round(viewX * viewScale));
-        const blitSrcY = Math.max(0, Math.round(viewY * viewScale));
-        const maxW = Math.max(0, fbW - blitSrcX);
-        const maxH = Math.max(0, fbH - blitSrcY);
+        const blitSrcX = Math.max(0, Math.round(viewX));
+        const blitSrcY = Math.max(0, Math.round(viewY));
+        const maxW = fbW > 0 ? Math.max(0, fbW - blitSrcX) : targetWidth;
+        const maxH = fbH > 0 ? Math.max(0, fbH - blitSrcY) : targetHeight;
         const blitW = Math.min(targetWidth, maxW);
         const blitH = Math.min(targetHeight, maxH);
 

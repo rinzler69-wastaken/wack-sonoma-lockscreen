@@ -978,6 +978,18 @@ assert(wackClockText.includes('this._blurLive = boolVal'), 'WackClock stores and
 assert(wackClockText.includes('this._timeBlurEffect.live = boolVal'), 'WackClock updates time blur effect live mode');
 assert(wackClockText.includes('this._dateBlurEffect.live = boolVal'), 'WackClock updates date blur effect live mode');
 
+// Test kawaseBlurEffect ClockGlyphBlurEffect live continuous repaint & framebuffer resolution
+const freshKawaseSrc = Gio.File.new_for_path('src/main/kawaseBlurEffect.js').load_contents(null)[1];
+const freshKawaseText = new TextDecoder().decode(freshKawaseSrc);
+assert(freshKawaseText.includes('if (this._live)\n            this.queue_repaint();'), 'ClockGlyphBlurEffect schedules next frame via queue_repaint when live is true');
+assert(freshKawaseText.includes('(paintContext && paintContext.get_framebuffer ? paintContext.get_framebuffer() : null)'), 'ClockGlyphBlurEffect resolves framebuffer fallback from paintContext');
+assert(freshKawaseText.includes('const geom = sourceFramebuffer ? captureGeometry(actor, sourceFramebuffer) : null;'), 'ClockGlyphBlurEffect integrates captureGeometry for matrix-accurate sampling');
+
+// Test extension.js active-changed live blur sync
+const extSrc = Gio.File.new_for_path('extension.js').load_contents(null)[1];
+const extText = new TextDecoder().decode(extSrc);
+assert(extText.includes('this._unlockDialogController.syncLiveBlur(this._dialog)'), 'extension.js triggers syncLiveBlur on screenShield active-changed');
+
 // 23. Test LLS Video Overlay Fade-Out in UnlockSequenceController
 print('\n[23] Testing LLS Video Overlay Fade-Out in UnlockSequenceController:');
 
