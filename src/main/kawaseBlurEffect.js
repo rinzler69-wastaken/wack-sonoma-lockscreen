@@ -550,8 +550,8 @@ export const KawaseBlurEffect = GObject.registerClass({
             resourceScale,
             this._tint_r, this._tint_g, this._tint_b, this._tint_alpha,
         ];
-        if (this.appliedOutputUniforms && this.appliedOutputUniforms.every((v, i) => v === uniforms[i]))
-            return;
+            if (this.appliedOutputUniforms && this.appliedOutputUniforms.every((v, i) => v === uniforms[i]))
+                return;
 
         const pipeline = this.outputPipeline;
         setFloat(pipeline, 'corner_radius', radius);
@@ -705,8 +705,8 @@ export const KawaseBlurEffect = GObject.registerClass({
 
     updateSampling(passes, blend) {
         if (this.appliedSampling && this.appliedSampling.passes === passes
-            && this.appliedSampling.blend === blend)
-            return;
+                && this.appliedSampling.blend === blend)
+                return;
 
         for (let level = passes - 1; level >= 1; level--)
             this.configureUpsample(this.upPipelines[level], level, passes, blend);
@@ -1003,7 +1003,7 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
     }
 
     get mode() { return 2; }
-    set mode(_) {}
+    set mode(_) { }
 
     get tint_r() { return this._tint_r; }
     set tint_r(val) {
@@ -1258,8 +1258,8 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
 
     updateSampling(passes, blend, glyphTexture, width, height) {
         if (this.appliedSampling && this.appliedSampling.passes === passes
-            && this.appliedSampling.blend === blend)
-            return;
+                && this.appliedSampling.blend === blend)
+                return;
 
         for (let level = passes - 1; level >= 1; level--)
             this.configureUpsample(this.upPipelines[level], level, passes, blend);
@@ -1378,95 +1378,95 @@ export const ClockGlyphBlurEffect = GObject.registerClass({
             this.queue_repaint();
     }
 
-    addBlurPasses(node, actor, targetWidth, targetHeight, passes, blend, sourceFramebuffer, viewX, viewY) {
-        if (!sourceFramebuffer)
-            return false;
+        addBlurPasses(node, actor, targetWidth, targetHeight, passes, blend, sourceFramebuffer, viewX, viewY) {
+            if (!sourceFramebuffer)
+                return false;
 
-        const fbW = sourceFramebuffer.get_width ? sourceFramebuffer.get_width() : 0;
-        const fbH = sourceFramebuffer.get_height ? sourceFramebuffer.get_height() : 0;
-        if (fbW <= 0 || fbH <= 0)
-            return false;
+            const fbW = sourceFramebuffer.get_width ? sourceFramebuffer.get_width() : 0;
+            const fbH = sourceFramebuffer.get_height ? sourceFramebuffer.get_height() : 0;
+            if (fbW <= 0 || fbH <= 0)
+                return false;
 
-        const blitSrcX = Math.max(0, Math.round(viewX));
-        const blitSrcY = Math.max(0, Math.round(viewY));
-        const maxW = fbW > 0 ? Math.max(0, fbW - blitSrcX) : targetWidth;
-        const maxH = fbH > 0 ? Math.max(0, fbH - blitSrcY) : targetHeight;
-        const blitW = Math.min(targetWidth, maxW);
-        const blitH = Math.min(targetHeight, maxH);
+            const blitSrcX = Math.max(0, Math.round(viewX));
+            const blitSrcY = Math.max(0, Math.round(viewY));
+            const maxW = fbW > 0 ? Math.max(0, fbW - blitSrcX) : targetWidth;
+            const maxH = fbH > 0 ? Math.max(0, fbH - blitSrcY) : targetHeight;
+            const blitW = Math.min(targetWidth, maxW);
+            const blitH = Math.min(targetHeight, maxH);
 
-        if (blitW <= 0 || blitH <= 0)
-            return false;
+            if (blitW <= 0 || blitH <= 0)
+                return false;
 
-        this.downTargets[0].framebuffer.clear4f(Cogl.BufferBit.COLOR, 0, 0, 0, 0);
+            this.downTargets[0].framebuffer.clear4f(Cogl.BufferBit.COLOR, 0, 0, 0, 0);
 
-        if (sourceFramebuffer.blit) {
-            sourceFramebuffer.blit(
-                this.downTargets[0].framebuffer,
-                blitSrcX, blitSrcY,
-                0, 0,
-                blitW, blitH
-            );
-        } else if (Cogl.blit_framebuffer) {
-            Cogl.blit_framebuffer(
-                sourceFramebuffer,
-                this.downTargets[0].framebuffer,
-                blitSrcX, blitSrcY,
-                0, 0,
-                blitW, blitH
-            );
+            if (sourceFramebuffer.blit) {
+                sourceFramebuffer.blit(
+                    this.downTargets[0].framebuffer,
+                    blitSrcX, blitSrcY,
+                    0, 0,
+                    blitW, blitH
+                );
+            } else if (Cogl.blit_framebuffer) {
+                Cogl.blit_framebuffer(
+                    sourceFramebuffer,
+                    this.downTargets[0].framebuffer,
+                    blitSrcX, blitSrcY,
+                    0, 0,
+                    blitW, blitH
+                );
+            }
+
+            const bounds = { x: 0, y: 0, width: targetWidth, height: targetHeight };
+            for (let level = 1; level <= passes; level++) {
+                if (passes === 1 && blend === 0)
+                    break;
+                addPassNode(
+                    node,
+                    this.downTargets[level],
+                    this.downPipelines[level],
+                    bounds,
+                    `WackClockGlyph downsample ${level}`
+                );
+            }
+
+            for (let level = passes - 1; level >= 1; level--) {
+                addPassNode(
+                    node,
+                    this.upTargets[level],
+                    this.upPipelines[level],
+                    bounds,
+                    `WackClockGlyph upsample ${level}`
+                );
+            }
+
+            return true;
         }
 
-        const bounds = { x: 0, y: 0, width: targetWidth, height: targetHeight };
-        for (let level = 1; level <= passes; level++) {
-            if (passes === 1 && blend === 0)
-                break;
-            addPassNode(
-                node,
-                this.downTargets[level],
-                this.downPipelines[level],
-                bounds,
-                `WackClockGlyph downsample ${level}`
-            );
+        releaseTargets() {
+            this.downTargets = [];
+            this.upTargets = [];
+            this.downPipelines = [];
+            this.upPipelines = [];
+            this.outputPipeline = null;
+            this.regions.clear();
+            this.width = 0;
+            this.height = 0;
+            this.capacityWidth = 0;
+            this.capacityHeight = 0;
+            this.context = null;
+            this.appliedSampling = null;
+            this.blurValid = false;
+            this._lastX = null;
+            this._lastY = null;
+            this._lastW = null;
+            this._lastH = null;
         }
 
-        for (let level = passes - 1; level >= 1; level--) {
-            addPassNode(
-                node,
-                this.upTargets[level],
-                this.upPipelines[level],
-                bounds,
-                `WackClockGlyph upsample ${level}`
-            );
+        destroy() {
+            this.releaseTargets();
+            releaseStageViewTracking();
         }
-
-        return true;
-    }
-
-    releaseTargets() {
-        this.downTargets = [];
-        this.upTargets = [];
-        this.downPipelines = [];
-        this.upPipelines = [];
-        this.outputPipeline = null;
-        this.regions.clear();
-        this.width = 0;
-        this.height = 0;
-        this.capacityWidth = 0;
-        this.capacityHeight = 0;
-        this.context = null;
-        this.appliedSampling = null;
-        this.blurValid = false;
-        this._lastX = null;
-        this._lastY = null;
-        this._lastW = null;
-        this._lastH = null;
-    }
-
-    destroy() {
-        this.releaseTargets();
-        releaseStageViewTracking();
-    }
-});
+    });
 
 export function createKawaseBlurEffect(params = {}) {
     const effect = params.mode === 2
