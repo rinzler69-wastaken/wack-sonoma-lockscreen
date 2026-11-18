@@ -271,7 +271,9 @@ export class GdmPromptStyling {
 
         const defaultVibrancy = this._gdm._extension ? this._gdm._extension.getSettings().get_string('prompt-vibrancy') : 'tonal';
         const vibrancyMode = color.vibrancyMode ?? defaultVibrancy;
-        const isSolid = (vibrancyMode === 'tonal' || vibrancyMode === 'less');
+        // When LiveLockScreen video is active, force the live acrylic blur path.
+        const llsLive = this._gdm?._promptStyling?._blurLive ?? false;
+        const isSolid = !llsLive && (vibrancyMode === 'tonal' || vibrancyMode === 'less');
 
         let shadowStyle = '';
         let bgStyle;

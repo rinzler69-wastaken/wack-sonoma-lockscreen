@@ -771,6 +771,9 @@ const liveEffect = makeKawaseEffect({ live: true });
 assert(liveEffect.live === true, 'KawaseBlurEffect honors live: true');
 assert(psText.includes('live: false'), 'promptStyling configures static Kawase blur for prompt chip');
 assert(gpsText.includes('live: true'), 'gdmPromptStyling initializes dynamic Kawase blur for prompt chip entrance');
+assert(psText.includes('!this._blurLive && (vibrancyMode === \'tonal\''), 'promptStyling auto-elevates Tonal/Less to live acrylic when LLS is active');
+assert(gpsText.includes('const llsLive = this._gdm?._promptStyling?._blurLive ?? false'), 'gdmPromptStyling reads live state from _promptStyling proxy');
+assert(gpsText.includes('!llsLive && (vibrancyMode === \'tonal\''), 'gdmPromptStyling auto-elevates Tonal/Less to live acrylic when LLS is active');
 
 // 19. Test Acrylic Glass Tint Parity (Prompt Chip, Notif Card)
 print('\n[19] Testing Acrylic Glass Tint Parity & Downsample Leak Protection:');
@@ -984,6 +987,9 @@ const freshKawaseText = new TextDecoder().decode(freshKawaseSrc);
 assert(freshKawaseText.includes('if (this._live)\n            this.queue_repaint();'), 'ClockGlyphBlurEffect schedules next frame via queue_repaint when live is true');
 assert(freshKawaseText.includes('(paintContext && paintContext.get_framebuffer ? paintContext.get_framebuffer() : null)'), 'ClockGlyphBlurEffect resolves framebuffer fallback from paintContext');
 assert(freshKawaseText.includes('const geom = sourceFramebuffer ? captureGeometry(actor, sourceFramebuffer) : null;'), 'ClockGlyphBlurEffect integrates captureGeometry for matrix-accurate sampling');
+assert(freshKawaseText.includes('float bgLuma = dot(blurredColor.rgb, vec3(0.2126, 0.7152, 0.0722));'), 'ClockGlyphBlurEffect calculates dynamic background luminance in shader');
+assert(freshKawaseText.includes('float dynamicAlpha = mix(clock_tint_alpha, 0.92, smoothstep(0.35, 0.85, bgLuma));'), 'ClockGlyphBlurEffect dynamically adapts white alpha based on background luminance');
+assert(freshKawaseText.includes('highlightSuppression'), 'ClockGlyphBlurEffect applies highlight contrast protection in extreme highlights');
 
 // Test extension.js active-changed live blur sync
 const extSrc = Gio.File.new_for_path('extension.js').load_contents(null)[1];

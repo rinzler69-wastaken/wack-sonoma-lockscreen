@@ -278,7 +278,9 @@ export class PromptStyling {
             : (this._extension._settings
                 ? this._extension._settings.get_string('prompt-vibrancy')
                 : 'tonal');
-        const isSolid = (vibrancyMode === 'tonal' || vibrancyMode === 'less');
+        // When LiveLockScreen video is active, the static wallpaper colour is hidden — force live
+        // acrylic blur regardless of the user's vibrancy setting so the prompt blurs the video.
+        const isSolid = !this._blurLive && (vibrancyMode === 'tonal' || vibrancyMode === 'less');
 
         let shadowStyle = '';
         let bgStyle;

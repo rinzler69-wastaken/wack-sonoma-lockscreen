@@ -183,8 +183,21 @@ vec4 blurredColor = mix(sourceColor, filteredColor, opacity_factor);
 vec2 position = cogl_tex_coord_in[0].xy * vec2(output_width, output_height);
 blurredColor.rgb += dither(position * wack_resource_scale) * 2.0 / 255.0 * blurredColor.a;
 
-// Mix blurred background with clock tint
-blurredColor.rgb = mix(blurredColor.rgb, clock_tint, clock_tint_alpha);
+// Calculate perceived luminance of blurred background under glyph
+float bgLuma = dot(blurredColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+
+// Dynamically adapt white alpha for legibility as video background brightness shifts
+float dynamicAlpha = mix(clock_tint_alpha, 0.92, smoothstep(0.35, 0.85, bgLuma));
+float effectiveAlpha = max(clock_tint_alpha, dynamicAlpha);
+
+// In extreme highlights, protect contrast so white text never blends into pure white
+if (bgLuma > 0.75) {
+    float highlightSuppression = clamp((bgLuma - 0.75) * 4.0, 0.0, 1.0);
+    blurredColor.rgb *= (1.0 - highlightSuppression * 0.35);
+}
+
+// Mix blurred background with clock tint using dynamic legibility alpha
+blurredColor.rgb = mix(blurredColor.rgb, clock_tint, effectiveAlpha);
 
 // Sample mask from text glyph texture
 vec4 mask = mask_sample(cogl_tex_coord_in[0].xy);
