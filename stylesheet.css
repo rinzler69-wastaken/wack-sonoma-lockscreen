@@ -173,11 +173,22 @@
 #panel.unlock-screen.wack-status-corner .panel-button:hover,
 #panel.login-screen.wack-status-corner .panel-button:hover {
     background-color: transparent;
-}    
+}
 
 #panel.unlock-screen.wack-status-corner .panel-status-indicators-box,
 #panel.login-screen.wack-status-corner .panel-status-indicators-box {
     spacing: 14px;
+}
+
+#panel.unlock-screen.wack-status-corner .power-status.panel-status-indicators-box,
+#panel.login-screen.wack-status-corner .power-status.panel-status-indicators-box {
+    spacing: 4px;
+}
+
+#panel.unlock-screen.wack-status-corner .power-status .system-status-icon,
+#panel.login-screen.wack-status-corner .power-status .system-status-icon {
+    margin: 0;
+    padding: 0;
 }
 
 #panel.unlock-screen.wack-status-corner .panel-button StLabel,
